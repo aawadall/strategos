@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  UNITY_VERSION: 6000.0.40f1
+  UNITY_VERSION: 6000.0.75f1
   PROJECT_PATH: .
 
 # =============================================================================
