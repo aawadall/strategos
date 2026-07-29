@@ -167,7 +167,9 @@ build_target() {
     local build_log="$ARTIFACTS_DIR/build-log-$platform_name.txt"
 
     local unity_args=(
-        -batchmode -quit -nographics
+        # Note: -quit intentionally omitted. EditorApplication.Exit() in
+        # GameBuild.cs controls exit code; -quit overrides it and masks failures.
+        -batchmode -nographics
         -projectPath    "$PROJECT_ROOT"
         -executeMethod  "$build_method"
         -customBuildPath "$build_output"

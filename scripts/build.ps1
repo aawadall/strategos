@@ -153,7 +153,10 @@ function Build-Target {
     $BuildLog    = Join-Path $ArtifactsDir "build-log-$PlatformName.txt"
 
     $Args = @(
-        "-batchmode", "-quit", "-nographics",
+        # Note: -quit is intentionally omitted for builds.
+        # EditorApplication.Exit() inside GameBuild controls the exit code.
+        # Adding -quit overrides Exit(1) and masks build failures.
+        "-batchmode", "-nographics",
         "-projectPath",    $ProjectRoot,
         "-executeMethod",  $BuildMethod,
         "-customBuildPath", $BuildOutput,

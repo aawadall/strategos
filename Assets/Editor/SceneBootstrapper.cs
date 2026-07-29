@@ -150,6 +150,29 @@ namespace Strategos.Editor
         }
 
         // -------------------------------------------------------------------------
+        // Public utility — callable from GameBuild in batch mode
+        // -------------------------------------------------------------------------
+
+        /// <summary>
+        /// Creates the demo scene if it doesn't exist and registers it in
+        /// EditorBuildSettings. Safe to call from the build pipeline in batch mode;
+        /// does NOT open the scene (no EditorSceneManager.OpenScene call).
+        /// </summary>
+        public static void EnsureSceneRegistered()
+        {
+            if (!File.Exists(DemoScenePath))
+            {
+                Debug.Log("[SceneBootstrapper] Creating demo scene for build pipeline.");
+                CreateDemoScene();
+            }
+            else
+            {
+                // Scene exists — just make sure it is in build settings.
+                AddSceneToBuildSettings(DemoScenePath);
+            }
+        }
+
+        // -------------------------------------------------------------------------
         // Helpers
         // -------------------------------------------------------------------------
 

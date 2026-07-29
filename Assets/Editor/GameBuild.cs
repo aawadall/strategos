@@ -137,16 +137,18 @@ namespace Strategos.Editor
                 .Select(s => s.path)
                 .ToArray();
 
-            // Fallback: register demo scene if build settings are empty (CI first run)
-            if (scenes.Length == 0 && File.Exists(DemoScenePath))
+            if (scenes.Length == 0)
             {
-                Debug.LogWarning("[GameBuild] No scenes in build settings — " +
-                    "registering demo scene as fallback.");
-                EditorBuildSettings.scenes = new[]
-                {
-                    new EditorBuildSettingsScene(DemoScenePath, true)
-                };
-                return new[] { DemoScenePath };
+                // In batch mode, SceneBootstrapper's delayCall may not have fired yet.
+                // Call EnsureSceneRegistered() directly so the demo scene is created
+                // and added to build settings synchronously before we proceed.
+                Debug.Log("[GameBuild] No scenes registered — bootstrapping demo scene.");
+                SceneBootstrapper.EnsureSceneRegistered();
+
+                scenes = EditorBuildSettings.scenes
+                    .Where(s => s.enabled)
+                    .Select(s => s.path)
+                    .ToArray();
             }
 
             return scenes;
