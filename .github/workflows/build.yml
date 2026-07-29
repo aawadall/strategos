@@ -1,0 +1,152 @@
+# =============================================================================
+# Strategos — CI Build & Test
+#
+# Triggers: push/PR to master or main, plus manual dispatch.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   UNITY_LICENSE   — XML content of your Unity license file.
+#                     Obtain via: Unity Editor → Help → Manage License →
+#                     Activate New License → Save License File.
+#                     Then run: cat Unity_v6000.x.ulf | base64  (store decoded)
+#   UNITY_EMAIL     — Your Unity account email
+#   UNITY_PASSWORD  — Your Unity account password
+#
+# Jobs:
+#   test   — Runs Unity EditMode tests and uploads NUnit XML results.
+#   build  — Builds Windows, Linux, and macOS in parallel (requires test pass).
+# =============================================================================
+
+name: CI — Build & Test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:   # Allows manual trigger from the GitHub Actions UI
+
+concurrency:
+  # Cancel any in-progress run on the same branch/PR when a new one starts.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UNITY_VERSION: 6000.0.40f1
+  PROJECT_PATH: .
+
+# =============================================================================
+# Job 1 — Test
+# =============================================================================
+jobs:
+  test:
+    name: Tests (EditMode)
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # ── Cache Library ───────────────────────────────────────────────────────
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Test-
+            Library-
+
+      # ── Run tests ───────────────────────────────────────────────────────────
+      - name: Run EditMode tests
+        uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath:    ${{ env.PROJECT_PATH }}
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          testMode:       EditMode
+          artifactsPath:  TestResults
+          githubToken:    ${{ secrets.GITHUB_TOKEN }}
+          checkName:      EditMode Test Results
+
+      # ── Upload test results ─────────────────────────────────────────────────
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()   # Upload even on test failure so failures are inspectable
+        with:
+          name: TestResults
+          path: ${{ steps.tests.outputs.artifactsPath }}
+          retention-days: 14
+
+# =============================================================================
+# Job 2 — Build matrix
+# =============================================================================
+  build:
+    name: Build — ${{ matrix.platform.name }}
+    needs: test          # Only runs if tests pass
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false   # Let all platforms finish even if one fails
+      matrix:
+        platform:
+          - name:        Windows
+            unityTarget: StandaloneWindows64
+            buildMethod: Strategos.Editor.GameBuild.BuildWindows
+
+          - name:        Linux
+            unityTarget: StandaloneLinux64
+            buildMethod: Strategos.Editor.GameBuild.BuildLinux
+
+          - name:        macOS
+            unityTarget: StandaloneOSX
+            buildMethod: Strategos.Editor.GameBuild.BuildMacOS
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # ── Cache Library (per-platform to avoid cross-contamination) ───────────
+      - name: Cache Unity Library (${{ matrix.platform.name }})
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.platform.name }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.platform.name }}-
+            Library-
+
+      # ── Build ────────────────────────────────────────────────────────────────
+      - name: Build ${{ matrix.platform.name }}
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath:    ${{ env.PROJECT_PATH }}
+          unityVersion:   ${{ env.UNITY_VERSION }}
+          targetPlatform: ${{ matrix.platform.unityTarget }}
+          buildName:      Strategos
+          buildsPath:     Artifacts
+          buildMethod:    ${{ matrix.platform.buildMethod }}
+
+      # ── Upload build artifact ────────────────────────────────────────────────
+      - name: Upload ${{ matrix.platform.name }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name:              Strategos-${{ matrix.platform.name }}-${{ github.sha }}
+          path:              Artifacts/${{ matrix.platform.unityTarget }}
+          retention-days:    7
+          if-no-files-found: error
