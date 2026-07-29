@@ -39,7 +39,10 @@ Key source files:
 | `Assets/Scripts/Core/NatoSymbols/SymbolFactory.cs` | Factory Method (frame + fill) |
 | `Assets/Scripts/Core/NatoSymbols/IconDecorator.cs` | Icon layer decorator |
 | `Assets/Scripts/Core/NatoSymbols/SectorModifierDecorator.cs` | Sector 1/2 modifiers |
-| `Assets/Scripts/Core/NatoSymbols/AmplifierDecorator.cs` | Echelon / HQ / TF / text |
+| `Assets/Scripts/Core/NatoSymbols/AmplifierDecorator.cs` | Echelon / HQ / TF / feint |
+| `Assets/Scripts/Core/NatoSymbols/ConditionDecorator.cs` | Condition + combat-power bars |
+| `Assets/Scripts/Core/NatoSymbols/TextAmplifierDecorator.cs` | Text amplifiers T / M / F |
+| `Assets/Scripts/Core/NatoSymbols/ProceduralDrawUtil.cs` | Pixel primitives + 5×7 bitmap font |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolComposer.cs` | Table 3-1 composition |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolBaker.cs` | Compose → Sprite |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolDatabase.cs` | ScriptableObject sprite registry |

@@ -4,6 +4,9 @@ Custom in-house tool for generating, compositing, and rendering NATO APP-6D mili
 
 Construction follows APP-6(D) Chapter 1 / Table 3-1: **Factory** creates the framed base; **Decorators** add icon, sector modifiers, and amplifiers.
 
+> This document is the reference for APP-6D detail (SIDC tables, frame shapes, layer model).
+> For build commands, rendering invariants and known traps, see [CLAUDE.md](../CLAUDE.md).
+
 ---
 
 ## Architecture Overview
@@ -17,9 +20,11 @@ SIDCParser  ──► SIDCCode
     ▼
 NatoSymbolComposer
     │  1. SymbolFactory.CreateBase()     → Frame + Fill
-    │  2. IconDecorator                  → Field A icon
+    │  2. IconDecorator                  → Field A icon + entity-type variant mark
     │  3. SectorModifierDecorator        → Sector 1 / 2
-    │  4. AmplifierDecorator             → Fields B/D/S + text T/M/F
+    │  4. AmplifierDecorator             → Fields B/D/S (echelon, HQ, TF, feint)
+    │  5. ConditionDecorator             → operational condition + combat-power bars
+    │  6. TextAmplifierDecorator         → text fields T / M / F
     ▼
 INatoSymbol  (ordered SymbolLayerDraw list + SymbolTextAmplifiers)
     │
@@ -107,7 +112,10 @@ Every icon-based symbol is composed of:
 | 2. Icon | Field A | Bounding octagon main / full-frame / full-octagon |
 | 3. Modifiers | Sector 1 / 2 | Octagon sectors (.3L / .4L / .3L) — max one each |
 | 4. Amplifiers | Fields B, D, S, … | Outside frame (echelon, HQ staff, TF bracket, feint) |
-| 5. Text | Fields T, M, F, … | Designation, higher formation, strength |
+| 5. Text | Fields T, M, F | Designation, higher formation, reinforced/reduced — right of frame |
+
+Layer 5 is baked with the 5×7 bitmap font in `ProceduralDrawUtil` (`DrawText`), not with
+TextMeshPro, so a composed symbol stays one self-contained sprite in headless bakes.
 
 ### Frame shapes (Land Unit — Table 1-1)
 
@@ -126,19 +134,31 @@ Fill colours (Table 1-8 computer-generated): Friend `#80E0FF`, Hostile `#FF8080`
 
 Vertical sectors relative to octagon height `L`: top `.3L` (sector 1), mid `.4L` (main icon), bottom `.3L` (sector 2). Encoded in `SymbolLayout`.
 
+Within the `BASE = 256` canvas the frame occupies the **left** portion only
+(`FrameLeft = 12` … `FrameRight = 160`). The remaining right-hand column is reserved for
+the text amplifiers, which APP-6D places outside the frame — so a composed symbol is
+intentionally not centred in its texture. Below the frame, `ConditionBarY` and
+`StrengthBarY` hold the operational-condition and combat-power bars, positioned clear of
+the HQ staff terminus (`HqLineY`).
+
 ### Echelon marks (Field B / Table A-8)
 
-| Code | Mark |
-|---|---|
-| 11 | Team ○ |
-| 12 | Squad • |
-| 13 | Section •• |
-| 14 | Platoon ••• |
-| 15 | Company ••• |
-| 16 | Battalion I |
-| 17 | Regiment II |
-| 18 | Brigade X |
-| 21–26 | Division … Command (XX …) |
+| Code | Echelon | Mark |
+|---|---|---|
+| 11 | Team / Crew | ○ |
+| 12 | Squad | • |
+| 13 | Section | •• |
+| 14 | Platoon | ••• |
+| 15 | Company / Battery / Troop | I |
+| 16 | Battalion / Squadron | II |
+| 17 | Regiment / Group | III |
+| 18 | Brigade | X |
+| 21 | Division | XX |
+| 22 | Corps | XXX |
+| 23 | Army | XXXX |
+| 24 | Army Group / Front | XXXXX |
+| 25 | Region / Theater | XXXXXX |
+| 26 | Command | ++ |
 
 ---
 
@@ -156,9 +176,11 @@ Sprite sprite = SymbolFactory.Create().GetSymbolSprite(sidcCode, 256);
 | Type | Role |
 |---|---|
 | `SymbolFactory` / `ProceduralSymbolFactory` | Factory Method — base frame + fill |
-| `IconDecorator` | Table 3-1 Step 2 — land main / full-frame icons |
+| `IconDecorator` | Table 3-1 Step 2 — land main / full-frame icons + entity-type variants |
 | `SectorModifierDecorator` | Step 3 — sector 1/2 modifiers |
-| `AmplifierDecorator` | Echelon, HQ, TF, feint + text T/M/F |
+| `AmplifierDecorator` | Echelon, HQ staff, TF bracket, feint |
+| `ConditionDecorator` | Operational condition bar + combat-power bar |
+| `TextAmplifierDecorator` | Text fields T / M / F |
 | `NatoSymbolBaker` | Flatten `INatoSymbol` → `Sprite` |
 | `NatoSymbolView` | In-scene display (database layers or baked procedural) |
 
@@ -222,15 +244,29 @@ Assets/Art/NatoSymbols/
 | `INatoSymbol.cs` | Layer draw model + `SymbolLayout` |
 | `NatoSymbolDecorator.cs` | Base symbol + decorator base |
 | `SymbolFactory.cs` | Factory Method (procedural frame) |
-| `IconDecorator.cs` | Land unit icons |
+| `ProceduralDrawUtil.cs` | Pixel primitives, mobility glyphs, 5×7 bitmap font |
+| `IconDecorator.cs` | Land unit icons + entity-type variants |
 | `SectorModifierDecorator.cs` | Sector 1/2 modifiers |
-| `AmplifierDecorator.cs` | Graphic + text amplifiers |
+| `AmplifierDecorator.cs` | Graphic amplifiers (echelon, HQ, TF, feint) |
+| `ConditionDecorator.cs` | Condition + combat-power bars |
+| `TextAmplifierDecorator.cs` | Text amplifiers T / M / F |
 | `NatoSymbolComposer.cs` | Table 3-1 orchestration |
 | `NatoSymbolBaker.cs` | Compose → Sprite |
 | `NatoSymbolDatabase.cs` | ScriptableObject sprite registry |
 | `NatoSymbolGenerator.cs` | GPU bake (database) / procedural fallback |
 | `NatoSymbolView.cs` | In-scene display |
 | `NatoSymbolEditorWindow.cs` | Editor preview + export |
+| `Editor/TmpResources.cs` | Headless TMP essential-resources importer |
+| `Editor/SymbolContactSheet.cs` | Bakes a permutation grid for visual review |
+
+---
+
+## Reviewing rendering changes
+
+`Strategos → Bake Symbol Contact Sheet` writes `Artifacts/symbol-contact-sheet.png`, a
+grid covering variants, operational conditions, strength levels, Field F markers, frame
+shapes and sector-modifier interactions. Faster and more thorough than driving the demo
+panel by hand.
 
 ---
 
