@@ -132,9 +132,9 @@ namespace Strategos.NatoSymbols
         Squad       = 12, // •
         Section     = 13, // ••
         Platoon     = 14, // •••
-        Company     = 15, // •••
-        Battalion   = 16, // I
-        Regiment    = 17, // II
+        Company     = 15, // I
+        Battalion   = 16, // II
+        Regiment    = 17, // III
         Brigade     = 18, // X
         Division    = 21, // XX
         Corps       = 22, // XXX

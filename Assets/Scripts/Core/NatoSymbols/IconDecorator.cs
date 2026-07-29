@@ -78,12 +78,17 @@ namespace Strategos.NatoSymbols
 
         private static void DrawInfantry(Color32[] buf, int sz, float sc, IdentityGroup group, Color32 col)
         {
+            // Table A-8: infantry is a pair of crossed diagonals filling the frame.
             int th = Mathf.Max(2, Mathf.RoundToInt(4 * sc));
             GetFrameCorners(sc, group, out int x0, out int y0, out int x1, out int y1);
             int margin = SymbolLayout.Scale(16, sc);
             ProceduralDrawUtil.DrawLine(buf, sz,
                 x0 + margin, y0 + margin,
                 x1 - margin, y1 - margin,
+                col, th);
+            ProceduralDrawUtil.DrawLine(buf, sz,
+                x0 + margin, y1 - margin,
+                x1 - margin, y0 + margin,
                 col, th);
         }
 

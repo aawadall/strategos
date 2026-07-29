@@ -59,6 +59,19 @@ namespace Strategos.NatoSymbols
 
         // ─── Echelon (Field B) ────────────────────────────────────────────────
 
+        /// <summary>Draws <paramref name="count"/> vertical echelon bars centred on cx.</summary>
+        private static void DrawBars(Color32[] buf, int sz, int cx, int cy, int count,
+            int bw, int bh, int spacing, Color32 col)
+        {
+            int start = cx - ((count - 1) * spacing) / 2;
+            for (int i = 0; i < count; i++)
+            {
+                int x = start + i * spacing;
+                ProceduralDrawUtil.FillRect(buf, sz,
+                    x - bw / 2, cy - bh / 2, x + bw / 2, cy + bh / 2, col, col, 0);
+            }
+        }
+
         private static void DrawEchelon(Color32[] buf, int sz, float sc, Echelon echelon, Color32 col)
         {
             int cy  = SymbolLayout.Scale(SymbolLayout.EchelonCY, sc);
@@ -69,6 +82,7 @@ namespace Strategos.NatoSymbols
             int bh  = Mathf.Max(6, SymbolLayout.Scale(22, sc));
             int xr  = Mathf.Max(4, SymbolLayout.Scale(9, sc));
             int xth = Mathf.Max(1, Mathf.RoundToInt(2 * sc));
+            int barSpc = Mathf.Max(bw + 3, SymbolLayout.Scale(14, sc));
 
             switch (echelon)
             {
@@ -84,20 +98,19 @@ namespace Strategos.NatoSymbols
                     ProceduralDrawUtil.FillCircle(buf, sz, cx + spc / 2, cy, dr, col);
                     break;
                 case Echelon.Platoon:
-                case Echelon.Company:
                     ProceduralDrawUtil.FillCircle(buf, sz, cx - spc, cy, dr, col);
                     ProceduralDrawUtil.FillCircle(buf, sz, cx, cy, dr, col);
                     ProceduralDrawUtil.FillCircle(buf, sz, cx + spc, cy, dr, col);
                     break;
+                // Table A-6: company I, battalion II, regiment III.
+                case Echelon.Company:
+                    DrawBars(buf, sz, cx, cy, 1, bw, bh, barSpc, col);
+                    break;
                 case Echelon.Battalion:
-                    ProceduralDrawUtil.FillRect(buf, sz,
-                        cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2, col, col, 0);
+                    DrawBars(buf, sz, cx, cy, 2, bw, bh, barSpc, col);
                     break;
                 case Echelon.Regiment:
-                    ProceduralDrawUtil.FillRect(buf, sz,
-                        cx - spc / 2 - bw / 2, cy - bh / 2, cx - spc / 2 + bw / 2, cy + bh / 2, col, col, 0);
-                    ProceduralDrawUtil.FillRect(buf, sz,
-                        cx + spc / 2 - bw / 2, cy - bh / 2, cx + spc / 2 + bw / 2, cy + bh / 2, col, col, 0);
+                    DrawBars(buf, sz, cx, cy, 3, bw, bh, barSpc, col);
                     break;
                 case Echelon.Brigade:
                     ProceduralDrawUtil.DrawX(buf, sz, cx, cy, xr, col, xth);
