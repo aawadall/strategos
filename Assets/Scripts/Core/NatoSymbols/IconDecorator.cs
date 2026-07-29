@@ -116,17 +116,29 @@ namespace Strategos.NatoSymbols
             ProceduralDrawUtil.DrawText(buf, sz, Cx(sc), y, s, col, scale, TextAlign.Center);
         }
 
+        /// <summary>
+        /// A full-frame icon spans sectors 1 and 2, so it is reduced to the main
+        /// sector whenever anything else needs that space (IconPlacement.MainSector
+        /// vs FullFrame). Without this the sector glyphs are drawn straight through
+        /// the icon.
+        /// </summary>
+        private static bool NeedsMainSectorOnly(SIDCCode code) =>
+            code.Modifier1 != 0
+            || code.Modifier2 != 0
+            || (code.EntityType != 0 && code.EntityType != VarStandard);
+
         private static ProceduralDraw ResolveLandIcon(SIDCCode code)
         {
             Color32 black = new Color32(0, 0, 0, 255);
             int entity = code.EntityCode;
             IdentityGroup group = code.IdentityGroup;
+            bool mainOnly = NeedsMainSectorOnly(code);
 
             switch ((LandEntityCode)entity)
             {
                 case LandEntityCode.Infantry:
                     // Full-frame diagonal slash — geometry adapted to frame shape.
-                    return (buf, sz, sc) => DrawInfantry(buf, sz, sc, group, black);
+                    return (buf, sz, sc) => DrawInfantry(buf, sz, sc, group, black, mainOnly);
 
                 case LandEntityCode.Armor:
                     return (buf, sz, sc) => DrawArmor(buf, sz, sc, black);
@@ -135,7 +147,7 @@ namespace Strategos.NatoSymbols
                     return (buf, sz, sc) => DrawArtillery(buf, sz, sc, black);
 
                 case LandEntityCode.Reconnaissance:
-                    return (buf, sz, sc) => DrawRecon(buf, sz, sc, group, black);
+                    return (buf, sz, sc) => DrawRecon(buf, sz, sc, group, black, mainOnly);
 
                 case LandEntityCode.CombatEngineering:
                     return (buf, sz, sc) => DrawEngineer(buf, sz, sc, black);
@@ -166,11 +178,12 @@ namespace Strategos.NatoSymbols
 
         // ─── Icon drawings ────────────────────────────────────────────────────
 
-        private static void DrawInfantry(Color32[] buf, int sz, float sc, IdentityGroup group, Color32 col)
+        private static void DrawInfantry(Color32[] buf, int sz, float sc, IdentityGroup group,
+            Color32 col, bool mainSectorOnly)
         {
             // Table A-8: infantry is a pair of crossed diagonals filling the frame.
             int th = Mathf.Max(2, Mathf.RoundToInt(4 * sc));
-            GetFrameCorners(sc, group, out int x0, out int y0, out int x1, out int y1);
+            GetFrameCorners(sc, group, mainSectorOnly, out int x0, out int y0, out int x1, out int y1);
             int margin = SymbolLayout.Scale(16, sc);
             ProceduralDrawUtil.DrawLine(buf, sz,
                 x0 + margin, y0 + margin,
@@ -182,11 +195,12 @@ namespace Strategos.NatoSymbols
                 col, th);
         }
 
-        private static void DrawRecon(Color32[] buf, int sz, float sc, IdentityGroup group, Color32 col)
+        private static void DrawRecon(Color32[] buf, int sz, float sc, IdentityGroup group,
+            Color32 col, bool mainSectorOnly)
         {
             // Cavalry: both diagonals (× inside frame).
             int th = Mathf.Max(2, Mathf.RoundToInt(4 * sc));
-            GetFrameCorners(sc, group, out int x0, out int y0, out int x1, out int y1);
+            GetFrameCorners(sc, group, mainSectorOnly, out int x0, out int y0, out int x1, out int y1);
             int margin = SymbolLayout.Scale(16, sc);
             ProceduralDrawUtil.DrawLine(buf, sz, x0 + margin, y0 + margin, x1 - margin, y1 - margin, col, th);
             ProceduralDrawUtil.DrawLine(buf, sz, x0 + margin, y1 - margin, x1 - margin, y0 + margin, col, th);
@@ -300,7 +314,7 @@ namespace Strategos.NatoSymbols
         /// icon must be fitted to the inscribed rectangle — sizing it off the
         /// bounding box pushes the corners outside the frame.
         /// </summary>
-        private static void GetFrameCorners(float sc, IdentityGroup group,
+        private static void GetFrameCorners(float sc, IdentityGroup group, bool mainSectorOnly,
             out int x0, out int y0, out int x1, out int y1)
         {
             int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
@@ -331,6 +345,17 @@ namespace Strategos.NatoSymbols
             int margin = SymbolLayout.Scale(marginUnits, sc);
             int ix = Mathf.Max(4, Mathf.RoundToInt(hw * fx) - margin);
             int iy = Mathf.Max(4, Mathf.RoundToInt(hh * fy) - margin);
+
+            if (mainSectorOnly)
+            {
+                // Clamp the height to the middle .4L band but keep the inscribed
+                // width — the icon fills the main sector horizontally, it does not
+                // shrink proportionally.
+                int half = Mathf.Max(4, SymbolLayout.Scale(
+                    (SymbolLayout.MainTop - SymbolLayout.MainBottom) / 2, sc));
+                iy = Mathf.Min(iy, half);
+                cy = SymbolLayout.Scale(SymbolLayout.MainCY, sc);
+            }
 
             x0 = cx - ix; x1 = cx + ix;
             y0 = cy - iy; y1 = cy + iy;

@@ -120,6 +120,27 @@ namespace Strategos.Editor
             })
                 list.Add(new Case($"frame {a}", Make(affiliation: a)));
 
+            // Sector 1 (upper) modifiers, and sector 1 + sector 2 together.
+            var sectorMods = new (string Name, int Code)[]
+            {
+                ("airborne",    SectorModifierDecorator.ModAirborne),
+                ("air assault", SectorModifierDecorator.ModAirAssault),
+                ("wheeled",     SectorModifierDecorator.ModWheeled),
+                ("mountain",    SectorModifierDecorator.ModMountain),
+                ("amphibious",  SectorModifierDecorator.ModAmphibious),
+            };
+            foreach (var m in sectorMods)
+                list.Add(new Case($"sector1 {m.Name}", Make(modifier1: m.Code)));
+
+            list.Add(new Case("sector1 + sector2",
+                Make(modifier1: SectorModifierDecorator.ModAirborne,
+                     modifier2: SectorModifierDecorator.ModWheeled)));
+
+            // Sector 1 against a main-sector icon rather than a full-frame one.
+            list.Add(new Case("sector1 + artillery",
+                Make(modifier1: SectorModifierDecorator.ModAirborne,
+                     entity: LandEntityCode.Artillery)));
+
             // Interaction cases called out in the plan.
             list.Add(new Case("variant vs sector 2",
                 Make(entityType: 13, modifier2: SectorModifierDecorator.ModAirborne)));
@@ -134,7 +155,9 @@ namespace Strategos.Editor
             int entityType = 11,
             UnitStatus status = UnitStatus.Present,
             HeadquartersTaskForceDummy hq = HeadquartersTaskForceDummy.None,
+            int modifier1 = 0,
             int modifier2 = 0,
+            LandEntityCode entity = LandEntityCode.Infantry,
             string strength = "100",
             StrengthModifier strengthMod = StrengthModifier.None,
             string designation = "1-7 IN",
@@ -149,10 +172,10 @@ namespace Strategos.Editor
                 (int)status,
                 (int)hq,
                 (int)Echelon.Company,
-                (int)LandEntityCode.Infantry,
+                (int)entity,
                 entityType,
                 0,
-                0,
+                modifier1,
                 modifier2);
 
             if (!SIDCParser.TryParse(raw, out var code))
