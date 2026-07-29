@@ -16,7 +16,7 @@ namespace Strategos.Demo
         // -------------------------------------------------------------------------
 
         [Header("Symbol Database (optional)")]
-        [Tooltip("Assign NatoSymbolDatabase to use real sprites. Leave null for placeholder mode.")]
+        [Tooltip("Assign NatoSymbolDatabase to use real sprites. Leave null for procedural generation.")]
         [SerializeField] private NatoSymbolDatabase _database;
 
         [Header("Layout")]
@@ -26,6 +26,9 @@ namespace Strategos.Demo
         [Header("Labels")]
         [SerializeField] private TMP_FontAsset _font;
         [SerializeField] private float         _labelScale = 0.22f;
+
+        // Symbol factory — created in Start() via SymbolFactory.Create()
+        private SymbolFactory _factory;
 
         // -------------------------------------------------------------------------
         // Data tables
@@ -52,12 +55,13 @@ namespace Strategos.Demo
 
         private void Start()
         {
+            _factory = SymbolFactory.Create(_database);
             SpawnGrid();
         }
 
         private void OnDestroy()
         {
-            PlaceholderSymbolFactory.ClearCache();
+            _factory?.ClearCache();
         }
 
         // -------------------------------------------------------------------------
@@ -115,21 +119,14 @@ namespace Strategos.Demo
             go.transform.SetParent(transform, false);
             go.transform.localPosition = localPos;
 
-            if (_database != null)
-            {
-                // Use the real NatoSymbolView (art-backed)
-                var view = go.AddComponent<NatoSymbolView>();
-                view.SetSymbol(sidc);
-            }
-            else
-            {
-                // Placeholder: colored sprite
-                var sr     = go.AddComponent<SpriteRenderer>();
-                sr.sprite  = PlaceholderSymbolFactory.Get(sidc);
-                sr.drawMode = SpriteDrawMode.Sliced;
-                // Scale sprite to fill cell size; sprite is 128px = 1 world unit by default
-                go.transform.localScale = Vector3.one * _cellSize;
-            }
+            // SymbolFactory.Create() picks the right renderer automatically.
+            // ProceduralSymbolFactory draws proper NATO shapes;
+            // swap to DatabaseSymbolFactory when real sprites are ready.
+            var sr    = go.AddComponent<SpriteRenderer>();
+            sr.sprite = _factory.GetSymbolSprite(sidc, 256);
+
+            // Sprite is 256px at 256 PPU = 1 world unit. Scale to cell size.
+            go.transform.localScale = Vector3.one * _cellSize;
         }
 
         // -------------------------------------------------------------------------
