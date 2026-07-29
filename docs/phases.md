@@ -18,6 +18,10 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] Basic main-menu scene with placeholder UI
 - [ ] In-game developer console (log, commands, unit spawning)
 - [ ] Unit test framework (Unity Test Framework) wired up
+- [ ] Steamworks partner account created; Steam App ID registered on Steamworks portal
+- [ ] `steam_appid.txt` added to Unity project root for development builds
+- [ ] Steamworks.NET (or Facepunch.Steamworks) Unity package integrated
+- [ ] Steam Overlay verified functional in development builds
 
 **Milestone M0:** Clean build, blank terrain scene loads, tests pass in CI.
 
@@ -177,6 +181,9 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] Trigger/event scripting (simple): reinforce at time X, event fires when Y captured
 - [ ] Scenario metadata: name, description, date/era, classification level, author
 - [ ] Export to JSON; share as file or upload to community hub
+- [ ] Steam Workshop integration via `SteamUGC`: publish and subscribe to scenarios from the in-game browser
+- [ ] Workshop item structure: `scenario.json`, `preview.png`, `metadata.json` (tags, version, description)
+- [ ] Workshop tags: era, echelon scale, region, nation, scenario type
 
 ### 6.2 Historical Scenarios
 - [ ] Initial pack: 5–10 historical engagements at varied echelon scales
@@ -207,6 +214,7 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] Hidden information: each player sees only their own intel
 - [ ] Screen-swap prompts between player turns
 - [ ] Local AI fill-in if player disconnects
+- [ ] Steam Remote Play Together: enable in Steamworks portal to allow internet hotseat at zero networking cost
 
 ### 7.3 Online Multiplayer
 - [ ] Unity Netcode for GameObjects (primary) / Mirror (fallback)
@@ -215,6 +223,9 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] Spectator slot
 - [ ] Reconnect and resume after disconnect
 - [ ] Ranked and unranked match types
+- [ ] Steam Lobbies (`SteamMatchmaking`): optional lobby backend for friend invites and browser
+- [ ] Steam Friends invite: invite via Steam overlay using `SteamFriends.InviteUserToGame`
+- [ ] Steam Rich Presence: show current game state (scenario name, echelon, turn) in Steam profile
 
 ### 7.4 AI vs AI (Watch Mode)
 - [ ] Player sets up two AI commanders (faction, difficulty, doctrine, model)
@@ -290,6 +301,8 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] AI model hub (see Phase 8.6)
 - [ ] Notification system: game invites, turn alerts, tournament results
 - [ ] Mod support API: custom units, terrain packs, doctrine packs
+- [ ] Steam Leaderboards (`SteamUserStats`): global and friends-only leaderboards as primary backend
+- [ ] Steam Rich Presence updates: reflect match status across all online modes
 
 **Milestone M9:** Backend deployed; account creation, matchmaking, and scenario upload/download working in production.
 
@@ -328,10 +341,22 @@ Detailed task breakdown for each development phase. See [ROADMAP.md](../ROADMAP.
 - [ ] Linux (Steam Deck compatible)
 - [ ] WebGL (stretch — limited echelon scale)
 
+### Steam Early Access Exit
+- [ ] All Phase 8 AI milestones met (RL agent functional at battalion+ scale)
+- [ ] Phase 9 online services stable under load
+- [ ] All EA community-reported critical bugs resolved
+- [ ] Public EA roadmap updated to reflect 1.0 scope
+
+### Steam Assets & Store
+- [ ] Steam Achievements (20–30): echelon progression, mastery, game modes, community — see [docs/steam.md](steam.md)
+- [ ] Steam Cloud (`SteamRemoteStorage`): sync saves, settings, and doctrine templates
+- [ ] Steam store page complete: capsule art, 5+ screenshots, trailer, short/long descriptions, tags
+- [ ] Steam Deck compatibility verified (target Playable; Verified post-1.0)
+
 ### Release Checklist
 - [ ] Legal review: NATO symbol usage, any trademarked unit names
 - [ ] ESRB/PEGI rating (expected: T/12+)
-- [ ] Steam page, trailer, press kit
+- [ ] Steam page approved, trailer published, press kit sent
 - [ ] 1.0 launch blog post with AI architecture writeup
 
 **Milestone M10: 1.0 Release.**
