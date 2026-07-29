@@ -1,59 +1,120 @@
 // SymbolFactory.cs
-// Abstract factory for NATO APP-6D symbol sprites.
-// Use SymbolFactory.Create() to get the appropriate concrete factory.
-//
-// Factory method pattern:
-//   SymbolFactory            — abstract base (this file)
-//   ProceduralSymbolFactory  — runtime pixel-art generator, no art assets required
-//   DatabaseSymbolFactory    — (future) uses NatoSymbolDatabase sprite sheets
+// Factory Method for APP-6D base framed symbols (Table 3-1 Step 1).
+// Decorators add icon / sector modifiers / amplifiers via NatoSymbolComposer.
+// Legacy GetSymbolSprite bakes Compose → single Sprite for demo/editor.
 
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Strategos.NatoSymbols
 {
     /// <summary>
-    /// Abstract base for all NATO APP-6D symbol sprite factories.
-    /// Concrete subclasses decide how to render the symbol (procedural pixel-art,
-    /// sprite database, vector SVG, etc.).
+    /// Abstract factory for APP-6D base symbols (frame + fill).
     /// </summary>
     public abstract class SymbolFactory
     {
-        // -------------------------------------------------------------------------
-        // Factory method
-        // -------------------------------------------------------------------------
-
         /// <summary>
         /// Returns the most appropriate factory for the current context.
-        /// <list type="bullet">
-        ///   <item>If <paramref name="database"/> is assigned and fully populated,
-        ///   returns a database-backed factory (higher fidelity).</item>
-        ///   <item>Otherwise returns <see cref="ProceduralSymbolFactory"/>,
-        ///   which generates correct APP-6D shapes at runtime with no art assets.</item>
-        /// </list>
+        /// Database-backed factory is reserved for when sprites are populated.
         /// </summary>
         public static SymbolFactory Create(NatoSymbolDatabase database = null)
         {
-            // When the database has real sprites wired up, swap to a high-fidelity
-            // factory.  For now, always use the procedural generator.
-            // TODO: return new DatabaseSymbolFactory(database) when database != null
+            // TODO: return new DatabaseSymbolFactory(database) when database is populated
             return new ProceduralSymbolFactory();
         }
 
-        // -------------------------------------------------------------------------
-        // Abstract contract
-        // -------------------------------------------------------------------------
+        /// <summary>Creates the framed + filled base symbol (no icon/modifiers yet).</summary>
+        public abstract INatoSymbol CreateBase(SIDCCode code);
 
         /// <summary>
-        /// Returns a cached or newly generated Sprite for the given SIDC code.
+        /// Legacy convenience: Compose full symbol and bake to a single Sprite.
         /// </summary>
-        /// <param name="code">Fully parsed APP-6D symbol identity.</param>
-        /// <param name="size">Texture resolution in pixels (square). Default 256.</param>
-        public abstract Sprite GetSymbolSprite(SIDCCode code, int size = 256);
+        public virtual Sprite GetSymbolSprite(SIDCCode code, int size = 256)
+        {
+            var symbol = NatoSymbolComposer.Compose(code, this);
+            return NatoSymbolBaker.Bake(symbol, size);
+        }
 
-        /// <summary>
-        /// Releases all cached textures and sprites.
-        /// Call when the scene that owns the factory is being destroyed.
-        /// </summary>
         public virtual void ClearCache() { }
+    }
+
+    /// <summary>
+    /// Procedural Land Unit frame factory (APP-6D Table 1-1 / 1-2 / 1-8).
+    /// </summary>
+    public sealed class ProceduralSymbolFactory : SymbolFactory
+    {
+        private readonly Dictionary<string, Sprite> _bakeCache = new();
+
+        public override INatoSymbol CreateBase(SIDCCode code)
+        {
+            Color32 fill = (Color32)AffiliationColour.ForAffiliation(code.Affiliation);
+            Color32 bdr  = new Color32(0, 0, 0, 255);
+            FrameLineStyle style = ResolveLineStyle(code);
+
+            SymbolLayerDraw frame = SymbolLayerDraw.FromProcedural(
+                SymbolLayer.Frame,
+                "Frame",
+                (buf, sz, sc) => DrawLandFrame(buf, sz, sc, code.IdentityGroup, fill, bdr, style),
+                sortOrder: 0);
+
+            return new BaseNatoSymbol(code, frame);
+        }
+
+        public override Sprite GetSymbolSprite(SIDCCode code, int size = 256)
+        {
+            string key = $"{code.Raw}|{code.Designation}|{code.HigherFormation}|{(int)code.StrengthModifier}|{size}";
+            if (_bakeCache.TryGetValue(key, out var hit) && hit != null)
+                return hit;
+
+            var sprite = base.GetSymbolSprite(code, size);
+            _bakeCache[key] = sprite;
+            return sprite;
+        }
+
+        public override void ClearCache()
+        {
+            foreach (var s in _bakeCache.Values)
+                if (s != null) Object.Destroy(s.texture);
+            _bakeCache.Clear();
+        }
+
+        internal static FrameLineStyle ResolveLineStyle(SIDCCode code)
+        {
+            if (code.HasUncertainIdentity)
+                return FrameLineStyle.Dotted;
+            if (code.IsPlanned)
+                return FrameLineStyle.Dashed;
+            return FrameLineStyle.Solid;
+        }
+
+        internal static void DrawLandFrame(Color32[] buf, int sz, float sc,
+            IdentityGroup group, Color32 fill, Color32 bdr, FrameLineStyle style)
+        {
+            int l  = SymbolLayout.Scale(SymbolLayout.FrameLeft,   sc);
+            int r  = SymbolLayout.Scale(SymbolLayout.FrameRight,  sc);
+            int b  = SymbolLayout.Scale(SymbolLayout.FrameBottom, sc);
+            int t  = SymbolLayout.Scale(SymbolLayout.FrameTop,    sc);
+            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX,     sc);
+            int cy = SymbolLayout.Scale(SymbolLayout.FrameCY,     sc);
+            int hw = SymbolLayout.Scale(SymbolLayout.FrameHalfW,  sc);
+            int hh = SymbolLayout.Scale(SymbolLayout.FrameHalfH,  sc);
+            int bw = Mathf.Max(2, SymbolLayout.Scale(SymbolLayout.BorderWidth, sc));
+
+            switch (group)
+            {
+                case IdentityGroup.Hostile:
+                    ProceduralDrawUtil.FillDiamond(buf, sz, cx, cy, hw, hh, fill, bdr, bw, style);
+                    break;
+                case IdentityGroup.Neutral:
+                    ProceduralDrawUtil.FillRect(buf, sz, cx - hh, b, cx + hh, t, fill, bdr, bw, style);
+                    break;
+                case IdentityGroup.Unknown:
+                    ProceduralDrawUtil.FillEllipse(buf, sz, cx, cy, hw, hh, fill, bdr, bw, style);
+                    break;
+                default: // Friend
+                    ProceduralDrawUtil.FillRect(buf, sz, l, b, r, t, fill, bdr, bw, style);
+                    break;
+            }
+        }
     }
 }

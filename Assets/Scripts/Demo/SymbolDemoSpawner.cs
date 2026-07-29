@@ -1,7 +1,6 @@
 // SymbolDemoSpawner.cs
 // Spawns a 4×12 grid (affiliations × echelons) of NATO symbols on scene Start.
-// Uses PlaceholderSymbolFactory when NatoSymbolDatabase is not assigned.
-// Accessible via: GameObject "SymbolDemoSpawner" in Assets/Scenes/Demo/SymbolDemo.unity
+// Uses SymbolFactory / NatoSymbolComposer (procedural when no database).
 
 using TMPro;
 using UnityEngine;
@@ -11,10 +10,6 @@ namespace Strategos.Demo
 {
     public class SymbolDemoSpawner : MonoBehaviour
     {
-        // -------------------------------------------------------------------------
-        // Inspector
-        // -------------------------------------------------------------------------
-
         [Header("Symbol Database (optional)")]
         [Tooltip("Assign NatoSymbolDatabase to use real sprites. Leave null for procedural generation.")]
         [SerializeField] private NatoSymbolDatabase _database;
@@ -27,7 +22,6 @@ namespace Strategos.Demo
         [SerializeField] private TMP_FontAsset _font;
         [SerializeField] private float         _labelScale = 0.22f;
 
-        // Symbol factory — created in Start() via SymbolFactory.Create()
         private SymbolFactory _factory;
 
         // -------------------------------------------------------------------------
@@ -119,9 +113,7 @@ namespace Strategos.Demo
             go.transform.SetParent(transform, false);
             go.transform.localPosition = localPos;
 
-            // SymbolFactory.Create() picks the right renderer automatically.
-            // ProceduralSymbolFactory draws proper NATO shapes;
-            // swap to DatabaseSymbolFactory when real sprites are ready.
+            // Compose (factory + decorators) then bake via legacy GetSymbolSprite adapter.
             var sr    = go.AddComponent<SpriteRenderer>();
             sr.sprite = _factory.GetSymbolSprite(sidc, 256);
 
@@ -144,7 +136,7 @@ namespace Strategos.Demo
             tmp.fontSize           = fontSize;
             tmp.color              = color;
             tmp.alignment          = TextAlignmentOptions.Center;
-            tmp.enableWordWrapping = false;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.overflowMode       = TextOverflowModes.Overflow;
             if (_font != null) tmp.font = _font;
         }
@@ -154,24 +146,31 @@ namespace Strategos.Demo
         // -------------------------------------------------------------------------
 
         /// <summary>
-        /// Builds a minimal Infantry SIDC for the given affiliation and echelon.
-        /// Format: version(2) + affiliation(1) + land(2) + status(1) + flags(1) +
-        ///         echelon(2) + infantry(2) + padding(9)
+        /// Builds a Land Unit Infantry SIDC (APP-6D Annex A 20-digit layout).
+        /// Digits: ver(10) + context(0) + identity + set(10) + status(0) + hq(0) +
+        ///         echelon + entity(12) + type(11) + subtype/mods(000000).
         /// </summary>
         private static SIDCCode BuildSIDC(Affiliation aff, Echelon echelon)
         {
-            var raw = $"10{(int)aff}{(int)SymbolDimension.Land:D2}00{(int)echelon:D2}12000000000";
+            var raw = string.Format(
+                "10{0}{1}{2:D2}00{3:D2}1211000000",
+                (int)SymbolContext.Reality,
+                (int)aff,
+                (int)SymbolSet.LandUnit,
+                (int)echelon);
+
             if (SIDCParser.TryParse(raw, out var code))
                 return code;
 
-            // Fallback: manually set fields if parse fails.
             return new SIDCCode
             {
                 Raw         = raw,
+                Context     = SymbolContext.Reality,
                 Affiliation = aff,
-                Dimension   = SymbolDimension.Land,
+                SymbolSet   = SymbolSet.LandUnit,
                 Echelon     = echelon,
                 EntityCode  = 12,
+                EntityType  = 11,
                 Status      = UnitStatus.Present,
             };
         }

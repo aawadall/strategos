@@ -116,11 +116,12 @@ function Invoke-Unity {
     Write-Host ""
 
     & $UnityExe @Arguments
+    $code = if (Test-Path variable:/LASTEXITCODE) { $LASTEXITCODE } else { 0 }
 
-    if ($LASTEXITCODE -ne 0) {
+    if ($code -ne 0) {
         Write-Host ""
-        Write-Error "Unity exited with code $LASTEXITCODE. Full log: $LogFile"
-        exit $LASTEXITCODE
+        Write-Error "Unity exited with code $code. Full log: $LogFile"
+        exit $code
     }
 }
 

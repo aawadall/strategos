@@ -16,7 +16,7 @@ namespace Strategos.Editor
         // Window state
         // -------------------------------------------------------------------------
         private NatoSymbolDatabase _database;
-        private string  _sidc           = "10031500001211000000";
+        private string  _sidc           = "10031000151211000000";
         private string  _designation    = "1-7 IN";
         private string  _higherFormation = "3 ID";
         private string  _strength       = "850";
@@ -116,10 +116,10 @@ namespace Strategos.Editor
 
             if (SIDCParser.TryParse(_sidc, out var code))
             {
-                EditorGUILayout.LabelField($"Affiliation: {code.Affiliation}   " +
-                    $"Dimension: {code.Dimension}   " +
+                EditorGUILayout.LabelField($"Identity: {code.Affiliation}   " +
+                    $"Set: {code.SymbolSet}   " +
                     $"Echelon: {code.Echelon}   " +
-                    $"Entity: {code.EntityCode:D2}",
+                    $"Entity: {code.EntityCode:D2}{code.EntityType:D2}",
                     EditorStyles.miniLabel);
             }
         }
@@ -155,7 +155,6 @@ namespace Strategos.Editor
         {
             _lastError = null;
 
-            if (_database == null) { _previewTex = null; return; }
             if (!SIDCParser.TryParse(_sidc, out var code))
             {
                 _lastError = $"Invalid SIDC: '{_sidc}'";
@@ -167,8 +166,18 @@ namespace Strategos.Editor
             code.HigherFormation = _higherFormation;
             code.StrengthLabel   = _strength;
 
-            var sprites = _database.Resolve(code);
-            _previewTex = BakeToTexture(sprites, code, _previewSize);
+            if (_database != null)
+            {
+                var sprites = _database.Resolve(code);
+                _previewTex = BakeToTexture(sprites, code, _previewSize);
+            }
+            else
+            {
+                // Procedural Factory + Decorator pipeline (no art database required).
+                var symbol = NatoSymbolComposer.Compose(code, (NatoSymbolDatabase)null);
+                var sprite = NatoSymbolBaker.Bake(symbol, _previewSize);
+                _previewTex = sprite != null ? sprite.texture : null;
+            }
             Repaint();
         }
 
@@ -188,7 +197,6 @@ namespace Strategos.Editor
 
         private void RunBatchGeneration()
         {
-            if (_database == null) { Debug.LogError("[NatoSymbolEditor] Database not assigned."); return; }
             if (!File.Exists(_batchCataloguePath))
             {
                 Debug.LogError($"[NatoSymbolEditor] Catalogue not found: {_batchCataloguePath}");
@@ -206,8 +214,18 @@ namespace Strategos.Editor
                 code.Designation     = entry.designation;
                 code.HigherFormation = entry.formation;
 
-                var sprites = _database.Resolve(code);
-                var tex = BakeToTexture(sprites, code, 128);
+                Texture2D tex;
+                if (_database != null)
+                {
+                    var sprites = _database.Resolve(code);
+                    tex = BakeToTexture(sprites, code, 128);
+                }
+                else
+                {
+                    var symbol = NatoSymbolComposer.Compose(code, (NatoSymbolDatabase)null);
+                    var sprite = NatoSymbolBaker.Bake(symbol, 128);
+                    tex = sprite != null ? sprite.texture : null;
+                }
                 if (tex == null) continue;
 
                 string safeName = $"{entry.sidc}_{entry.designation.Replace("/", "-")}";

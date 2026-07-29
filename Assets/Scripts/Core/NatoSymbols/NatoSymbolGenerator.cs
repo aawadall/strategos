@@ -52,15 +52,17 @@ namespace Strategos.NatoSymbols
         /// </summary>
         public Sprite Generate(SIDCCode code, int size = 0)
         {
-            if (_database == null)
+            int px = size > 0 ? size : _defaultSize;
+
+            if (_database != null)
             {
-                Debug.LogError("[NatoSymbolGenerator] NatoSymbolDatabase is not assigned.");
-                return null;
+                var sprites = _database.Resolve(code);
+                return Bake(sprites, code, px);
             }
 
-            int px = size > 0 ? size : _defaultSize;
-            var sprites = _database.Resolve(code);
-            return Bake(sprites, code, px);
+            // Procedural fallback via Factory + Decorator composer.
+            var symbol = NatoSymbolComposer.Compose(code, (NatoSymbolDatabase)null);
+            return NatoSymbolBaker.Bake(symbol, px);
         }
 
         // -------------------------------------------------------------------------

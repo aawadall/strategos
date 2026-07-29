@@ -1,6 +1,7 @@
 // SIDCParser.cs
 // Parses a 20-character APP-6D SIDC string into a fully structured SIDCCode.
-// See docs/nato-symbol-generator.md for the SIDC field layout.
+// Optional third ten digits (30 total) are accepted and ignored.
+// Layout: APP-6(D) Annex A §A.3–A.11.
 
 using System;
 using UnityEngine;
@@ -9,13 +10,12 @@ namespace Strategos.NatoSymbols
 {
     public static class SIDCParser
     {
-        // Expected length of an APP-6D SIDC string.
         private const int SIDCLength = 20;
+        private const int SIDCExtendedLength = 30;
 
         /// <summary>
-        /// Parses a 20-character APP-6D SIDC string.
+        /// Parses a 20-character APP-6D SIDC string (or 30 with optional extension).
         /// Returns true and populates <paramref name="result"/> on success.
-        /// Returns false and logs an error on failure.
         /// </summary>
         public static bool TryParse(string sidc, out SIDCCode result)
         {
@@ -29,27 +29,30 @@ namespace Strategos.NatoSymbols
 
             sidc = sidc.Trim().ToUpperInvariant();
 
-            if (sidc.Length != SIDCLength)
+            if (sidc.Length != SIDCLength && sidc.Length != SIDCExtendedLength)
             {
-                Debug.LogError($"[SIDCParser] SIDC '{sidc}' has length {sidc.Length}; expected {SIDCLength}.");
+                Debug.LogError($"[SIDCParser] SIDC '{sidc}' has length {sidc.Length}; expected {SIDCLength} or {SIDCExtendedLength}.");
                 return false;
             }
 
+            // Work with the required first 20 digits; ignore optional third ten.
+            string core = sidc.Length >= SIDCLength ? sidc.Substring(0, SIDCLength) : sidc;
+
             try
             {
-                result.Raw              = sidc;
-                result.Affiliation      = ParseAffiliation(sidc[2]);
-                result.Dimension        = ParseDimension(int.Parse(sidc.Substring(3, 2)));
-                result.Status           = ParseStatus(sidc[5]);
-                result.ModifierFlags    = ParseModifierFlags(sidc[6]);
-                result.Echelon          = ParseEchelon(int.Parse(sidc.Substring(7, 2)));
-                result.EntityCode       = int.Parse(sidc.Substring(9, 2));
-                result.EntityType       = int.Parse(sidc.Substring(11, 2));
-                result.EntitySubtype    = int.Parse(sidc.Substring(13, 2));
-                result.Modifier1        = int.Parse(sidc.Substring(15, 2));
-                result.Modifier2        = int.Parse(sidc.Substring(17, 2));
+                result.Raw       = core;
+                result.Context   = ParseContext(Digit(core, 2));
+                result.Affiliation = ParseAffiliation(Digit(core, 3));
+                result.SymbolSet = ParseSymbolSet(int.Parse(core.Substring(4, 2)));
+                result.Status    = ParseStatus(Digit(core, 6));
+                result.HqTfDummy = ParseHqTfDummy(Digit(core, 7));
+                result.Echelon   = ParseEchelon(int.Parse(core.Substring(8, 2)));
+                result.EntityCode    = int.Parse(core.Substring(10, 2));
+                result.EntityType    = int.Parse(core.Substring(12, 2));
+                result.EntitySubtype = int.Parse(core.Substring(14, 2));
+                result.Modifier1     = int.Parse(core.Substring(16, 2));
+                result.Modifier2     = int.Parse(core.Substring(18, 2));
 
-                // Text label fields are not encoded in SIDC — caller sets these separately.
                 result.Designation      = string.Empty;
                 result.HigherFormation  = string.Empty;
                 result.StrengthLabel    = string.Empty;
@@ -60,13 +63,11 @@ namespace Strategos.NatoSymbols
             catch (Exception ex)
             {
                 Debug.LogError($"[SIDCParser] Failed to parse SIDC '{sidc}': {ex.Message}");
+                result = default;
                 return false;
             }
         }
 
-        /// <summary>
-        /// Parses a SIDC string and throws on failure. Prefer TryParse for runtime use.
-        /// </summary>
         public static SIDCCode Parse(string sidc)
         {
             if (TryParse(sidc, out SIDCCode result))
@@ -76,19 +77,19 @@ namespace Strategos.NatoSymbols
 
         /// <summary>
         /// Serialises a SIDCCode back to its canonical 20-character string.
-        /// If the Raw field is set and valid, returns it directly.
         /// </summary>
         public static string Serialise(SIDCCode code)
         {
             if (!string.IsNullOrEmpty(code.Raw) && code.Raw.Length == SIDCLength)
                 return code.Raw;
 
-            // Reconstruct from fields if Raw is stale or missing.
-            return string.Format("10{0}{1:D2}{2}{3}{4:D2}{5:D2}{6:D2}{7:D2}{8:D2}{9:D2}0",
+            return string.Format(
+                "10{0}{1}{2:D2}{3}{4}{5:D2}{6:D2}{7:D2}{8:D2}{9:D2}{10:D2}",
+                (int)code.Context,
                 (int)code.Affiliation,
-                (int)code.Dimension,
+                (int)code.SymbolSet,
                 (int)code.Status,
-                (int)code.ModifierFlags & 0xF,
+                (int)code.HqTfDummy,
                 (int)code.Echelon,
                 code.EntityCode,
                 code.EntityType,
@@ -101,12 +102,23 @@ namespace Strategos.NatoSymbols
         // Private field parsers
         // -----------------------------------------------------------------
 
+        private static char Digit(string sidc, int index) => sidc[index];
+
+        private static SymbolContext ParseContext(char c)
+        {
+            if (int.TryParse(c.ToString(), out int val) && Enum.IsDefined(typeof(SymbolContext), val))
+                return (SymbolContext)val;
+
+            Debug.LogWarning($"[SIDCParser] Unknown context '{c}', defaulting to Reality.");
+            return SymbolContext.Reality;
+        }
+
         private static Affiliation ParseAffiliation(char c)
         {
             if (int.TryParse(c.ToString(), out int val) && Enum.IsDefined(typeof(Affiliation), val))
                 return (Affiliation)val;
 
-            // APP-6D also uses letter codes in some contexts — map common ones.
+            // Letter codes sometimes appear in legacy / hand-drawn contexts.
             switch (c)
             {
                 case 'F': return Affiliation.Friend;
@@ -122,31 +134,30 @@ namespace Strategos.NatoSymbols
             }
         }
 
-        private static SymbolDimension ParseDimension(int code)
+        private static SymbolSet ParseSymbolSet(int code)
         {
-            if (Enum.IsDefined(typeof(SymbolDimension), code))
-                return (SymbolDimension)code;
+            if (Enum.IsDefined(typeof(SymbolSet), code))
+                return (SymbolSet)code;
 
-            Debug.LogWarning($"[SIDCParser] Unknown symbol set code {code}, defaulting to Land.");
-            return SymbolDimension.Land;
+            Debug.LogWarning($"[SIDCParser] Unknown symbol set {code}, defaulting to LandUnit.");
+            return SymbolSet.LandUnit;
         }
 
         private static UnitStatus ParseStatus(char c)
         {
-            return c == '1' ? UnitStatus.AnticipatedPlanned : UnitStatus.Present;
+            if (int.TryParse(c.ToString(), out int val) && Enum.IsDefined(typeof(UnitStatus), val))
+                return (UnitStatus)val;
+            return UnitStatus.Present;
         }
 
-        private static SymbolModifierFlag ParseModifierFlags(char c)
+        private static HeadquartersTaskForceDummy ParseHqTfDummy(char c)
         {
-            // APP-6D position 7: 0=none, 1=HQ, 2=TF, 3=HQ+TF, 4=Feint, 5=HQ+Feint, 6=TF+Feint, 7=HQ+TF+Feint
-            if (!int.TryParse(c.ToString(), out int val))
-                return SymbolModifierFlag.None;
+            // Table A-7: 0=none, 1=feint, 2=HQ, 3=feint+HQ, 4=TF, 5=feint+TF, 6=TF+HQ, 7=all
+            if (int.TryParse(c.ToString(), out int val)
+                && Enum.IsDefined(typeof(HeadquartersTaskForceDummy), val))
+                return (HeadquartersTaskForceDummy)val;
 
-            var flags = SymbolModifierFlag.None;
-            if ((val & 1) != 0) flags |= SymbolModifierFlag.Headquarters;
-            if ((val & 2) != 0) flags |= SymbolModifierFlag.TaskForce;
-            if ((val & 4) != 0) flags |= SymbolModifierFlag.FeintDummy;
-            return flags;
+            return HeadquartersTaskForceDummy.None;
         }
 
         private static Echelon ParseEchelon(int code)
@@ -155,7 +166,7 @@ namespace Strategos.NatoSymbols
             if (Enum.IsDefined(typeof(Echelon), code))
                 return (Echelon)code;
 
-            Debug.LogWarning($"[SIDCParser] Unknown echelon code {code}, defaulting to None.");
+            Debug.LogWarning($"[SIDCParser] Unknown echelon/amplifier code {code}, defaulting to None.");
             return Echelon.None;
         }
     }
