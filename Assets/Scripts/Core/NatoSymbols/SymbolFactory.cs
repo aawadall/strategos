@@ -62,7 +62,10 @@ namespace Strategos.NatoSymbols
 
         public override Sprite GetSymbolSprite(SIDCCode code, int size = 256)
         {
-            string key = $"{code.Raw}|{code.Designation}|{code.HigherFormation}|{(int)code.StrengthModifier}|{size}";
+            // Every field that affects the bake must be in the key. StrengthLabel is
+            // included because the strength percentage now draws a combat-power bar.
+            string key = $"{code.Raw}|{code.Designation}|{code.HigherFormation}|" +
+                         $"{code.StrengthLabel}|{(int)code.StrengthModifier}|{size}";
             if (_bakeCache.TryGetValue(key, out var hit) && hit != null)
                 return hit;
 

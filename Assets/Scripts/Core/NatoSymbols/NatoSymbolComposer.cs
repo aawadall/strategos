@@ -31,6 +31,10 @@ namespace Strategos.NatoSymbols
             symbol = new IconDecorator(symbol);
             symbol = new SectorModifierDecorator(symbol);
             symbol = new AmplifierDecorator(symbol);
+            // Condition/strength bars and text amplifiers run last: AmplifierDecorator
+            // populates SymbolTextAmplifiers, which both of them read.
+            symbol = new ConditionDecorator(symbol);
+            symbol = new TextAmplifierDecorator(symbol);
             return symbol;
         }
     }

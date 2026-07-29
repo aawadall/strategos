@@ -106,14 +106,17 @@ namespace Strategos.NatoSymbols
     {
         public const int BASE = 256;
 
-        // Frame bounding box (land unit closed frame)
-        public const int FrameLeft   = 24;
-        public const int FrameRight  = 232;
+        // Frame bounding box (land unit closed frame).
+        // The frame sits left of centre so the right of the canvas is free for the
+        // text amplifier column — APP-6D places fields T, M and F outside the frame,
+        // and at BASE=256 a full-width frame leaves no room for them.
+        public const int FrameLeft   = 12;
+        public const int FrameRight  = 160;
         public const int FrameBottom = 56;
         public const int FrameTop    = 180;
-        public const int FrameCX     = 128;
+        public const int FrameCX     = 86;
         public const int FrameCY     = 118;
-        public const int FrameHalfW  = 104;
+        public const int FrameHalfW  = 74;
         public const int FrameHalfH  = 62;
         public const int BorderWidth = 4;
 
@@ -131,8 +134,24 @@ namespace Strategos.NatoSymbols
 
         // Amplifier zones outside frame
         public const int EchelonCY = 214;
-        public const int HqLineY   = 40;
+        public const int HqLineY   = 44;
         public const int TfBracketY = 196;
+
+        // Text amplifier column, right of the frame (APP-6D Table 3-2 fields T, M, F).
+        public const int TextGap    = 8;                     // clearance from frame edge
+        public const int TextLeftX  = FrameRight + TextGap;  // column starts here
+        public const int TextRightX = 252;                   // text is right-aligned to this
+        public const int TextWidth  = TextRightX - TextLeftX;
+        public const int FieldTY    = 126; // designation
+        public const int FieldMY    = 100; // higher formation
+        public const int FieldFY    = 164; // reinforced / reduced, upper right
+        public const int TextScale  = 2;   // preferred glyph scale at BASE resolution
+
+        // Condition / strength bars, clear of the HQ staff terminus (HqLineY = 44)
+        // so the staff does not read as joined to the top bar.
+        public const int ConditionBarY = 20;
+        public const int StrengthBarY  = 6;
+        public const int BarHeight     = 8;
 
         public static int Scale(int v, float scale) => Mathf.RoundToInt(v * scale);
     }

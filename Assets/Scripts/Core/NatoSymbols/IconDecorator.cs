@@ -8,6 +8,19 @@ namespace Strategos.NatoSymbols
 {
     public sealed class IconDecorator : NatoSymbolDecorator
     {
+        // Entity-type variants (SIDC digits 13–14). Like the sector modifier codes
+        // these are project stubs, not Annex A values — they exist so the builder's
+        // Variant control maps onto a visible mark.
+        public const int VarStandard   = 11;
+        public const int VarMechanized = 12;
+        public const int VarMotorized  = 13;
+        public const int VarAirAssault = 14;
+        public const int VarAmphibious = 15;
+        public const int VarMountain   = 16;
+        public const int VarArctic     = 17;
+        public const int VarHeavy      = 18;
+        public const int VarLight      = 19;
+
         public IconDecorator(INatoSymbol inner) : base(inner) { }
 
         protected override void Contribute(List<SymbolLayerDraw> layers, ref SymbolTextAmplifiers text)
@@ -17,13 +30,90 @@ namespace Strategos.NatoSymbols
                 return;
 
             var draw = ResolveLandIcon(code);
-            if (draw == null) return;
+            if (draw != null)
+            {
+                layers.Add(SymbolLayerDraw.FromProcedural(
+                    SymbolLayer.Icon,
+                    $"Icon_{code.EntityCode:D2}{code.EntityType:D2}",
+                    draw,
+                    sortOrder: 1));
+            }
 
-            layers.Add(SymbolLayerDraw.FromProcedural(
-                SymbolLayer.Icon,
-                $"Icon_{code.EntityCode:D2}{code.EntityType:D2}",
-                draw,
-                sortOrder: 1));
+            var variant = ResolveVariant(code);
+            if (variant != null)
+            {
+                layers.Add(SymbolLayerDraw.FromProcedural(
+                    SymbolLayer.Icon,
+                    $"Variant_{code.EntityType:D2}",
+                    variant,
+                    sortOrder: 1));
+            }
+        }
+
+        /// <summary>
+        /// Mobility mark for the entity type. Everything except mechanized occupies
+        /// the lower sector, so it is suppressed when an explicit Sector 2 modifier
+        /// is already there — otherwise the two marks overlap.
+        /// </summary>
+        private static ProceduralDraw ResolveVariant(SIDCCode code)
+        {
+            Color32 black = new Color32(0, 0, 0, 255);
+
+            if (code.EntityType == VarMechanized)
+                return (buf, sz, sc) => DrawMechanizedRing(buf, sz, sc, black);
+
+            if (code.Modifier2 != 0) return null;
+
+            switch (code.EntityType)
+            {
+                case VarMotorized:
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawWheeled(
+                        buf, sz, Cx(sc), Sector2(sc), sc, black);
+
+                case VarAirAssault:
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawChevron(
+                        buf, sz, Cx(sc), Sector2(sc), sc, black, up: true);
+
+                case VarAmphibious:
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawWaves(
+                        buf, sz, Cx(sc), Sector2(sc), sc, black);
+
+                case VarMountain:
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawMountain(
+                        buf, sz, Cx(sc), Sector2(sc), sc, black);
+
+                case VarArctic:
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawArch(
+                        buf, sz, Cx(sc), Sector2(sc), sc, black);
+
+                // No conventional glyph for heavy / light — use the bitmap font.
+                case VarHeavy:
+                    return (buf, sz, sc) => DrawVariantLetter(buf, sz, sc, "H", black);
+                case VarLight:
+                    return (buf, sz, sc) => DrawVariantLetter(buf, sz, sc, "L", black);
+
+                default:
+                    return null; // VarStandard and unknown types draw nothing.
+            }
+        }
+
+        private static int Cx(float sc) => SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
+        private static int Sector2(float sc) => SymbolLayout.Scale(SymbolLayout.Sector2CY, sc);
+
+        private static void DrawMechanizedRing(Color32[] buf, int sz, float sc, Color32 col)
+        {
+            int cy = SymbolLayout.Scale(SymbolLayout.MainCY, sc);
+            int rx = SymbolLayout.Scale(62, sc);
+            int ry = SymbolLayout.Scale(36, sc);
+            int th = Mathf.Max(2, SymbolLayout.Scale(3, sc));
+            ProceduralDrawUtil.DrawEllipseOutline(buf, sz, Cx(sc), cy, rx, ry, col, th);
+        }
+
+        private static void DrawVariantLetter(Color32[] buf, int sz, float sc, string s, Color32 col)
+        {
+            int scale = Mathf.Max(1, Mathf.RoundToInt(SymbolLayout.TextScale * sc));
+            int y = Sector2(sc) - (ProceduralDrawUtil.GlyphH * scale) / 2;
+            ProceduralDrawUtil.DrawText(buf, sz, Cx(sc), y, s, col, scale, TextAlign.Center);
         }
 
         private static ProceduralDraw ResolveLandIcon(SIDCCode code)
@@ -105,23 +195,12 @@ namespace Strategos.NatoSymbols
         private static void DrawArmor(Color32[] buf, int sz, float sc, Color32 col)
         {
             // Ellipse outline in main sector (tracked armour silhouette approx).
-            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
+            // Border-only so the frame fill underneath is not erased.
             int cy = SymbolLayout.Scale(SymbolLayout.MainCY, sc);
             int rx = SymbolLayout.Scale(48, sc);
             int ry = SymbolLayout.Scale(28, sc);
             int bw = Mathf.Max(2, SymbolLayout.Scale(3, sc));
-            // Border-only: skip interior so we do not erase the frame fill.
-            for (int y = cy - ry; y <= cy + ry; y++)
-            for (int x = cx - rx; x <= cx + rx; x++)
-            {
-                float dx = x - cx, dy = y - cy;
-                float outer = dx * dx / ((float)rx * rx) + dy * dy / ((float)ry * ry);
-                if (outer > 1.01f) continue;
-                int irx = System.Math.Max(1, rx - bw), iry = System.Math.Max(1, ry - bw);
-                float inner = dx * dx / ((float)irx * irx) + dy * dy / ((float)iry * iry);
-                if (inner > 1.0f)
-                    ProceduralDrawUtil.Set(buf, sz, x, y, col);
-            }
+            ProceduralDrawUtil.DrawEllipseOutline(buf, sz, Cx(sc), cy, rx, ry, col, bw);
         }
 
         private static void DrawArtillery(Color32[] buf, int sz, float sc, Color32 col)
@@ -215,23 +294,46 @@ namespace Strategos.NatoSymbols
             ProceduralDrawUtil.DrawCircleOutline(buf, sz, cx, cy, r, col, th);
         }
 
+        /// <summary>
+        /// Largest icon box that stays inside the frame for this identity group.
+        /// Diamond and ellipse frames taper away from their bounding box, so the
+        /// icon must be fitted to the inscribed rectangle — sizing it off the
+        /// bounding box pushes the corners outside the frame.
+        /// </summary>
         private static void GetFrameCorners(float sc, IdentityGroup group,
             out int x0, out int y0, out int x1, out int y1)
         {
-            // Use rectangular inset for friend; tighter diamond inset for hostile.
-            int margin = SymbolLayout.Scale(group == IdentityGroup.Hostile ? 28 : 20, sc);
-            x0 = SymbolLayout.Scale(SymbolLayout.FrameLeft,   sc) + margin;
-            y0 = SymbolLayout.Scale(SymbolLayout.FrameBottom, sc) + margin;
-            x1 = SymbolLayout.Scale(SymbolLayout.FrameRight,  sc) - margin;
-            y1 = SymbolLayout.Scale(SymbolLayout.FrameTop,    sc) - margin;
-
-            if (group == IdentityGroup.Neutral)
+            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
+            int cy = SymbolLayout.Scale(SymbolLayout.FrameCY, sc);
+            int hw = SymbolLayout.Scale(SymbolLayout.FrameHalfW, sc);
+            int hh = SymbolLayout.Scale(SymbolLayout.FrameHalfH, sc);
+            // fx/fy are the inscribed-rectangle fractions of the bounding box; the
+            // margin is the extra breathing room. Tapering frames are already at
+            // their geometric limit (a diamond requires fx + fy <= 1), so they take
+            // only a token margin or the icon collapses.
+            float fx = 1f, fy = 1f;
+            int marginUnits = 12;
+            switch (group)
             {
-                int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
-                int hh = SymbolLayout.Scale(SymbolLayout.FrameHalfH, sc);
-                x0 = cx - hh + margin / 2;
-                x1 = cx + hh - margin / 2;
+                case IdentityGroup.Hostile:
+                    fx = fy = 0.50f;  // diamond: fx + fy <= 1
+                    marginUnits = 3;
+                    break;
+                case IdentityGroup.Unknown:
+                    fx = fy = 0.70f;  // ellipse: fx² + fy² <= 1, so ~1/√2
+                    marginUnits = 5;
+                    break;
+                case IdentityGroup.Neutral:
+                    hw = hh;          // neutral frame is a square
+                    break;
             }
+
+            int margin = SymbolLayout.Scale(marginUnits, sc);
+            int ix = Mathf.Max(4, Mathf.RoundToInt(hw * fx) - margin);
+            int iy = Mathf.Max(4, Mathf.RoundToInt(hh * fy) - margin);
+
+            x0 = cx - ix; x1 = cx + ix;
+            y0 = cy - iy; y1 = cy + iy;
         }
     }
 }

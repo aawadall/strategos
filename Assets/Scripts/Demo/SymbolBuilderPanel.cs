@@ -237,7 +237,7 @@ namespace Strategos.Demo
             _tableRows[a + 1].Code.text = Dash(code.HigherFormation);
             _tableRows[a + 1].Meaning.text = "Parent command drawn right of the frame";
             _tableRows[a + 2].Code.text = StrengthDisplay(code);
-            _tableRows[a + 2].Meaning.text = "Combat power / reinforced-reduced amplifier";
+            _tableRows[a + 2].Meaning.text = "+/-/± drawn upper right; % as combat-power bar";
         }
 
         private static string Slice(string raw, int start, int len)
@@ -259,7 +259,7 @@ namespace Strategos.Demo
             5  => HqMeaning(code.HqTfDummy),
             6  => EchelonMeaning(code.Echelon),
             7  => $"{LabelForUnit(code.EntityCode)} — main icon inside the frame",
-            8  => $"{VariantLabel(code.EntityType)} — equipment / mobility variant",
+            8  => $"{VariantLabel(code.EntityType)} — {VariantMark(code)}",
             9  => code.EntitySubtype == 0
                     ? "Not used by this symbol"
                     : $"Subtype {code.EntitySubtype:D2}",
@@ -267,6 +267,30 @@ namespace Strategos.Demo
             11 => $"{ModLabel(code.Modifier2)} — lower octagon sector",
             _  => string.Empty,
         };
+
+        /// <summary>Describes the mark IconDecorator actually draws for the variant.</summary>
+        private static string VariantMark(SIDCCode code)
+        {
+            string mark = code.EntityType switch
+            {
+                IconDecorator.VarMechanized => "ellipse around the icon",
+                IconDecorator.VarMotorized  => "wheels, lower sector",
+                IconDecorator.VarAirAssault => "chevron, lower sector",
+                IconDecorator.VarAmphibious => "waves, lower sector",
+                IconDecorator.VarMountain   => "mountain, lower sector",
+                IconDecorator.VarArctic     => "arch, lower sector",
+                IconDecorator.VarHeavy      => "H, lower sector",
+                IconDecorator.VarLight      => "L, lower sector",
+                _                           => "no additional mark",
+            };
+
+            // The lower-sector mark yields to an explicit Sector 2 modifier.
+            if (code.Modifier2 != 0 && code.EntityType != IconDecorator.VarMechanized
+                && code.EntityType != IconDecorator.VarStandard)
+                return mark + " (hidden — sector 2 in use)";
+
+            return mark;
+        }
 
         private static string ContextMeaning(SymbolContext c) => c switch
         {
@@ -298,12 +322,12 @@ namespace Strategos.Demo
 
         private static string StatusMeaning(UnitStatus s) => s switch
         {
-            UnitStatus.Present => "solid frame, confirmed location",
+            UnitStatus.Present => "solid frame, confirmed location, no bar",
             UnitStatus.AnticipatedPlanned => "dashed frame, planned / anticipated",
-            UnitStatus.PresentDamaged => "operational condition: damaged",
-            UnitStatus.PresentDestroyed => "operational condition: destroyed",
-            UnitStatus.PresentFullyCapable => "fully capable",
-            UnitStatus.PresentFullToCapacity => "at capacity",
+            UnitStatus.PresentDamaged => "amber condition bar below frame",
+            UnitStatus.PresentDestroyed => "red condition bar below frame",
+            UnitStatus.PresentFullyCapable => "green condition bar below frame",
+            UnitStatus.PresentFullToCapacity => "blue condition bar below frame",
             _ => "status / condition amplifier",
         };
 

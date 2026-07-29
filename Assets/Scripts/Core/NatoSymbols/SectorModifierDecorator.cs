@@ -48,70 +48,33 @@ namespace Strategos.NatoSymbols
             Color32 black = new Color32(0, 0, 0, 255);
             int cyConst = sectorTop ? SymbolLayout.Sector1CY : SymbolLayout.Sector2CY;
 
+            // Glyphs live in ProceduralDrawUtil so IconDecorator's entity-type
+            // variants draw the identical marks.
             switch (modCode)
             {
                 case ModAirborne:
                 case ModAirAssault:
-                    return (buf, sz, sc) => DrawChevron(buf, sz, sc, cyConst, black, up: true);
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawChevron(
+                        buf, sz, Cx(sc), Cy(cyConst, sc), sc, black, up: true);
 
                 case ModMountain:
-                    return (buf, sz, sc) => DrawMountain(buf, sz, sc, cyConst, black);
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawMountain(
+                        buf, sz, Cx(sc), Cy(cyConst, sc), sc, black);
 
                 case ModWheeled:
-                    return (buf, sz, sc) => DrawWheeled(buf, sz, sc, cyConst, black);
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawWheeled(
+                        buf, sz, Cx(sc), Cy(cyConst, sc), sc, black);
 
                 case ModAmphibious:
-                    return (buf, sz, sc) => DrawWaves(buf, sz, sc, cyConst, black);
+                    return (buf, sz, sc) => ProceduralDrawUtil.DrawWaves(
+                        buf, sz, Cx(sc), Cy(cyConst, sc), sc, black);
 
                 default:
                     return null;
             }
         }
 
-        private static void DrawChevron(Color32[] buf, int sz, float sc, int cyConst, Color32 col, bool up)
-        {
-            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
-            int cy = SymbolLayout.Scale(cyConst, sc);
-            int w  = SymbolLayout.Scale(22, sc);
-            int h  = SymbolLayout.Scale(12, sc);
-            int th = Mathf.Max(2, SymbolLayout.Scale(3, sc));
-            int tipY = up ? cy + h / 2 : cy - h / 2;
-            int baseY = up ? cy - h / 2 : cy + h / 2;
-            ProceduralDrawUtil.DrawLine(buf, sz, cx - w, baseY, cx, tipY, col, th);
-            ProceduralDrawUtil.DrawLine(buf, sz, cx + w, baseY, cx, tipY, col, th);
-        }
-
-        private static void DrawMountain(Color32[] buf, int sz, float sc, int cyConst, Color32 col)
-        {
-            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
-            int cy = SymbolLayout.Scale(cyConst, sc);
-            int w  = SymbolLayout.Scale(18, sc);
-            int h  = SymbolLayout.Scale(14, sc);
-            int th = Mathf.Max(2, SymbolLayout.Scale(3, sc));
-            ProceduralDrawUtil.DrawLine(buf, sz, cx - w, cy - h / 2, cx, cy + h / 2, col, th);
-            ProceduralDrawUtil.DrawLine(buf, sz, cx, cy + h / 2, cx + w, cy - h / 2, col, th);
-        }
-
-        private static void DrawWheeled(Color32[] buf, int sz, float sc, int cyConst, Color32 col)
-        {
-            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
-            int cy = SymbolLayout.Scale(cyConst, sc);
-            int r  = SymbolLayout.Scale(8, sc);
-            int sp = SymbolLayout.Scale(20, sc);
-            int th = Mathf.Max(1, SymbolLayout.Scale(2, sc));
-            ProceduralDrawUtil.DrawCircleOutline(buf, sz, cx - sp / 2, cy, r, col, th);
-            ProceduralDrawUtil.DrawCircleOutline(buf, sz, cx + sp / 2, cy, r, col, th);
-        }
-
-        private static void DrawWaves(Color32[] buf, int sz, float sc, int cyConst, Color32 col)
-        {
-            int cx = SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
-            int cy = SymbolLayout.Scale(cyConst, sc);
-            int w  = SymbolLayout.Scale(28, sc);
-            int th = Mathf.Max(2, SymbolLayout.Scale(3, sc));
-            ProceduralDrawUtil.DrawLine(buf, sz, cx - w, cy, cx - w / 3, cy + SymbolLayout.Scale(4, sc), col, th);
-            ProceduralDrawUtil.DrawLine(buf, sz, cx - w / 3, cy + SymbolLayout.Scale(4, sc), cx + w / 3, cy - SymbolLayout.Scale(4, sc), col, th);
-            ProceduralDrawUtil.DrawLine(buf, sz, cx + w / 3, cy - SymbolLayout.Scale(4, sc), cx + w, cy, col, th);
-        }
+        private static int Cx(float sc) => SymbolLayout.Scale(SymbolLayout.FrameCX, sc);
+        private static int Cy(int cyConst, float sc) => SymbolLayout.Scale(cyConst, sc);
     }
 }
