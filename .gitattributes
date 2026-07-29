@@ -1,0 +1,93 @@
+# =============================================================================
+# Strategos — Git Attributes
+# Configures Git LFS tracking for binary assets and line ending normalisation.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Git LFS — Textures & Sprites
+# ---------------------------------------------------------------------------
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text
+*.hdr filter=lfs diff=lfs merge=lfs -text
+*.svg filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Audio
+# ---------------------------------------------------------------------------
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+*.aiff filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Heightmaps & GIS Data
+# ---------------------------------------------------------------------------
+*.raw filter=lfs diff=lfs merge=lfs -text
+*.hgt filter=lfs diff=lfs merge=lfs -text
+*.dem filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — 3D Models & Animations
+# ---------------------------------------------------------------------------
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.dae filter=lfs diff=lfs merge=lfs -text
+*.max filter=lfs diff=lfs merge=lfs -text
+*.anim filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Fonts
+# ---------------------------------------------------------------------------
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+*.woff filter=lfs diff=lfs merge=lfs -text
+*.woff2 filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Unity-specific binaries
+# ---------------------------------------------------------------------------
+*.unitypackage filter=lfs diff=lfs merge=lfs -text
+*.cubemap filter=lfs diff=lfs merge=lfs -text
+*.spriteatlas filter=lfs diff=lfs merge=lfs -text
+*.asset filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Compiled / Build Outputs
+# ---------------------------------------------------------------------------
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Git LFS — Replay Files
+# ---------------------------------------------------------------------------
+*.stgreplay filter=lfs diff=lfs merge=lfs -text
+
+# ---------------------------------------------------------------------------
+# Line Endings — normalise to LF in repo, checkout native on Windows
+# ---------------------------------------------------------------------------
+* text=auto
+
+# Force LF for scripts and config files regardless of OS
+*.sh text eol=lf
+*.bash text eol=lf
+*.py text eol=lf
+*.cs text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.xml text eol=lf
+*.csproj text eol=lf
+*.sln text eol=lf
+*.asmdef text eol=lf
