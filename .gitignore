@@ -1,0 +1,69 @@
+# =============================================================================
+# Strategos — .gitignore
+# Unity 6 project — keep source and assets; exclude generated/cache files.
+# =============================================================================
+
+# Unity generated cache and temp directories
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]ser[Ss]ettings/
+
+# Unity auto-generated project files (regenerated on each Editor open)
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity crash reports
+sysinfo.txt
+*.stackdump
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows metadata
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.vsp
+*.vsps
+*.vsp
+
+# TextMeshPro Essential Resources — re-imported from package, not committed
+Assets/TextMesh Pro/
+
+# Addressables build output (generated)
+Assets/AddressableAssetsData/AddressableAssetSettings.asset
+ServerData/
+
+# Unity Package Manager lock file — let each dev resolve locally
+Packages/packages-lock.json
+
+# AI model outputs (generated during training, not source)
+Assets/AI/Models/Generated/
+
+# Build CI artifacts
+Artifacts/

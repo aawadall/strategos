@@ -1,0 +1,19 @@
+{
+    "name": "Strategos.Editor",
+    "rootNamespace": "Strategos.Editor",
+    "references": [
+        "Strategos.Runtime",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

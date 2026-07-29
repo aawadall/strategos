@@ -1,0 +1,179 @@
+// SceneBootstrapper.cs
+// Runs once per Editor session when the project first loads.
+// Automatically creates Assets/Scenes/Demo/SymbolDemo.unity if it doesn't exist,
+// then opens it so symbols are visible immediately.
+//
+// Menu:  Strategos → Open Demo Scene      (manual trigger)
+//        Strategos → Recreate Demo Scene  (force-rebuilds the scene)
+
+#if UNITY_EDITOR
+using System.IO;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using Strategos.Demo;
+
+namespace Strategos.Editor
+{
+    [InitializeOnLoad]
+    public static class SceneBootstrapper
+    {
+        // -------------------------------------------------------------------------
+        // Constants
+        // -------------------------------------------------------------------------
+
+        private const string DemoScenePath = "Assets/Scenes/Demo/SymbolDemo.unity";
+        private const string SessionKey    = "Strategos.SceneBootstrapped";
+
+        // Demo grid geometry (must match SymbolDemoSpawner defaults)
+        private const int   NumCols    = 12;   // echelons
+        private const int   NumRows    = 4;    // affiliations
+        private const float CellSize   = 1.6f;
+        private const float CellSpacing = 0.4f;
+
+        // -------------------------------------------------------------------------
+        // Static constructor — runs on every Editor domain reload
+        // -------------------------------------------------------------------------
+
+        static SceneBootstrapper()
+        {
+            // Defer until the Editor is fully ready.
+            EditorApplication.delayCall += Bootstrap;
+        }
+
+        // -------------------------------------------------------------------------
+        // Bootstrapper
+        // -------------------------------------------------------------------------
+
+        private static void Bootstrap()
+        {
+            // Only run once per Editor session to avoid disrupting the user's workflow.
+            if (SessionState.GetBool(SessionKey, false)) return;
+            SessionState.SetBool(SessionKey, true);
+
+            if (!File.Exists(DemoScenePath))
+            {
+                Debug.Log("[SceneBootstrapper] Demo scene not found — creating it now.");
+                CreateDemoScene();
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // Menu items
+        // -------------------------------------------------------------------------
+
+        [MenuItem("Strategos/Open Demo Scene _F5")]
+        public static void OpenDemoScene()
+        {
+            if (!File.Exists(DemoScenePath))
+                CreateDemoScene();
+
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                EditorSceneManager.OpenScene(DemoScenePath);
+        }
+
+        [MenuItem("Strategos/Recreate Demo Scene")]
+        public static void RecreateDemoScene()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                CreateDemoScene();
+                EditorSceneManager.OpenScene(DemoScenePath);
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // Scene construction
+        // -------------------------------------------------------------------------
+
+        private static void CreateDemoScene()
+        {
+            EnsureFolder("Assets/Scenes");
+            EnsureFolder("Assets/Scenes/Demo");
+
+            var scene = EditorSceneManager.NewScene(
+                NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // --- Camera ---
+            var camGO = new GameObject("Main Camera") { tag = "MainCamera" };
+            var cam   = camGO.AddComponent<Camera>();
+            cam.orthographic    = true;
+            cam.clearFlags      = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.08f, 0.09f, 0.10f); // dark op-map background
+            cam.nearClipPlane   = 0.1f;
+            cam.farClipPlane    = 100f;
+            camGO.AddComponent<AudioListener>();
+
+            var demoCam = camGO.AddComponent<DemoCamera>();
+
+            // Compute grid size and position camera at centre.
+            float step      = CellSize + CellSpacing;
+            float gridW     = (NumCols - 1) * step;
+            float gridH     = (NumRows - 1) * step;
+            float cx        = gridW * 0.5f;
+            float cy        = -gridH * 0.5f;
+            float orthoSize = Mathf.Max(gridW / 2f, gridH) * 0.72f + 2f;
+
+            camGO.transform.position = new Vector3(cx, cy, -20f);
+            cam.orthographicSize     = orthoSize;
+            demoCam.SetDefaults(new Vector3(cx, cy, 0f), orthoSize);
+
+            // --- Directional light ---
+            var lightGO   = new GameObject("Directional Light");
+            var light     = lightGO.AddComponent<Light>();
+            light.type    = LightType.Directional;
+            light.color   = Color.white;
+            light.intensity = 1f;
+            lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+            // --- Symbol demo spawner ---
+            var spawnerGO = new GameObject("SymbolDemoSpawner");
+            spawnerGO.AddComponent<SymbolDemoSpawner>();
+
+            // --- Title label (world-space) ---
+            var titleGO  = new GameObject("TitleLabel");
+            var titleTMP = titleGO.AddComponent<TMPro.TextMeshPro>();
+            titleTMP.text      = "STRATEGOS — NATO APP-6D Symbol Library\n<size=60%>Placeholder mode · Assign NatoSymbolDatabase for real sprites</size>";
+            titleTMP.fontSize  = 0.5f;
+            titleTMP.color     = new Color(0.8f, 0.8f, 0.8f);
+            titleTMP.alignment = TMPro.TextAlignmentOptions.Center;
+            titleTMP.enableWordWrapping = false;
+            float titleY = step * 1.8f;
+            titleGO.transform.position = new Vector3(cx, cy + titleY, 0f);
+
+            // --- Save scene ---
+            EditorSceneManager.SaveScene(scene, DemoScenePath);
+            AddSceneToBuildSettings(DemoScenePath);
+
+            Debug.Log($"[SceneBootstrapper] Demo scene created → {DemoScenePath}");
+        }
+
+        // -------------------------------------------------------------------------
+        // Helpers
+        // -------------------------------------------------------------------------
+
+        private static void EnsureFolder(string path)
+        {
+            if (!AssetDatabase.IsValidFolder(path))
+            {
+                var parts  = path.Split('/');
+                var parent = string.Join("/", parts, 0, parts.Length - 1);
+                AssetDatabase.CreateFolder(parent, parts[parts.Length - 1]);
+            }
+        }
+
+        private static void AddSceneToBuildSettings(string path)
+        {
+            var existing = EditorBuildSettings.scenes;
+            foreach (var s in existing)
+                if (s.path == path) return;
+
+            var updated = new EditorBuildSettingsScene[existing.Length + 1];
+            existing.CopyTo(updated, 0);
+            updated[existing.Length] = new EditorBuildSettingsScene(path, true);
+            EditorBuildSettings.scenes = updated;
+        }
+    }
+}
+#endif
