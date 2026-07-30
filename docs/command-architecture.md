@@ -293,6 +293,60 @@ It does not need engagement resolution, victory conditions or AI. C3 is orthogon
 combat milestone and can be built before, after, or alongside it — the only hard
 prerequisite is the command and situation topics themselves.
 
+### Decision: C3 is deferred, and stays cheap if three seams are respected
+
+C3 is a maturity feature, not a foundation. It is deliberately **not** scheduled — but it
+only stays cheap if three things hold, and each is close to free now and expensive later.
+
+**Genuinely additive later, no preparation needed:** the channel itself — delay, loss,
+corruption, interception, injection — plus varying delay by echelon and terrain, and
+EW/jamming/SIGINT as channel effects. All of it slots into an existing gap and touches
+neither publisher nor subscriber.
+
+**The three seams to respect now:**
+
+1. **Publication and delivery stay separate.** Already delivery rule 1; zero extra cost.
+2. **Commander-facing reads go through an accessor named for the observer**, even while it
+   trivially returns the real queue. A naming decision, not code. Recorded in #10.
+3. **Units act on messages received, not on polled world state.** Recorded as an acceptance
+   criterion in #13 and #15.
+
+The third is the one that matters. **The cost of adding C3 scales with how much code reads
+ground truth directly** — near zero today, small after the sandbox, and a rewrite of the
+reaction system once #12 and #13 exist written against the world rather than against
+reports. A unit that asks *"is there a hostile in range?"* can never be deceived; one that
+asks *"have I received a contact report?"* needs no change at all when the reports start
+arriving late, wrong, or forged.
+
+Respect those three and C3 is a feature. Ignore the third and it is a rewrite of the AI.
+
+### Relation to the Byzantine Generals Problem
+
+Worth stating precisely, because only part of C3 is Byzantine:
+
+| Concern | Fault class | Byzantine? |
+|---|---|---|
+| Latency | Timing / asynchrony | No |
+| Noise — loss, random corruption | Omission / crash | No |
+| Hijack — forged or injected orders | Arbitrary / malicious | **Yes** |
+
+Two differences matter more than the resemblance. BGP is about **consensus** among peers;
+this is **command** down a hierarchy — there is no agreement protocol to run. And BGP exists
+to *defeat* the problem, whereas a game exists to *simulate* it: the fog of command is the
+product working. Do not implement Byzantine fault tolerance in the simulation.
+
+Two things do transfer. **Authentication** — Lamport's result is that unforgeable signatures
+collapse the problem, which is the design justification for separating a message's claimed
+source from its actual one, and makes comms security a modellable capability rather than
+bookkeeping. And **redundancy** — Phase 5.3's intel fusion across multiple sources with
+confidence levels is soft Byzantine-tolerant sensing arrived at from doctrine rather than
+from proofs.
+
+The one place it becomes a real engineering constraint is Phase 7 multiplayer, where a
+cheating client is a traitor in the technical sense — though games almost universally answer
+that with an authoritative server validating the command stream rather than with BFT
+consensus.
+
 ---
 
 ## Open decisions
