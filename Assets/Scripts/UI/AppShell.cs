@@ -151,15 +151,18 @@ namespace Strategos.UI
         // ─── Command line ─────────────────────────────────────────────────────
 
         /// <summary>
-        /// Reads <c>-view &lt;key&gt;</c>. Lets a capture script screenshot any view
-        /// without driving the UI, which is the difference between a change being
-        /// verifiable and not.
+        /// Reads <c>-view &lt;key&gt;</c>. Lets a capture run screenshot any view without
+        /// driving the UI, which is the difference between a change being verifiable and
+        /// not.
         /// </summary>
-        private static string RequestedViewKey()
+        private static string RequestedViewKey() => CommandLineValue("-view");
+
+        /// <summary>Value following <paramref name="flag"/> on the command line, or null.</summary>
+        private static string CommandLineValue(string flag)
         {
             var args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length - 1; i++)
-                if (string.Equals(args[i], "-view", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(args[i], flag, StringComparison.OrdinalIgnoreCase))
                     return args[i + 1];
             return null;
         }

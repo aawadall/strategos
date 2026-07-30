@@ -36,7 +36,8 @@ param (
     [string]$Out,
     [int]$Width = 1600,
     [int]$Height = 900,
-    [int]$WaitSeconds = 12
+    [int]$WaitSeconds = 12,
+    [string]$View
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,6 +60,9 @@ public class StrategosCapture {
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
     [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr h);
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT { public int Left, Top, Right, Bottom; }
 }
@@ -79,6 +83,8 @@ $unityArgs = @(
     "-screen-height", "$Height",
     "-popupwindow"
 )
+if ($View) { $unityArgs += @("-view", $View) }
+
 $proc = Start-Process -FilePath $Exe -ArgumentList $unityArgs -PassThru
 
 try {
@@ -91,8 +97,27 @@ try {
         exit 1
     }
 
-    [void][StrategosCapture]::SetForegroundWindow($handle)
-    Start-Sleep -Seconds 2
+    # SetForegroundWindow FAILS SILENTLY when the calling process is not itself the
+    # foreground process, and CopyFromScreen below then saves whatever window happens to
+    # occupy those coordinates. That has happened, and the screenshot of an unrelated
+    # application is indistinguishable from a broken layout. So verify, retry, and refuse
+    # to save rather than save a lie.
+    $focused = $false
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        [void][StrategosCapture]::ShowWindow($handle, 5)       # SW_SHOW
+        [void][StrategosCapture]::BringWindowToTop($handle)
+        [void][StrategosCapture]::SetForegroundWindow($handle)
+        Start-Sleep -Milliseconds 600
+        if ([StrategosCapture]::GetForegroundWindow() -eq $handle) { $focused = $true; break }
+        Write-Host "   Focus : attempt $attempt did not take, retrying"
+    }
+    if (-not $focused) {
+        Write-Error ("Player window never reached the foreground, so the capture would " +
+                     "have been of another window. Close whatever is stealing focus " +
+                     "(or use an idle desktop) and retry.")
+        exit 1
+    }
+    Start-Sleep -Seconds 1
 
     $rect = New-Object StrategosCapture+RECT
     [void][StrategosCapture]::GetWindowRect($handle, [ref]$rect)
