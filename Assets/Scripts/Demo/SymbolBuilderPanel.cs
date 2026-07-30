@@ -3,6 +3,11 @@
 //   left  — topo underlay, composed symbol, SIDC, digit-by-digit breakdown table
 //   right — light control rail with bordered selectors
 // All text/background pairs are chosen for >= 7:1 contrast (WCAG AAA).
+//
+// The underlay is a real generated map: Strategos.Maps generates the terrain and
+// MapRasterizer draws the sheet the symbol sits on. It used to be five Gaussian
+// hills with fake isolines, which is where the Topographic palette's paper and
+// contour colours came from before they were promoted into MapPalette.
 
 using System;
 using System.Collections.Generic;
@@ -11,6 +16,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Strategos.Maps;
 using Strategos.NatoSymbols;
 
 namespace Strategos.Demo
@@ -54,11 +60,26 @@ namespace Strategos.Demo
         private TMP_Dropdown _hqTfDrop;
         private TMP_Dropdown _statusDrop;
         private TMP_Dropdown _strengthModDrop;
+        private TMP_Dropdown _mapProfileDrop;
+        private TMP_Dropdown _mapModeDrop;
+        private TMP_Text _mapInfoLabel;
 
         private Texture2D _previewTex;
         private Texture2D _topoTex;
         private bool _suppress;
         private static TMP_FontAsset _uiFont;
+
+        private ReliefProfile[] _mapProfiles;
+        private MapRenderMode[] _mapModes;
+
+        /// <summary>
+        /// Seed of the map currently on screen. Fixed at start so the demo opens the
+        /// same way every run; NEW MAP advances it.
+        /// </summary>
+        private int _mapSeed = 20260729;
+
+        /// <summary>Card size the underlay crop was last computed for.</summary>
+        private Vector2 _underlayCardSize;
 
         private Affiliation[] _affiliations;
         private Echelon[] _echelons;
@@ -145,6 +166,7 @@ namespace Strategos.Demo
             BuildUi();
             PopulateOptions();
             Canvas.ForceUpdateCanvases();
+            RefreshMap();
             RefreshPreview();
         }
 
@@ -545,6 +567,24 @@ namespace Strategos.Demo
             if (_formationField != null) _formationField.text = "3 ID";
             if (_strengthSlider != null) _strengthSlider.value = 100;
 
+            _mapProfiles = new[]
+            {
+                ReliefProfile.Rolling, ReliefProfile.Plains, ReliefProfile.Hills,
+                ReliefProfile.Mountains, ReliefProfile.Coastal, ReliefProfile.Desert,
+                ReliefProfile.Arctic,
+            };
+            SetDrop(_mapProfileDrop, Array.ConvertAll(_mapProfiles, p => Prettify(p.ToString())), 0);
+
+            // Schematic first: it is the operations-map look, where everything that is
+            // not a symbol or a control measure steps back. That is what an underlay
+            // behind a symbol wants.
+            _mapModes = new[]
+            {
+                MapRenderMode.Schematic, MapRenderMode.Topographic,
+                MapRenderMode.Hybrid, MapRenderMode.Terrain,
+            };
+            SetDrop(_mapModeDrop, Array.ConvertAll(_mapModes, m => Prettify(m.ToString())), 0);
+
             _suppress = false;
         }
 
@@ -627,19 +667,24 @@ namespace Strategos.Demo
             var topoRt = CreateRect("Topo", mapStack);
             Stretch(topoRt);
             _topoImage = topoRt.gameObject.AddComponent<RawImage>();
-            _topoTex = GenerateTopoTexture(640, 480);
-            _topoImage.texture = _topoTex;
             _topoImage.color = Color.white;
             _topoImage.raycastTarget = false;
+            // Texture comes from RefreshMap, which needs the map dropdowns to exist and
+            // so cannot run until the whole UI is built.
+            _topoImage.texture = Texture2D.whiteTexture;
 
-            // Translucent paper halo so the symbol stays legible over the contours.
+            // Paper halo so the symbol and its amplifier text stay legible over the
+            // sheet. Soft-edged, not a flat rectangle: against a real map a hard edge
+            // reads as a panel someone forgot to remove, and it cuts the contours it
+            // is meant to quieten.
             var halo = CreateRect("Halo", mapStack);
             halo.anchorMin = new Vector2(0.5f, 0.5f);
             halo.anchorMax = new Vector2(0.5f, 0.5f);
             halo.pivot = new Vector2(0.5f, 0.5f);
-            halo.sizeDelta = new Vector2(300, 260);
+            halo.sizeDelta = new Vector2(420, 380);
             var haloImg = halo.gameObject.AddComponent<Image>();
-            haloImg.color = new Color(1f, 1f, 0.98f, 0.34f);
+            haloImg.sprite = HaloSprite;
+            haloImg.color = new Color(1f, 1f, 0.98f, 0.62f);
             haloImg.raycastTarget = false;
 
             var symbolHolder = CreateRect("SymbolHolder", mapStack);
@@ -651,6 +696,36 @@ namespace Strategos.Demo
             _previewImage.color = Color.white;
             _previewImage.texture = Texture2D.whiteTexture;
             _previewImage.raycastTarget = false;
+
+            BuildMapMarginalia(mapStack);
+        }
+
+        /// <summary>
+        /// The strip along the foot of the sheet carrying seed, extent, elevation range
+        /// and contour interval — a map's marginalia. Without it the underlay is a
+        /// picture; with it the reader knows what ground and what scale they are on.
+        /// </summary>
+        private void BuildMapMarginalia(Transform mapStack)
+        {
+            var strip = CreateRect("Marginalia", mapStack);
+            strip.anchorMin = new Vector2(0, 0);
+            strip.anchorMax = new Vector2(1, 0);
+            strip.pivot = new Vector2(0.5f, 0);
+            strip.sizeDelta = new Vector2(0, 20);
+
+            var stripImg = strip.gameObject.AddComponent<Image>();
+            stripImg.color = new Color(1f, 1f, 0.98f, 0.72f);
+            stripImg.raycastTarget = false;
+
+            _mapInfoLabel = CreateOverlayTmp("Info", strip, string.Empty, 10, Theme.InkMuted);
+            Stretch(_mapInfoLabel.rectTransform);
+            _mapInfoLabel.rectTransform.offsetMin = new Vector2(8, 0);
+            _mapInfoLabel.rectTransform.offsetMax = new Vector2(-8, 0);
+            _mapInfoLabel.alignment = TextAlignmentOptions.MidlineLeft;
+            _mapInfoLabel.characterSpacing = 1.5f;
+            _mapInfoLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            _mapInfoLabel.overflowMode = TextOverflowModes.Ellipsis;
+            _mapInfoLabel.raycastTarget = false;
         }
 
         private void BuildSidcCard(Transform stage)
@@ -883,95 +958,171 @@ namespace Strategos.Demo
             _formationField = AddInput(content, "HIGHER FORMATION", "3 ID");
 
             AddButton(content, "REFRESH SYMBOL", RefreshPreview);
+
+            AddSection(content, "MAP UNDERLAY");
+            _mapProfileDrop = AddDropdown(content, "RELIEF PROFILE");
+            _mapModeDrop = AddDropdown(content, "RENDER MODE");
+
+            // AddDropdown wires every dropdown to RefreshPreview; the map controls need
+            // the map rebuilt as well. Regenerating is far more expensive than
+            // recomposing a symbol, so it stays off the symbol path rather than having
+            // RefreshPreview do both.
+            _mapProfileDrop.onValueChanged.AddListener(_ => RefreshMapIfReady());
+            _mapModeDrop.onValueChanged.AddListener(_ => RefreshMapIfReady());
+
+            AddButton(content, "NEW MAP", NewMap);
+        }
+
+        private void RefreshMapIfReady()
+        {
+            if (_suppress) return;
+            RefreshMap();
+        }
+
+        /// <summary>Advances the seed and regenerates. Same profile, different ground.</summary>
+        private void NewMap()
+        {
+            _mapSeed = UnityEngine.Random.Range(1, int.MaxValue);
+            RefreshMap();
         }
 
         // -------------------------------------------------------------------------
-        // Topo map generation
+        // Topo underlay
         // -------------------------------------------------------------------------
 
-        private static Texture2D GenerateTopoTexture(int w, int h)
+        /// <summary>
+        /// Cells per side of the underlay map. Square, and cropped to whatever shape
+        /// the card happens to be — see <see cref="UpdateUnderlayCrop"/>. 200 cells at
+        /// 25 m is a 5 km square, and generates in a few hundred milliseconds.
+        /// </summary>
+        private const int UnderlayCells = 200;
+
+        /// <summary>
+        /// Render scale. Above the overview zoom on purpose: at 1 px per cell the
+        /// renderer generalises roads to hairlines and drops spot detail, which is
+        /// right for a whole-map sheet and wrong for a card you look at up close.
+        /// </summary>
+        private const float UnderlayPixelsPerCell = 4f;
+
+        /// <summary>
+        /// How many landforms should fit across the sheet. A profile's
+        /// <c>FeatureScaleCells</c> is tuned for the 512-cell default map; used as-is on
+        /// a 200-cell one, a single hill is wider than the whole sheet and the underlay
+        /// comes out as one dome with concentric rings.
+        /// </summary>
+        private const float UnderlayLandformsAcross = 2.5f;
+
+        /// <summary>
+        /// Regenerates the underlay from the current map controls and shows it.
+        /// Called from Start and whenever a map control changes; generation costs a few
+        /// hundred milliseconds on the main thread, which is why it is on a button and
+        /// two dropdowns rather than a slider.
+        /// </summary>
+        private void RefreshMap()
         {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            if (_topoImage == null) return;
+
+            var profile = SelectedMapProfile;
+
+            // Shrink the landform scale to suit a sheet this small. This is what
+            // ParameterOverride is for — the alternative is inventing a near-duplicate
+            // profile per map size.
+            var tuned = ReliefProfiles.For(profile);
+            tuned.FeatureScaleCells = Mathf.Min(
+                tuned.FeatureScaleCells, UnderlayCells / UnderlayLandformsAcross);
+
+            var settings = new MapGenerationSettings
             {
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp,
-                name = "TopoUnderlay",
+                Name              = "UNDERLAY",
+                Seed              = _mapSeed,
+                Width             = UnderlayCells,
+                Height            = UnderlayCells,
+                MetresPerCell     = 25f,
+                Profile           = profile,
+                ParameterOverride = tuned,
             };
 
-            var px = new Color32[w * h];
-            var paper = new Color32(233, 229, 214, 255);
-            var water = new Color32(196, 214, 208, 255);
-            // Kept low-contrast: the map is an underlay, the symbol is the subject.
-            var contour = new Color32(196, 185, 156, 255);
-            var contourMajor = new Color32(168, 154, 120, 255);
-            var gridCol = new Color32(206, 200, 178, 255);
+            var map = MapGenerator.Generate(settings);
 
-            // Fixed hill centres (map-like, not stretched Perlin woodgrain)
-            var hills = new[]
+            var options = MapRenderOptions.Default;
+            options.Mode          = SelectedMapMode;
+            options.PixelsPerCell = UnderlayPixelsPerCell;
+
+            // No names, no spot heights: this sheet exists to be drawn on. Text and
+            // point marks under a 320 px symbol are clutter competing with the subject,
+            // and the contact sheet is where that detail gets inspected.
+            options.DrawLabels = false;
+            options.DrawPois   = false;
+
+            var tex = MapRasterizer.Render(map, options);
+            tex.name = "TopoUnderlay";
+
+            _topoImage.texture = tex;
+            if (_topoTex != null) Destroy(_topoTex);
+            _topoTex = tex;
+
+            UpdateUnderlayCrop();
+
+            if (_mapInfoLabel != null)
             {
-                new Vector2(0.28f, 0.62f),
-                new Vector2(0.68f, 0.55f),
-                new Vector2(0.48f, 0.30f),
-                new Vector2(0.78f, 0.28f),
-                new Vector2(0.18f, 0.28f),
-            };
-            var hillH = new[] { 1.0f, 0.85f, 0.7f, 0.55f, 0.6f };
-            var hillR = new[] { 0.42f, 0.38f, 0.35f, 0.28f, 0.30f };
-
-            for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
-            {
-                float nx = x / (float)(w - 1);
-                float ny = y / (float)(h - 1);
-
-                float elev = 0f;
-                for (int i = 0; i < hills.Length; i++)
-                {
-                    float dx = (nx - hills[i].x) / hillR[i];
-                    float dy = (ny - hills[i].y) / hillR[i];
-                    float d2 = dx * dx + dy * dy;
-                    elev += hillH[i] * Mathf.Exp(-d2 * 2.2f);
-                }
-                // gentle regional tilt
-                elev += (1f - ny) * 0.12f;
-                elev = Mathf.Clamp01(elev / 1.6f);
-
-                Color32 c = elev < 0.18f ? water : paper;
-
-                // True isolines: mark when crossing contour thresholds
-                const int levels = 12;
-                float scaled = elev * levels;
-                float distToLine = Mathf.Abs(scaled - Mathf.Round(scaled));
-                int level = Mathf.RoundToInt(scaled);
-                if (distToLine < 0.07f && elev > 0.16f)
-                    c = (level % 3 == 0) ? contourMajor : contour;
-
-                // Map grid
-                int gx = x * 8 / w;
-                int gy = y * 6 / h;
-                bool gridLine =
-                    Mathf.Abs(x - (gx * w / 8)) < 1 ||
-                    Mathf.Abs(y - (gy * h / 6)) < 1;
-                if (gridLine)
-                    c = Lerp(c, gridCol, 0.55f);
-
-                px[y * w + x] = c;
+                var header = map.Header;
+                // Hyphen, not an en dash: U+2013 is not in the bundled LiberationSans
+                // SDF atlas and renders as nothing, so the elevation range came out as
+                // "202 280 M". Latin-1 punctuation only here — see the glyph coverage
+                // note in CLAUDE.md.
+                _mapInfoLabel.text =
+                    $"SEED {_mapSeed}   ·   {header.WidthMetres / 1000f:0.#} × " +
+                    $"{header.HeightMetres / 1000f:0.#} KM   ·   " +
+                    $"{header.MinElevation:0}-{header.MaxElevation:0} M   ·   " +
+                    $"CONTOUR {header.ContourInterval:0} M";
             }
-
-            tex.SetPixels32(px);
-            tex.Apply(false, false);
-            return tex;
         }
 
-        private static Color32 Lerp(Color32 a, Color32 b, float t)
+        /// <summary>
+        /// Fits the sheet to the card by cropping to a centred region of the card's
+        /// shape, never by stretching. A stretched map has a different scale on each
+        /// axis, so every distance and bearing read off it is wrong — which for a map
+        /// is a correctness problem, not a cosmetic one. The card's aspect depends on
+        /// the window, so this is re-evaluated when its size changes rather than baked
+        /// into the generated map.
+        /// </summary>
+        private void UpdateUnderlayCrop()
         {
-            t = Mathf.Clamp01(t);
-            return new Color32(
-                (byte)(a.r + (b.r - a.r) * t),
-                (byte)(a.g + (b.g - a.g) * t),
-                (byte)(a.b + (b.b - a.b) * t),
-                255);
+            if (_topoImage == null || _topoTex == null) return;
+
+            Rect card = _topoImage.rectTransform.rect;
+            if (card.width < 1f || card.height < 1f) return;
+
+            _underlayCardSize = new Vector2(card.width, card.height);
+
+            float cardAspect = card.width / card.height;
+            float texAspect  = _topoTex.width / (float)_topoTex.height;
+
+            float uvW = 1f, uvH = 1f;
+            if (cardAspect > texAspect) uvH = texAspect / cardAspect;
+            else                        uvW = cardAspect / texAspect;
+
+            _topoImage.uvRect = new Rect((1f - uvW) * 0.5f, (1f - uvH) * 0.5f, uvW, uvH);
         }
+
+        private void Update()
+        {
+            // Cheap guard against a window resize reshaping the card. Regenerating on
+            // resize would stall for a few hundred milliseconds; re-cropping is free.
+            if (_topoImage == null) return;
+
+            Rect card = _topoImage.rectTransform.rect;
+            if (Mathf.Abs(card.width  - _underlayCardSize.x) > 0.5f ||
+                Mathf.Abs(card.height - _underlayCardSize.y) > 0.5f)
+                UpdateUnderlayCrop();
+        }
+
+        private ReliefProfile SelectedMapProfile =>
+            Pick(_mapProfiles, _mapProfileDrop, ReliefProfile.Rolling);
+
+        private MapRenderMode SelectedMapMode =>
+            Pick(_mapModes, _mapModeDrop, MapRenderMode.Schematic);
+
 
         // -------------------------------------------------------------------------
         // Control helpers
@@ -1337,6 +1488,7 @@ namespace Strategos.Demo
         }
 
         private static Sprite _arrowSprite;
+        private static Sprite _haloSprite;
 
         /// <summary>Solid down-triangle, drawn white so Image.color can tint it.</summary>
         private static Sprite ArrowSprite
@@ -1371,6 +1523,49 @@ namespace Strategos.Demo
                 tex.Apply(false, false);
                 _arrowSprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
                 return _arrowSprite;
+            }
+        }
+
+        /// <summary>
+        /// Radial falloff used to quieten the sheet under the symbol. Generated for the
+        /// same reason <see cref="ArrowSprite"/> is: there is no gradient asset in the
+        /// project and a UI sprite is cheaper to draw than a shader to author.
+        /// </summary>
+        private static Sprite HaloSprite
+        {
+            get
+            {
+                if (_haloSprite != null) return _haloSprite;
+
+                const int s = 128;
+                var tex = new Texture2D(s, s, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    name = "SymbolHalo",
+                };
+
+                var px = new Color32[s * s];
+                float centre = (s - 1) * 0.5f;
+
+                for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float dx = (x - centre) / centre;
+                    float dy = (y - centre) / centre;
+                    float d  = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    // Opaque out to 45% of the radius, then eased to nothing at the
+                    // edge. Smoothstep rather than linear: a linear ramp leaves a
+                    // visible ring where the gradient starts.
+                    float a = 1f - Mathf.SmoothStep(0.45f, 1f, d);
+                    px[y * s + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+
+                tex.SetPixels32(px);
+                tex.Apply(false, false);
+                _haloSprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
+                return _haloSprite;
             }
         }
 
