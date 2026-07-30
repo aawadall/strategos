@@ -13,8 +13,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
@@ -29,27 +27,11 @@ using static Strategos.UI.UiFactory;
 
 namespace Strategos.Demo
 {
-    public class SymbolBuilderPanel : MonoBehaviour
+    public class SymbolBuilderPanel : MonoBehaviour, IAppView
     {
         [Header("Optional")]
         [SerializeField] private NatoSymbolDatabase _database;
         [SerializeField] private int _previewSize = 384;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureInDemoScene()
-        {
-            var scene = SceneManager.GetActiveScene();
-            if (!scene.IsValid() || scene.name != "SymbolDemo") return;
-            if (FindAnyObjectByType<SymbolBuilderPanel>() != null) return;
-
-            var spawner = FindAnyObjectByType<SymbolDemoSpawner>(FindObjectsInactive.Include);
-            if (spawner != null) spawner.gameObject.SetActive(false);
-
-            var title = GameObject.Find("TitleLabel");
-            if (title != null) title.SetActive(false);
-
-            new GameObject("SymbolBuilder").AddComponent<SymbolBuilderPanel>();
-        }
 
         private RawImage _previewImage;
         private RawImage _topoImage;
@@ -87,14 +69,39 @@ namespace Strategos.Demo
 
         private TableRow[] _tableRows;
 
-        private void Start()
+        // -------------------------------------------------------------------------
+        // IAppView
+        // -------------------------------------------------------------------------
+
+        public string Title => "BUILDER";
+        public string Key => "builder";
+
+        /// <summary>
+        /// Builds the panel into the shell's content host. Runs once, on first activation,
+        /// so the underlay's few hundred milliseconds of generation are paid when this tab
+        /// is first opened rather than at startup.
+        /// </summary>
+        public void Build(RectTransform host)
         {
-            EnsureEventSystem();
-            BuildUi();
+            BuildUi(host);
             PopulateOptions();
             Canvas.ForceUpdateCanvases();
             RefreshMap();
             RefreshPreview();
+        }
+
+        public void OnShown()
+        {
+            // The card may have been resized while this view was hidden, and the Update
+            // poller below was not running to notice.
+            UpdateUnderlayCrop();
+        }
+
+        public void OnHidden()
+        {
+            // A dropdown left open re-appears open, floating over whichever view is
+            // shown next.
+            HideDropdownsIn(transform);
         }
 
         private void OnDestroy()
@@ -243,20 +250,14 @@ namespace Strategos.Demo
         // UI construction
         // -------------------------------------------------------------------------
 
-        private void BuildUi()
+        /// <summary>
+        /// Builds the panel into <paramref name="host"/>. The Canvas, CanvasScaler and
+        /// GraphicRaycaster this used to create itself now belong to AppShell, so that one
+        /// canvas serves every view instead of each view stacking its own.
+        /// </summary>
+        private void BuildUi(RectTransform host)
         {
-            var canvasGo = new GameObject("SymbolBuilderCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvasGo.transform.SetParent(transform, false);
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
-
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
-
-            var root = CreateRect("Root", canvasGo.transform);
+            var root = CreateRect("Root", host);
             Stretch(root);
             root.gameObject.AddComponent<Image>().color = Theme.StageBg;
             var rootH = root.gameObject.AddComponent<HorizontalLayoutGroup>();

@@ -13,6 +13,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Strategos.Demo;
+using Strategos.UI;
 
 namespace Strategos.Editor
 {
@@ -97,6 +98,10 @@ namespace Strategos.Editor
             cam.backgroundColor = new Color(0.08f, 0.09f, 0.10f); // dark op-map background
             cam.nearClipPlane   = 0.1f;
             cam.farClipPlane    = 100f;
+            // The 3D map drape has its own camera rendering to a texture inside a card.
+            // Without this mask the main camera draws that terrain a second time, hidden
+            // behind the overlay canvas where the cost is invisible.
+            cam.cullingMask    &= ~(1 << AppShell.MapDrapeLayer);
             camGO.AddComponent<AudioListener>();
 
             var demoCam = camGO.AddComponent<DemoCamera>();
@@ -109,9 +114,9 @@ namespace Strategos.Editor
             light.intensity = 1f;
             lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-            // --- Symbol builder (primary UX: side-menu composition) ---
-            var builderGO = new GameObject("SymbolBuilder");
-            builderGO.AddComponent<SymbolBuilderPanel>();
+            // --- App shell (owns the canvas and hosts every view) ---
+            var shellGO = new GameObject("AppShell");
+            shellGO.AddComponent<AppShell>();
 
             // Optional reference grid — disabled by default; enable in Inspector to compare echelons.
             var spawnerGO = new GameObject("SymbolDemoSpawner");
@@ -139,6 +144,17 @@ namespace Strategos.Editor
         /// EditorBuildSettings. Safe to call from the build pipeline in batch mode;
         /// does NOT open the scene (no EditorSceneManager.OpenScene call).
         /// </summary>
+        /// <summary>
+        /// Rebuilds the demo scene unconditionally. Batch-safe: unlike the menu item it
+        /// does not call SaveCurrentModifiedScenesIfUserWantsTo, which would block on a
+        /// dialog with no one to answer it.
+        /// </summary>
+        public static void RecreateSceneBatch()
+        {
+            CreateDemoScene();
+            Debug.Log($"[SceneBootstrapper] Scene recreated in batch mode -> {DemoScenePath}");
+        }
+
         public static void EnsureSceneRegistered()
         {
             if (!File.Exists(DemoScenePath))
