@@ -34,7 +34,7 @@ namespace Strategos.Demo
         [SerializeField] private int _previewSize = 384;
 
         private RawImage _previewImage;
-        private RawImage _topoImage;
+        private MapSheetCard _mapCard;
         private TMP_Text _sidcLabel;
         private TMP_InputField _designationField;
         private TMP_InputField _formationField;
@@ -52,10 +52,8 @@ namespace Strategos.Demo
         private TMP_Dropdown _strengthModDrop;
         private TMP_Dropdown _mapProfileDrop;
         private TMP_Dropdown _mapModeDrop;
-        private TMP_Text _mapInfoLabel;
 
         private Texture2D _previewTex;
-        private Texture2D _topoTex;
         private bool _suppress;
 
         /// <summary>
@@ -63,9 +61,6 @@ namespace Strategos.Demo
         /// same way every run; NEW MAP advances it.
         /// </summary>
         private int _mapSeed = 20260729;
-
-        /// <summary>Card size the underlay crop was last computed for.</summary>
-        private Vector2 _underlayCardSize;
 
         private TableRow[] _tableRows;
 
@@ -107,7 +102,7 @@ namespace Strategos.Demo
         private void OnDestroy()
         {
             DestroyPreviewAssets();
-            if (_topoTex != null) Destroy(_topoTex);
+            _mapCard?.Dispose();
         }
 
         // -------------------------------------------------------------------------
@@ -306,24 +301,7 @@ namespace Strategos.Demo
 
         private void BuildMapCard(Transform stage)
         {
-            var mapCard = CreateRect("MapCard", stage);
-            mapCard.gameObject.AddComponent<LayoutElement>().preferredHeight = 400;
-            mapCard.gameObject.AddComponent<Image>().color = Theme.CardLine;
-
-            var mapStack = CreateRect("MapStack", mapCard);
-            Stretch(mapStack);
-            mapStack.offsetMin = new Vector2(2, 2);
-            mapStack.offsetMax = new Vector2(-2, -2);
-            mapStack.gameObject.AddComponent<Image>().color = Theme.MapPaper;
-
-            var topoRt = CreateRect("Topo", mapStack);
-            Stretch(topoRt);
-            _topoImage = topoRt.gameObject.AddComponent<RawImage>();
-            _topoImage.color = Color.white;
-            _topoImage.raycastTarget = false;
-            // Texture comes from RefreshMap, which needs the map dropdowns to exist and
-            // so cannot run until the whole UI is built.
-            _topoImage.texture = Texture2D.whiteTexture;
+            _mapCard = new MapSheetCard(stage, preferredHeight: 400, out var mapStack);
 
             // Paper halo so the symbol and its amplifier text stay legible over the
             // sheet. Soft-edged, not a flat rectangle: against a real map a hard edge
@@ -349,35 +327,10 @@ namespace Strategos.Demo
             _previewImage.texture = Texture2D.whiteTexture;
             _previewImage.raycastTarget = false;
 
-            BuildMapMarginalia(mapStack);
-        }
-
-        /// <summary>
-        /// The strip along the foot of the sheet carrying seed, extent, elevation range
-        /// and contour interval — a map's marginalia. Without it the underlay is a
-        /// picture; with it the reader knows what ground and what scale they are on.
-        /// </summary>
-        private void BuildMapMarginalia(Transform mapStack)
-        {
-            var strip = CreateRect("Marginalia", mapStack);
-            strip.anchorMin = new Vector2(0, 0);
-            strip.anchorMax = new Vector2(1, 0);
-            strip.pivot = new Vector2(0.5f, 0);
-            strip.sizeDelta = new Vector2(0, 20);
-
-            var stripImg = strip.gameObject.AddComponent<Image>();
-            stripImg.color = new Color(1f, 1f, 0.98f, 0.72f);
-            stripImg.raycastTarget = false;
-
-            _mapInfoLabel = CreateOverlayTmp("Info", strip, string.Empty, 10, Theme.InkMuted);
-            Stretch(_mapInfoLabel.rectTransform);
-            _mapInfoLabel.rectTransform.offsetMin = new Vector2(8, 0);
-            _mapInfoLabel.rectTransform.offsetMax = new Vector2(-8, 0);
-            _mapInfoLabel.alignment = TextAlignmentOptions.MidlineLeft;
-            _mapInfoLabel.characterSpacing = 1.5f;
-            _mapInfoLabel.textWrappingMode = TextWrappingModes.NoWrap;
-            _mapInfoLabel.overflowMode = TextOverflowModes.Ellipsis;
-            _mapInfoLabel.raycastTarget = false;
+            // The marginalia strip is built by the card, but it has to stay on top of the
+            // halo and the symbol, so re-seat it as the last sibling.
+            var strip = mapStack.Find("Marginalia");
+            if (strip != null) strip.SetAsLastSibling();
         }
 
         private void BuildSidcCard(Transform stage)
@@ -584,7 +537,7 @@ namespace Strategos.Demo
         /// </summary>
         private void RefreshMap()
         {
-            if (_topoImage == null) return;
+            if (_mapCard == null) return;
 
             var profile = SelectedMapProfile;
 
@@ -618,67 +571,17 @@ namespace Strategos.Demo
             options.DrawLabels = false;
             options.DrawPois   = false;
 
-            var tex = MapRasterizer.Render(map, options);
-            tex.name = "TopoUnderlay";
-
-            _topoImage.texture = tex;
-            if (_topoTex != null) Destroy(_topoTex);
-            _topoTex = tex;
-
-            UpdateUnderlayCrop();
-
-            if (_mapInfoLabel != null)
-            {
-                var header = map.Header;
-                // Hyphen, not an en dash: U+2013 is not in the bundled LiberationSans
-                // SDF atlas and renders as nothing, so the elevation range came out as
-                // "202 280 M". Latin-1 punctuation only here — see the glyph coverage
-                // note in CLAUDE.md.
-                _mapInfoLabel.text =
-                    $"SEED {_mapSeed}   ·   {header.WidthMetres / 1000f:0.#} × " +
-                    $"{header.HeightMetres / 1000f:0.#} KM   ·   " +
-                    $"{header.MinElevation:0}-{header.MaxElevation:0} M   ·   " +
-                    $"CONTOUR {header.ContourInterval:0} M";
-            }
+            _mapCard.Render(map, options);
+            _mapCard.SetMarginaliaFor(map, _mapSeed);
         }
 
-        /// <summary>
-        /// Fits the sheet to the card by cropping to a centred region of the card's
-        /// shape, never by stretching. A stretched map has a different scale on each
-        /// axis, so every distance and bearing read off it is wrong — which for a map
-        /// is a correctness problem, not a cosmetic one. The card's aspect depends on
-        /// the window, so this is re-evaluated when its size changes rather than baked
-        /// into the generated map.
-        /// </summary>
-        private void UpdateUnderlayCrop()
-        {
-            if (_topoImage == null || _topoTex == null) return;
-
-            Rect card = _topoImage.rectTransform.rect;
-            if (card.width < 1f || card.height < 1f) return;
-
-            _underlayCardSize = new Vector2(card.width, card.height);
-
-            float cardAspect = card.width / card.height;
-            float texAspect  = _topoTex.width / (float)_topoTex.height;
-
-            float uvW = 1f, uvH = 1f;
-            if (cardAspect > texAspect) uvH = texAspect / cardAspect;
-            else                        uvW = cardAspect / texAspect;
-
-            _topoImage.uvRect = new Rect((1f - uvW) * 0.5f, (1f - uvH) * 0.5f, uvW, uvH);
-        }
+        private void UpdateUnderlayCrop() => _mapCard?.UpdateCrop();
 
         private void Update()
         {
             // Cheap guard against a window resize reshaping the card. Regenerating on
             // resize would stall for a few hundred milliseconds; re-cropping is free.
-            if (_topoImage == null) return;
-
-            Rect card = _topoImage.rectTransform.rect;
-            if (Mathf.Abs(card.width  - _underlayCardSize.x) > 0.5f ||
-                Mathf.Abs(card.height - _underlayCardSize.y) > 0.5f)
-                UpdateUnderlayCrop();
+            _mapCard?.PollResize();
         }
 
         private ReliefProfile SelectedMapProfile =>
