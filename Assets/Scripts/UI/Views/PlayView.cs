@@ -88,6 +88,33 @@ namespace Strategos.UI.Views
         private bool _running = true;
         private Toggle _runToggle;
         private TMP_Text _clockLabel;
+        private TMP_Dropdown _speedDrop;
+
+        /// <summary>
+        /// Real-time multiplier. 1 means a simulated second per real second.
+        ///
+        /// A PRESENTATION setting, not a simulation one. The simulation only ever advances in
+        /// whole fixed ticks, so compression changes how quickly ticks are *asked for* and
+        /// nothing about what they do: the same tick count produces the same result at any
+        /// speed. That property is a direct dividend of the fixed-step decision, and it is why
+        /// this control cannot break the divergence test.
+        /// </summary>
+        private float _timeScale = 1f;
+
+        /// <summary>
+        /// Offered rates. 6.4 km at a foot unit's 1.2 m/s is roughly an hour and a half of
+        /// simulated time, so the top of the range has to be genuinely fast to be useful.
+        /// </summary>
+        private static readonly float[] TimeScales = { 1f, 2f, 5f, 15f, 60f, 300f };
+
+        /// <summary>
+        /// Most simulated time that may be banked toward catch-up, in ticks.
+        ///
+        /// Sized for the fastest offered rate at a poor frame rate: 300x at 15 fps needs 20
+        /// steps a frame, so 32 leaves headroom without letting a long stall — a generation, a
+        /// breakpoint — dump minutes of simulated time into one frame.
+        /// </summary>
+        private const float MaxBankedTicks = 32f;
 
         private RectTransform _selectionMark;
         private RectTransform _detailsCard;
@@ -129,6 +156,14 @@ namespace Strategos.UI.Views
 
         private void Update()
         {
+            // Space pauses, as it does in every game of this shape. Safe here because this
+            // view has no text input to steal it from.
+            if (Input.GetKeyDown(KeyCode.Space) && _runToggle != null)
+            {
+                _runToggle.isOn = !_runToggle.isOn;   // fires the toggle's own handler
+                RefreshClock();
+            }
+
             AdvanceSimulation();
             _card?.PollResize();
             // Markers follow the sheet rather than caching screen positions, so a window
@@ -268,7 +303,9 @@ namespace Strategos.UI.Views
             hint.GetComponent<LayoutElement>().preferredHeight = 30;
 
             AddButton(content, "ABORT PLAN", AbortSelected);
-            _runToggle = AddToggle(content, "CLOCK RUNNING", true, () => _running = _runToggle.isOn);
+            _runToggle = AddToggle(content, "CLOCK RUNNING  (SPACE)", true,
+                () => _running = _runToggle.isOn);
+            _speedDrop = AddDropdown(content, "TIME COMPRESSION", OnSpeedChanged);
 
             AddSection(content, "PRESENTATION");
             _modeDrop = AddDropdown(content, "RENDER MODE", RefreshSheet);
@@ -291,6 +328,11 @@ namespace Strategos.UI.Views
         {
             _suppress = true;
             SetDrop(_modeDrop, DisplayNames.RenderModeLabels(), 1);   // Topographic
+
+            var speeds = new string[TimeScales.Length];
+            speeds[0] = "x1   (real time)";
+            for (int i = 1; i < TimeScales.Length; i++) speeds[i] = $"x{TimeScales[i]:0}";
+            SetDrop(_speedDrop, speeds, 0);
             _suppress = false;
         }
 
@@ -546,19 +588,32 @@ namespace Strategos.UI.Views
         {
             if (_sim == null || !_running) return;
 
-            _tickAccumulator += Time.deltaTime;
+            _tickAccumulator += Time.deltaTime * _timeScale;
 
-            const int maxStepsPerFrame = 8;
+            // Bank a bounded amount of simulated time rather than a bounded number of steps.
+            // A step cap has to grow with the compression to keep up, and then stops being a
+            // guard; capping the bank keeps the guard fixed — a frame hitch drops simulated
+            // time instead of producing a burst of catch-up steps that looks like teleporting
+            // — while still allowing a compressed clock all the steps it legitimately needs.
+            float maxBank = MaxBankedTicks * Simulation.SecondsPerTick;
+            if (_tickAccumulator > maxBank) _tickAccumulator = maxBank;
+
             int steps = 0;
-            while (_tickAccumulator >= Simulation.SecondsPerTick && steps < maxStepsPerFrame)
+            while (_tickAccumulator >= Simulation.SecondsPerTick)
             {
                 _tickAccumulator -= Simulation.SecondsPerTick;
                 _sim.Step();
                 steps++;
             }
-            if (steps >= maxStepsPerFrame) _tickAccumulator = 0f;
 
             if (steps > 0) RefreshClock();
+        }
+
+        private void OnSpeedChanged()
+        {
+            if (_suppress || _speedDrop == null) return;
+            _timeScale = TimeScales[Mathf.Clamp(_speedDrop.value, 0, TimeScales.Length - 1)];
+            RefreshClock();
         }
 
         private void RefreshClock()
@@ -573,7 +628,8 @@ namespace Strategos.UI.Views
             }
 
             _clockLabel.text =
-                $"T+{_sim.Tick:0000}   ·   {moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS ISSUED";
+                $"T+{_sim.Tick:0000}   ·   {(_running ? $"x{_timeScale:0}" : "PAUSED")}   ·   " +
+                $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS ISSUED";
 
             // The details panel shows a live plan, so keep it current while one is selected.
             if (_selection.Count > 0) RefreshSelection();
