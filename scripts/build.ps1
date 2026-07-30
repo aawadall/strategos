@@ -115,8 +115,14 @@ function Invoke-Unity {
     Write-Host "  Log: $LogFile"
     Write-Host ""
 
-    & $UnityExe @Arguments
-    $code = if (Test-Path variable:/LASTEXITCODE) { $LASTEXITCODE } else { 0 }
+    # Start-Process -Wait, NOT the call operator. Unity.exe is a GUI-subsystem binary,
+    # and PowerShell does not wait for those: `& $UnityExe ...` returns in about a tenth
+    # of a second while the editor is still building. Everything after it then races the
+    # build — most painfully scripts\capture.ps1, which would launch and screenshot the
+    # PREVIOUS player while the new one was still being written, so a UI change appeared
+    # to have had no effect at all.
+    $proc = Start-Process -FilePath $UnityExe -ArgumentList $Arguments -Wait -PassThru
+    $code = $proc.ExitCode
 
     if ($code -ne 0) {
         Write-Host ""
