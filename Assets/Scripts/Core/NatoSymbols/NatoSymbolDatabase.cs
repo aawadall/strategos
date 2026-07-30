@@ -133,14 +133,18 @@ namespace Strategos.NatoSymbols
         {
             return new SymbolSpriteSet
             {
-                Frame       = GetFrame(sidc.Affiliation, sidc.Dimension, sidc.IsPlanned),
+                Frame       = GetFrame(sidc.Affiliation, sidc.Dimension, sidc.IsPlanned || sidc.HasUncertainIdentity),
                 Icon        = GetIcon(sidc.Dimension, sidc.EntityCode),
                 Echelon     = GetEchelon(sidc.Echelon),
                 HQLine      = sidc.IsHeadquarters ? HeadquartersLine : null,
                 TFBracket   = sidc.IsTaskForce    ? TaskForceBracket : null,
                 Feint       = sidc.IsFeintDummy   ? FeintIndicator   : null,
-                Reinforced  = sidc.StrengthModifier == StrengthModifier.Reinforced ? ReinforcedMark : null,
-                Reduced     = sidc.StrengthModifier == StrengthModifier.Reduced    ? ReducedMark    : null,
+                Reinforced  = sidc.StrengthModifier == StrengthModifier.Reinforced ||
+                              sidc.StrengthModifier == StrengthModifier.ReinforcedReduced
+                              ? ReinforcedMark : null,
+                Reduced     = sidc.StrengthModifier == StrengthModifier.Reduced ||
+                              sidc.StrengthModifier == StrengthModifier.ReinforcedReduced
+                              ? ReducedMark : null,
                 FrameTint   = AffiliationColour.ForAffiliation(sidc.Affiliation),
             };
         }

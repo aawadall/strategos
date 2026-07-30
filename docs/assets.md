@@ -32,8 +32,19 @@ Key source files:
 
 | File | Role |
 |---|---|
-| `Assets/Scripts/Core/NatoSymbols/NatoSymbolTypes.cs` | Enums, structs, SIDCCode |
+| `Assets/Scripts/Core/NatoSymbols/NatoSymbolTypes.cs` | Enums, structs, SIDCCode (Annex A) |
 | `Assets/Scripts/Core/NatoSymbols/SIDCParser.cs` | SIDC string → SIDCCode |
+| `Assets/Scripts/Core/NatoSymbols/INatoSymbol.cs` | Layer model + SymbolLayout |
+| `Assets/Scripts/Core/NatoSymbols/NatoSymbolDecorator.cs` | Base symbol + decorator base |
+| `Assets/Scripts/Core/NatoSymbols/SymbolFactory.cs` | Factory Method (frame + fill) |
+| `Assets/Scripts/Core/NatoSymbols/IconDecorator.cs` | Icon layer decorator |
+| `Assets/Scripts/Core/NatoSymbols/SectorModifierDecorator.cs` | Sector 1/2 modifiers |
+| `Assets/Scripts/Core/NatoSymbols/AmplifierDecorator.cs` | Echelon / HQ / TF / feint |
+| `Assets/Scripts/Core/NatoSymbols/ConditionDecorator.cs` | Condition + combat-power bars |
+| `Assets/Scripts/Core/NatoSymbols/TextAmplifierDecorator.cs` | Text amplifiers T / M / F |
+| `Assets/Scripts/Core/NatoSymbols/ProceduralDrawUtil.cs` | Pixel primitives + 5×7 bitmap font |
+| `Assets/Scripts/Core/NatoSymbols/NatoSymbolComposer.cs` | Table 3-1 composition |
+| `Assets/Scripts/Core/NatoSymbols/NatoSymbolBaker.cs` | Compose → Sprite |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolDatabase.cs` | ScriptableObject sprite registry |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolGenerator.cs` | GPU bake compositor (RenderTexture) |
 | `Assets/Scripts/Core/NatoSymbols/NatoSymbolView.cs` | In-scene layered SpriteRenderer display |
@@ -48,14 +59,18 @@ The generator composites five ordered layers per symbol:
 
 The **Editor Window** (menu: **Strategos → NATO Symbol Generator**) enables live SIDC preview, single export, and CI batch generation from a JSON catalogue.
 
-### SIDC Format (APP-6D)
+### SIDC Format (APP-6D Annex A)
 
-Each symbol is identified by a 20-character Symbol Identification Coding (SIDC) string. The key fields:
+Each symbol is identified by a 20-digit Symbol Identification Code (optional third ten ignored). Key fields:
 
 ```
-Version   Std  SIDC fields ...
-10        0    [Symbol Set][Status][HQ][TF/FD][Echelon/Mob][Entity][Mod1][Mod2]
+1–2 Version (10) | 3–4 Context+Identity | 5–6 Symbol Set | 7 Status
+8 HQ/TF/Dummy | 9–10 Amplifier | 11–16 Entity… | 17–20 Sector modifiers
 ```
+
+Example (friend land infantry company): `10031000151211000000`
+
+Construction uses Factory (frame) + Decorators (icon → modifiers → amplifiers). See [docs/nato-symbol-generator.md](nato-symbol-generator.md).
 
 Store SIDC codes in `UnitDefinition` ScriptableObjects and resolve to sprite at runtime.
 

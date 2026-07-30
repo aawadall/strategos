@@ -1,8 +1,8 @@
 // NatoSymbolView.cs
 // MonoBehaviour that displays a NATO APP-6D symbol in-scene using layered SpriteRenderers.
-// No texture baking — each layer is a separate child SpriteRenderer sorted by order.
-// Attach to any unit marker GameObject. Call SetSymbol() to update.
+// Prefer NatoSymbolDatabase sprites when assigned; otherwise Compose → bake procedural layers.
 
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -33,71 +33,55 @@ namespace Strategos.NatoSymbols
         [SerializeField] private float _symbolSize = 1f;
 
         [Header("Preview (Inspector)")]
-        [SerializeField] private string _previewSIDC = "10031500001211000000";
+        [SerializeField] private string _previewSIDC = "10031000151211000000";
         [SerializeField] private string _previewDesignation;
         [SerializeField] private string _previewFormation;
 
         private SIDCCode _currentCode;
-
-        // -------------------------------------------------------------------------
-        // Lifecycle
-        // -------------------------------------------------------------------------
+        private readonly List<Texture2D> _ownedTextures = new();
 
         private void Awake()
         {
             EnsureLayers();
         }
 
-        private void OnValidate()
+        private void OnDestroy()
         {
-            // Live preview in the Editor Inspector.
-            if (Application.isPlaying) return;
-            if (!string.IsNullOrEmpty(_previewSIDC) && _database != null)
-            {
-                if (SIDCParser.TryParse(_previewSIDC, out var code))
-                {
-                    code.Designation    = _previewDesignation;
-                    code.HigherFormation = _previewFormation;
-                    SetSymbol(code);
-                }
-            }
+            ClearOwnedTextures();
         }
 
-        // -------------------------------------------------------------------------
-        // Public API
-        // -------------------------------------------------------------------------
+        private void OnValidate()
+        {
+            if (Application.isPlaying) return;
+            if (string.IsNullOrEmpty(_previewSIDC)) return;
+            if (SIDCParser.TryParse(_previewSIDC, out var code))
+            {
+                code.Designation     = _previewDesignation;
+                code.HigherFormation = _previewFormation;
+                SetSymbol(code);
+            }
+        }
 
         /// <summary>Updates the displayed symbol to match the given SIDCCode.</summary>
         public void SetSymbol(SIDCCode code)
         {
-            if (_database == null)
-            {
-                Debug.LogError("[NatoSymbolView] NatoSymbolDatabase is not assigned.", this);
-                return;
-            }
-
             _currentCode = code;
             EnsureLayers();
+            ClearOwnedTextures();
 
-            var sprites = _database.Resolve(code);
-            ApplyLayer(_frameRenderer,    sprites.Frame,      sprites.FrameTint);
-            ApplyLayer(_iconRenderer,     sprites.Icon,       Color.white);
-            ApplyLayer(_echelonRenderer,  sprites.Echelon,    Color.black);
-            ApplyLayer(_hqLineRenderer,   sprites.HQLine,     Color.black);
-            ApplyLayer(_tfBracketRenderer, sprites.TFBracket, Color.black);
-            ApplyLayer(_feintRenderer,    sprites.Feint,      Color.black);
-            ApplyLayer(_strengthModRenderer,
-                code.StrengthModifier == StrengthModifier.Reinforced ? sprites.Reinforced
-              : code.StrengthModifier == StrengthModifier.Reduced    ? sprites.Reduced
-              : null, Color.black);
+            if (_database != null)
+            {
+                ApplyDatabaseLayers(code);
+            }
+            else
+            {
+                ApplyComposedLayers(code);
+            }
 
             UpdateTextLabels(code);
-
-            // Scale the root transform so the symbol occupies _symbolSize world units.
             transform.localScale = Vector3.one * _symbolSize;
         }
 
-        /// <summary>Convenience overload accepting a raw SIDC string.</summary>
         public void SetSymbol(string sidc, string designation = "", string higherFormation = "")
         {
             if (!SIDCParser.TryParse(sidc, out var code)) return;
@@ -106,12 +90,39 @@ namespace Strategos.NatoSymbols
             SetSymbol(code);
         }
 
-        /// <summary>Returns the SIDCCode currently displayed.</summary>
         public SIDCCode CurrentCode => _currentCode;
 
-        // -------------------------------------------------------------------------
-        // Private helpers
-        // -------------------------------------------------------------------------
+        private void ApplyDatabaseLayers(SIDCCode code)
+        {
+            var sprites = _database.Resolve(code);
+            ApplyLayer(_frameRenderer,     sprites.Frame,      sprites.FrameTint);
+            ApplyLayer(_iconRenderer,      sprites.Icon,       Color.white);
+            ApplyLayer(_echelonRenderer,   sprites.Echelon,    Color.black);
+            ApplyLayer(_hqLineRenderer,    sprites.HQLine,     Color.black);
+            ApplyLayer(_tfBracketRenderer, sprites.TFBracket,  Color.black);
+            ApplyLayer(_feintRenderer,     sprites.Feint,      Color.black);
+            ApplyLayer(_strengthModRenderer,
+                code.StrengthModifier == StrengthModifier.Reinforced ? sprites.Reinforced
+              : code.StrengthModifier == StrengthModifier.Reduced    ? sprites.Reduced
+              : null, Color.black);
+        }
+
+        private void ApplyComposedLayers(SIDCCode code)
+        {
+            // Procedural path: bake full composition onto the frame renderer.
+            var symbol = NatoSymbolComposer.Compose(code, (NatoSymbolDatabase)null);
+            var baked  = NatoSymbolBaker.Bake(symbol, 256);
+            if (baked != null)
+                _ownedTextures.Add(baked.texture);
+
+            ApplyLayer(_frameRenderer, baked, Color.white);
+            ApplyLayer(_iconRenderer, null, Color.white);
+            ApplyLayer(_echelonRenderer, null, Color.white);
+            ApplyLayer(_hqLineRenderer, null, Color.white);
+            ApplyLayer(_tfBracketRenderer, null, Color.white);
+            ApplyLayer(_feintRenderer, null, Color.white);
+            ApplyLayer(_strengthModRenderer, null, Color.white);
+        }
 
         private static void ApplyLayer(SpriteRenderer renderer, Sprite sprite, Color tint)
         {
@@ -123,14 +134,10 @@ namespace Strategos.NatoSymbols
 
         private void UpdateTextLabels(SIDCCode code)
         {
-            SetLabel(_designationLabel,     code.Designation);
-            SetLabel(_higherFormationLabel, code.HigherFormation);
-
-            // Strength label: number + optional +/- modifier
-            var strength = code.StrengthLabel ?? string.Empty;
-            if (code.StrengthModifier == StrengthModifier.Reinforced) strength += "+";
-            if (code.StrengthModifier == StrengthModifier.Reduced)    strength += "-";
-            SetLabel(_strengthLabel, strength);
+            var text = SymbolTextAmplifiers.FromCode(code);
+            SetLabel(_designationLabel,     text.Designation);
+            SetLabel(_higherFormationLabel, text.HigherFormation);
+            SetLabel(_strengthLabel,        text.StrengthDisplay);
         }
 
         private static void SetLabel(TMP_Text label, string text)
@@ -140,16 +147,22 @@ namespace Strategos.NatoSymbols
             label.enabled = !string.IsNullOrEmpty(text);
         }
 
-        /// <summary>Creates any missing child renderers at their canonical Z-offsets.</summary>
+        private void ClearOwnedTextures()
+        {
+            foreach (var t in _ownedTextures)
+                if (t != null) Destroy(t);
+            _ownedTextures.Clear();
+        }
+
         private void EnsureLayers()
         {
-            _frameRenderer      = EnsureRenderer(_frameRenderer,      "Layer_Frame",      sortOrder: 0,  zOffset: 0.00f);
-            _iconRenderer       = EnsureRenderer(_iconRenderer,       "Layer_Icon",       sortOrder: 1,  zOffset: -0.01f);
-            _echelonRenderer    = EnsureRenderer(_echelonRenderer,    "Layer_Echelon",    sortOrder: 2,  zOffset: -0.02f);
-            _hqLineRenderer     = EnsureRenderer(_hqLineRenderer,     "Layer_HQLine",     sortOrder: 3,  zOffset: -0.03f);
-            _tfBracketRenderer  = EnsureRenderer(_tfBracketRenderer,  "Layer_TFBracket",  sortOrder: 3,  zOffset: -0.03f);
-            _feintRenderer      = EnsureRenderer(_feintRenderer,      "Layer_Feint",      sortOrder: 3,  zOffset: -0.03f);
-            _strengthModRenderer = EnsureRenderer(_strengthModRenderer, "Layer_Strength", sortOrder: 3,  zOffset: -0.03f);
+            _frameRenderer       = EnsureRenderer(_frameRenderer,       "Layer_Frame",      sortOrder: 0,  zOffset: 0.00f);
+            _iconRenderer        = EnsureRenderer(_iconRenderer,        "Layer_Icon",       sortOrder: 1,  zOffset: -0.01f);
+            _echelonRenderer     = EnsureRenderer(_echelonRenderer,     "Layer_Echelon",    sortOrder: 2,  zOffset: -0.02f);
+            _hqLineRenderer      = EnsureRenderer(_hqLineRenderer,      "Layer_HQLine",     sortOrder: 3,  zOffset: -0.03f);
+            _tfBracketRenderer   = EnsureRenderer(_tfBracketRenderer,   "Layer_TFBracket",  sortOrder: 3,  zOffset: -0.03f);
+            _feintRenderer       = EnsureRenderer(_feintRenderer,       "Layer_Feint",      sortOrder: 3,  zOffset: -0.03f);
+            _strengthModRenderer = EnsureRenderer(_strengthModRenderer, "Layer_Strength",   sortOrder: 3,  zOffset: -0.03f);
         }
 
         private SpriteRenderer EnsureRenderer(SpriteRenderer existing, string childName, int sortOrder, float zOffset)

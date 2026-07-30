@@ -2,239 +2,234 @@
 
 Custom in-house tool for generating, compositing, and rendering NATO APP-6D military symbols in Unity 6. No external runtime dependencies.
 
+Construction follows APP-6(D) Chapter 1 / Table 3-1: **Factory** creates the framed base; **Decorators** add icon, sector modifiers, and amplifiers.
+
+> This document is the reference for APP-6D detail (SIDC tables, frame shapes, layer model).
+> For build commands, rendering invariants and known traps, see [CLAUDE.md](../CLAUDE.md).
+
 ---
 
 ## Architecture Overview
 
-The generator is split into three layers:
-
 ```
-┌───────────────────────────────────────────────────────┐
-│  NatoSymbolView  (MonoBehaviour — in-scene display)   │
-│  Layered SpriteRenderers, no texture baking required  │
-└───────────────────────────┬───────────────────────────┘
-                            │ requests
-┌───────────────────────────▼───────────────────────────┐
-│  NatoSymbolGenerator  (runtime compositor)            │
-│  Accepts SIDCCode → composites layers → returns Sprite│
-└──────────┬─────────────────────┬──────────────────────┘
-           │ parses              │ looks up
-┌──────────▼──────────┐ ┌────────▼──────────────────────┐
-│  SIDCParser         │ │  NatoSymbolDatabase            │
-│  string → SIDCCode  │ │  ScriptableObject              │
-└─────────────────────┘ │  frames / icons / echelons     │
-                        └───────────────────────────────┘
+SIDC string
+    │
+    ▼
+SIDCParser  ──► SIDCCode
+    │
+    ▼
+NatoSymbolComposer
+    │  1. SymbolFactory.CreateBase()     → Frame + Fill
+    │  2. IconDecorator                  → Field A icon + entity-type variant mark
+    │  3. SectorModifierDecorator        → Sector 1 / 2
+    │  4. AmplifierDecorator             → Fields B/D/S (echelon, HQ, TF, feint)
+    │  5. ConditionDecorator             → operational condition + combat-power bars
+    │  6. TextAmplifierDecorator         → text fields T / M / F
+    ▼
+INatoSymbol  (ordered SymbolLayerDraw list + SymbolTextAmplifiers)
+    │
+    ├── NatoSymbolView      (Mode A — layered SpriteRenderers / baked procedural)
+    ├── NatoSymbolBaker     (Mode B — flatten to Sprite)
+    └── NatoSymbolGenerator (Mode B — GPU blit when database sprites exist)
 ```
 
-Additionally, a **Unity Editor Window** (`NatoSymbolEditorWindow`) allows:
-- Live SIDC preview
-- Batch export of sprite atlases
-- Symbol catalogue browser
+Editor Window (`NatoSymbolEditorWindow`, menu **Strategos → NATO Symbol Generator**): live SIDC preview, PNG export, batch from catalogue JSON. Works with procedural composition when no database is assigned.
 
 ---
 
-## SIDC Format (APP-6D)
+## SIDC Format (APP-6D Annex A)
 
-A **Symbol Identification Coding (SIDC)** string is 20 characters, structured as follows:
+A SIDC is **two sets of ten digits** (20 required). An optional third ten (30 total) may carry originator extensions and is accepted but ignored.
 
 ```
-Pos  1–2   : Version (10 = APP-6D)
-Pos  3     : Standard Identity / Affiliation (0–Z)
-Pos  4–5   : Symbol Set (land=10, sea=30, air=01, space=05, subsurface=35, cyberspace=60)
-Pos  6     : Status (0=present, 1=anticipated/planned)
-Pos  7     : HQ/Task Force/Dummy (0=none, 1=HQ, 2=TF, 3=HQ+TF, 4=Feint/Dummy, ...)
-Pos  8–9   : Echelon/Mobility (00=none, 11=team, 12=squad, 13=section, 14=platoon,
-             15=company, 16=battalion, 17=regiment, 18=brigade, 21=division,
-             22=corps, 23=army, 24=army group, 25=theater/command)
-Pos 10–11  : Entity (main unit type code)
-Pos 12–13  : Entity Type modifier
-Pos 14–15  : Entity Subtype modifier
-Pos 16–17  : Sector 1 modifier
-Pos 18–19  : Sector 2 modifier
-Pos 20     : Reserved
+Digits 1–2   : Version (10 = APP-6D)
+Digits 3–4   : Context (0=Reality) + Standard Identity (Table A-2)
+Digits 5–6   : Symbol Set (10=Land Unit — Table A-4)
+Digit  7     : Status (Table A-6)
+Digit  8     : HQ / Task Force / Dummy (Table A-7)
+Digits 9–10  : Amplifier — echelon / mobility (Table A-8)
+Digits 11–12 : Entity
+Digits 13–14 : Entity Type
+Digits 15–16 : Entity Subtype
+Digits 17–18 : Sector 1 Modifier
+Digits 19–20 : Sector 2 Modifier
 ```
 
-Example:
-```
-10031500001211000000
-│ │ │ │ │  │ │
-│ │ │ │ │  │ └── Modifiers (0000)
-│ │ │ │ │  └──── Entity: Infantry (1211 → 12=infantry, 11=foot)
-│ │ │ │ └─────── HQ/TF/Dummy: 0 (none)
-│ │ │ └───────── Status: 0 (present)
-│ │ └─────────── Symbol Set: 10 (land)
-│ └───────────── Affiliation: 3 (friend)
-└─────────────── Version: 10 (APP-6D)
+### Standard Identity (digit 4 — Table A-2)
 
-Echelon at pos 8–9: 15 = Company
+| Code | Identity |
+|---|---|
+| 0 | Pending |
+| 1 | Unknown |
+| 2 | Assumed Friend |
+| 3 | Friend |
+| 4 | Neutral |
+| 5 | Suspect / Joker |
+| 6 | Hostile / Faker |
+
+Identity groups (Table A-3) drive frame shape: Unknown, Friend, Neutral, Hostile.
+
+### HQ / Task Force / Dummy (digit 8 — Table A-7)
+
+| Code | Meaning |
+|---|---|
+| 0 | None |
+| 1 | Feint/Dummy |
+| 2 | Headquarters |
+| 3 | Feint + HQ |
+| 4 | Task Force |
+| 5 | Feint + TF |
+| 6 | TF + HQ |
+| 7 | Feint + TF + HQ |
+
+### Canonical example
+
+Friend Land Unit Infantry Company:
+
+```
+10031000151211000000
+│││││ ││ │ │ │
+│││││ ││ │ │ └── Sector mods 0000
+│││││ ││ │ └──── Entity subtype 00
+│││││ ││ └────── Entity type 11
+│││││ └───────── Entity 12 (infantry)
+││││└─────────── Echelon 15 (company)
+│││└──────────── HQ/TF 0, Status 0
+││└───────────── Symbol Set 10 (Land Unit)
+│└────────────── Context 0 + Identity 3 (Friend)
+└─────────────── Version 10
 ```
 
 ---
 
-## Symbol Layers
+## Symbol Layers (APP-6D §1.2)
 
-Every rendered symbol is composed of five ordered layers:
+Every icon-based symbol is composed of:
 
-| Layer | Z-Order | Content |
+| Layer | APP-6(D) term | Location |
 |---|---|---|
-| 1. Frame | Bottom | Affiliation shape (rectangle, diamond, circle, etc.) |
-| 2. Icon | Above frame | Unit function/type icon |
-| 3. Echelon | Above frame | Echelon mark (dots, Roman numerals, Xs) |
-| 4. Modifiers | Above frame | HQ line, TF bracket, feint dashes |
-| 5. Text Labels | Top | Designation, higher formation, strength |
+| 1. Frame + Fill | Frame / Fill | Shape by identity group × dimension; colour Table 1-8 |
+| 2. Icon | Field A | Bounding octagon main / full-frame / full-octagon |
+| 3. Modifiers | Sector 1 / 2 | Octagon sectors (.3L / .4L / .3L) — max one each |
+| 4. Amplifiers | Fields B, D, S, … | Outside frame (echelon, HQ staff, TF bracket, feint) |
+| 5. Text | Fields T, M, F | Designation, higher formation, reinforced/reduced — right of frame |
 
-### Frame Shapes by Affiliation + Dimension
+Layer 5 is baked with the 5×7 bitmap font in `ProceduralDrawUtil` (`DrawText`), not with
+TextMeshPro, so a composed symbol stays one self-contained sprite in headless bakes.
 
-| Affiliation | Land Frame | Air Frame | Sea Frame |
-|---|---|---|---|
-| Friend | Rectangle | Rounded rect | Diamond |
-| Hostile | Diamond | Diamond | Diamond |
-| Neutral | Square (rotated 45°) | Square | Square |
-| Unknown | Circle | Circle | Circle |
-| Pending | Question-mark frame | | |
+### Frame shapes (Land Unit — Table 1-1)
 
-Fill colours:
-- Friend: `#80E0FF` (light blue)
-- Hostile: `#FF8080` (light red)
-- Neutral: `#AAFFAA` (light green)
-- Unknown: `#FFFF80` (light yellow)
-- Pending: `#FFFFFF`
+| Identity group | Land frame |
+|---|---|
+| Friend | Rectangle |
+| Hostile | Diamond |
+| Neutral | Square |
+| Unknown / Pending | Ellipse |
 
-### Echelon Marks
+Line style: solid (present), dashed (planned), dotted (uncertain identity — Assumed Friend / Suspect / Pending).
 
-| Code | Mark | Rendering |
+Fill colours (Table 1-8 computer-generated): Friend `#80E0FF`, Hostile `#FF8080`, Neutral `#AAFFAA`, Unknown `#FFFF80`.
+
+### Bounding octagon (Figure 1-15)
+
+Vertical sectors relative to octagon height `L`: top `.3L` (sector 1), mid `.4L` (main icon), bottom `.3L` (sector 2). Encoded in `SymbolLayout`.
+
+Within the `BASE = 256` canvas the frame occupies the **left** portion only
+(`FrameLeft = 12` … `FrameRight = 160`). The remaining right-hand column is reserved for
+the text amplifiers, which APP-6D places outside the frame — so a composed symbol is
+intentionally not centred in its texture. Below the frame, `ConditionBarY` and
+`StrengthBarY` hold the operational-condition and combat-power bars, positioned clear of
+the HQ staff terminus (`HqLineY`).
+
+### Echelon marks (Field B / Table A-8)
+
+| Code | Echelon | Mark |
 |---|---|---|
-| 11 | Team/Crew | ○ (small circle, or no mark) |
-| 12 | Squad | • (one filled dot) |
-| 13 | Section | •• (two dots) |
-| 14 | Platoon | ••• (three dots) |
-| 15 | Company | ••• (three dots, alternate glyph) |
-| 16 | Battalion | I |
-| 17 | Regiment | II |
+| 11 | Team / Crew | ○ |
+| 12 | Squad | • |
+| 13 | Section | •• |
+| 14 | Platoon | ••• |
+| 15 | Company / Battery / Troop | I |
+| 16 | Battalion / Squadron | II |
+| 17 | Regiment / Group | III |
 | 18 | Brigade | X |
 | 21 | Division | XX |
 | 22 | Corps | XXX |
 | 23 | Army | XXXX |
-| 24 | Army Group | XXXXX |
-| 25 | Theater | XXXXXX |
+| 24 | Army Group / Front | XXXXX |
+| 25 | Region / Theater | XXXXXX |
+| 26 | Command | ++ |
 
-Echelon marks are rendered as TextMeshPro text objects centred above the frame.
+---
+
+## Factory + Decorator API
+
+```csharp
+// Preferred entry point
+INatoSymbol symbol = NatoSymbolComposer.Compose("10031000151211000000");
+INatoSymbol symbol = NatoSymbolComposer.Compose(sidcCode, database);
+
+// Legacy single-sprite convenience (Compose → Bake)
+Sprite sprite = SymbolFactory.Create().GetSymbolSprite(sidcCode, 256);
+```
+
+| Type | Role |
+|---|---|
+| `SymbolFactory` / `ProceduralSymbolFactory` | Factory Method — base frame + fill |
+| `IconDecorator` | Table 3-1 Step 2 — land main / full-frame icons + entity-type variants |
+| `SectorModifierDecorator` | Step 3 — sector 1/2 modifiers |
+| `AmplifierDecorator` | Echelon, HQ staff, TF bracket, feint |
+| `ConditionDecorator` | Operational condition bar + combat-power bar |
+| `TextAmplifierDecorator` | Text fields T / M / F |
+| `NatoSymbolBaker` | Flatten `INatoSymbol` → `Sprite` |
+| `NatoSymbolView` | In-scene display (database layers or baked procedural) |
 
 ---
 
 ## Rendering Modes
 
-### Mode A — Layered (runtime, default)
+### Mode A — Layered (runtime)
 
-`NatoSymbolView` uses stacked `SpriteRenderer` child objects for each layer. No RenderTexture baking; Unity's sprite sorting handles Z-order. Best for in-game unit markers.
+`NatoSymbolView` uses stacked `SpriteRenderer` children when a `NatoSymbolDatabase` is assigned. Without a database, the composer bakes a procedural sprite onto the frame layer.
 
-**Pros:** Zero allocation after spawn, dynamic (echelon/status change updates instantly).
-**Cons:** Multiple draw calls per symbol (mitigated with GPU instancing + sprite atlases).
+### Mode B — Baked
 
-### Mode B — Baked (editor, persistence)
+`NatoSymbolBaker.Bake()` (CPU procedural) or `NatoSymbolGenerator.Bake()` (GPU blit of database sprites). Used by the Editor Window and demo grid.
 
-`NatoSymbolGenerator.Bake()` composites all layers onto a `RenderTexture` and calls `ReadPixels()` to produce a persistent `Texture2D`/`Sprite`. Used by the Editor Window to produce atlas assets.
+### Mode C — SVG Export (planned)
 
-**Pros:** Single draw call, portable (can be shown anywhere including UI).
-**Cons:** Allocates memory; not suitable for very large numbers of unique symbols at runtime.
-
-### Mode C — SVG Export (CI pipeline)
-
-The Editor Window can export any symbol as a standalone SVG file using Unity's **Vector Graphics** package (`com.unity.vectorgraphics`). Used for documentation, the Steam store page, and scenario thumbnails.
+Vector Graphics package export for documentation / store art — not implemented in this slice.
 
 ---
 
-## Component Sprite Organisation
+## Component Sprite Organisation (database path)
 
-All component sprites live in `Assets/Art/NatoSymbols/` and are packed into Sprite Atlases per category:
+When art is ready, component sprites live under `Assets/Art/NatoSymbols/` and are registered on `NatoSymbolDatabase`. Same composer order; only the frame factory / resolvers switch to sprites.
 
 ```
 Assets/Art/NatoSymbols/
 ├── Frames/
-│   ├── Land_Friend.png
-│   ├── Land_Hostile.png
-│   ├── Land_Neutral.png
-│   ├── Land_Unknown.png
-│   ├── Air_Friend.png
-│   └── ... (one per Dimension × Affiliation)
-├── Icons/
-│   ├── Land/
-│   │   ├── Infantry.png
-│   │   ├── Armor.png
-│   │   ├── Artillery.png
-│   │   ├── Aviation.png
-│   │   ├── Engineer.png
-│   │   ├── Signals.png
-│   │   ├── Logistics.png
-│   │   ├── Medical.png
-│   │   ├── Headquarters.png
-│   │   ├── AirDefense.png
-│   │   ├── Reconnaissance.png
-│   │   └── ... (all APP-6D land entities)
-│   ├── Air/
-│   └── Sea/
+├── Icons/Land/
 ├── Echelons/
-│   ├── Team.png
-│   ├── Squad.png
-│   ├── Platoon.png
-│   ├── Company.png
-│   ├── Battalion.png
-│   ├── Regiment.png
-│   ├── Brigade.png
-│   ├── Division.png
-│   ├── Corps.png
-│   ├── Army.png
-│   ├── ArmyGroup.png
-│   └── Theater.png
 ├── Modifiers/
-│   ├── HQ_Line.png
-│   ├── TaskForce_Bracket.png
-│   ├── Feint_Indicator.png
-│   ├── Reinforced.png
-│   └── Reduced.png
 └── Atlas/
-    ├── Frames.spriteatlas
-    ├── Icons_Land.spriteatlas
-    ├── Icons_Air.spriteatlas
-    ├── Icons_Sea.spriteatlas
-    ├── Echelons.spriteatlas
-    └── Modifiers.spriteatlas
 ```
-
-All component sprites are **128×128 px** source art, exported as greyscale + alpha (tinted at runtime).
 
 ---
 
 ## Editor Tool
 
-`NatoSymbolEditorWindow` (menu: **Strategos → NATO Symbol Generator**) provides:
+`NatoSymbolEditorWindow` (menu: **Strategos → NATO Symbol Generator**):
 
-1. **Preview Panel** — Enter any SIDC string, see live composed symbol at 128 px and 256 px
-2. **Component Inspector** — Click any layer to highlight which sprite is used
-3. **Text Modifier Fields** — Set designation, higher formation, strength labels
-4. **Export Button** — Saves the current symbol as a `Sprite` asset into `Assets/Art/NatoSymbols/Exported/`
-5. **Batch Generate** — Reads a JSON catalogue file and generates all listed symbols into an atlas
-6. **Symbol Catalogue Browser** — Grid view of all symbols in `NatoSymbolDatabase`
-
----
-
-## Batch Generation (CI)
-
-A `NatoSymbolBatchGenerator` Editor script can be invoked from the command line:
-
-```bash
-Unity.exe -batchmode -quit \
-  -executeMethod Strategos.Editor.NatoSymbolBatchGenerator.Run \
-  -cataloguePath Assets/Data/NatoSymbols/catalogue.json \
-  -outputPath Assets/Art/NatoSymbols/Exported/
-```
-
-`catalogue.json` is a JSON array of SIDC strings + metadata:
+1. Live SIDC preview (procedural or database)
+2. Text amplifier fields (designation, formation, strength)
+3. PNG export
+4. Batch generate from JSON catalogue
 
 ```json
 [
-  { "sidc": "10031500001211000000", "designation": "1-7 IN", "formation": "3 ID" },
-  { "sidc": "10061500003100000000", "designation": "1-34 AR", "formation": "1 AD" }
+  { "sidc": "10031000151211000000", "designation": "1-7 IN", "formation": "3 ID" },
+  { "sidc": "10061000151600000000", "designation": "1-34 AR", "formation": "1 AD" }
 ]
 ```
 
@@ -244,13 +239,35 @@ Unity.exe -batchmode -quit \
 
 | File | Purpose |
 |---|---|
-| `Assets/Scripts/Core/NatoSymbols/NatoSymbolTypes.cs` | Enums, structs, SIDC data model |
-| `Assets/Scripts/Core/NatoSymbols/SIDCParser.cs` | SIDC string → SIDCCode |
-| `Assets/Scripts/Core/NatoSymbols/NatoSymbolDatabase.cs` | ScriptableObject component registry |
-| `Assets/Scripts/Core/NatoSymbols/NatoSymbolGenerator.cs` | Compositor — layers → Sprite |
-| `Assets/Scripts/Core/NatoSymbols/NatoSymbolView.cs` | MonoBehaviour in-scene display |
-| `Assets/Editor/NatoSymbolEditorWindow.cs` | Unity Editor preview + export tool |
+| `NatoSymbolTypes.cs` | Enums / SIDCCode (Annex A) |
+| `SIDCParser.cs` | 20/30-digit SIDC → SIDCCode |
+| `INatoSymbol.cs` | Layer draw model + `SymbolLayout` |
+| `NatoSymbolDecorator.cs` | Base symbol + decorator base |
+| `SymbolFactory.cs` | Factory Method (procedural frame) |
+| `ProceduralDrawUtil.cs` | Pixel primitives, mobility glyphs, 5×7 bitmap font |
+| `IconDecorator.cs` | Land unit icons + entity-type variants |
+| `SectorModifierDecorator.cs` | Sector 1/2 modifiers |
+| `AmplifierDecorator.cs` | Graphic amplifiers (echelon, HQ, TF, feint) |
+| `ConditionDecorator.cs` | Condition + combat-power bars |
+| `TextAmplifierDecorator.cs` | Text amplifiers T / M / F |
+| `NatoSymbolComposer.cs` | Table 3-1 orchestration |
+| `NatoSymbolBaker.cs` | Compose → Sprite |
+| `NatoSymbolDatabase.cs` | ScriptableObject sprite registry |
+| `NatoSymbolGenerator.cs` | GPU bake (database) / procedural fallback |
+| `NatoSymbolView.cs` | In-scene display |
+| `NatoSymbolEditorWindow.cs` | Editor preview + export |
+| `Editor/TmpResources.cs` | Headless TMP essential-resources importer |
+| `Editor/SymbolContactSheet.cs` | Bakes a permutation grid for visual review |
 
 ---
 
-*Last updated: 2026-07-29 | Co-Authored-By: Oz <oz-agent@warp.dev>*
+## Reviewing rendering changes
+
+`Strategos → Bake Symbol Contact Sheet` writes `Artifacts/symbol-contact-sheet.png`, a
+grid covering variants, operational conditions, strength levels, Field F markers, frame
+shapes and sector-modifier interactions. Faster and more thorough than driving the demo
+panel by hand.
+
+---
+
+*Last updated: 2026-07-29*

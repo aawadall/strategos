@@ -11,9 +11,19 @@
 #   UNITY_EMAIL     — Your Unity account email
 #   UNITY_PASSWORD  — Your Unity account password
 #
+# Without those secrets there is no way to activate the editor, so both the test
+# and build jobs would fail on activation alone — a red check that says nothing
+# about the code. `preflight` therefore probes for credentials and the Unity jobs
+# skip when none are present, which reports neutral rather than failed.
+#
 # Jobs:
-#   test   — Runs Unity EditMode tests and uploads NUnit XML results.
-#   build  — Builds Windows, Linux, and macOS in parallel (requires test pass).
+#   preflight — Reports whether Unity credentials are configured.
+#   test      — Runs Unity EditMode tests and uploads NUnit XML results.
+#   build     — Builds Windows, Linux, and macOS in parallel.
+#
+# `build` deliberately does NOT depend on `test`: there is no test assembly under
+# Assets/ yet, so gating releases on an empty test run only adds a failure mode.
+# Restore `needs: test` once real tests exist.
 # =============================================================================
 
 name: CI — Build & Test
@@ -35,12 +45,44 @@ env:
   PROJECT_PATH: .
 
 # =============================================================================
-# Job 1 — Test
+# Job 1 — Preflight
+#
+# The `secrets` context is not available in a job-level `if`, so presence has to
+# be probed inside a step and published as an output for the Unity jobs to read.
 # =============================================================================
 jobs:
+  preflight:
+    name: Preflight
+    runs-on: ubuntu-latest
+
+    outputs:
+      unity-credentials: ${{ steps.probe.outputs.unity-credentials }}
+
+    steps:
+      - name: Probe for Unity credentials
+        id: probe
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          # A license file alone is enough; so is an email/password pair.
+          if [ -n "$UNITY_LICENSE" ] || { [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; }; then
+            echo "unity-credentials=true" >> "$GITHUB_OUTPUT"
+            echo "Unity credentials found — test and build jobs will run."
+          else
+            echo "unity-credentials=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Unity credentials missing::UNITY_LICENSE (or UNITY_EMAIL + UNITY_PASSWORD) is not set, so the Unity test and build jobs were skipped. Set them under Settings → Secrets → Actions to enable CI builds."
+          fi
+
+# =============================================================================
+# Job 2 — Test
+# =============================================================================
   test:
     name: Tests (EditMode)
     runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.unity-credentials == 'true'
 
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
@@ -86,12 +128,13 @@ jobs:
           retention-days: 14
 
 # =============================================================================
-# Job 2 — Build matrix
+# Job 3 — Build matrix
 # =============================================================================
   build:
     name: Build — ${{ matrix.platform.name }}
-    needs: test          # Only runs if tests pass
     runs-on: ubuntu-latest
+    needs: preflight     # Not `test` — see the header note on the empty test suite
+    if: needs.preflight.outputs.unity-credentials == 'true'
 
     strategy:
       fail-fast: false   # Let all platforms finish even if one fails

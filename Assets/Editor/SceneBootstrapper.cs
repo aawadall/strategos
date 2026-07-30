@@ -26,12 +26,6 @@ namespace Strategos.Editor
         private const string DemoScenePath = "Assets/Scenes/Demo/SymbolDemo.unity";
         private const string SessionKey    = "Strategos.SceneBootstrapped";
 
-        // Demo grid geometry (must match SymbolDemoSpawner defaults)
-        private const int   NumCols    = 12;   // echelons
-        private const int   NumRows    = 4;    // affiliations
-        private const float CellSize   = 1.6f;
-        private const float CellSpacing = 0.4f;
-
         // -------------------------------------------------------------------------
         // Static constructor — runs on every Editor domain reload
         // -------------------------------------------------------------------------
@@ -107,18 +101,6 @@ namespace Strategos.Editor
 
             var demoCam = camGO.AddComponent<DemoCamera>();
 
-            // Compute grid size and position camera at centre.
-            float step      = CellSize + CellSpacing;
-            float gridW     = (NumCols - 1) * step;
-            float gridH     = (NumRows - 1) * step;
-            float cx        = gridW * 0.5f;
-            float cy        = -gridH * 0.5f;
-            float orthoSize = Mathf.Max(gridW / 2f, gridH) * 0.72f + 2f;
-
-            camGO.transform.position = new Vector3(cx, cy, -20f);
-            cam.orthographicSize     = orthoSize;
-            demoCam.SetDefaults(new Vector3(cx, cy, 0f), orthoSize);
-
             // --- Directional light ---
             var lightGO   = new GameObject("Directional Light");
             var light     = lightGO.AddComponent<Light>();
@@ -127,20 +109,19 @@ namespace Strategos.Editor
             light.intensity = 1f;
             lightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-            // --- Symbol demo spawner ---
+            // --- Symbol builder (primary UX: side-menu composition) ---
+            var builderGO = new GameObject("SymbolBuilder");
+            builderGO.AddComponent<SymbolBuilderPanel>();
+
+            // Optional reference grid — disabled by default; enable in Inspector to compare echelons.
             var spawnerGO = new GameObject("SymbolDemoSpawner");
+            spawnerGO.SetActive(false);
             spawnerGO.AddComponent<SymbolDemoSpawner>();
 
-            // --- Title label (world-space) ---
-            var titleGO  = new GameObject("TitleLabel");
-            var titleTMP = titleGO.AddComponent<TMPro.TextMeshPro>();
-            titleTMP.text      = "STRATEGOS — NATO APP-6D Symbol Library\n<size=60%>Placeholder mode · Assign NatoSymbolDatabase for real sprites</size>";
-            titleTMP.fontSize  = 0.5f;
-            titleTMP.color     = new Color(0.8f, 0.8f, 0.8f);
-            titleTMP.alignment = TMPro.TextAlignmentOptions.Center;
-            titleTMP.enableWordWrapping = false;
-            float titleY = step * 1.8f;
-            titleGO.transform.position = new Vector3(cx, cy + titleY, 0f);
+            // Camera framed for UI (screen-space builder); world grid optional.
+            camGO.transform.position = new Vector3(0f, 0f, -20f);
+            cam.orthographicSize = 8f;
+            demoCam.SetDefaults(Vector3.zero, 8f);
 
             // --- Save scene ---
             EditorSceneManager.SaveScene(scene, DemoScenePath);
