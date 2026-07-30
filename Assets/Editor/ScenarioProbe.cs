@@ -280,15 +280,47 @@ namespace Strategos.Editor
                 log.AppendLine($"  validation catches {"unknown capability id",-28} -> \"{caught[0]}\"");
             }
 
-            // And the shipped fixture's ids must all resolve.
-            var shippedProblems = ScenarioSamples.Skirmish().Validate(UnitCatalogue.Default());
+            // And the shipped fixture's ids must all resolve, and every unit must be
+            // standing somewhere its own capabilities can actually occupy. The generator
+            // makes a lot of standing water, so a plausible coordinate lands in a lake more
+            // often than expected — and the symbol draws fine on top of it.
+            var sample = ScenarioSamples.Skirmish();
+            var sampleMap = sample.GenerateMap();
+            var shippedProblems = sample.Validate(UnitCatalogue.Default(), sampleMap);
             foreach (var p2 in shippedProblems)
             {
-                log.AppendLine($"  FAIL sample fails catalogue validation: {p2}");
+                log.AppendLine($"  FAIL sample fails full validation: {p2}");
                 bad++;
+            }
+            log.AppendLine($"  all {sample.Units.Count} sample units start on passable ground");
+
+            // And prove the passability check actually fires.
+            var drowned = ScenarioSamples.Skirmish();
+            drowned.Units[0].Cell = FindCell(sampleMap, LandcoverClass.Water);
+            if (drowned.Units[0].Cell.x >= 0f)
+            {
+                var caught2 = drowned.Validate(UnitCatalogue.Default(), sampleMap);
+                if (caught2.Count == 0)
+                {
+                    log.AppendLine("  FAIL validation missed: unit standing in water");
+                    bad++;
+                }
+                else
+                {
+                    log.AppendLine($"  validation catches {"unit in impassable terrain",-28} -> \"{caught2[0]}\"");
+                }
             }
 
             return bad;
+        }
+
+        /// <summary>First cell of the given landcover, or (-1,-1) if the map has none.</summary>
+        private static Vector2 FindCell(MapData map, LandcoverClass want)
+        {
+            for (int y = 0; y < map.Height; y++)
+            for (int x = 0; x < map.Width; x++)
+                if (map.GetLandcover(x, y) == want) return new Vector2(x, y);
+            return new Vector2(-1f, -1f);
         }
 
         private static int ExpectProblem(StringBuilder log, string what,

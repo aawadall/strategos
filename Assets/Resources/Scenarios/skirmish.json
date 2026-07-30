@@ -62,8 +62,8 @@
       "HigherFormation": "1-7 IN",
       "CapabilityId": "inf-mech",
       "Cell": {
-        "x": 40.0,
-        "y": 40.0
+        "x": 58.0,
+        "y": 72.0
       },
       "Strength": 100,
       "Readiness": 100.0,
@@ -91,8 +91,8 @@
       "HigherFormation": "2-69 AR",
       "CapabilityId": "armor",
       "Cell": {
-        "x": 52.0,
-        "y": 34.0
+        "x": 76.0,
+        "y": 60.0
       },
       "Strength": 100,
       "Readiness": 100.0,
@@ -120,8 +120,8 @@
       "HigherFormation": "1-7 IN",
       "CapabilityId": "recon-motor",
       "Cell": {
-        "x": 60.0,
-        "y": 52.0
+        "x": 88.0,
+        "y": 92.0
       },
       "Strength": 100,
       "Readiness": 100.0,
@@ -149,8 +149,8 @@
       "HigherFormation": "2 MRR",
       "CapabilityId": "inf-motor",
       "Cell": {
-        "x": 215.0,
-        "y": 210.0
+        "x": 190.0,
+        "y": 178.0
       },
       "Strength": 100,
       "Readiness": 100.0,
@@ -178,8 +178,8 @@
       "HigherFormation": "2 MRR",
       "CapabilityId": "armor",
       "Cell": {
-        "x": 203.0,
-        "y": 218.0
+        "x": 178.0,
+        "y": 196.0
       },
       "Strength": 100,
       "Readiness": 100.0,
@@ -207,8 +207,8 @@
       "HigherFormation": "2 MRR",
       "CapabilityId": "artillery",
       "Cell": {
-        "x": 228.0,
-        "y": 232.0
+        "x": 186.0,
+        "y": 150.0
       },
       "Strength": 90,
       "Readiness": 100.0,

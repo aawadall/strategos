@@ -120,6 +120,31 @@ namespace Strategos.NatoSymbols
         public const int FrameHalfH  = 62;
         public const int BorderWidth = 4;
 
+        /// <summary>
+        /// Frame centre as a fraction of the baked texture, where (0.5, 0.5) is the texture
+        /// centre and the sprite's pivot.
+        ///
+        /// **Anything pinning a baked symbol to a map position needs this.** Because the
+        /// frame sits left of centre to leave room for the text amplifier column, the frame
+        /// centre is at (86, 118) of 256 — roughly (0.336, 0.461) — and NOT at the pivot. A
+        /// sprite placed naively by its pivot puts the *texture* centre on the point, so
+        /// every symbol sits visibly up and to the left of where it actually is, which reads
+        /// as a coordinate bug rather than a pivot one.
+        ///
+        /// To place a symbol of on-screen size <c>s</c> so its frame centre lands on
+        /// <c>p</c>: <c>imageCentre = p - (FrameCentreNormalised - 0.5f * Vector2.one) * s</c>.
+        /// </summary>
+        public static Vector2 FrameCentreNormalised =>
+            new(FrameCX / (float)BASE, FrameCY / (float)BASE);
+
+        /// <summary>
+        /// Offset from a sprite's pivot to its frame centre, in units of the on-screen
+        /// symbol size. Subtract this from the desired position to get where the image's
+        /// centre should go.
+        /// </summary>
+        public static Vector2 PivotToFrameCentre =>
+            FrameCentreNormalised - new Vector2(0.5f, 0.5f);
+
         // Bounding octagon ≈ frame interior
         public const int OctagonL = 124; // ≈ FrameTop - FrameBottom
 

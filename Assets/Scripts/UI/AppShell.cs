@@ -68,6 +68,7 @@ namespace Strategos.UI
             BuildChrome(out var tabStrip, out var contentHost);
             _views = new ViewHost(contentHost, tabStrip);
 
+            _views.Add<PlayView>(v => ((PlayView)v).Session = _session);
             _views.Add<ExplorerView>(v => ((ExplorerView)v).Session = _session);
             _views.Add<ScenarioSetupView>(v => ((ScenarioSetupView)v).Session = _session);
             _views.Add<SymbolBuilderPanel>();

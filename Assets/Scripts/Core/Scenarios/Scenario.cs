@@ -106,7 +106,17 @@ namespace Strategos.Scenarios
         /// id degrades to the generic fallback rather than throwing, so a typo turns a
         /// mechanised company into a walking one and reads as a movement bug.
         /// </param>
-        public List<string> Validate(UnitCatalogue catalogue = null)
+        /// <param name="map">
+        /// When supplied along with a catalogue, each unit's starting cell is checked against
+        /// what its own capabilities can actually occupy. Costs a generation, so callers that
+        /// already have the map should pass it and others should not bother.
+        ///
+        /// This catches the placement that looks like nothing at all: a unit sitting in a
+        /// lake. The generator produces a lot of standing water (see the closed-basin note in
+        /// CLAUDE.md), so a plausible-looking coordinate lands in one more often than you
+        /// would expect, and the symbol draws perfectly well on top of it.
+        /// </param>
+        public List<string> Validate(UnitCatalogue catalogue = null, MapData map = null)
         {
             var problems = new List<string>();
 
@@ -167,6 +177,20 @@ namespace Strategos.Scenarios
 
                 if (catalogue != null && !catalogue.Contains(u.CapabilityId))
                     problems.Add($"Unit {who} has unknown capability id '{u.CapabilityId}'.");
+
+                if (catalogue != null && map != null && u.IsOnMap(map))
+                {
+                    var caps = catalogue.Get(u.CapabilityId);
+                    var cover = u.Landcover(map);
+                    int cx = Mathf.Clamp(Mathf.RoundToInt(u.Cell.x), 0, map.Width - 1);
+                    int cy = Mathf.Clamp(Mathf.RoundToInt(u.Cell.y), 0, map.Height - 1);
+                    float slope = map.SampleSlopeDegrees(cx, cy);
+
+                    if (!caps.CanEnter(cover, slope))
+                        problems.Add(
+                            $"Unit {who} starts on {LandcoverInfo.DisplayName(cover)} at " +
+                            $"{slope:0}deg, which '{caps.Id}' cannot occupy.");
+                }
             }
 
             foreach (var s in Sides)
