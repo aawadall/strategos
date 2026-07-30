@@ -347,10 +347,18 @@ Recorded so they are not re-investigated. None are fixed.
   `HydrologyStage.LakeDepth`, which would only shrink the shorelines of basins that should
   not exist. Note `FillDepressions`' comment deliberately preserves hollows as tactical
   features, so breaching needs a size threshold rather than being applied wholesale.
-- **CI gates every build on a test job with no tests.** `.github/workflows/build.yml` runs
-  `game-ci/unity-test-runner` in EditMode and `build` has `needs: test`, but there is no
-  test assembly anywhere under `Assets/`. `com.unity.test-framework` is in the manifest,
-  so the scaffolding is one asmdef away.
+- **There is still no test assembly anywhere under `Assets/`,** so the EditMode test job
+  has nothing to run. `com.unity.test-framework` is in the manifest, so the scaffolding is
+  one asmdef away. `build` no longer has `needs: test` — gating releases on an empty test
+  run only added a failure mode — so **restore that dependency when real tests land**.
+- **CI cannot activate Unity: no `UNITY_LICENSE` / `UNITY_EMAIL` / `UNITY_PASSWORD` secrets
+  are set on the repo.** Every hosted build and test therefore skips. The `preflight` job
+  probes for those credentials and the Unity jobs are `if`-gated on it, so a run without
+  them reports neutral-green with a warning annotation rather than a red X that says
+  nothing about the code — but note that **green CI currently means "nothing ran"**. Set
+  the secrets under Settings → Secrets → Actions to get real coverage. The `secrets`
+  context is unavailable in a job-level `if`, which is why the probe is a job and not a
+  condition.
 - **`.gitattributes` line-ending rules are overridden.** `git check-attr text filter --
   "Assets/TextMesh Pro/Sprites/EmojiOne.png"` reports `text: auto` despite the `-text`
   flag on `*.png` / `*.ttf`, so a later `* text=auto` rule wins. Harmless while LFS
