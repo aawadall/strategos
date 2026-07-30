@@ -61,6 +61,19 @@ namespace Strategos.Editor
 
         private static void Run(BuildTarget target)
         {
+            // Import anything edited since the last Editor session before building.
+            // Without this a batch build can package the assemblies already sitting in
+            // Library/ScriptAssemblies and silently ship the previous revision — the
+            // build reports success and the player runs your last change but one.
+            AssetDatabase.Refresh();
+
+            if (EditorApplication.isCompiling)
+            {
+                Fail("Scripts are still compiling. The build would package the previous " +
+                     "assemblies; re-run the build.");
+                return;
+            }
+
             string output    = ResolveOutputPath(target);
             bool   isDev     = HasArg("-development");
             var    scenes    = GetEnabledScenes();

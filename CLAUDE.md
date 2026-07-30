@@ -13,15 +13,21 @@ tables, frame shapes, layer model). If you change symbol behaviour, update both.
 
 Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D symbology.
 
-**Only Phase 2 (the symbol system) is implemented.** Everything else in `ROADMAP.md` —
-terrain, units, combat, C2, scenarios, AI, networking — is unbuilt. The runtime is a demo
-scene containing a symbol builder panel; there is no game loop yet.
+**Phase 2 (the symbol system) is complete; Phase 1's map system is partly built.** The
+map has a data model, a generation pipeline and a 2D topographic renderer, and the demo
+panel draws its symbol on a real generated sheet with live relief-profile and render-mode
+controls. There is still no terrain mesh, no map camera and no panning or zooming — the
+map is a texture in a UI card, not a world. Everything else in `ROADMAP.md` — units,
+combat, C2, scenarios, AI, networking — is unbuilt; there is no game loop yet.
 
 | Path | Contents |
 |---|---|
 | `Assets/Scripts/Core/NatoSymbols/` | The symbol system (all of it) |
+| `Assets/Scripts/Core/Maps/Model/` | `MapData` and friends — data only |
+| `Assets/Scripts/Core/Maps/Generation/` | The generation pipeline, one file per stage |
+| `Assets/Scripts/Core/Maps/Rendering2D/` | CPU topographic renderer |
 | `Assets/Scripts/Demo/` | Demo scene behaviours, incl. `SymbolBuilderPanel` |
-| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheet |
+| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
 
 ---
@@ -32,6 +38,15 @@ scene containing a symbol builder panel; there is no game loop yet.
 .\scripts\build.ps1 -Target Windows64      # Windows64 | Linux64 | macOS | WebGL | All
 .\scripts\capture.ps1                      # launch player, screenshot, close
 ```
+
+**A batch build can silently ship the previous revision.** `BuildPlayer` will package
+whatever is already in `Library/ScriptAssemblies`, so a build started right after an edit
+can succeed, report success, and run your last change but one — twice in a row, which is
+long enough to send you hunting for a bug in code that is not in the player. `GameBuild.Run`
+now calls `AssetDatabase.Refresh()` first and refuses to build while
+`EditorApplication.isCompiling`. If you are still unsure which revision you are looking
+at, put something visible in the frame and confirm it: the map card's marginalia strip
+carries seed and extent, which is exactly what it is for.
 
 Bake a grid of symbol permutations — **prefer this over clicking the GUI** when checking
 rendering changes:
@@ -44,6 +59,23 @@ rendering changes:
 # -> Artifacts/symbol-contact-sheet.png
 ```
 
+Same idea for maps, and the same advice — a generator's output is a picture, so read the
+picture. `MapContactSheet` bakes every relief profile against every render mode at 1 px
+per cell, plus one map at 3 px per cell where labels and cased roads are checkable:
+
+```powershell
+# Menu: Strategos > Bake Map Contact Sheet
+& "C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Unity.exe" `
+    -batchmode -quit -nographics -projectPath . `
+    -executeMethod Strategos.Editor.MapContactSheet.Bake -logFile map-sheet.log
+# -> Artifacts/map-contact-sheet.png, Artifacts/map-detail.png
+```
+
+It logs per-profile elevation range, feature counts and a landcover breakdown. Check
+those numbers before reading the image: a landcover percentage that has moved says the
+generator changed, where the image alone cannot tell you whether generation or the
+palette moved.
+
 Player log (**always check after a UI change**, see UI gotchas below):
 
 ```
@@ -51,7 +83,8 @@ Player log (**always check after a UI change**, see UI gotchas below):
 ```
 
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
-`Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Import TMP Essential Resources`.
+`Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
+`Import TMP Essential Resources`.
 
 ---
 
@@ -75,6 +108,32 @@ SIDCParser → SIDCCode
 `SymbolTextAmplifiers`. Nothing rasterises until `Bake`. `ConditionDecorator` and
 `TextAmplifierDecorator` run last because they read the amplifiers that
 `AmplifierDecorator` populates.
+
+The map system mirrors that shape: an ordered pipeline over a data-only container, and
+nothing rasterises until the renderer runs. `MapGenerator.Generate` hard-codes the stage
+order for the same reason `Compose` does — later stages read what earlier ones wrote:
+
+```
+MapGenerationSettings → ReliefParameters
+    └─ TectonicStage      base landform, sea level
+       └─ (authored relief hook)
+          └─ ErosionStage      weathers the surface
+             └─ HydrologyStage  fill, D8 routing, lakes, rivers, moisture
+                └─ LandcoverStage  classification from slope + moisture
+                   └─ SettlementStage  towns, stamped into landcover
+                      └─ NetworkStage  roads between them, bridges and fords
+                         └─ (authored features hook)
+```
+
+`MapData` is data only: an elevation grid, a landcover grid, and vector features.
+`MapRasterizer.RenderPixels` is the only thing that draws, and its layer order is fixed
+too — ground, contours, areas, lines, point marks, labels, grid. Labels come after every
+mark because placement can only avoid collisions it can see, and the grid comes last
+because a grid line that gives way to a road has stopped being a coordinate reference.
+
+The two systems share `ProceduralDrawUtil`. Symbols bake into a square buffer, maps into
+a rectangular one, so every primitive has a `(w, h)` overload with the square one
+forwarding to it. Add new primitives to the rectangular overload.
 
 ---
 
@@ -145,6 +204,42 @@ Break these and the symbol silently degrades rather than erroring.
 
 ---
 
+## Map rendering invariants
+
+Same failure mode: the sheet comes out drawable but wrong.
+
+- **Stroke widths are authored at 3 px per cell** (`MapViewport.ReferencePixelsPerCell`)
+  and `StrokeScale` is *not* floored at 1. It was, and an overview drowned: a stream held
+  at its authored 2 px is 50 m of ground width at 1 px per cell, so the whole drainage
+  network rendered as ribbons and the map read as flooded. Floor the **final pixel width**
+  at 1 instead, so features thin to hairlines rather than vanish.
+- **Point marks generalise by dropping, not by shrinking** (`MapRasterizer.DetailZoom`).
+  A line can thin; a ford's circle has a minimum legible size, so below the threshold
+  fords, bridges and spot heights are simply not drawn. Settlements always are.
+- **The viewport starts at cell −0.5, not 0.** A cell coordinate names a sample point, not
+  a square. Anchor the window at 0 and a 512-cell map renders 511 px and every feature
+  sits half a cell off.
+- **`MapLabelPlacer` is first-come, so call order is priority order.** Place cities before
+  villages, and everything before the grid. An edge label's inset must clear
+  `Padding + EdgeMargin` or it is silently rejected as overhanging — grid designators
+  vanished entirely at an inset of 3.
+- **Landcover pattern spacing is in pixels, not cells.** A stipple is a property of the
+  printed surface and should look the same at every zoom; lock it to cells and it
+  coarsens as you zoom in.
+- **The kilometre grid wins wherever it fits** (`MapGridOverlay.AutoSquareSpacing`).
+  Choosing the finest legible interval gives a 500 m grid at working zoom, where the two
+  principal digits step by 5 and stop reading as the km figure a report would quote.
+- **Hydrology keeps two flood surfaces and they are not interchangeable.**
+  `FillDepressions` returns *routing* (epsilon-raised, for D8) and *standing* (epsilon-free,
+  the true water surface). Lake depth must come from `standing`: epsilon accumulates along
+  gently-sloped paths, so at 512 cells and up a valley floor rises past the 0.75 m lake
+  threshold and the whole drainage network is classified as lake. The standing surface also
+  seeds the border at −∞, because a map is a window cut from a landscape and its edges are
+  not a rim — seeded at their own height, any interior ground below the lowest edge cell
+  fills to the edge.
+
+---
+
 ## Unity / VCS gotchas
 
 - **`.meta` files and `ProjectSettings/` must stay tracked.** Unity stores asset GUIDs in
@@ -185,6 +280,19 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
 - **`childForceExpandWidth = true`** hands every child a share of the surplus regardless
   of `flexibleWidth`, inflating a fixed-width child past the screen edge. Leave it off
   when one child has a fixed width and another should absorb slack.
+- **The map card's underlay is cropped to fit, never stretched** (`UpdateUnderlayCrop`).
+  The card's aspect follows the window, so a `Stretch`ed `RawImage` squashes the sheet —
+  and a map with a different scale on each axis misreports every distance on it. The crop
+  is a `uvRect` recomputed when the card resizes, because regenerating would stall for a
+  few hundred milliseconds.
+- **The underlay is generated at `Start` on the main thread** (~200 ms for a 200-cell map),
+  which is why profile and mode are dropdowns and reseeding is a button. Do not put map
+  generation behind a slider.
+- **A profile's `FeatureScaleCells` is tuned for the 512-cell default map.** On the
+  200-cell underlay one landform is wider than the whole sheet and it renders as a single
+  dome with concentric rings, which reads as a bug in the noise. `RefreshMap` scales it
+  down through `ParameterOverride`; note this also multiplies the number of closed basins,
+  so the lake problem in Known gaps shows up more strongly here than on a full-size map.
 
 ---
 
@@ -193,8 +301,13 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
 The bundled LiberationSans SDF atlas has **no geometric-shape glyphs**. These render as
 tofu boxes: `▾` U+25BE, `○` U+25CB, `•` U+2022 (risky), `−` U+2212.
 
+**`–` U+2013 EN DASH renders as nothing at all** — no tofu box, just a gap, which is
+worse because it looks like a formatting bug rather than a missing glyph. An elevation
+range came out as `202 280 M`. Use a plain hyphen.
+
 Latin-1 is safe: `·` `±` `+` `-`. For shapes, draw procedurally instead — see
-`ArrowSprite` in `SymbolBuilderPanel`, which generates the dropdown arrow as a texture.
+`ArrowSprite` and `HaloSprite` in `SymbolBuilderPanel`, which generate the dropdown arrow
+and the symbol's soft paper halo as textures.
 
 Amplifier text baked into symbols does **not** use TMP at all; it uses the 5×7 bitmap
 font in `ProceduralDrawUtil` (`DrawText` / `MeasureText`), so symbols render identically
@@ -223,6 +336,17 @@ The reference PDF is `Research/APP-6D…pdf` (gitignored — copyright restricte
 
 Recorded so they are not re-investigated. None are fixed.
 
+- **Generated terrain has huge closed basins, so maps come out 18–29% lake.** Measured on
+  256-cell maps at seed 20260729: Hills 11,676 lake cells with 8,396 over 5 m deep and a
+  deepest point of 38.7 m; Mountains deepest 381.7 m; Desert 20% water. These are real
+  depressions in the noise, not a classification error — both flood-surface bugs above were
+  found and fixed while chasing this and neither moved the numbers. Real landscapes lack
+  them because fluvial erosion breaches them; the generator has no equivalent. The fix is a
+  breaching pass (carve an outlet from each basin's low point to its spill) or a minimum
+  catchment test before a depression is allowed to be a lake — **not** raising
+  `HydrologyStage.LakeDepth`, which would only shrink the shorelines of basins that should
+  not exist. Note `FillDepressions`' comment deliberately preserves hollows as tactical
+  features, so breaching needs a size threshold rather than being applied wholesale.
 - **CI gates every build on a test job with no tests.** `.github/workflows/build.yml` runs
   `game-ci/unity-test-runner` in EditMode and `build` has `needs: test`, but there is no
   test assembly anywhere under `Assets/`. `com.unity.test-framework` is in the manifest,

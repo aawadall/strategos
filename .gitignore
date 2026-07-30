@@ -75,5 +75,9 @@ Assets/AI/Models/Generated/
 # Build CI artifacts
 Artifacts/
 
+# Batch-mode Editor logs. The documented bake commands write these to the repo
+# root (-logFile sheet.log, -logFile map-sheet.log).
+*.log
+
 # Research — reference PDFs (NATO APP-6D standard is copyright-restricted)
 Research/
