@@ -24,18 +24,51 @@ The game supports:
 
 | Symbol | Echelon | Typical Strength |
 |---|---|---|
-| ○ (none) | Fireteam / Crew | 2–4 |
-| • | Squad / Section | 9–13 |
-| •• | Platoon / Detachment | 30–50 |
-| ••• | Company / Battery / Troop | 80–250 |
-| I | Battalion / Squadron | 300–1,000 |
-| II | Regiment / Group | 1,000–3,000 |
+| ○ | Fireteam / Crew | 2–4 |
+| • | Squad | 9–13 |
+| •• | Section | 8–13 |
+| ••• | Platoon / Detachment | 30–50 |
+| I | Company / Battery / Troop | 80–250 |
+| II | Battalion / Squadron | 300–1,000 |
+| III | Regiment / Group | 1,000–3,000 |
 | X | Brigade / Combat Team | 3,000–5,000 |
 | XX | Division | 10,000–20,000 |
 | XXX | Corps | 20,000–80,000 |
 | XXXX | Army | 100,000+ |
 | XXXXX | Army Group / Front | multiple Armies |
 | XXXXXX | Theater / Combatant Command | multiple Army Groups |
+
+> Squad and section are near-synonyms and vary by army, but APP-6D and the code treat
+> them as distinct echelons, so they are listed separately here. The marks above match
+> `AmplifierDecorator.DrawEchelon` — company is **one** bar, battalion two, regiment three.
+> An earlier version of this table had them shifted by one; see the echelon note in
+> [CLAUDE.md](CLAUDE.md) before "correcting" it back.
+
+### Echelon is the difficulty curve
+
+The echelon the player commands is not just a matter of scale. **It determines how much of
+the command problem is present at all**, and that is the intended progression:
+
+| Commanding | What command feels like |
+|---|---|
+| Fireteam / squad | No C2 problem — you *are* the unit. You see what it sees; orders are instant. |
+| Platoon / company | Subordinates exist but are close. Orders are near-immediate. |
+| Battalion | Subordinates out of sight. Reports mediate what you know. Delay begins to bite. |
+| Brigade / division | You command through subordinate headquarters. You cannot see the front. |
+| Corps / army | You work from reports already stale. You issue intent, not instructions. |
+| Theater | Coalition. Some formations you cannot order at all, only ask. |
+
+This is why the later phases exist. Communications degradation, order propagation delay,
+intelligence fusion, and the divergence between what a commander believes and what is true
+are not features bolted onto a finished game — **they are what makes each echelon feel
+different rather than merely bigger.** Introduced all at once at squad level they would be
+noise; unlocked as the player climbs, they are the learning curve.
+
+The design consequence: these effects should be **parameterised by echelon, not toggled**.
+Order delay is a function of echelon, distance and terrain that returns approximately zero
+at squad level and grows from there — one code path from tutorial to theatre, with the
+degenerate case serving as the tutorial. See
+[docs/command-architecture.md](docs/command-architecture.md).
 
 ---
 
@@ -75,6 +108,7 @@ Add accounts, matchmaking, leaderboards, scenario workshop, replay library, AI m
 Complete audio, UI/UX, tutorials, accessibility, performance optimization, platform builds, legal review, and 1.0 launch assets.
 
 See [docs/phases.md](docs/phases.md) for the full task breakdown and milestones.
+See [docs/command-architecture.md](docs/command-architecture.md) for the command/situation topic design that Phases 3–5 build on.
 See [docs/steam.md](docs/steam.md) for the Steam publishing guide, Early Access strategy, and Steamworks integration details.
 
 ---
