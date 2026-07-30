@@ -37,6 +37,11 @@ namespace Strategos.Scenarios
                 Description =
                     "Two mechanised companies advance into the same valley from opposite " +
                     "ends. Neither side knows the other is there.",
+                // Placements sit inside the middle band of the map on purpose. A square map
+                // shown in a wide card is cropped vertically — MapSheetCard never stretches,
+                // because a map with a different scale on each axis misreports every distance
+                // on it — so units near the north or south edge are simply not on screen
+                // until there is pan and zoom.
                 Map = new MapGenerationSettings
                 {
                     Name = "Valley",
@@ -55,25 +60,25 @@ namespace Strategos.Scenarios
 
             // South-west, advancing north-east.
             Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarMechanized,
-                Echelon.Company, new Vector2(40f, 40f), "A/1-7 IN", "1-7 IN",
+                Echelon.Company, new Vector2(58f, 72f), "A/1-7 IN", "1-7 IN",
                 UnitCatalogue.InfantryMech);
             Add(s, blue.Id, 2, LandEntityCode.Armor, IconDecorator.VarStandard,
-                Echelon.Platoon, new Vector2(52f, 34f), "1/A/2-69 AR", "2-69 AR",
+                Echelon.Platoon, new Vector2(76f, 60f), "1/A/2-69 AR", "2-69 AR",
                 UnitCatalogue.Armor);
             Add(s, blue.Id, 3, LandEntityCode.Reconnaissance, IconDecorator.VarMotorized,
-                Echelon.Platoon, new Vector2(60f, 52f), "SCT/1-7 IN", "1-7 IN",
+                Echelon.Platoon, new Vector2(88f, 92f), "SCT/1-7 IN", "1-7 IN",
                 UnitCatalogue.ReconMotor);
 
             // North-east, advancing south-west.
             Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarMotorized,
-                Echelon.Company, new Vector2(215f, 210f), "3/2 MRR", "2 MRR",
+                Echelon.Company, new Vector2(190f, 178f), "3/2 MRR", "2 MRR",
                 UnitCatalogue.InfantryMotor);
             Add(s, red.Id, 5, LandEntityCode.Armor, IconDecorator.VarStandard,
-                Echelon.Platoon, new Vector2(203f, 218f), "1/3/2 MRR", "2 MRR",
+                Echelon.Platoon, new Vector2(178f, 196f), "1/3/2 MRR", "2 MRR",
                 UnitCatalogue.Armor);
             // Company echelon: APP-6D's one-bar mark covers company, battery and troop.
             Add(s, red.Id, 6, LandEntityCode.Artillery, IconDecorator.VarStandard,
-                Echelon.Company, new Vector2(228f, 232f), "BTY/2 MRR", "2 MRR",
+                Echelon.Company, new Vector2(186f, 150f), "BTY/2 MRR", "2 MRR",
                 UnitCatalogue.Artillery, strength: 90);
 
             return s;

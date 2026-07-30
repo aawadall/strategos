@@ -197,6 +197,46 @@ namespace Strategos.UI
         }
 
         /// <summary>
+        /// Cell coordinate to a local position inside <see cref="Rect"/>, ready for an
+        /// overlay's <c>anchoredPosition</c>.
+        ///
+        /// This is the transform anything drawn *on* the map needs — unit symbols, order
+        /// arrows, control measures — and it lives here so those all agree rather than each
+        /// re-deriving it. The chain is cell -> texture pixel (via the viewport the sheet was
+        /// rendered with) -> texture uv -> the visible sub-rectangle after cropping -> local
+        /// rect position.
+        ///
+        /// Returns false when the cell is outside the visible crop, so callers can hide
+        /// rather than draw off the edge of the card.
+        /// </summary>
+        public bool CellToLocal(Vector2 cell, out Vector2 local)
+        {
+            local = Vector2.zero;
+            if (_texture == null) return false;
+
+            var view = Viewport;
+            if (view.Width < 1 || view.Height < 1) return false;
+
+            Vector2 px = view.CellToPixel(cell.x, cell.y);
+            var uv = new Vector2(px.x / view.Width, px.y / view.Height);
+
+            // The RawImage shows only the uvRect sub-rectangle; map into it.
+            Rect shown = _image.uvRect;
+            if (shown.width <= 0f || shown.height <= 0f) return false;
+
+            var t = new Vector2((uv.x - shown.x) / shown.width,
+                                (uv.y - shown.y) / shown.height);
+
+            Rect r = _image.rectTransform.rect;
+            local = new Vector2(r.xMin + t.x * r.width, r.yMin + t.y * r.height);
+
+            // A small margin so a symbol straddling the edge is not popped out abruptly.
+            const float slack = 0.15f;
+            return t.x >= -slack && t.x <= 1f + slack &&
+                   t.y >= -slack && t.y <= 1f + slack;
+        }
+
+        /// <summary>
         /// Re-crops if the card changed shape. Call from the owning view's Update; cheap
         /// enough to poll, and far cheaper than regenerating.
         /// </summary>
