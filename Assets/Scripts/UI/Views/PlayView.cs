@@ -829,12 +829,31 @@ namespace Strategos.UI.Views
                         if (entry.Command.Kind != CommandKind.MoveTo) continue;
 
                         Vector2 to = entry.Command.TargetCell;
-
-                        // Solid for the leg being executed, dashed for what is merely planned.
                         bool executing = entry.Status == CommandStatus.Executing;
-                        _orders.AddLeg(_card, from, to, Tint(colour, executing), dashed: !executing);
+                        var tint = Tint(colour, executing);
 
-                        from = to;
+                        // Draw the route the unit is actually walking, not a straight line to
+                        // the destination. Without this the arrow shows intent while the unit
+                        // goes somewhere else -- it appeared to cross a lake the pathfinder had
+                        // carefully routed around, which is worse than drawing nothing.
+                        var route = executing ? _sim.RouteOf(m.Unit.Id) : null;
+                        if (route != null && route.Count > 0)
+                        {
+                            Vector2 leg = from;
+                            for (int r = 0; r < route.Count; r++)
+                            {
+                                var next = new Vector2(route[r].x, route[r].y);
+                                _orders.AddLeg(_card, leg, next, tint, dashed: false);
+                                leg = next;
+                            }
+                            from = leg;
+                        }
+                        else
+                        {
+                            _orders.AddLeg(_card, from, to, tint, dashed: !executing);
+                            from = to;
+                        }
+
                         last = to;
                     }
 

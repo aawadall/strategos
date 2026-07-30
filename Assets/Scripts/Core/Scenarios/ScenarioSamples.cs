@@ -71,7 +71,7 @@ namespace Strategos.Scenarios
 
             // North-east, advancing south-west.
             Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarMotorized,
-                Echelon.Company, new Vector2(190f, 178f), "3/2 MRR", "2 MRR",
+                Echelon.Company, new Vector2(180f, 176f), "3/2 MRR", "2 MRR",
                 UnitCatalogue.InfantryMotor);
             Add(s, red.Id, 5, LandEntityCode.Armor, IconDecorator.VarStandard,
                 Echelon.Platoon, new Vector2(178f, 196f), "1/3/2 MRR", "2 MRR",

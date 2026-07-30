@@ -11,6 +11,8 @@
 // only the owner mutates — and it is the rule a compiler cannot enforce, so it is stated at
 // the seam where it would be broken.
 
+using System.Collections.Generic;
+using UnityEngine;
 using Strategos.Maps;
 using Strategos.Units;
 
@@ -37,6 +39,20 @@ namespace Strategos.Commands
 
         /// <summary>Seconds of simulated time per step. Fixed — see Simulation.</summary>
         public float SecondsPerTick;
+    }
+
+    /// <summary>
+    /// Implemented by an executor that plans a route, so a view can draw what the unit will
+    /// actually walk rather than a straight line to the destination.
+    ///
+    /// Separate from ICommandExecutor because most executors have no route — firing at
+    /// something does not involve one — and because the alternative is a view recomputing the
+    /// path itself, which is both wasteful and able to disagree with what is being walked.
+    /// </summary>
+    public interface IRouteProvider
+    {
+        /// <summary>Cells the unit is currently routed through, or null.</summary>
+        IReadOnlyList<Vector2Int> RouteOf(UnitId unit);
     }
 
     public interface ICommandExecutor
