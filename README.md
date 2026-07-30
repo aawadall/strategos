@@ -98,7 +98,18 @@ See [ROADMAP.md](ROADMAP.md) for the full phased development plan.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT terms with a **non-military use restriction** — see [LICENSE](LICENSE) for the
+full text.
+
+Strategos is a game. It is licensed for personal, educational, research and
+non-military entertainment use. It may not be deployed, integrated or executed by
+any military organisation, armed force, defence contractor, intelligence agency or
+state security service for operational training, war-gaming or combat simulation.
+
+Because that is a restriction on the field of use, this is **not** an OSI-approved
+open-source licence, and GitHub will report the repository as "Other" rather than
+MIT. The source remains public and freely readable, modifiable and redistributable
+within the terms above.
 
 ---
 
