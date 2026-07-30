@@ -4,15 +4,23 @@
 // Typed rather than bare ints, because a scenario file, a command's addressee and a unit's
 // parent are all "an int" and mixing them up is a silent bug rather than a compile error.
 //
-// TWO SERIALISATION COMPROMISES, both deliberate:
+// TWO SHAPE DECISIONS, both deliberate:
 //
-//   1. The backing field is public and not readonly. Unity's serialiser — which
-//      Strategos.Scenarios will use for scenario JSON — does not serialise readonly fields.
-//      Treat these as immutable regardless; nothing should assign Value after construction.
+//   1. The backing field is public and NOT readonly, because the project's serialisation
+//      contract is public non-readonly instance fields — see ScenarioIO.FieldsOnlyResolver,
+//      which skips readonly fields along with every computed property. Treat these as
+//      immutable regardless; nothing should assign Value after construction.
 //
-//   2. There is no nullable form. UnityEngine.JsonUtility does not serialise Nullable<T>, so
-//      "no parent" is the sentinel UnitId.None (Value 0) rather than a UnitId?. Real ids
-//      start at 1. Semantically None means null; it just survives a round trip.
+//   2. There is no nullable form. "No parent" is the sentinel UnitId.None (Value 0) rather
+//      than a UnitId?, so that default(UnitId) already means "none" — a freshly deserialised
+//      unit with no parent reads correctly without ceremony, and use sites are spared
+//      .HasValue / .Value at every step. Real ids start at 1.
+//
+//      NOTE: an earlier version of this comment justified the sentinel by claiming
+//      JsonUtility cannot serialise Nullable<T>. That is true of JsonUtility but irrelevant
+//      here — scenarios serialise through Newtonsoft (com.unity.nuget.newtonsoft-json,
+//      already in the manifest), which handles nullables fine. The sentinel stands on the
+//      reasoning above, not on a serialiser limitation.
 
 using System;
 
