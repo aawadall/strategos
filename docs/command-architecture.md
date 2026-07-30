@@ -224,6 +224,77 @@ into after something has quietly broken it.
 
 ---
 
+## C3: noise, latency and hijack
+
+The intended next phase is **C3** — Command, Control and *Communications* — meaning
+messages that arrive late, arrive wrong, or do not arrive at all, and adversaries who
+listen or inject.
+
+### Why the topology already supports it
+
+Because publication and delivery are separate concerns, a **channel** can be inserted
+between them without either end knowing:
+
+```
+   publisher ──► [ CHANNEL ] ──► subscriber
+                     │
+                     ├─ delay        by echelon, distance, terrain
+                     ├─ loss         message never arrives
+                     ├─ corruption   message arrives altered
+                     ├─ interception adversary receives a copy
+                     └─ injection    adversary publishes as someone else
+```
+
+Delivery rule 1 — publish to the next step — is the degenerate case: a uniform one-step
+delay. C3 makes the delay a function of echelon, distance and terrain, and adds the other
+four effects alongside it. The mechanism does not change; only its parameters do.
+
+This is why publication and delivery must stay separate even while comms are perfect. A
+unit that polls world state directly cannot be deceived; a unit that acts on what it was
+*told* can be.
+
+### Determinism still applies
+
+Loss and corruption are stochastic, and stochastic means replay-breaking unless it is
+seeded. Derive every channel roll from `DeterministicRandom` keyed on the message's `Seq`,
+never from ambient randomness. A dropped message must drop identically on every replay and
+every machine, or none of the guarantees above survive.
+
+### Provenance: the message shape changes
+
+Hijack requires distinguishing **what a message claims** from **what is true**. A unit
+believes an order came from its headquarters; the simulation knows it did not.
+
+That means a claimed source separate from the actual one, and an authenticity state the
+receiver cannot see but the simulation can. Worth knowing now because it is a change to the
+message shape, which is the expensive kind.
+
+### The consequence that breaks a rule
+
+**Delivery rule 4 needs qualifying.** "Read for state" is right, but *whose* state?
+
+While comms are perfect, a unit's queue and what the commander believes it is doing are the
+same object. Under C3 they diverge — a unit may be executing a plan the commander does not
+know about, or sitting idle because a FRAGO never arrived. At that point a UI reading the
+unit's real queue is **cheating**: it renders ground truth the commander has not earned.
+
+So the rule becomes: *read state, but read the observer's state.* There has to be a
+command-post model — the commander's picture, built from reports received rather than from
+the world.
+
+The cheap preparation, worth doing now: route reads through an accessor named for the
+observer (a believed-plan or command-post view), even though it trivially returns the real
+queue today. Renaming a call later is easy; finding every place that quietly read ground
+truth is not. This is recorded in #10.
+
+### What C3 does *not* need
+
+It does not need engagement resolution, victory conditions or AI. C3 is orthogonal to the
+combat milestone and can be built before, after, or alongside it — the only hard
+prerequisite is the command and situation topics themselves.
+
+---
+
 ## Open decisions
 
 Recorded rather than settled, because each affects behaviour a player will notice.
