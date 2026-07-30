@@ -5,6 +5,7 @@
 using TMPro;
 using UnityEngine;
 using Strategos.NatoSymbols;
+using Strategos.UI;
 
 namespace Strategos.Demo
 {
@@ -145,51 +146,24 @@ namespace Strategos.Demo
         // Helpers
         // -------------------------------------------------------------------------
 
+        /// <summary>Builds a Land Unit Infantry SIDC at the given identity and echelon.</summary>
+        private static SIDCCode BuildSIDC(Affiliation aff, Echelon echelon) =>
+            SIDCBuilder.Build(
+                affiliation: aff,
+                echelon:     echelon,
+                entityCode:  (int)LandEntityCode.Infantry,
+                entityType:  IconDecorator.VarStandard);
+
         /// <summary>
-        /// Builds a Land Unit Infantry SIDC (APP-6D Annex A 20-digit layout).
-        /// Digits: ver(10) + context(0) + identity + set(10) + status(0) + hq(0) +
-        ///         echelon + entity(12) + type(11) + subtype/mods(000000).
+        /// Mark over name, on two lines, for a column header.
+        ///
+        /// The mark comes from DisplayNames so it matches what AmplifierDecorator draws.
+        /// This method used to carry its own table, and that table was the pre-2039fe0
+        /// off-by-one — Company showed three dots, Battalion one bar — written with the
+        /// U+25CB / U+2022 glyphs that the bundled atlas renders as tofu. Both were
+        /// invisible because this spawner is disabled at runtime.
         /// </summary>
-        private static SIDCCode BuildSIDC(Affiliation aff, Echelon echelon)
-        {
-            var raw = string.Format(
-                "10{0}{1}{2:D2}00{3:D2}1211000000",
-                (int)SymbolContext.Reality,
-                (int)aff,
-                (int)SymbolSet.LandUnit,
-                (int)echelon);
-
-            if (SIDCParser.TryParse(raw, out var code))
-                return code;
-
-            return new SIDCCode
-            {
-                Raw         = raw,
-                Context     = SymbolContext.Reality,
-                Affiliation = aff,
-                SymbolSet   = SymbolSet.LandUnit,
-                Echelon     = echelon,
-                EntityCode  = 12,
-                EntityType  = 11,
-                Status      = UnitStatus.Present,
-            };
-        }
-
-        private static string EchelonLabel(Echelon e) => e switch
-        {
-            Echelon.Team      => "○\nTeam",
-            Echelon.Squad     => "•\nSquad",
-            Echelon.Section   => "••\nSection",
-            Echelon.Platoon   => "•••\nPlatoon",
-            Echelon.Company   => "•••\nCompany",
-            Echelon.Battalion => "I\nBattalion",
-            Echelon.Regiment  => "II\nRegiment",
-            Echelon.Brigade   => "X\nBrigade",
-            Echelon.Division  => "XX\nDivision",
-            Echelon.Corps     => "XXX\nCorps",
-            Echelon.Army      => "XXXX\nArmy",
-            Echelon.Theater   => "XXXXXX\nTheater",
-            _                 => e.ToString(),
-        };
+        private static string EchelonLabel(Echelon e) =>
+            $"{DisplayNames.EchelonMark(e)}\n{DisplayNames.EchelonName(e)}";
     }
 }

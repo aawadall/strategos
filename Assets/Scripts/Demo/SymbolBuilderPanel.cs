@@ -76,9 +76,6 @@ namespace Strategos.Demo
         private Texture2D _topoTex;
         private bool _suppress;
 
-        private ReliefProfile[] _mapProfiles;
-        private MapRenderMode[] _mapModes;
-
         /// <summary>
         /// Seed of the map currently on screen. Fixed at start so the demo opens the
         /// same way every run; NEW MAP advances it.
@@ -87,41 +84,6 @@ namespace Strategos.Demo
 
         /// <summary>Card size the underlay crop was last computed for.</summary>
         private Vector2 _underlayCardSize;
-
-        private Affiliation[] _affiliations;
-        private Echelon[] _echelons;
-        private LandEntityCode[] _unitTypes;
-        private (string label, int code)[] _variants;
-        private (string label, int code)[] _sectorMods;
-        private HeadquartersTaskForceDummy[] _hqTf;
-        private UnitStatus[] _statuses;
-        private StrengthModifier[] _strengthMods;
-
-        /// <summary>
-        /// APP-6(D) Annex A field layout of the 20-digit SIDC.
-        /// Start/Len index into <see cref="SIDCCode.Raw"/>.
-        /// </summary>
-        private static readonly (string Pos, int Start, int Len, string Field)[] SidcFields =
-        {
-            ("1–2",   0, 2, "Version / standard"),
-            ("3",          2, 1, "Context"),
-            ("4",          3, 1, "Standard identity"),
-            ("5–6",   4, 2, "Symbol set"),
-            ("7",          6, 1, "Status / condition"),
-            ("8",          7, 1, "HQ / TF / dummy"),
-            ("9–10",  8, 2, "Echelon / mobility"),
-            ("11–12",10, 2, "Entity"),
-            ("13–14",12, 2, "Entity type"),
-            ("15–16",14, 2, "Entity subtype"),
-            ("17–18",16, 2, "Sector 1 modifier"),
-            ("19–20",18, 2, "Sector 2 modifier"),
-        };
-
-        // Text amplifiers are drawn beside the frame but are not encoded in the SIDC.
-        private static readonly string[] AmplifierFields =
-        {
-            "Designation (T)", "Higher formation (M)", "Strength (F)",
-        };
 
         private TableRow[] _tableRows;
 
@@ -181,19 +143,19 @@ namespace Strategos.Demo
 
             string raw = code.Raw ?? string.Empty;
 
-            for (int i = 0; i < SidcFields.Length; i++)
+            for (int i = 0; i < SidcExplain.Fields.Length; i++)
             {
-                var f = SidcFields[i];
+                var f = SidcExplain.Fields[i];
                 _tableRows[i].Code.text = Slice(raw, f.Start, f.Len);
-                _tableRows[i].Meaning.text = SidcFieldMeaning(i, code);
+                _tableRows[i].Meaning.text = SidcExplain.FieldMeaning(i, code);
             }
 
-            int a = SidcFields.Length;
+            int a = SidcExplain.Fields.Length;
             _tableRows[a + 0].Code.text = Dash(code.Designation);
             _tableRows[a + 0].Meaning.text = "Unique unit label drawn right of the frame";
             _tableRows[a + 1].Code.text = Dash(code.HigherFormation);
             _tableRows[a + 1].Meaning.text = "Parent command drawn right of the frame";
-            _tableRows[a + 2].Code.text = StrengthDisplay(code);
+            _tableRows[a + 2].Code.text = SidcExplain.StrengthDisplay(code);
             _tableRows[a + 2].Meaning.text = "+/-/± drawn upper right; % as combat-power bar";
         }
 
@@ -206,193 +168,29 @@ namespace Strategos.Demo
 
         private static string Dash(string s) => string.IsNullOrEmpty(s) ? "—" : s;
 
-        private string SidcFieldMeaning(int index, SIDCCode code) => index switch
-        {
-            0  => "APP-6(D) symbology version",
-            1  => $"{code.Context} — {ContextMeaning(code.Context)}",
-            2  => $"{code.Affiliation} — {FrameMeaning(code.Affiliation)}",
-            3  => $"{Prettify(code.SymbolSet.ToString())} (set {(int)code.SymbolSet:D2})",
-            4  => $"{StatusLabel(code.Status)} — {StatusMeaning(code.Status)}",
-            5  => HqMeaning(code.HqTfDummy),
-            6  => EchelonMeaning(code.Echelon),
-            7  => $"{LabelForUnit(code.EntityCode)} — main icon inside the frame",
-            8  => $"{VariantLabel(code.EntityType)} — {VariantMark(code)}",
-            9  => code.EntitySubtype == 0
-                    ? "Not used by this symbol"
-                    : $"Subtype {code.EntitySubtype:D2}",
-            10 => $"{ModLabel(code.Modifier1)} — upper octagon sector",
-            11 => $"{ModLabel(code.Modifier2)} — lower octagon sector",
-            _  => string.Empty,
-        };
-
-        /// <summary>Describes the mark IconDecorator actually draws for the variant.</summary>
-        private static string VariantMark(SIDCCode code)
-        {
-            string mark = code.EntityType switch
-            {
-                IconDecorator.VarMechanized => "ellipse around the icon",
-                IconDecorator.VarMotorized  => "wheels, lower sector",
-                IconDecorator.VarAirAssault => "chevron, lower sector",
-                IconDecorator.VarAmphibious => "waves, lower sector",
-                IconDecorator.VarMountain   => "mountain, lower sector",
-                IconDecorator.VarArctic     => "arch, lower sector",
-                IconDecorator.VarHeavy      => "H, lower sector",
-                IconDecorator.VarLight      => "L, lower sector",
-                _                           => "no additional mark",
-            };
-
-            // The lower-sector mark yields to an explicit Sector 2 modifier.
-            if (code.Modifier2 != 0 && code.EntityType != IconDecorator.VarMechanized
-                && code.EntityType != IconDecorator.VarStandard)
-                return mark + " (hidden — sector 2 in use)";
-
-            return mark;
-        }
-
-        private static string ContextMeaning(SymbolContext c) => c switch
-        {
-            SymbolContext.Reality    => "live operational data",
-            SymbolContext.Exercise   => "exercise track",
-            SymbolContext.Simulation => "simulated track",
-            _ => "context",
-        };
-
-        private static string FrameMeaning(Affiliation a) => a switch
-        {
-            Affiliation.Friend or Affiliation.AssumedFriend => "blue rectangle frame",
-            Affiliation.Hostile or Affiliation.Suspect => "red diamond frame",
-            Affiliation.Neutral => "green square frame",
-            Affiliation.Unknown or Affiliation.Pending => "yellow ellipse frame",
-            _ => "standard identity frame",
-        };
-
-        private static string StatusLabel(UnitStatus s) => s switch
-        {
-            UnitStatus.Present => "Present",
-            UnitStatus.AnticipatedPlanned => "Planned",
-            UnitStatus.PresentFullyCapable => "Fully capable",
-            UnitStatus.PresentDamaged => "Damaged",
-            UnitStatus.PresentDestroyed => "Destroyed",
-            UnitStatus.PresentFullToCapacity => "Full capacity",
-            _ => s.ToString(),
-        };
-
-        private static string StatusMeaning(UnitStatus s) => s switch
-        {
-            UnitStatus.Present => "solid frame, confirmed location, no bar",
-            UnitStatus.AnticipatedPlanned => "dashed frame, planned / anticipated",
-            UnitStatus.PresentDamaged => "amber condition bar below frame",
-            UnitStatus.PresentDestroyed => "red condition bar below frame",
-            UnitStatus.PresentFullyCapable => "green condition bar below frame",
-            UnitStatus.PresentFullToCapacity => "blue condition bar below frame",
-            _ => "status / condition amplifier",
-        };
-
-        private static string HqMeaning(HeadquartersTaskForceDummy h) => h switch
-        {
-            HeadquartersTaskForceDummy.None => "No HQ / TF / feint amplifiers",
-            HeadquartersTaskForceDummy.Headquarters => "HQ staff line below the frame",
-            HeadquartersTaskForceDummy.TaskForce => "Task-force bracket above the frame",
-            HeadquartersTaskForceDummy.TaskForceHeadquarters => "HQ staff line + task-force bracket",
-            HeadquartersTaskForceDummy.FeintDummy => "Feint / dummy dashed inverted V",
-            _ => "Combined HQ / TF / feint graphic",
-        };
-
-        private static string EchelonMeaning(Echelon e) => e switch
-        {
-            Echelon.Team => "o  Team / crew",
-            Echelon.Squad => "·  Squad",
-            Echelon.Section => "··  Section",
-            Echelon.Platoon => "···  Platoon",
-            Echelon.Company => "I Company / battery / troop",
-            Echelon.Battalion => "II Battalion / squadron",
-            Echelon.Regiment => "III Regiment / group",
-            Echelon.Brigade => "X Brigade",
-            Echelon.Division => "XX Division",
-            Echelon.Corps => "XXX Corps",
-            Echelon.Army => "XXXX Army",
-            Echelon.ArmyGroup => "XXXXX Army group / front",
-            Echelon.Theater => "XXXXXX Theater",
-            Echelon.Command => "++ Command",
-            _ => "No echelon mark",
-        };
-
-        private string VariantLabel(int code)
-        {
-            if (_variants == null) return code.ToString("D2");
-            foreach (var v in _variants)
-                if (v.code == code) return v.label;
-            return code.ToString("D2");
-        }
-
-        private string ModLabel(int code)
-        {
-            if (code == 0) return "None";
-            if (_sectorMods == null) return code.ToString("D2");
-            foreach (var m in _sectorMods)
-                if (m.code == code) return m.label;
-            return code.ToString("D2");
-        }
-
-        private static string StrengthDisplay(SIDCCode code)
-        {
-            var s = string.IsNullOrEmpty(code.StrengthLabel) ? "—" : code.StrengthLabel + "%";
-            return code.StrengthModifier switch
-            {
-                StrengthModifier.Reinforced => s + " (+)",
-                StrengthModifier.Reduced => s + " (-)",
-                StrengthModifier.ReinforcedReduced => s + " (±)",
-                _ => s,
-            };
-        }
-
         private SIDCCode BuildSidc()
         {
-            var aff = Pick(_affiliations, _affiliationDrop, Affiliation.Friend);
-            var ech = Pick(_echelons, _echelonDrop, Echelon.Company);
-            var ent = Pick(_unitTypes, _unitTypeDrop, LandEntityCode.Infantry);
-            int type = PickCode(_variants, _variantDrop, 11);
-            int mod1 = PickCode(_sectorMods, _mod1Drop, 0);
-            int mod2 = PickCode(_sectorMods, _mod2Drop, 0);
-            var hq = Pick(_hqTf, _hqTfDrop, HeadquartersTaskForceDummy.None);
-            var status = Pick(_statuses, _statusDrop, UnitStatus.Present);
-            var strMod = Pick(_strengthMods, _strengthModDrop, StrengthModifier.None);
+            var aff = Pick(DisplayNames.Affiliations, _affiliationDrop, Affiliation.Friend);
+            var ech = Pick(DisplayNames.Echelons, _echelonDrop, Echelon.Company);
+            var ent = Pick(DisplayNames.UnitTypes, _unitTypeDrop, LandEntityCode.Infantry);
+            int type = PickCode(DisplayNames.Variants, _variantDrop, 11);
+            int mod1 = PickCode(DisplayNames.SectorMods, _mod1Drop, 0);
+            int mod2 = PickCode(DisplayNames.SectorMods, _mod2Drop, 0);
+            var hq = Pick(DisplayNames.HqTf, _hqTfDrop, HeadquartersTaskForceDummy.None);
+            var status = Pick(DisplayNames.Statuses, _statusDrop, UnitStatus.Present);
+            var strMod = Pick(DisplayNames.StrengthMods, _strengthModDrop, StrengthModifier.None);
 
             int strengthPct = _strengthSlider != null ? Mathf.RoundToInt(_strengthSlider.value) : 100;
-            if (_strengthValueLabel != null)
-                _strengthValueLabel.text = $"{strengthPct}%";
 
-            string raw = string.Format(
-                "10{0}{1}{2:D2}{3}{4}{5:D2}{6:D2}{7:D2}{8:D2}{9:D2}{10:D2}",
-                (int)SymbolContext.Reality,
-                (int)aff,
-                (int)SymbolSet.LandUnit,
-                (int)status,
-                (int)hq,
-                (int)ech,
-                (int)ent,
-                type,
-                0,
-                mod1,
-                mod2);
-
-            if (!SIDCParser.TryParse(raw, out var code))
-            {
-                code = new SIDCCode
-                {
-                    Raw = raw,
-                    Context = SymbolContext.Reality,
-                    Affiliation = aff,
-                    SymbolSet = SymbolSet.LandUnit,
-                    Status = status,
-                    HqTfDummy = hq,
-                    Echelon = ech,
-                    EntityCode = (int)ent,
-                    EntityType = type,
-                    Modifier1 = mod1,
-                    Modifier2 = mod2,
-                };
-            }
+            var code = SIDCBuilder.Build(
+                affiliation: aff,
+                echelon:     ech,
+                entityCode:  (int)ent,
+                entityType:  type,
+                hqTfDummy:   hq,
+                status:      status,
+                modifier1:   mod1,
+                modifier2:   mod2);
 
             code.Designation = _designationField != null ? _designationField.text : string.Empty;
             code.HigherFormation = _formationField != null ? _formationField.text : string.Empty;
@@ -418,107 +216,25 @@ namespace Strategos.Demo
 
         private void PopulateOptions()
         {
+            // Programmatic population fires onValueChanged for the plain setters below,
+            // so the refresh path is suppressed until every control is seeded.
             _suppress = true;
 
-            _affiliations = new[]
-            {
-                Affiliation.Friend, Affiliation.Hostile, Affiliation.Neutral, Affiliation.Unknown,
-                Affiliation.AssumedFriend, Affiliation.Suspect, Affiliation.Pending,
-            };
-            SetDrop(_affiliationDrop, Array.ConvertAll(_affiliations, a => Prettify(a.ToString())), 0);
+            SetDrop(_affiliationDrop,  DisplayNames.AffiliationLabels(), 0);
+            SetDrop(_echelonDrop,      DisplayNames.EchelonLabels(), 4);   // Company
+            SetDrop(_unitTypeDrop,     DisplayNames.UnitTypeLabels(), 0);
+            SetDrop(_variantDrop,      DisplayNames.VariantLabels(), 0);
+            SetDrop(_mod1Drop,         DisplayNames.SectorModLabels(), 0);
+            SetDrop(_mod2Drop,         DisplayNames.SectorModLabels(), 0);
+            SetDrop(_hqTfDrop,         DisplayNames.HqTfLabels(), 0);
+            SetDrop(_statusDrop,       DisplayNames.StatusLabels(), 0);
+            SetDrop(_strengthModDrop,  DisplayNames.StrengthModLabels, 0);
+            SetDrop(_mapProfileDrop,   DisplayNames.ProfileLabels(), 0);
+            SetDrop(_mapModeDrop,      DisplayNames.RenderModeLabels(), 0);
 
-            _echelons = new[]
-            {
-                Echelon.Team, Echelon.Squad, Echelon.Section, Echelon.Platoon,
-                Echelon.Company, Echelon.Battalion, Echelon.Regiment, Echelon.Brigade,
-                Echelon.Division, Echelon.Corps, Echelon.Army, Echelon.ArmyGroup,
-                Echelon.Theater, Echelon.Command,
-            };
-            SetDrop(_echelonDrop, Array.ConvertAll(_echelons, EchelonLabel), 4);
-
-            _unitTypes = new[]
-            {
-                LandEntityCode.Infantry, LandEntityCode.Armor, LandEntityCode.Artillery,
-                LandEntityCode.Reconnaissance, LandEntityCode.CombatEngineering,
-                LandEntityCode.AirDefense, LandEntityCode.Aviation,
-                LandEntityCode.SignalsCommunication, LandEntityCode.LogisticsSupport,
-                LandEntityCode.Medical, LandEntityCode.Headquarters,
-                LandEntityCode.SpecialOperations, LandEntityCode.MissileBallistic,
-            };
-            SetDrop(_unitTypeDrop, Array.ConvertAll(_unitTypes, u => Prettify(u.ToString())), 0);
-
-            _variants = new (string, int)[]
-            {
-                ("Standard / Foot", 11), ("Mechanized", 12), ("Motorized", 13),
-                ("Air Assault", 14), ("Amphibious", 15), ("Mountain", 16),
-                ("Arctic", 17), ("Heavy", 18), ("Light", 19),
-            };
-            SetDrop(_variantDrop, Array.ConvertAll(_variants, v => v.label), 0);
-
-            _sectorMods = new (string, int)[]
-            {
-                ("None", 0),
-                ("Airborne", SectorModifierDecorator.ModAirborne),
-                ("Air Assault", SectorModifierDecorator.ModAirAssault),
-                ("Wheeled", SectorModifierDecorator.ModWheeled),
-                ("Mountain", SectorModifierDecorator.ModMountain),
-                ("Amphibious", SectorModifierDecorator.ModAmphibious),
-            };
-            SetDrop(_mod1Drop, Array.ConvertAll(_sectorMods, m => m.label), 0);
-            SetDrop(_mod2Drop, Array.ConvertAll(_sectorMods, m => m.label), 0);
-
-            _hqTf = new[]
-            {
-                HeadquartersTaskForceDummy.None,
-                HeadquartersTaskForceDummy.Headquarters,
-                HeadquartersTaskForceDummy.TaskForce,
-                HeadquartersTaskForceDummy.TaskForceHeadquarters,
-                HeadquartersTaskForceDummy.FeintDummy,
-                HeadquartersTaskForceDummy.FeintDummyHeadquarters,
-                HeadquartersTaskForceDummy.FeintDummyTaskForce,
-                HeadquartersTaskForceDummy.FeintDummyTaskForceHeadquarters,
-            };
-            SetDrop(_hqTfDrop, Array.ConvertAll(_hqTf, h => Prettify(h.ToString())), 0);
-
-            _statuses = new[]
-            {
-                UnitStatus.Present, UnitStatus.AnticipatedPlanned,
-                UnitStatus.PresentFullyCapable, UnitStatus.PresentDamaged,
-                UnitStatus.PresentDestroyed, UnitStatus.PresentFullToCapacity,
-            };
-            SetDrop(_statusDrop, Array.ConvertAll(_statuses, StatusLabel), 0);
-
-            _strengthMods = new[]
-            {
-                StrengthModifier.None, StrengthModifier.Reinforced,
-                StrengthModifier.Reduced, StrengthModifier.ReinforcedReduced,
-            };
-            SetDrop(_strengthModDrop, new[]
-            {
-                "None", "Reinforced (+)", "Reduced (-)", "Reinforced & reduced (±)",
-            }, 0);
-
-            if (_designationField != null) _designationField.text = "1-7 IN";
-            if (_formationField != null) _formationField.text = "3 ID";
-            if (_strengthSlider != null) _strengthSlider.value = 100;
-
-            _mapProfiles = new[]
-            {
-                ReliefProfile.Rolling, ReliefProfile.Plains, ReliefProfile.Hills,
-                ReliefProfile.Mountains, ReliefProfile.Coastal, ReliefProfile.Desert,
-                ReliefProfile.Arctic,
-            };
-            SetDrop(_mapProfileDrop, Array.ConvertAll(_mapProfiles, p => Prettify(p.ToString())), 0);
-
-            // Schematic first: it is the operations-map look, where everything that is
-            // not a symbol or a control measure steps back. That is what an underlay
-            // behind a symbol wants.
-            _mapModes = new[]
-            {
-                MapRenderMode.Schematic, MapRenderMode.Topographic,
-                MapRenderMode.Hybrid, MapRenderMode.Terrain,
-            };
-            SetDrop(_mapModeDrop, Array.ConvertAll(_mapModes, m => Prettify(m.ToString())), 0);
+            if (_designationField != null) _designationField.SetTextWithoutNotify("1-7 IN");
+            if (_formationField != null) _formationField.SetTextWithoutNotify("3 ID");
+            if (_strengthSlider != null) _strengthSlider.SetValueWithoutNotify(100);
 
             _suppress = false;
         }
@@ -719,12 +435,12 @@ namespace Strategos.Demo
             divider.gameObject.AddComponent<LayoutElement>().preferredHeight = 2;
             divider.gameObject.AddComponent<Image>().color = Theme.CardLine;
 
-            int total = SidcFields.Length + AmplifierFields.Length;
+            int total = SidcExplain.Fields.Length + SidcExplain.AmplifierFields.Length;
             _tableRows = new TableRow[total];
 
             for (int i = 0; i < total; i++)
             {
-                bool amplifier = i >= SidcFields.Length;
+                bool amplifier = i >= SidcExplain.Fields.Length;
                 var stripe = (i % 2 == 0) ? Theme.CardBg : Theme.RowStripe;
                 UiTable.CreateRow(tableCard, $"Row{i}", stripe, out var r);
                 _tableRows[i] = r;
@@ -732,12 +448,12 @@ namespace Strategos.Demo
                 if (amplifier)
                 {
                     r.Pos.text = "amp";
-                    r.Field.text = AmplifierFields[i - SidcFields.Length];
+                    r.Field.text = SidcExplain.AmplifierFields[i - SidcExplain.Fields.Length];
                 }
                 else
                 {
-                    r.Pos.text = SidcFields[i].Pos;
-                    r.Field.text = SidcFields[i].Field;
+                    r.Pos.text = SidcExplain.Fields[i].Pos;
+                    r.Field.text = SidcExplain.Fields[i].Field;
                 }
 
                 r.Pos.color = Theme.InkMuted;
@@ -965,48 +681,10 @@ namespace Strategos.Demo
         }
 
         private ReliefProfile SelectedMapProfile =>
-            Pick(_mapProfiles, _mapProfileDrop, ReliefProfile.Rolling);
+            Pick(DisplayNames.Profiles, _mapProfileDrop, ReliefProfile.Rolling);
 
         private MapRenderMode SelectedMapMode =>
-            Pick(_mapModes, _mapModeDrop, MapRenderMode.Schematic);
+            Pick(DisplayNames.RenderModes, _mapModeDrop, MapRenderMode.Schematic);
 
-        private static string EchelonLabel(Echelon e) => e switch
-        {
-            // Latin-1 only: the bundled font atlas has no geometric-shape glyphs.
-            Echelon.Team => "Team / Crew  o",
-            Echelon.Squad => "Squad  ·",
-            Echelon.Section => "Section  ··",
-            Echelon.Platoon => "Platoon  ···",
-            Echelon.Company => "Company  I",
-            Echelon.Battalion => "Battalion  II",
-            Echelon.Regiment => "Regiment  III",
-            Echelon.Brigade => "Brigade  X",
-            Echelon.Division => "Division  XX",
-            Echelon.Corps => "Corps  XXX",
-            Echelon.Army => "Army  XXXX",
-            Echelon.ArmyGroup => "Army Group  XXXXX",
-            Echelon.Theater => "Theater  XXXXXX",
-            Echelon.Command => "Command  ++",
-            _ => e.ToString(),
-        };
-
-        private static string Prettify(string s)
-        {
-            if (string.IsNullOrEmpty(s)) return s;
-            var chars = new List<char> { s[0] };
-            for (int i = 1; i < s.Length; i++)
-            {
-                if (char.IsUpper(s[i])) chars.Add(' ');
-                chars.Add(s[i]);
-            }
-            return new string(chars.ToArray());
-        }
-
-        private static string LabelForUnit(int entityCode)
-        {
-            if (Enum.IsDefined(typeof(LandEntityCode), entityCode))
-                return Prettify(((LandEntityCode)entityCode).ToString());
-            return $"Entity {entityCode:D2}";
-        }
     }
 }
