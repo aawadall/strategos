@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Strategos.Maps;
+using Strategos.Movement;
 using Strategos.NatoSymbols;
 using Strategos.Units;
 
@@ -197,7 +198,88 @@ namespace Strategos.Scenarios
                 if (CountUnitsOf(s.Id) == 0)
                     problems.Add($"Side {s.Id} '{s.Name}' has no units.");
 
+            if (catalogue != null && map != null) CheckReachability(problems, catalogue, map);
+
             return problems;
+        }
+
+        /// <summary>
+        /// Every unit must be able to reach every other one it might have to fight.
+        ///
+        /// The failure this catches is completely silent: a unit placed on an island, or in a
+        /// pocket walled off by lakes, sits on perfectly passable ground and simply never
+        /// arrives anywhere. It was found in this project's own sample scenario, where one
+        /// company of a *meeting* engagement occupied a 24-cell pocket it could not leave.
+        ///
+        /// One flood fill per distinct capability, because passability is a property of the
+        /// unit: ground that isolates a mechanised company may be walkable on foot.
+        /// </summary>
+        private void CheckReachability(List<string> problems, UnitCatalogue catalogue, MapData map)
+        {
+            var byCapability = new Dictionary<string, MovementGrid>();
+
+            foreach (var probe in Units)
+            {
+                var caps = catalogue.Get(probe.CapabilityId);
+                if (!byCapability.TryGetValue(caps.Id, out var grid))
+                    byCapability[caps.Id] = grid = MovementGrid.Build(map, caps);
+                if (grid == null) continue;
+
+                int px = Mathf.Clamp(Mathf.RoundToInt(probe.Cell.x), 0, map.Width - 1);
+                int py = Mathf.Clamp(Mathf.RoundToInt(probe.Cell.y), 0, map.Height - 1);
+                if (!grid.Passable(px, py)) continue;   // already reported as impassable
+
+                var reached = Flood(grid, px, py);
+
+                foreach (var other in Units)
+                {
+                    if (other.Id == probe.Id) continue;
+
+                    int ox = Mathf.Clamp(Mathf.RoundToInt(other.Cell.x), 0, map.Width - 1);
+                    int oy = Mathf.Clamp(Mathf.RoundToInt(other.Cell.y), 0, map.Height - 1);
+                    if (!grid.Passable(ox, oy)) continue;
+
+                    if (!reached[oy * map.Width + ox])
+                    {
+                        string who = string.IsNullOrEmpty(probe.Designation)
+                            ? probe.Id.ToString() : probe.Designation;
+                        string them = string.IsNullOrEmpty(other.Designation)
+                            ? other.Id.ToString() : other.Designation;
+                        problems.Add($"Unit {who} cannot reach {them}; they are in separate " +
+                                     $"regions for '{caps.Id}'.");
+                        break;   // one report per unit is enough to act on
+                    }
+                }
+            }
+        }
+
+        private static bool[] Flood(MovementGrid grid, int x, int y)
+        {
+            int w = grid.Width, h = grid.Height;
+            var seen = new bool[w * h];
+            var queue = new Queue<int>();
+
+            seen[y * w + x] = true;
+            queue.Enqueue(y * w + x);
+
+            int[] dx = { 1, -1, 0, 0 };
+            int[] dy = { 0, 0, 1, -1 };
+
+            while (queue.Count > 0)
+            {
+                int c = queue.Dequeue();
+                int cx = c % w, cy = c / w;
+                for (int d = 0; d < 4; d++)
+                {
+                    int nx = cx + dx[d], ny = cy + dy[d];
+                    if (!grid.Passable(nx, ny)) continue;
+                    int i = ny * w + nx;
+                    if (seen[i]) continue;
+                    seen[i] = true;
+                    queue.Enqueue(i);
+                }
+            }
+            return seen;
         }
 
         public bool IsValid => Validate().Count == 0;

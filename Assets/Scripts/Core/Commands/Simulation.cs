@@ -80,6 +80,21 @@ namespace Strategos.Commands
         public CommandQueue QueueOf(UnitId id) =>
             _queues.TryGetValue(id.Value, out var q) ? q : null;
 
+        /// <summary>
+        /// The route a unit is currently walking, from whichever executor planned it, or null.
+        /// Asked rather than recomputed, so what a view draws is what the unit is following.
+        /// </summary>
+        public IReadOnlyList<Vector2Int> RouteOf(UnitId id)
+        {
+            for (int i = 0; i < _executors.Count; i++)
+                if (_executors[i] is IRouteProvider provider)
+                {
+                    var route = provider.RouteOf(id);
+                    if (route != null && route.Count > 0) return route;
+                }
+            return null;
+        }
+
         public UnitInstance UnitOf(UnitId id)
         {
             for (int i = 0; i < _units.Count; i++)

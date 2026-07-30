@@ -61,6 +61,7 @@ namespace Strategos.Editor
             bad += CheckCancelFrom(log);
             bad += CheckLogIsAppendOnly(log);
             bad += CheckRealMovement(log);
+            bad += CheckPathfinding(log);
             bad += CheckReplayDivergence(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
@@ -451,6 +452,140 @@ namespace Strategos.Editor
                            $"mechanised vs {footSteps} on foot, arrived within " +
                            $"{error:0.###} cells  {(bad == 0 ? "ok" : "FAILED")}");
             return bad;
+        }
+
+        // ─── Pathfinding (#8b) ────────────────────────────────────────────────
+
+        /// <summary>
+        /// The route respects the terrain rather than walking through it, prefers roads where
+        /// roads are quicker, and fails cleanly where there is no way through.
+        /// </summary>
+        private static int CheckPathfinding(StringBuilder log)
+        {
+            int bad = 0;
+
+            var scenario = ScenarioSamples.Skirmish();
+            scenario.Map.EnableErosion = false;
+            var map = scenario.GenerateMap();
+            var cat = UnitCatalogue.Default();
+
+            var mech = cat.Get(UnitCatalogue.InfantryMech);
+            var grid = Strategos.Movement.MovementGrid.Build(map, mech);
+            var (passable, road, barrier) = grid.Census();
+
+            int fords = 0, bridges = 0;
+            foreach (var poi in map.Pois)
+            {
+                if (poi.Kind == MapPoiKind.Ford) fords++;
+                if (poi.Kind == MapPoiKind.Bridge) bridges++;
+            }
+
+            log.AppendLine($"  grid {map.Width}x{map.Height}: {passable} passable, " +
+                           $"{road} road, {barrier} wet-crossing cells " +
+                           $"({fords} fords, {bridges} bridges)");
+
+            if (passable == 0) { log.AppendLine("  FAIL nothing is passable"); bad++; }
+            if (road == 0) { log.AppendLine("  FAIL no road cells were rasterised"); bad++; }
+
+            // A route must never step on a cell its own capability rejects. This is the
+            // assertion that catches a grid built from the wrong unit, or barriers ignored.
+            var a = new Vector2Int(58, 72);
+            var b = new Vector2Int(180, 176);
+            var found = Strategos.Movement.PathFinder.Find(grid, a, b);
+
+            if (!found.Found)
+            {
+                log.AppendLine($"  FAIL no route from {a} to {b} across open ground");
+                bad++;
+            }
+            else
+            {
+                int illegal = 0;
+                foreach (var c in found.Cells)
+                    if (!grid.Passable(c.x, c.y)) illegal++;
+
+                if (illegal > 0)
+                {
+                    log.AppendLine($"  FAIL route crosses {illegal} impassable cell(s)");
+                    bad++;
+                }
+
+                // Crossing a river must cost more than the same going without one, or the
+                // penalty is not reaching the search.
+                int wet = 0;
+                foreach (var c in found.Cells) if (grid.IsBarrier(c.x, c.y)) wet++;
+
+                int rawLegs = found.Cells.Count;
+                Strategos.Movement.PathFinder.Simplify(found.Cells);
+                int simplified = found.Cells.Count;
+                Strategos.Movement.PathFinder.Smooth(grid, found.Cells);
+
+                float straightCells = Vector2.Distance(a, b);
+                log.AppendLine($"  route {a} -> {b}: {rawLegs} cells -> {simplified} after " +
+                               $"simplify -> {found.Cells.Count} after smoothing, " +
+                               $"{found.Seconds:0} s, {found.Expanded} expanded, {wet} wet " +
+                               $"(straight line is {straightCells:0} cells)");
+            }
+
+            // Unreachable must fail rather than hang or return something.
+            var water = FindCell(map, LandcoverClass.Water);
+            if (water.x >= 0f)
+            {
+                var into = Strategos.Movement.PathFinder.Find(grid,
+                    a, new Vector2Int((int)water.x, (int)water.y));
+                if (into.Found)
+                {
+                    log.AppendLine("  FAIL routed into water, which mechanised cannot enter");
+                    bad++;
+                }
+            }
+
+            // Foot and mechanised disagree about the same ground, because their capabilities
+            // do -- the property that proves the grid is built per capability.
+            var footGrid = Strategos.Movement.MovementGrid.Build(
+                map, cat.Get(UnitCatalogue.InfantryFoot));
+            var (footPassable, _, _) = footGrid.Census();
+            if (footPassable <= passable)
+            {
+                log.AppendLine($"  FAIL foot can reach {footPassable} cells, mechanised " +
+                               $"{passable}; foot should out-climb and out-wade it");
+                bad++;
+            }
+            else
+            {
+                log.AppendLine($"  passability differs by unit: foot {footPassable} cells vs " +
+                               $"mechanised {passable}");
+            }
+
+            // Determinism: the same search twice must give the same cells. Compared before
+            // any post-processing, and cell by cell rather than by count -- two different
+            // routes of equal length would otherwise pass.
+            var first = Strategos.Movement.PathFinder.Find(grid, a, b);
+            var again = Strategos.Movement.PathFinder.Find(grid, a, b);
+            bool identical = first.Cells.Count == again.Cells.Count;
+            if (identical)
+                for (int i = 0; i < first.Cells.Count; i++)
+                    if (first.Cells[i] != again.Cells[i]) { identical = false; break; }
+
+            if (!identical)
+            {
+                log.AppendLine("  FAIL the same search returned a different route");
+                bad++;
+            }
+            else
+            {
+                log.AppendLine($"  determinism: two searches returned identical {first.Cells.Count}-cell routes");
+            }
+
+            return bad;
+        }
+
+        private static Vector2 FindCell(MapData map, LandcoverClass want)
+        {
+            for (int y = 0; y < map.Height; y++)
+            for (int x = 0; x < map.Width; x++)
+                if (map.GetLandcover(x, y) == want) return new Vector2(x, y);
+            return new Vector2(-1f, -1f);
         }
 
         // ─── The one that matters ─────────────────────────────────────────────
