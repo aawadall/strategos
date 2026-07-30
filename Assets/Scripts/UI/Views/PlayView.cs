@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Commands;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
 using Strategos.Scenarios;
@@ -68,6 +69,26 @@ namespace Strategos.UI.Views
         /// </summary>
         private readonly List<UnitId> _selection = new();
 
+        /// <summary>
+        /// The running simulation. It holds the same UnitInstance objects the markers do, so
+        /// a unit moved by an executor is redrawn without anything having to be pushed.
+        /// </summary>
+        private Simulation _sim;
+
+        /// <summary>
+        /// Real seconds banked toward the next simulation step.
+        ///
+        /// The simulation advances in whole fixed ticks and the presentation runs at whatever
+        /// frame rate it gets. Driving state from Time.deltaTime directly would make results
+        /// depend on frame rate and machine, which is exactly what the divergence test exists
+        /// to prevent.
+        /// </summary>
+        private float _tickAccumulator;
+
+        private bool _running = true;
+        private Toggle _runToggle;
+        private TMP_Text _clockLabel;
+
         private RectTransform _selectionMark;
         private RectTransform _detailsCard;
         private TMP_Text _detailsTitle;
@@ -108,6 +129,7 @@ namespace Strategos.UI.Views
 
         private void Update()
         {
+            AdvanceSimulation();
             _card?.PollResize();
             // Markers follow the sheet rather than caching screen positions, so a window
             // resize or a re-crop keeps every symbol on its own ground. Cheap at this unit
@@ -156,6 +178,11 @@ namespace Strategos.UI.Views
             _statusLabel.color = Theme.InkMuted;
             _statusLabel.characterSpacing = 1f;
             _statusLabel.GetComponent<LayoutElement>().preferredHeight = 18;
+
+            _clockLabel = CreateTmp("Clock", stage, "T+0000", 11, FontStyles.Bold);
+            _clockLabel.color = Theme.Accent;
+            _clockLabel.characterSpacing = 2f;
+            _clockLabel.GetComponent<LayoutElement>().preferredHeight = 16;
 
             var holder = CreateRect("CardHolder", stage);
             var hle = holder.gameObject.AddComponent<LayoutElement>();
@@ -233,6 +260,16 @@ namespace Strategos.UI.Views
             AddSection(content, "SELECTED UNIT");
             BuildDetailsCard(content);
 
+            AddSection(content, "ORDERS");
+            var hint = CreateTmp("Hint", content,
+                "Left-click selects.  Right-click orders a move.\nHold Shift to queue behind the current plan.",
+                10, FontStyles.Italic);
+            hint.color = Theme.InkMuted;
+            hint.GetComponent<LayoutElement>().preferredHeight = 30;
+
+            AddButton(content, "ABORT PLAN", AbortSelected);
+            _runToggle = AddToggle(content, "CLOCK RUNNING", true, () => _running = _runToggle.isOn);
+
             AddSection(content, "PRESENTATION");
             _modeDrop = AddDropdown(content, "RENDER MODE", RefreshSheet);
             _showLabels = AddToggle(content, "UNIT LABELS", true, LayOutMarkers);
@@ -283,6 +320,10 @@ namespace Strategos.UI.Views
                 $"{_scenario.Sides.Count} SIDES   ·   {_scenario.Units.Count} UNITS   ·   " +
                 $"{_map.Header.WidthMetres / 1000f:0.#} × {_map.Header.HeightMetres / 1000f:0.#} KM" +
                 (problems.Count > 0 ? $"   ·   {problems.Count} VALIDATION WARNING(S)" : string.Empty);
+
+            _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
+            _sim.AddExecutor(new MoveToExecutor());
+            _tickAccumulator = 0f;
 
             RefreshSheet();
             BuildMarkers();
@@ -429,9 +470,113 @@ namespace Strategos.UI.Views
 
         private void OnMapClicked(UnityEngine.EventSystems.PointerEventData e)
         {
+            // Left selects, right orders — the convention every player already knows, and it
+            // removes the ambiguity of one button meaning "select this" and "go there"
+            // depending on what happens to be under the cursor.
+            if (e.button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
+            {
+                OrderMoveTo(e);
+                return;
+            }
+
             var hit = UnitAt(e);
             if (hit == null) ClearSelection();
             else Select(hit.Id);
+        }
+
+        /// <summary>
+        /// Issues a MoveTo for the selected unit to the clicked ground.
+        ///
+        /// The order goes onto the bus rather than moving anything: it is logged, delivered on
+        /// the next step, and carried out by the executor. That indirection is the whole point
+        /// of #9 — the same path serves a player, a replay and, later, an AI.
+        /// </summary>
+        private void OrderMoveTo(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            if (!CellAt(e, out var cell)) return;
+
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null) return;
+
+            var actor = ActorId.ForSide(unit.Side);
+
+            // Queue behind the existing plan when shift is held, replace it otherwise. A plan
+            // that silently grew every time you clicked would be worse than one that did not
+            // exist.
+            bool queue = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
+
+            _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
+        }
+
+        /// <summary>Cell under the pointer. The inverse of the transform that draws markers.</summary>
+        private bool CellAt(UnityEngine.EventSystems.PointerEventData e, out Vector2 cell)
+        {
+            cell = default;
+            if (_map == null) return false;
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _card.Rect, e.position, e.pressEventCamera, out var local))
+                return false;
+
+            Rect r = _card.Rect.rect;
+            if (r.width < 1f || r.height < 1f) return false;
+
+            var t = new Vector2((local.x - r.xMin) / r.width, (local.y - r.yMin) / r.height);
+
+            var shown = _card.Image.uvRect;
+            var uv = new Vector2(shown.x + t.x * shown.width, shown.y + t.y * shown.height);
+
+            var view = _card.Viewport;
+            int px = Mathf.Clamp(Mathf.FloorToInt(uv.x * view.Width), 0, view.Width - 1);
+            int py = Mathf.Clamp(Mathf.FloorToInt(uv.y * view.Height), 0, view.Height - 1);
+
+            cell = view.PixelToCell(px, py);
+            return true;
+        }
+
+        /// <summary>
+        /// Advances the simulation by whole fixed ticks, banking the remainder.
+        ///
+        /// Capped per frame so a stall — a long generation, a breakpoint — cannot produce a
+        /// burst of catch-up steps that looks like units teleporting.
+        /// </summary>
+        private void AdvanceSimulation()
+        {
+            if (_sim == null || !_running) return;
+
+            _tickAccumulator += Time.deltaTime;
+
+            const int maxStepsPerFrame = 8;
+            int steps = 0;
+            while (_tickAccumulator >= Simulation.SecondsPerTick && steps < maxStepsPerFrame)
+            {
+                _tickAccumulator -= Simulation.SecondsPerTick;
+                _sim.Step();
+                steps++;
+            }
+            if (steps >= maxStepsPerFrame) _tickAccumulator = 0f;
+
+            if (steps > 0) RefreshClock();
+        }
+
+        private void RefreshClock()
+        {
+            if (_clockLabel == null || _sim == null) return;
+
+            int moving = 0;
+            foreach (var u in _sim.Units)
+            {
+                var q = _sim.QueueOf(u.Id);
+                if (q != null && !q.IsEmpty) moving++;
+            }
+
+            _clockLabel.text =
+                $"T+{_sim.Tick:0000}   ·   {moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS ISSUED";
+
+            // The details panel shows a live plan, so keep it current while one is selected.
+            if (_selection.Count > 0) RefreshSelection();
         }
 
         /// <summary>
@@ -472,6 +617,21 @@ namespace Strategos.UI.Views
             return best;
         }
 
+        /// <summary>
+        /// Aborts the selected unit's plan.
+        ///
+        /// Issued as a command rather than clearing the queue directly, so it is logged and a
+        /// replay reconstructs that the plan was cut short and when — the motivating case for
+        /// the whole design: recon reports a trap, the commander aborts.
+        /// </summary>
+        private void AbortSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null) return;
+            _sim.Issue(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
         private void Select(UnitId id)
         {
             _selection.Clear();
@@ -486,6 +646,26 @@ namespace Strategos.UI.Views
         }
 
         private bool IsSelected(UnitId id) => _selection.Contains(id);
+
+        /// <summary>
+        /// The unit's live plan, read from its queue.
+        ///
+        /// Read, not reconstructed from the command stream — delivery rule 4. A shadow copy
+        /// built by listening would be a second source of truth and would drift.
+        /// </summary>
+        private string DescribePlan(UnitInstance unit)
+        {
+            var q = _sim?.QueueOf(unit.Id);
+            if (q == null || q.IsEmpty) return "NO ORDERS";
+
+            var head = q[0];
+            string what = head.Command.Kind == CommandKind.MoveTo
+                ? $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}"
+                : head.Command.Kind.ToString().ToUpperInvariant();
+
+            string more = q.Count > 1 ? $"   (+{q.Count - 1} QUEUED)" : string.Empty;
+            return $"{head.Status.ToString().ToUpperInvariant()}: {what}{more}";
+        }
 
         private void RefreshSelection()
         {
@@ -521,7 +701,8 @@ namespace Strategos.UI.Views
                         $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%\n" +
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
-                        $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG";
+                        $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG\n" +
+                        DescribePlan(unit);
                 }
             }
 
@@ -612,10 +793,13 @@ namespace Strategos.UI.Views
                     name.alignment = TextAlignmentOptions.MidlineLeft;
                     name.color = Theme.Ink;
 
+                    // Composition only, no position. The order of battle is built once and
+                    // units move, so anything positional here would be the load-time value
+                    // presented as current -- and it was, reading three grid squares behind
+                    // the details panel while a unit was under way. Live position belongs in
+                    // the details panel, which is refreshed on every tick.
                     var detail = CreateTmp("D", row,
-                        $"{caps.Name}   ·   {unit.Strength}%   ·   " +
-                        $"{unit.Mgrs(_map)}   ·   " +
-                        $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}",
+                        $"{caps.Name}   ·   STR {unit.Strength}%",
                         10, FontStyles.Normal, withLayout: false);
                     detail.rectTransform.anchorMin = new Vector2(0, 0f);
                     detail.rectTransform.anchorMax = new Vector2(1, 0.5f);
