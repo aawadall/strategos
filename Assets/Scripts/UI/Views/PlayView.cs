@@ -56,6 +56,23 @@ namespace Strategos.UI.Views
         private readonly List<Marker> _markers = new();
         private bool _suppress;
 
+        /// <summary>
+        /// Currently selected units.
+        ///
+        /// A set that happens to hold at most one, not a single UnitInstance field. Multi-
+        /// and formation-select are out of scope here but should not be *precluded*:
+        /// commanding at echelon is eventually the core mechanic, and the Command message
+        /// already reserves a group addressee. The cost of getting this wrong is not the
+        /// selection code, which is small — it is that every call site downstream assumes one
+        /// unit, so widening it later means touching the whole ordering path.
+        /// </summary>
+        private readonly List<UnitId> _selection = new();
+
+        private RectTransform _selectionMark;
+        private RectTransform _detailsCard;
+        private TMP_Text _detailsTitle;
+        private TMP_Text _detailsBody;
+
         /// <summary>One unit's on-map presence: the symbol and its caption.</summary>
         private sealed class Marker
         {
@@ -157,6 +174,24 @@ namespace Strategos.UI.Views
             // layout failure rather than a unit being off-screen.
             _unitLayer.gameObject.AddComponent<RectMask2D>();
 
+            // Selection brackets live in the unit layer so they are clipped with it, and
+            // above the symbols so they read as chrome rather than part of a symbol.
+            _selectionMark = CreateRect("Selection", _unitLayer);
+            _selectionMark.anchorMin = _selectionMark.anchorMax = new Vector2(0.5f, 0.5f);
+            _selectionMark.pivot = new Vector2(0.5f, 0.5f);
+            _selectionMark.sizeDelta = new Vector2(SymbolSize * 1.5f, SymbolSize * 1.5f);
+            var markImg = _selectionMark.gameObject.AddComponent<Image>();
+            markImg.sprite = UiSprites.SelectionBrackets;
+            markImg.color = Theme.Accent;
+            markImg.raycastTarget = false;
+            _selectionMark.gameObject.SetActive(false);
+
+            // Pointer handling goes on the sheet itself, as MapExplorerView does, so a later
+            // scroll-to-zoom cannot fight the rail's ScrollRect for the wheel.
+            _card.Image.raycastTarget = true;
+            var region = _card.Rect.gameObject.AddComponent<PointerRegion>();
+            region.Clicked = OnMapClicked;
+
             // The marginalia strip is built by the card but must stay above the symbols.
             var strip = stack.Find("Marginalia");
             if (strip != null) strip.SetAsLastSibling();
@@ -194,6 +229,9 @@ namespace Strategos.UI.Views
             var srt = (RectTransform)scroll.transform;
             srt.offsetMin = new Vector2(2, 0);
             srt.offsetMax = new Vector2(0, -38);
+
+            AddSection(content, "SELECTED UNIT");
+            BuildDetailsCard(content);
 
             AddSection(content, "PRESENTATION");
             _modeDrop = AddDropdown(content, "RENDER MODE", RefreshSheet);
@@ -249,6 +287,7 @@ namespace Strategos.UI.Views
             RefreshSheet();
             BuildMarkers();
             BuildOrbat();
+            ClearSelection();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
         }
@@ -329,6 +368,8 @@ namespace Strategos.UI.Views
             // symbol visibly offset. Shift by the pivot-to-frame-centre vector instead.
             Vector2 frameOffset = SymbolLayout.PivotToFrameCentre * SymbolSize;
 
+            bool markedThisPass = false;
+
             foreach (var m in _markers)
             {
                 bool visible = _card.CellToLocal(m.Unit.Cell, out var local);
@@ -337,15 +378,178 @@ namespace Strategos.UI.Views
 
                 ((RectTransform)m.Go.transform).anchoredPosition = local - frameOffset;
                 m.Label.gameObject.SetActive(labels);
+
+                // The brackets sit on the frame, not on the marker's centre, so they stay
+                // concentric with the symbol the user is actually looking at.
+                if (_selectionMark != null && IsSelected(m.Unit.Id))
+                {
+                    _selectionMark.anchoredPosition = local;
+                    _selectionMark.gameObject.SetActive(true);
+                    markedThisPass = true;
+                }
             }
+
+            // Hidden when nothing is selected, and also when the selected unit is scrolled
+            // out of the cropped view — brackets floating over empty ground would imply a
+            // unit is there.
+            if (_selectionMark != null && !markedThisPass)
+                _selectionMark.gameObject.SetActive(false);
+        }
+
+        // ─── Selection ────────────────────────────────────────────────────────
+
+        private void BuildDetailsCard(Transform parent)
+        {
+            _detailsCard = CreateRect("Details", parent);
+            _detailsCard.gameObject.AddComponent<LayoutElement>().preferredHeight = 92;
+            _detailsCard.gameObject.AddComponent<Image>().color = UiTheme.CardBg;
+
+            _detailsTitle = CreateTmp("T", _detailsCard, string.Empty, 13, FontStyles.Bold,
+                withLayout: false);
+            _detailsTitle.rectTransform.anchorMin = new Vector2(0, 1);
+            _detailsTitle.rectTransform.anchorMax = new Vector2(1, 1);
+            _detailsTitle.rectTransform.pivot = new Vector2(0.5f, 1);
+            _detailsTitle.rectTransform.sizeDelta = new Vector2(-20, 22);
+            _detailsTitle.rectTransform.anchoredPosition = new Vector2(0, -6);
+            _detailsTitle.alignment = TextAlignmentOptions.MidlineLeft;
+            _detailsTitle.color = Theme.Ink;
+            _detailsTitle.characterSpacing = 2f;
+
+            _detailsBody = CreateTmp("B", _detailsCard, string.Empty, 11, FontStyles.Normal,
+                withLayout: false);
+            Stretch(_detailsBody.rectTransform);
+            _detailsBody.rectTransform.offsetMin = new Vector2(10, 6);
+            _detailsBody.rectTransform.offsetMax = new Vector2(-10, -28);
+            _detailsBody.alignment = TextAlignmentOptions.TopLeft;
+            _detailsBody.color = Theme.InkMuted;
+            _detailsBody.lineSpacing = 12f;
+
+            ClearSelection();
+        }
+
+        private void OnMapClicked(UnityEngine.EventSystems.PointerEventData e)
+        {
+            var hit = UnitAt(e);
+            if (hit == null) ClearSelection();
+            else Select(hit.Id);
+        }
+
+        /// <summary>
+        /// The unit under the pointer, or null.
+        ///
+        /// Hit-tested in the card's LOCAL space against the drawn symbol size, not in cell
+        /// space. Symbols are drawn at a fixed on-screen size, so a fixed local radius always
+        /// matches what is actually on screen; a fixed *cell* radius would shrink away as you
+        /// zoom out and make units progressively harder to click. (The issue's note said cell
+        /// space — that reasoning was written before #6 fixed the symbol size on screen.)
+        ///
+        /// Nearest wins rather than first found, so overlapping units resolve to the one the
+        /// pointer is actually closest to instead of whichever happens to come first in the
+        /// scenario's list.
+        /// </summary>
+        private UnitInstance UnitAt(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _card.Rect, e.position, e.pressEventCamera, out var click))
+                return null;
+
+            float radius = SymbolSize * 0.6f;
+            float bestSq = radius * radius;
+            UnitInstance best = null;
+
+            // Test against `local`, which is where the *frame* is drawn. LayOutMarkers
+            // offsets each marker's centre by -frameOffset precisely so the frame lands on
+            // the unit's position, so the frame — the thing the eye targets — is at `local`.
+            foreach (var m in _markers)
+            {
+                if (!m.Go.activeSelf) continue;
+                if (!_card.CellToLocal(m.Unit.Cell, out var local)) continue;
+
+                float d = (click - local).sqrMagnitude;
+                if (d < bestSq) { bestSq = d; best = m.Unit; }
+            }
+
+            return best;
+        }
+
+        private void Select(UnitId id)
+        {
+            _selection.Clear();
+            if (id.IsValid) _selection.Add(id);
+            RefreshSelection();
+        }
+
+        private void ClearSelection()
+        {
+            _selection.Clear();
+            RefreshSelection();
+        }
+
+        private bool IsSelected(UnitId id) => _selection.Contains(id);
+
+        private void RefreshSelection()
+        {
+            UnitInstance unit = null;
+            if (_selection.Count > 0 && _scenario != null)
+                unit = _scenario.FindUnit(_selection[0]);
+
+            if (_detailsTitle != null)
+            {
+                if (unit == null)
+                {
+                    _detailsTitle.text = "NONE";
+                    _detailsBody.text = "Click a unit on the map.";
+                }
+                else
+                {
+                    var side = _scenario.FindSide(unit.Side);
+                    var caps = unit.Capabilities(UnitCatalogue.Default());
+                    var code = unit.ToSidcCode();
+
+                    int cx = Mathf.Clamp(Mathf.RoundToInt(unit.Cell.x), 0, _map.Width - 1);
+                    int cy = Mathf.Clamp(Mathf.RoundToInt(unit.Cell.y), 0, _map.Height - 1);
+
+                    _detailsTitle.text = string.IsNullOrEmpty(unit.Designation)
+                        ? unit.Id.ToString()
+                        : unit.Designation.ToUpperInvariant();
+
+                    // Hyphens and middots only — the atlas renders an en dash as nothing.
+                    _detailsBody.text =
+                        $"{side?.Name ?? "?"}   ·   {DisplayNames.EchelonName(code.Echelon)}   ·   " +
+                        $"{DisplayNames.UnitTypeLabel(code.EntityCode)}\n" +
+                        $"{caps.Name}   ·   STR {unit.Strength}%   ·   " +
+                        $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%\n" +
+                        $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
+                        $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
+                        $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG";
+                }
+            }
+
+            LayOutMarkers();
+            RefreshOrbatHighlight();
         }
 
         // ─── Order of battle ──────────────────────────────────────────────────
+
+        /// <summary>Row background per unit id, so the selected one can be picked out.</summary>
+        private readonly Dictionary<int, Image> _orbatRows = new();
+
+        private void RefreshOrbatHighlight()
+        {
+            foreach (var kv in _orbatRows)
+            {
+                if (kv.Value == null) continue;
+                kv.Value.color = IsSelected(new UnitId(kv.Key))
+                    ? UiTheme.SelectFill
+                    : UiTheme.CardBg;
+            }
+        }
 
         private void BuildOrbat()
         {
             for (int i = _orbatRoot.childCount - 1; i >= 0; i--)
                 Destroy(_orbatRoot.GetChild(i).gameObject);
+            _orbatRows.Clear();
             if (_scenario == null) return;
 
             var catalogue = UnitCatalogue.Default();
@@ -379,6 +583,24 @@ namespace Strategos.UI.Views
                     var caps = unit.Capabilities(catalogue);
                     var row = CreateRect($"Unit_{unit.Id}", _orbatRoot);
                     row.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+
+                    // Selectable from the list as well as the map. Cheap, and the list is the
+                    // only way to reach a unit that is currently cropped off the sheet.
+                    var rowImg = row.gameObject.AddComponent<Image>();
+                    rowImg.color = UiTheme.CardBg;
+                    var rowBtn = row.gameObject.AddComponent<Button>();
+                    rowBtn.targetGraphic = rowImg;
+                    var rowColors = ColorBlock.defaultColorBlock;
+                    rowColors.normalColor = Color.white;
+                    rowColors.highlightedColor = new Color(0.94f, 0.94f, 0.90f);
+                    rowColors.pressedColor = new Color(0.88f, 0.90f, 0.86f);
+                    rowColors.selectedColor = Color.white;
+                    rowColors.fadeDuration = 0.05f;
+                    rowBtn.colors = rowColors;
+
+                    var captured = unit.Id;
+                    rowBtn.onClick.AddListener(() => Select(captured));
+                    _orbatRows[captured.Value] = rowImg;
 
                     var name = CreateTmp("N", row,
                         string.IsNullOrEmpty(unit.Designation) ? unit.Id.ToString() : unit.Designation,

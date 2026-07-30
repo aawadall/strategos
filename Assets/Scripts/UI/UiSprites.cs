@@ -17,6 +17,7 @@ namespace Strategos.UI
     {
         private static Sprite _arrow;
         private static Sprite _halo;
+        private static Sprite _selection;
 
         /// <summary>Solid down-triangle, drawn white so Image.color can tint it.</summary>
         public static Sprite Arrow
@@ -51,6 +52,58 @@ namespace Strategos.UI
                 tex.Apply(false, false);
                 _arrow = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
                 return _arrow;
+            }
+        }
+
+        /// <summary>
+        /// Four corner brackets, drawn white so Image.color can tint them.
+        ///
+        /// Corners rather than a full box or a ring: a closed outline around a symbol reads
+        /// as part of the symbol — APP-6D already uses enclosing shapes to mean something —
+        /// whereas brackets read as chrome pointing *at* it. It is also the convention most
+        /// military UI uses for a selected track.
+        /// </summary>
+        public static Sprite SelectionBrackets
+        {
+            get
+            {
+                if (_selection != null) return _selection;
+
+                const int s = 64;
+                const int thickness = 5;   // arm width
+                const int arm = 20;        // how far each arm runs from its corner
+
+                var tex = new Texture2D(s, s, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    name = "SelectionBrackets",
+                };
+
+                var px = new Color32[s * s];
+                var clear = new Color32(255, 255, 255, 0);
+                var solid = new Color32(255, 255, 255, 255);
+                for (int i = 0; i < px.Length; i++) px[i] = clear;
+
+                for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    // Distance from whichever edge is nearer, per axis.
+                    int dx = Mathf.Min(x, s - 1 - x);
+                    int dy = Mathf.Min(y, s - 1 - y);
+
+                    // A pixel belongs to a bracket when it is inside the thickness of one
+                    // edge and within the arm length along the other.
+                    bool horizontalArm = dy < thickness && dx < arm;
+                    bool verticalArm = dx < thickness && dy < arm;
+
+                    if (horizontalArm || verticalArm) px[y * s + x] = solid;
+                }
+
+                tex.SetPixels32(px);
+                tex.Apply(false, false);
+                _selection = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
+                return _selection;
             }
         }
 
