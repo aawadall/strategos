@@ -6,6 +6,9 @@ from reading the code.
 **Where facts belong:** this file is the authority for *commands, invariants and gotchas*.
 `docs/nato-symbol-generator.md` is the authority for *APP-6D reference detail* (SIDC
 tables, frame shapes, layer model). If you change symbol behaviour, update both.
+`docs/command-architecture.md` is the authority for *how orders and reports move* — topics,
+message shapes, delivery and ordering rules. It is a design note; nothing in it is built
+yet, so treat it as the intended shape rather than a description of the code.
 
 ---
 

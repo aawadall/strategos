@@ -75,6 +75,7 @@ Add accounts, matchmaking, leaderboards, scenario workshop, replay library, AI m
 Complete audio, UI/UX, tutorials, accessibility, performance optimization, platform builds, legal review, and 1.0 launch assets.
 
 See [docs/phases.md](docs/phases.md) for the full task breakdown and milestones.
+See [docs/command-architecture.md](docs/command-architecture.md) for the command/situation topic design that Phases 3–5 build on.
 See [docs/steam.md](docs/steam.md) for the Steam publishing guide, Early Access strategy, and Steamworks integration details.
 
 ---
