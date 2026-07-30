@@ -18,6 +18,47 @@ namespace Strategos.UI
         private static Sprite _arrow;
         private static Sprite _halo;
         private static Sprite _selection;
+        private static Texture2D _dash;
+
+        /// <summary>Length in pixels of one dash-plus-gap of <see cref="DashTexture"/>.</summary>
+        public const float DashPeriod = 16f;
+
+        /// <summary>
+        /// A repeating dash, for drawing a planned route as distinct from one under way.
+        ///
+        /// A texture with wrapMode Repeat rather than many small segments: a RawImage can then
+        /// draw a dashed line of any length as one quad by scaling its uvRect, instead of the
+        /// UI having to hold an object per dash.
+        ///
+        /// Dashed for planned and solid for executing follows the convention the symbol system
+        /// already uses — APP-6D draws an anticipated frame dashed and a present one solid — so
+        /// the same distinction means the same thing on a symbol and on its order.
+        /// </summary>
+        public static Texture2D DashTexture
+        {
+            get
+            {
+                if (_dash != null) return _dash;
+
+                const int w = 16;
+                _dash = new Texture2D(w, 1, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Point,   // crisp edges; a blurred dash reads as dirt
+                    wrapMode = TextureWrapMode.Repeat,
+                    name = "OrderDash",
+                };
+
+                var px = new Color32[w];
+                for (int x = 0; x < w; x++)
+                    px[x] = x < w * 0.6f
+                        ? new Color32(255, 255, 255, 255)
+                        : new Color32(255, 255, 255, 0);
+
+                _dash.SetPixels32(px);
+                _dash.Apply(false, false);
+                return _dash;
+            }
+        }
 
         /// <summary>Solid down-triangle, drawn white so Image.color can tint it.</summary>
         public static Sprite Arrow

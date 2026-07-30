@@ -116,6 +116,7 @@ namespace Strategos.UI.Views
         /// </summary>
         private const float MaxBankedTicks = 32f;
 
+        private OrderTrackLayer _orders;
         private RectTransform _selectionMark;
         private RectTransform _detailsCard;
         private TMP_Text _detailsTitle;
@@ -235,6 +236,13 @@ namespace Strategos.UI.Views
             // still drawn — floating over the tab bar and the rail, which looks like a
             // layout failure rather than a unit being off-screen.
             _unitLayer.gameObject.AddComponent<RectMask2D>();
+
+            // Routes go under the symbols so an arrowhead never covers the unit it belongs
+            // to, but inside the same masked layer so they are clipped with it.
+            var trackRoot = CreateRect("Orders", _unitLayer);
+            Stretch(trackRoot);
+            trackRoot.SetAsFirstSibling();
+            _orders = new OrderTrackLayer(trackRoot);
 
             // Selection brackets live in the unit layer so they are clipped with it, and
             // above the symbols so they read as chrome rather than part of a symbol.
@@ -477,6 +485,8 @@ namespace Strategos.UI.Views
             // unit is there.
             if (_selectionMark != null && !markedThisPass)
                 _selectionMark.gameObject.SetActive(false);
+
+            LayOutOrders();
         }
 
         // ─── Selection ────────────────────────────────────────────────────────
@@ -764,6 +774,90 @@ namespace Strategos.UI.Views
 
             LayOutMarkers();
             RefreshOrbatHighlight();
+        }
+
+        // ─── Order tracks ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// The plan this side's commander believes a unit is following.
+        ///
+        /// Today it is simply the unit's queue, and the indirection looks pointless. It is not:
+        /// under C3 (noise, latency, hijack) a commander's picture and the ground truth
+        /// diverge — a unit may be executing a plan the commander does not know about, or
+        /// sitting idle because a FRAGO never arrived — and at that point drawing the real
+        /// queue is cheating. Routing every such read through one accessor named for the
+        /// observer makes that a change here rather than a search through the view.
+        ///
+        /// See docs/command-architecture.md, "The consequence that breaks a rule".
+        /// </summary>
+        private IReadOnlyList<QueuedCommand> BelievedPlanOf(UnitInstance unit)
+        {
+            var q = _sim?.QueueOf(unit.Id);
+            return q?.Entries;
+        }
+
+        /// <summary>
+        /// Draws every unit's plan as a connected route, leg by leg.
+        ///
+        /// Read from the queue rather than reconstructed from the command stream — delivery
+        /// rule 4. A shadow copy maintained by listening would be a second source of truth and
+        /// would drift, which for a route means arrows pointing at places nobody is going.
+        /// </summary>
+        private void LayOutOrders()
+        {
+            if (_orders == null) return;
+            _orders.Begin();
+
+            if (_sim != null && _scenario != null)
+            {
+                foreach (var m in _markers)
+                {
+                    var plan = BelievedPlanOf(m.Unit);
+                    if (plan == null || plan.Count == 0) continue;
+
+                    var side = _scenario.FindSide(m.Unit.Side);
+                    var colour = side?.Colour ?? Color.white;
+
+                    // A route starts at the unit, not at the first waypoint, so the leg under
+                    // way shortens as the unit closes on it.
+                    Vector2 from = m.Unit.Cell;
+                    Vector2 last = from;
+
+                    for (int i = 0; i < plan.Count; i++)
+                    {
+                        var entry = plan[i];
+                        if (entry.Command.Kind != CommandKind.MoveTo) continue;
+
+                        Vector2 to = entry.Command.TargetCell;
+
+                        // Solid for the leg being executed, dashed for what is merely planned.
+                        bool executing = entry.Status == CommandStatus.Executing;
+                        _orders.AddLeg(_card, from, to, Tint(colour, executing), dashed: !executing);
+
+                        from = to;
+                        last = to;
+                    }
+
+                    // One arrowhead, at the end of the whole plan rather than on every leg —
+                    // a head per waypoint reads as several separate orders.
+                    if (last != m.Unit.Cell)
+                        _orders.AddArrowhead(_card, from == last ? m.Unit.Cell : from, last,
+                            Tint(colour, true));
+                }
+            }
+
+            _orders.End();
+        }
+
+        /// <summary>
+        /// Side colour, muted for a leg that has not started. The distinction is carried by
+        /// dash versus solid; the tint only reinforces it, so it stays subtle.
+        /// </summary>
+        private static Color Tint(Color side, bool executing)
+        {
+            var c = executing ? side : Color.Lerp(side, Theme.InkMuted, 0.35f);
+            c.a = executing ? 0.95f : 0.7f;
+            return c;
         }
 
         // ─── Order of battle ──────────────────────────────────────────────────
