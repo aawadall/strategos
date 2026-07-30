@@ -13,12 +13,18 @@ tables, frame shapes, layer model). If you change symbol behaviour, update both.
 
 Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D symbology.
 
-**Phase 2 (the symbol system) is complete; Phase 1's map system is partly built.** The
-map has a data model, a generation pipeline and a 2D topographic renderer, and the demo
-panel draws its symbol on a real generated sheet with live relief-profile and render-mode
-controls. There is still no terrain mesh, no map camera and no panning or zooming — the
-map is a texture in a UI card, not a world. Everything else in `ROADMAP.md` — units,
-combat, C2, scenarios, AI, networking — is unbuilt; there is no game loop yet.
+**Phase 2 (the symbol system) is complete; Phase 1's map system is largely built.** The
+map has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape
+(a heightfield mesh textured with the 2D sheet). The app is a tab shell over three
+views: **EXPLORE** (a symbol-library browser and a pannable, zoomable map inspector),
+**SCENARIO** (map settings with a 2D or 3D preview) and **BUILDER** (the original
+digit-by-digit symbol composer).
+
+There is still no *world*: the 3D drape is a preview rendered into a UI card, not a
+playable space, and there is no game camera. **There is no unit or entity model at all**
+— nothing has a position, strength or ORBAT link; `SIDCCode` is a rendering key.
+Everything else in `ROADMAP.md` — units, combat, C2, AI, networking — is unbuilt, and
+there is no game loop.
 
 | Path | Contents |
 |---|---|
@@ -26,8 +32,11 @@ combat, C2, scenarios, AI, networking — is unbuilt; there is no game loop yet.
 | `Assets/Scripts/Core/Maps/Model/` | `MapData` and friends — data only |
 | `Assets/Scripts/Core/Maps/Generation/` | The generation pipeline, one file per stage |
 | `Assets/Scripts/Core/Maps/Rendering2D/` | CPU topographic renderer |
-| `Assets/Scripts/Demo/` | Demo scene behaviours, incl. `SymbolBuilderPanel` |
-| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets |
+| `Assets/Scripts/Core/Maps/Rendering3D/` | Drape mesh + mipmapped drape texture |
+| `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
+| `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
+| `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` — the only thing in Resources |
+| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, mesh probe |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
 
 ---
@@ -36,8 +45,31 @@ combat, C2, scenarios, AI, networking — is unbuilt; there is no game loop yet.
 
 ```powershell
 .\scripts\build.ps1 -Target Windows64      # Windows64 | Linux64 | macOS | WebGL | All
-.\scripts\capture.ps1                      # launch player, screenshot, close
+.\scripts\capture.ps1 -View scenario       # launch player on one view, screenshot, close
 ```
+
+**`build.ps1` waits for the editor; do not "simplify" it back to the call operator.**
+`Unity.exe` is a GUI-subsystem binary and PowerShell does not wait for those, so
+`& $UnityExe …` returns in about 0.1 s with the build still running — measured 0.1 s
+versus 19 s after the fix. Anything sequenced after it then races the build, and
+`capture.ps1` screenshots the *previous* player, so a UI change looks like it did
+nothing. `-Wait` is also wrong: it waits on the whole process tree and Unity leaves
+helper children alive, which hung a 19 s build for ten minutes. Use `-PassThru` plus
+`WaitForExit()` on the returned object.
+
+**`capture.ps1` verifies it actually captured the player.** `SetForegroundWindow` fails
+silently when the caller is not itself the foreground process, and `CopyFromScreen` then
+saves whatever window occupies those coordinates — it once saved an unrelated
+application, which is indistinguishable from a catastrophically broken layout. It now
+retries focus and errors out rather than saving a lie. If it reports focus failure,
+something is stealing focus; it is not a UI bug. **Kill stray `Strategos` processes
+before capturing** — a lingering window at the same coordinates will be photographed
+instead.
+
+`-View <key>` selects a view without driving the UI: `explore`, `symbols`, `map`,
+`scenario`, `builder`. Add `-view3d` (passed straight to the player) to open the
+scenario preview in 3D. `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
+which is the cheap check that the shell came up at all.
 
 **A batch build can silently ship the previous revision.** `BuildPlayer` will package
 whatever is already in `Library/ScriptAssemblies`, so a build started right after an edit
@@ -137,6 +169,53 @@ forwarding to it. Add new primitives to the rectangular overload.
 
 ---
 
+## View shell
+
+`AppShell` owns **one** Canvas, CanvasScaler, GraphicRaycaster and EventSystem, plus the
+tab bar. Views own only their content and are handed a rect to build into. `ViewHost`
+switches between them and is used twice — once for the top-level tabs, once for
+EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
+
+- **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
+  them multiplies exposure to the silent-layout-truncation failure mode and pays every
+  view's startup cost whichever tab you wanted. Not destroyed, because rebuilding costs a
+  map regeneration or a few hundred symbol bakes.
+- **`IAppView.Build(host)` is explicit, not `Awake`/`OnEnable`** — `AddComponent` fires
+  those before the host rect can be handed over. `ViewHost` activates the GameObject
+  *before* calling `Build`, because a layout group computes nothing for an inactive
+  hierarchy.
+- **`OnHidden` must disable any camera with a `targetTexture`.** Such a camera renders
+  every frame whether or not anything displays the result, so a forgotten
+  `SetRendering(false)` costs a full terrain render per frame while you are looking at a
+  different view. This is the most expensive mistake available here.
+- **`OnHidden` must also close dropdowns** (`UiFactory.HideDropdownsIn`). A `TMP_Dropdown`
+  left open re-appears open, floating over whichever view comes next.
+- **Do not add a second bootstrap.** `AppShell` installs itself only if no shell exists,
+  and is deliberately *not* gated on the scene's name — that gate existed solely to work
+  around a stale committed scene and would blank any other scene. Two installers means two
+  stacked canvases and two EventSystems.
+- **Only `AppSession` holds shared state** — map settings, the current `MapData`, a
+  generation counter and the one cached symbol factory. It holds no textures on purpose,
+  so disposal stays with whichever view allocated them. Views compare
+  `AppSession.Generation` in `OnShown` and re-render only if it moved.
+- **Sprites from `AppSession.Symbols` must never be `Destroy`ed** — they are shared cache
+  entries, and only `ClearCache()` may free them. The builder bakes its preview *uncached*
+  via `NatoSymbolComposer` + `NatoSymbolBaker` precisely so it can dispose it; if it is
+  ever switched to the cached factory, `DestroyPreviewAssets` must go in the same change or
+  the library's tiles turn blank.
+- **Seed controls with `UiFactory.SetSliderValue`, not `Slider.SetValueWithoutNotify`.**
+  The numeric label is maintained by a `UiSliderReadout` component, and the bare
+  no-notify setter moves the value while leaving the label showing the old number — which
+  is how sixteen relief sliders came to display their minimums with their handles at the
+  real values.
+- **A slider whose range clamps its own authored value is a data bug, not a cosmetic one.**
+  Editing any relief slider writes *all* of them back as a `ParameterOverride`, so a
+  clamped reading silently rewrites the profile. `TreelineFraction` reaches 1.5 and
+  `SnowlineFraction` 2.0 — they are not 0–1 despite the names — and `BaseElevationMetres`
+  is −40 on Coastal. `ScenarioSetupView.BuildReliefSliders` records the real spans.
+
+---
+
 ## SIDC field layout
 
 20 digits (an optional third ten is parsed and ignored). Source of truth:
@@ -213,7 +292,8 @@ Same failure mode: the sheet comes out drawable but wrong.
   at its authored 2 px is 50 m of ground width at 1 px per cell, so the whole drainage
   network rendered as ribbons and the map read as flooded. Floor the **final pixel width**
   at 1 instead, so features thin to hairlines rather than vanish.
-- **Point marks generalise by dropping, not by shrinking** (`MapRasterizer.DetailZoom`).
+- **Point marks generalise by dropping, not by shrinking** (`DetailZoom`, a **private**
+  const at `MapRasterizer.cs:641` — promote it if a new view needs the same rule).
   A line can thin; a ford's circle has a minimum legible size, so below the threshold
   fords, bridges and spot heights are simply not drawn. Settlements always are.
 - **The viewport starts at cell −0.5, not 0.** A cell coordinate names a sample point, not
@@ -240,6 +320,63 @@ Same failure mode: the sheet comes out drawable but wrong.
 
 ---
 
+## 3D drape invariants
+
+The drape is a heightfield mesh textured with a rendered 2D sheet — the map draped over
+its own relief. Verify with `Strategos → Probe Map Mesh` (see below) *before* looking at
+the picture: a half-texel UV error, a missing last column and a flipped elevation axis all
+produce a plausible-looking hill.
+
+- **UVs are derived, not guessed: `u = (cx + 0.5) / w`.** The drape is rendered with
+  `MapViewport.ForWholeMap`, whose window starts at cell −0.5, so the half-cell offset is
+  required and the pixels-per-cell cancels out (making the UVs resolution-independent).
+  `MapData` is row-major from the south edge and `v = 0` is the texture's bottom row, so
+  there is **no vertical flip**. Getting this wrong shows up only as the grid floating off
+  the drape's edge in a finished render.
+- **Decimate on a grid, never by stride.** `cx = i * (w - 1) / nx` makes `i == nx` land on
+  `w - 1` exactly. A `for (x = 0; x < w; x += stride)` loop misses the last column whenever
+  `(w - 1) % stride != 0`, and the drape then stops short of the map's edge.
+- **512 cells at one vertex per cell is 262 144 vertices**, past what a 16-bit index buffer
+  addresses. `IndexFormat.UInt32` is set only above 65 000 so the default (192 a side,
+  ~38 000 verts) stays 16-bit and WebGL-safe — WebGL is a build target.
+- **The drape shader is `Cull Off` on purpose.** A skirted heightfield is viewed from
+  outside, culling costs nothing at this triangle count, and it removes the whole class of
+  bug where a winding mistake makes the drape invisible from above. Do not tidy it to
+  `Cull Back` without checking the mesh winding first.
+- **The drape needs its own texture because `MapRasterizer.Render` has no mip-maps**
+  (`mipChain: false` at `MapRasterizer.cs:116`). That is right for a flat sheet and wrong
+  in perspective, where the far half of the map minifies hard and shimmers.
+  `MapDrapeTexture` goes through the public `RenderPixels` and builds a mipmapped,
+  trilinear, anisotropic texture instead.
+- **Load the shader with `Resources.Load`, never `Shader.Find`.** `Find` only resolves
+  shaders used by a scene or listed in `m_AlwaysIncludedShaders`; neither is true here, so
+  it works in the editor and returns null in a player, where the symptom is a magenta
+  drape.
+- **The drape lives on layer 8 (`MapDrape`) and both cameras are masked.** The drape camera
+  renders only that layer; the scene camera is masked out of it by `SceneBootstrapper` and
+  again by `AppShell` at runtime, so a hand-edited scene cannot reintroduce a second
+  terrain render that nothing can see. The drape camera also has **no `AudioListener`** — a
+  second one warns every frame.
+- **A fresh `RenderTexture` holds uninitialised garbage**, so render once immediately after
+  allocating. Release before reallocating, and quantise the size (16 px) or a window drag
+  reallocates every frame.
+- **The 2D and 3D preview images cannot be the same `RawImage`.** The 2D sheet must be
+  aspect-cropped via `uvRect`; the 3D one must not be, because its target is allocated at
+  the frame's exact aspect. Two siblings keep each invariant structural.
+
+```powershell
+# Menu: Strategos > Probe Map Mesh  — works under -nographics
+& "C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Unity.exe" `
+    -batchmode -quit -nographics -projectPath . `
+    -executeMethod Strategos.Editor.MapMeshProbe.Run -logFile probe.log
+```
+
+It asserts vertex and triangle counts, index-format promotion, that the extent lands
+exactly on `(w-1, h-1)` cells, that the skirt floor is 20 m under the map minimum, that
+the UV corners are half a texel in, and that no vertex is NaN.
+
+---
+
 ## Unity / VCS gotchas
 
 - **`.meta` files and `ProjectSettings/` must stay tracked.** Unity stores asset GUIDs in
@@ -247,6 +384,13 @@ Same failure mode: the sheet comes out drawable but wrong.
   and asmdef reference breaks. Both were untracked before commit `5e20475`, so CI built a
   different project than local (default settings, no URP pipeline asset).
 - **`Assets/TextMesh Pro/` is committed on purpose — do not re-ignore it.** See below.
+- **Everything under `Assets/Resources/` ships in every build, unconditionally.** It holds
+  exactly one file, `Shaders/StrategosMapDrape.shader`, which is there because it must be
+  loadable by name in a player. Keep it that way; it is not a general dumping ground.
+- **`com.unity.modules.screencapture` and `…imageconversion` are deliberately absent**, so
+  `ScreenCapture.CaptureScreenshot` and `Texture2D.EncodeToPNG` do not exist. Screenshot
+  from outside with `capture.ps1` rather than adding engine modules to every shipped build
+  to serve a test harness.
 - Binary assets go through Git LFS (`.gitattributes`). Verify with
   `git check-attr text filter -- <path>`.
 
@@ -270,7 +414,7 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
 
 ## UI layout gotchas
 
-`SymbolBuilderPanel` constructs its entire UI in `Start()`.
+Every view builds its UI imperatively from `UiFactory`. There is no prefab and no UXML.
 
 - **An exception truncates the layout silently.** You get a window with a background
   colour and nothing else, and no error on screen. Always check `Player.log`.
@@ -279,20 +423,32 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
   height while still occupying the space.
 - **`childForceExpandWidth = true`** hands every child a share of the surplus regardless
   of `flexibleWidth`, inflating a fixed-width child past the screen edge. Leave it off
-  when one child has a fixed width and another should absorb slack.
-- **The map card's underlay is cropped to fit, never stretched** (`UpdateUnderlayCrop`).
-  The card's aspect follows the window, so a `Stretch`ed `RawImage` squashes the sheet —
-  and a map with a different scale on each axis misreports every distance on it. The crop
-  is a `uvRect` recomputed when the card resizes, because regenerating would stall for a
-  few hundred milliseconds.
-- **The underlay is generated at `Start` on the main thread** (~200 ms for a 200-cell map),
-  which is why profile and mode are dropdowns and reseeding is a button. Do not put map
-  generation behind a slider.
+  when one child has a fixed width and another should absorb slack — which is every view
+  here, since each has a fixed 440 px rail and a flexible stage.
+- **A map sheet is cropped to fit, never stretched** (`MapSheetCard.UpdateCrop`). The
+  card's aspect follows the window, so a `Stretch`ed `RawImage` squashes the sheet — and a
+  map with a different scale on each axis misreports every distance on it. The crop is a
+  `uvRect` recomputed on resize, because regenerating would stall for a few hundred
+  milliseconds.
+- **Map generation is synchronous on the main thread** (~200 ms at 200 cells, over a second
+  at 512 with erosion). It stays behind discrete controls and an explicit button. Do not
+  put map generation behind a slider. Mesh detail and vertical exaggeration *are* safe to
+  drive live — they rebuild or scale the mesh without regenerating.
 - **A profile's `FeatureScaleCells` is tuned for the 512-cell default map.** On the
-  200-cell underlay one landform is wider than the whole sheet and it renders as a single
-  dome with concentric rings, which reads as a bug in the noise. `RefreshMap` scales it
-  down through `ParameterOverride`; note this also multiplies the number of closed basins,
-  so the lake problem in Known gaps shows up more strongly here than on a full-size map.
+  200-cell builder underlay one landform is wider than the whole sheet and it renders as a
+  single dome with concentric rings, which reads as a bug in the noise. `RefreshMap` scales
+  it down through `ParameterOverride`; note this also multiplies the number of closed
+  basins, so the lake problem in Known gaps shows up more strongly there than on a
+  full-size map.
+- **A grid of tiles needs two-axis scrolling and a top-left-anchored content rect.** A
+  matrix enumerating two symbol fields is ~1900 px wide; with the content stretched to the
+  viewport width there is nothing to scroll horizontally and the right-hand columns are
+  simply unreachable. `UiScroll.CreateGridColumn` anchors content to the corner alone so
+  the `ContentSizeFitter` drives both dimensions.
+- **Baked symbol sprites are not frame-centred.** `FrameRight = 160` of `BASE = 256`
+  reserves a right-hand amplifier column, so the symbol sits left of centre in its texture.
+  The library's tiles are 4:3 rather than square for this reason — in a square tile it reads
+  as a layout bug. Do not "centre" it.
 
 ---
 
@@ -364,6 +520,16 @@ Recorded so they are not re-investigated. None are fixed.
   flag on `*.png` / `*.ttf`, so a later `* text=auto` rule wins. Harmless while LFS
   carries the content (verified: committed PNG/TTF headers intact), but it would corrupt
   a binary added without an LFS rule.
+- **Four land entity codes render as a bare frame.** `IconDecorator.ResolveLandIcon`
+  handles 11 of the 14 `LandEntityCode` values; `Unknown`, `SpecialOperations`,
+  `MissileBallistic` and `Cyber` fall through to its `default` and draw nothing inside the
+  frame. The symbol library lists them anyway, captioned `FRAME ONLY` — a catalogue that
+  hides the gaps is worse than one that shows them. `DisplayNames.RendersIcon` is the
+  lookup and must be kept in step with `ResolveLandIcon`.
+- **Only land symbol sets draw icons at all.** `IconDecorator.Contribute` returns early
+  unless the set is `LandUnit` or `LandCivilian`, and `ProceduralSymbolFactory` only draws
+  land frames, so the other 19 `SymbolSet` values would render as empty land frames. This
+  is why the library offers no symbol-set axis.
 - **Airborne and air assault share one chevron glyph.** `SectorModifierDecorator`
   resolves `ModAirborne` and `ModAirAssault` to the same case, so they are
   indistinguishable on screen despite being separate dropdown entries. Same for the Air

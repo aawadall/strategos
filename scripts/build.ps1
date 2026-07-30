@@ -115,8 +115,22 @@ function Invoke-Unity {
     Write-Host "  Log: $LogFile"
     Write-Host ""
 
-    & $UnityExe @Arguments
-    $code = if (Test-Path variable:/LASTEXITCODE) { $LASTEXITCODE } else { 0 }
+    # Launch detached and wait on the process object, NOT with the call operator and NOT
+    # with -Wait.
+    #
+    # The call operator does not wait at all: Unity.exe is a GUI-subsystem binary, so
+    # `& $UnityExe ...` returns in about a tenth of a second while the editor is still
+    # building. Everything sequenced after it then races the build — most painfully
+    # scripts\capture.ps1, which launched and screenshotted the PREVIOUS player while the
+    # new one was still being written, making a UI change look like it had had no effect.
+    #
+    # -Wait overcorrects: it waits on the whole process tree, and Unity leaves helper
+    # children (licensing, asset workers) alive after the editor itself has exited, so a
+    # build that finished in seconds hung for ten minutes. WaitForExit on the returned
+    # object waits for exactly the editor.
+    $proc = Start-Process -FilePath $UnityExe -ArgumentList $Arguments -PassThru
+    $proc.WaitForExit()
+    $code = $proc.ExitCode
 
     if ($code -ne 0) {
         Write-Host ""
