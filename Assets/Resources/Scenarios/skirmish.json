@@ -1,0 +1,165 @@
+{
+  "FormatVersion": 1,
+  "Name": "Meeting Engagement",
+  "Description": "Two mechanised companies advance into the same valley from opposite ends. Neither side knows the other is there.",
+  "Map": {
+    "Name": "Valley",
+    "Seed": 20260729,
+    "Width": 256,
+    "Height": 256,
+    "MetresPerCell": 25.0,
+    "Profile": "Rolling",
+    "Origin": {
+      "Zone": 32,
+      "Band": "U",
+      "Easting": 500000.0,
+      "Northing": 5600000.0
+    },
+    "EnableErosion": true,
+    "EnableCulture": true
+  },
+  "Sides": [
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Name": "BLUFOR",
+      "Affiliation": "Friend",
+      "Colour": {
+        "r": 0.502,
+        "g": 0.878,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Name": "OPFOR",
+      "Affiliation": "Hostile",
+      "Colour": {
+        "r": 1.0,
+        "g": 0.502,
+        "b": 0.502,
+        "a": 1.0
+      }
+    }
+  ],
+  "Units": [
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10031000151212000000",
+      "Designation": "A/1-7 IN",
+      "HigherFormation": "1-7 IN",
+      "Cell": {
+        "x": 40.0,
+        "y": 40.0
+      },
+      "Strength": 100
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10031000141611000000",
+      "Designation": "1/A/2-69 AR",
+      "HigherFormation": "2-69 AR",
+      "Cell": {
+        "x": 52.0,
+        "y": 34.0
+      },
+      "Strength": 100
+    },
+    {
+      "Id": {
+        "Value": 3
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10031000141913000000",
+      "Designation": "SCT/1-7 IN",
+      "HigherFormation": "1-7 IN",
+      "Cell": {
+        "x": 60.0,
+        "y": 52.0
+      },
+      "Strength": 100
+    },
+    {
+      "Id": {
+        "Value": 4
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10061000151213000000",
+      "Designation": "3/2 MRR",
+      "HigherFormation": "2 MRR",
+      "Cell": {
+        "x": 215.0,
+        "y": 210.0
+      },
+      "Strength": 100
+    },
+    {
+      "Id": {
+        "Value": 5
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10061000141611000000",
+      "Designation": "1/3/2 MRR",
+      "HigherFormation": "2 MRR",
+      "Cell": {
+        "x": 203.0,
+        "y": 218.0
+      },
+      "Strength": 100
+    },
+    {
+      "Id": {
+        "Value": 6
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10061000151311000000",
+      "Designation": "BTY/2 MRR",
+      "HigherFormation": "2 MRR",
+      "Cell": {
+        "x": 228.0,
+        "y": 232.0
+      },
+      "Strength": 90
+    }
+  ]
+}

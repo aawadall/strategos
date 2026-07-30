@@ -387,9 +387,20 @@ the UV corners are half a texel in, and that no vertex is NaN.
   and asmdef reference breaks. Both were untracked before commit `5e20475`, so CI built a
   different project than local (default settings, no URP pipeline asset).
 - **`Assets/TextMesh Pro/` is committed on purpose — do not re-ignore it.** See below.
-- **Everything under `Assets/Resources/` ships in every build, unconditionally.** It holds
-  exactly one file, `Shaders/StrategosMapDrape.shader`, which is there because it must be
-  loadable by name in a player. Keep it that way; it is not a general dumping ground.
+- **Everything under `Assets/Resources/` ships in every build, unconditionally.** Only things
+  that must be *loadable by name at runtime on every target* belong there: the drape shader
+  (`Shader.Find` does not work in a player) and the scenario fixtures
+  (`Resources` works on WebGL where `StreamingAssets` needs `UnityWebRequest`). It is not a
+  general dumping ground — anything that can be a normal asset reference should be one.
+- **Scenario JSON goes through Newtonsoft, not `JsonUtility`** (`com.unity.nuget.newtonsoft-json`,
+  auto-referenced, no asmdef entry needed). `JsonUtility` cannot serialise `Nullable<T>` and
+  `MapGenerationSettings.ParameterOverride` is a `ReliefParameters?`. **Newtonsoft serialises
+  public properties as well as fields**, and Unity's maths types have properties returning
+  their own type — `Vector2.normalized` is a `Vector2` — so it recurses until the depth
+  limit. `ScenarioIO` fixes this two ways and both matter: explicit converters for `Vector2`
+  and `Color`, and `FieldsOnlyResolver`, which serialises public non-readonly fields only.
+  Without the resolver every computed property lands in the file, including
+  `Scenario.IsValid`, which runs the whole validator on every save.
 - **`com.unity.modules.screencapture` and `…imageconversion` are deliberately absent**, so
   `ScreenCapture.CaptureScreenshot` and `Texture2D.EncodeToPNG` do not exist. Screenshot
   from outside with `capture.ps1` rather than adding engine modules to every shipped build
