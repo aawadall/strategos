@@ -18,6 +18,14 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
+using Strategos.UI;
+
+// The theme, widget kit and table helpers used to be private members of this class.
+// They now live in Strategos.UI so other views can match this one; these aliases keep
+// every call site below reading exactly as it did when they were members.
+using Theme = Strategos.UI.UiTheme;
+using TableRow = Strategos.UI.UiTableRow;
+using static Strategos.UI.UiFactory;
 
 namespace Strategos.Demo
 {
@@ -67,7 +75,6 @@ namespace Strategos.Demo
         private Texture2D _previewTex;
         private Texture2D _topoTex;
         private bool _suppress;
-        private static TMP_FontAsset _uiFont;
 
         private ReliefProfile[] _mapProfiles;
         private MapRenderMode[] _mapModes;
@@ -89,40 +96,6 @@ namespace Strategos.Demo
         private HeadquartersTaskForceDummy[] _hqTf;
         private UnitStatus[] _statuses;
         private StrengthModifier[] _strengthMods;
-
-        /// <summary>
-        /// Light paper palette. Contrast ratios against their intended background
-        /// are noted so future edits keep the UI legible.
-        /// </summary>
-        private static class Theme
-        {
-            public static readonly Color StageBg      = Hex(0xEF, 0xED, 0xE4); // page
-            public static readonly Color MapPaper     = Hex(0xE8, 0xE4, 0xD6); // map card
-            public static readonly Color CardBg       = Hex(0xFA, 0xF9, 0xF4); // sidc / table card
-            public static readonly Color CardLine     = Hex(0xB9, 0xB5, 0xA4);
-            public static readonly Color RowStripe    = Hex(0xF1, 0xEF, 0xE7);
-
-            public static readonly Color RailBg       = Hex(0xE4, 0xE1, 0xD5);
-            public static readonly Color RailEdge     = Hex(0xCF, 0xCB, 0xBA);
-            public static readonly Color SectionBg    = Hex(0xD2, 0xCE, 0xBE);
-
-            public static readonly Color ControlFace  = Hex(0xFC, 0xFB, 0xF6);
-            public static readonly Color ControlEdge  = Hex(0x8C, 0x88, 0x7A);
-            public static readonly Color ControlHover = Hex(0xED, 0xEA, 0xDD);
-            public static readonly Color SelectFill   = Hex(0xD3, 0xE2, 0xD0); // selected item
-
-            public static readonly Color Ink          = Hex(0x19, 0x1C, 0x18); // 16.5:1 on ControlFace
-            public static readonly Color InkMuted     = Hex(0x3F, 0x42, 0x39); //  7.9:1 on RailBg
-            public static readonly Color Accent       = Hex(0x2C, 0x5A, 0x38); //  7.6:1 on CardBg
-            public static readonly Color AccentText   = Hex(0xF6, 0xF4, 0xEB); //  7.4:1 on Accent
-
-            private static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f, 1f);
-        }
-
-        // Column widths for the breakdown table (reference-resolution px).
-        private const float ColPos = 62f;
-        private const float ColCode = 62f;
-        private const float ColField = 168f;
 
         /// <summary>
         /// APP-6(D) Annex A field layout of the 20-digit SIDC.
@@ -150,14 +123,6 @@ namespace Strategos.Demo
             "Designation (T)", "Higher formation (M)", "Strength (F)",
         };
 
-        private struct TableRow
-        {
-            public TMP_Text Pos;
-            public TMP_Text Code;
-            public TMP_Text Field;
-            public TMP_Text Meaning;
-        }
-
         private TableRow[] _tableRows;
 
         private void Start()
@@ -174,36 +139,6 @@ namespace Strategos.Demo
         {
             DestroyPreviewAssets();
             if (_topoTex != null) Destroy(_topoTex);
-        }
-
-        private static TMP_FontAsset UiFont
-        {
-            get
-            {
-                if (_uiFont != null) return _uiFont;
-
-                // TMP_Settings.defaultFontAsset dereferences TMP_Settings.instance,
-                // which is null until TMP Essential Resources are imported — the
-                // property throws rather than returning null, so it must be guarded
-                // or it takes the whole UI build down with it.
-                if (TMP_Settings.instance != null)
-                {
-                    try { _uiFont = TMP_Settings.defaultFontAsset; }
-                    catch (Exception) { _uiFont = null; }
-                }
-                if (_uiFont != null) return _uiFont;
-
-                // Fall back to an OS font so the panel still renders.
-                var osFont = Font.CreateDynamicFontFromOSFont(
-                    new[] { "Segoe UI", "Arial", "Helvetica", "Tahoma", "sans-serif" }, 28);
-                if (osFont != null)
-                {
-                    _uiFont = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (_uiFont != null)
-                        _uiFont.name = "StrategosUIFont";
-                }
-                return _uiFont;
-            }
         }
 
         // -------------------------------------------------------------------------
@@ -683,7 +618,7 @@ namespace Strategos.Demo
             halo.pivot = new Vector2(0.5f, 0.5f);
             halo.sizeDelta = new Vector2(420, 380);
             var haloImg = halo.gameObject.AddComponent<Image>();
-            haloImg.sprite = HaloSprite;
+            haloImg.sprite = UiSprites.Halo;
             haloImg.color = new Color(1f, 1f, 0.98f, 0.62f);
             haloImg.raycastTarget = false;
 
@@ -775,10 +710,10 @@ namespace Strategos.Demo
             tableTitle.GetComponent<LayoutElement>().preferredHeight = 20;
 
             // Header row
-            var header = CreateTableRow(tableCard, "HeaderRow", Theme.SectionBg, out var h);
+            var header = UiTable.CreateRow(tableCard, "HeaderRow", Theme.SectionBg, out var h);
             header.GetComponent<LayoutElement>().preferredHeight = 24;
-            SetRowText(h, "POS", "CODE", "FIELD", "MEANING");
-            ApplyRowStyle(h, Theme.Ink, FontStyles.Bold, 11.5f);
+            UiTable.SetRowText(h, "POS", "CODE", "FIELD", "MEANING");
+            UiTable.ApplyRowStyle(h, Theme.Ink, FontStyles.Bold, 11.5f);
 
             var divider = CreateRect("Divider", tableCard);
             divider.gameObject.AddComponent<LayoutElement>().preferredHeight = 2;
@@ -791,7 +726,7 @@ namespace Strategos.Demo
             {
                 bool amplifier = i >= SidcFields.Length;
                 var stripe = (i % 2 == 0) ? Theme.CardBg : Theme.RowStripe;
-                CreateTableRow(tableCard, $"Row{i}", stripe, out var r);
+                UiTable.CreateRow(tableCard, $"Row{i}", stripe, out var r);
                 _tableRows[i] = r;
 
                 if (amplifier)
@@ -810,63 +745,6 @@ namespace Strategos.Demo
                 r.Code.fontStyle = FontStyles.Bold;
                 r.Field.color = Theme.Ink;
                 r.Meaning.color = Theme.InkMuted;
-            }
-        }
-
-        private RectTransform CreateTableRow(Transform parent, string name, Color bg, out TableRow row)
-        {
-            var rt = CreateRect(name, parent);
-            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
-            rt.gameObject.AddComponent<Image>().color = bg;
-
-            var h = rt.gameObject.AddComponent<HorizontalLayoutGroup>();
-            h.padding = new RectOffset(8, 8, 0, 0);
-            h.spacing = 8;
-            h.childControlWidth = true;
-            h.childControlHeight = true;
-            h.childForceExpandWidth = false;
-            h.childForceExpandHeight = true;
-            h.childAlignment = TextAnchor.MiddleLeft;
-
-            row = new TableRow
-            {
-                Pos     = TableCell(rt, "Pos", ColPos, 0f),
-                Code    = TableCell(rt, "Code", ColCode, 0f),
-                Field   = TableCell(rt, "Field", ColField, 0f),
-                Meaning = TableCell(rt, "Meaning", 0f, 1f),
-            };
-            return rt;
-        }
-
-        private static TMP_Text TableCell(Transform parent, string name, float width, float flexible)
-        {
-            var tmp = CreateTmp(name, parent, string.Empty, 12, FontStyles.Normal);
-            var le = tmp.GetComponent<LayoutElement>();
-            le.preferredWidth = width;
-            le.flexibleWidth = flexible;
-            le.preferredHeight = 22;
-            tmp.alignment = TextAlignmentOptions.MidlineLeft;
-            tmp.textWrappingMode = TextWrappingModes.NoWrap;
-            tmp.overflowMode = TextOverflowModes.Ellipsis;
-            return tmp;
-        }
-
-        private static void SetRowText(TableRow r, string a, string b, string c, string d)
-        {
-            r.Pos.text = a;
-            r.Code.text = b;
-            r.Field.text = c;
-            r.Meaning.text = d;
-        }
-
-        private static void ApplyRowStyle(TableRow r, Color color, FontStyles style, float size)
-        {
-            foreach (var t in new[] { r.Pos, r.Code, r.Field, r.Meaning })
-            {
-                t.color = color;
-                t.fontStyle = style;
-                t.fontSize = size;
-                t.characterSpacing = 2f;
             }
         }
 
@@ -900,75 +778,44 @@ namespace Strategos.Demo
             chromeLabel.color = Theme.AccentText;
             chromeLabel.characterSpacing = 6f;
 
-            var scrollGo = CreateRect("Scroll", panel);
-            Stretch(scrollGo);
-            scrollGo.offsetMin = new Vector2(2, 0);
-            scrollGo.offsetMax = new Vector2(0, -38);
-            var scroll = scrollGo.gameObject.AddComponent<ScrollRect>();
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 48f;
-
-            var viewport = CreateRect("Viewport", scrollGo);
-            Stretch(viewport);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            viewport.gameObject.AddComponent<Image>().color = Theme.RailBg;
-            scroll.viewport = viewport;
-
-            var content = CreateRect("Content", viewport);
-            content.anchorMin = new Vector2(0, 1);
-            content.anchorMax = new Vector2(1, 1);
-            content.pivot = new Vector2(0.5f, 1);
-            content.anchoredPosition = Vector2.zero;
-            content.sizeDelta = Vector2.zero;
-            var contentV = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            contentV.padding = new RectOffset(14, 14, 12, 28);
-            contentV.spacing = 8;
-            contentV.childControlWidth = true;
-            contentV.childControlHeight = true;
-            contentV.childForceExpandHeight = false;
-            contentV.childForceExpandWidth = true;
-            content.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
-                ContentSizeFitter.FitMode.PreferredSize;
-            scroll.content = content;
+            var content = UiScroll.CreateColumn("Scroll", panel, Theme.RailBg, out var scroll);
+            var scrollRt = (RectTransform)scroll.transform;
+            scrollRt.offsetMin = new Vector2(2, 0);
+            scrollRt.offsetMax = new Vector2(0, -38); // clear the chrome header
 
             AddSection(content, "IDENTITY");
-            _affiliationDrop = AddDropdown(content, "AFFILIATION");
-            _statusDrop = AddDropdown(content, "STATUS / CONDITION");
+            _affiliationDrop = AddDropdown(content, "AFFILIATION", RefreshPreview);
+            _statusDrop = AddDropdown(content, "STATUS / CONDITION", RefreshPreview);
 
             AddSection(content, "ECHELON");
-            _echelonDrop = AddDropdown(content, "COMMAND LEVEL");
-            _hqTfDrop = AddDropdown(content, "HQ / TASK FORCE / FEINT");
+            _echelonDrop = AddDropdown(content, "COMMAND LEVEL", RefreshPreview);
+            _hqTfDrop = AddDropdown(content, "HQ / TASK FORCE / FEINT", RefreshPreview);
 
             AddSection(content, "UNIT / EQUIPMENT");
-            _unitTypeDrop = AddDropdown(content, "UNIT TYPE");
-            _variantDrop = AddDropdown(content, "VARIANT");
+            _unitTypeDrop = AddDropdown(content, "UNIT TYPE", RefreshPreview);
+            _variantDrop = AddDropdown(content, "VARIANT", RefreshPreview);
 
             AddSection(content, "SECTOR MODIFIERS");
-            _mod1Drop = AddDropdown(content, "SECTOR 1 (UPPER)");
-            _mod2Drop = AddDropdown(content, "SECTOR 2 (LOWER)");
+            _mod1Drop = AddDropdown(content, "SECTOR 1 (UPPER)", RefreshPreview);
+            _mod2Drop = AddDropdown(content, "SECTOR 2 (LOWER)", RefreshPreview);
 
             AddSection(content, "STRENGTH");
-            _strengthModDrop = AddDropdown(content, "STRENGTH AMPLIFIER");
-            (_strengthSlider, _strengthValueLabel) = AddSlider(content, "STRENGTH", 0, 100, 100);
+            _strengthModDrop = AddDropdown(content, "STRENGTH AMPLIFIER", RefreshPreview);
+            (_strengthSlider, _strengthValueLabel) =
+                AddSlider(content, "STRENGTH", 0, 100, 100, RefreshPreview);
 
             AddSection(content, "LABELS");
-            _designationField = AddInput(content, "DESIGNATION", "1-7 IN");
-            _formationField = AddInput(content, "HIGHER FORMATION", "3 ID");
+            _designationField = AddInput(content, "DESIGNATION", "1-7 IN", RefreshPreview);
+            _formationField = AddInput(content, "HIGHER FORMATION", "3 ID", RefreshPreview);
 
             AddButton(content, "REFRESH SYMBOL", RefreshPreview);
 
+            // The map controls rebuild the sheet, not the symbol. Regenerating is orders
+            // of magnitude more expensive than recomposing, so the two refresh paths stay
+            // separate rather than having one control trigger both.
             AddSection(content, "MAP UNDERLAY");
-            _mapProfileDrop = AddDropdown(content, "RELIEF PROFILE");
-            _mapModeDrop = AddDropdown(content, "RENDER MODE");
-
-            // AddDropdown wires every dropdown to RefreshPreview; the map controls need
-            // the map rebuilt as well. Regenerating is far more expensive than
-            // recomposing a symbol, so it stays off the symbol path rather than having
-            // RefreshPreview do both.
-            _mapProfileDrop.onValueChanged.AddListener(_ => RefreshMapIfReady());
-            _mapModeDrop.onValueChanged.AddListener(_ => RefreshMapIfReady());
+            _mapProfileDrop = AddDropdown(content, "RELIEF PROFILE", RefreshMapIfReady);
+            _mapModeDrop = AddDropdown(content, "RENDER MODE", RefreshMapIfReady);
 
             AddButton(content, "NEW MAP", NewMap);
         }
@@ -1122,489 +969,6 @@ namespace Strategos.Demo
 
         private MapRenderMode SelectedMapMode =>
             Pick(_mapModes, _mapModeDrop, MapRenderMode.Schematic);
-
-
-        // -------------------------------------------------------------------------
-        // Control helpers
-        // -------------------------------------------------------------------------
-
-        private static void EnsureEventSystem()
-        {
-            if (FindAnyObjectByType<EventSystem>() != null) return;
-            new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-        }
-
-        private static RectTransform CreateRect(string name, Transform parent)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            return go.GetComponent<RectTransform>();
-        }
-
-        private static void Stretch(RectTransform rt)
-        {
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
-
-        /// <summary>
-        /// Unity UI has no border on Image, so a control is an outer edge-coloured
-        /// rect with an inset face rect. Returns the face image for tinting.
-        /// </summary>
-        private static Image AddBorderedFace(RectTransform outer, float inset = 2f)
-        {
-            outer.gameObject.AddComponent<Image>().color = Theme.ControlEdge;
-            var face = CreateRect("Face", outer);
-            Stretch(face);
-            face.offsetMin = new Vector2(inset, inset);
-            face.offsetMax = new Vector2(-inset, -inset);
-            var img = face.gameObject.AddComponent<Image>();
-            img.color = Color.white; // tinted via ColorBlock
-            return img;
-        }
-
-        private static ColorBlock ControlColors()
-        {
-            var c = ColorBlock.defaultColorBlock;
-            c.normalColor = Theme.ControlFace;
-            c.highlightedColor = Theme.ControlHover;
-            c.pressedColor = Theme.SelectFill;
-            c.selectedColor = Theme.ControlFace;
-            c.disabledColor = Theme.RailEdge;
-            c.fadeDuration = 0.08f;
-            return c;
-        }
-
-        private static TMP_Text CreateTmp(string name, Transform parent, string text, float size, FontStyles style, bool withLayout = true)
-        {
-            var rt = CreateRect(name, parent);
-            if (withLayout)
-            {
-                var le = rt.gameObject.AddComponent<LayoutElement>();
-                le.preferredHeight = size + 8;
-            }
-            var tmp = rt.gameObject.AddComponent<TextMeshProUGUI>();
-            if (UiFont != null) tmp.font = UiFont;
-            tmp.text = text;
-            tmp.fontSize = size;
-            tmp.fontStyle = style;
-            tmp.color = Theme.Ink;
-            tmp.raycastTarget = false;
-            tmp.overflowMode = TextOverflowModes.Overflow;
-            return tmp;
-        }
-
-        private static TMP_Text CreateOverlayTmp(string name, Transform parent, string text, float size, Color color)
-        {
-            // For dropdown captions / items — no LayoutElement (breaks TMP_Dropdown).
-            var tmp = CreateTmp(name, parent, text, size, FontStyles.Bold, withLayout: false);
-            tmp.color = color;
-            return tmp;
-        }
-
-        private void AddSection(Transform parent, string title)
-        {
-            var bar = CreateRect($"Sec_{title}", parent);
-            bar.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
-            bar.gameObject.AddComponent<Image>().color = Theme.SectionBg;
-
-            var accent = CreateRect("Accent", bar);
-            accent.anchorMin = new Vector2(0, 0);
-            accent.anchorMax = new Vector2(0, 1);
-            accent.pivot = new Vector2(0, 0.5f);
-            accent.sizeDelta = new Vector2(4, 0);
-            accent.gameObject.AddComponent<Image>().color = Theme.Accent;
-
-            var tmp = CreateTmp("T", bar, title, 12, FontStyles.Bold, withLayout: false);
-            Stretch(tmp.rectTransform);
-            tmp.rectTransform.offsetMin = new Vector2(12, 0);
-            tmp.alignment = TextAlignmentOptions.MidlineLeft;
-            tmp.color = Theme.Ink;
-            tmp.characterSpacing = 3f;
-        }
-
-        private TMP_Dropdown AddDropdown(Transform parent, string label)
-        {
-            var wrap = CreateRect($"DD_{label}", parent);
-            var wrapV = wrap.gameObject.AddComponent<VerticalLayoutGroup>();
-            wrapV.spacing = 3;
-            wrapV.childControlWidth = true;
-            wrapV.childControlHeight = true;
-            wrapV.childForceExpandWidth = true;
-            wrap.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
-
-            var lbl = CreateTmp("L", wrap, label, 11, FontStyles.Bold);
-            lbl.color = Theme.InkMuted;
-            lbl.characterSpacing = 2f;
-            lbl.GetComponent<LayoutElement>().preferredHeight = 15;
-
-            var dropRt = CreateRect("Dropdown", wrap);
-            dropRt.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
-            var faceImg = AddBorderedFace(dropRt);
-
-            var drop = dropRt.gameObject.AddComponent<TMP_Dropdown>();
-            drop.targetGraphic = faceImg;
-            drop.colors = ControlColors();
-
-            var caption = CreateOverlayTmp("Caption", dropRt, "Select", 14, Theme.Ink);
-            Stretch(caption.rectTransform);
-            caption.rectTransform.offsetMin = new Vector2(10, 2);
-            caption.rectTransform.offsetMax = new Vector2(-30, -2);
-            caption.alignment = TextAlignmentOptions.MidlineLeft;
-            caption.textWrappingMode = TextWrappingModes.NoWrap;
-            caption.overflowMode = TextOverflowModes.Ellipsis;
-            caption.raycastTarget = false;
-            drop.captionText = caption;
-
-            // Drawn rather than typed: the geometric-shape glyphs (▾ U+25BE) are not
-            // in the LiberationSans atlas TMP ships with and render as tofu.
-            var arrow = CreateRect("Arrow", dropRt);
-            arrow.anchorMin = new Vector2(1, 0.5f);
-            arrow.anchorMax = new Vector2(1, 0.5f);
-            arrow.pivot = new Vector2(1, 0.5f);
-            arrow.sizeDelta = new Vector2(11, 7);
-            arrow.anchoredPosition = new Vector2(-11, 0);
-            var arrowImg = arrow.gameObject.AddComponent<Image>();
-            arrowImg.sprite = ArrowSprite;
-            arrowImg.color = Theme.Accent;
-            arrowImg.raycastTarget = false;
-
-            BuildDropdownTemplate(drop, dropRt);
-
-            drop.onValueChanged.AddListener(_ => RefreshPreview());
-            return drop;
-        }
-
-        private static void BuildDropdownTemplate(TMP_Dropdown drop, RectTransform dropRt)
-        {
-            var template = CreateRect("Template", dropRt);
-            template.gameObject.SetActive(false);
-            template.anchorMin = new Vector2(0, 0);
-            template.anchorMax = new Vector2(1, 0);
-            template.pivot = new Vector2(0.5f, 1);
-            template.anchoredPosition = new Vector2(0, 2);
-            template.sizeDelta = new Vector2(0, 240);
-            template.gameObject.AddComponent<Image>().color = Theme.ControlEdge;
-
-            var templateScroll = template.gameObject.AddComponent<ScrollRect>();
-            templateScroll.horizontal = false;
-            templateScroll.movementType = ScrollRect.MovementType.Clamped;
-            templateScroll.scrollSensitivity = 24f;
-
-            var tViewport = CreateRect("Viewport", template);
-            Stretch(tViewport);
-            tViewport.offsetMin = new Vector2(2, 2);
-            tViewport.offsetMax = new Vector2(-2, -2);
-            tViewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            tViewport.gameObject.AddComponent<Image>().color = Color.white;
-            templateScroll.viewport = tViewport;
-
-            var tContent = CreateRect("Content", tViewport);
-            tContent.anchorMin = new Vector2(0, 1);
-            tContent.anchorMax = new Vector2(1, 1);
-            tContent.pivot = new Vector2(0.5f, 1);
-            tContent.sizeDelta = new Vector2(0, 34);
-            templateScroll.content = tContent;
-
-            var item = CreateRect("Item", tContent);
-            item.anchorMin = new Vector2(0, 0.5f);
-            item.anchorMax = new Vector2(1, 0.5f);
-            item.sizeDelta = new Vector2(0, 34);
-            var itemToggle = item.gameObject.AddComponent<Toggle>();
-            var itemBg = item.gameObject.AddComponent<Image>();
-            itemBg.color = Color.white; // tinted via ColorBlock
-            itemToggle.targetGraphic = itemBg;
-
-            var itemColors = ColorBlock.defaultColorBlock;
-            itemColors.normalColor = Theme.ControlFace;
-            itemColors.highlightedColor = Theme.ControlHover;
-            itemColors.pressedColor = Theme.SelectFill;
-            itemColors.selectedColor = Theme.ControlHover;
-            itemColors.fadeDuration = 0.05f;
-            itemToggle.colors = itemColors;
-
-            // Selection marker: an opaque accent bar down the left edge. A full-bleed
-            // translucent overlay would wash out the item text instead.
-            var itemCheck = CreateRect("Item Checkmark", item);
-            itemCheck.anchorMin = new Vector2(0, 0);
-            itemCheck.anchorMax = new Vector2(0, 1);
-            itemCheck.pivot = new Vector2(0, 0.5f);
-            itemCheck.sizeDelta = new Vector2(5, 0);
-            var checkImg = itemCheck.gameObject.AddComponent<Image>();
-            checkImg.color = Theme.Accent;
-            itemToggle.graphic = checkImg;
-
-            var itemLabel = CreateOverlayTmp("Item Label", item, "Option", 13, Theme.Ink);
-            Stretch(itemLabel.rectTransform);
-            itemLabel.rectTransform.offsetMin = new Vector2(14, 0);
-            itemLabel.rectTransform.offsetMax = new Vector2(-8, 0);
-            itemLabel.alignment = TextAlignmentOptions.MidlineLeft;
-            itemLabel.textWrappingMode = TextWrappingModes.NoWrap;
-            itemLabel.overflowMode = TextOverflowModes.Ellipsis;
-            itemLabel.raycastTarget = false;
-
-            drop.template = template;
-            drop.itemText = itemLabel;
-        }
-
-        private (Slider, TMP_Text) AddSlider(Transform parent, string label, float min, float max, float value)
-        {
-            var wrap = CreateRect($"SL_{label}", parent);
-            var wrapV = wrap.gameObject.AddComponent<VerticalLayoutGroup>();
-            wrapV.spacing = 3;
-            wrapV.childControlWidth = true;
-            wrapV.childControlHeight = true;
-            wrapV.childForceExpandWidth = true;
-            wrap.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
-
-            var header = CreateRect("H", wrap);
-            header.gameObject.AddComponent<LayoutElement>().preferredHeight = 15;
-            var headerH = header.gameObject.AddComponent<HorizontalLayoutGroup>();
-            headerH.childControlWidth = true;
-            headerH.childForceExpandWidth = true;
-
-            var lbl = CreateTmp("L", header, label, 11, FontStyles.Bold);
-            lbl.color = Theme.InkMuted;
-            lbl.characterSpacing = 2f;
-            var val = CreateTmp("V", header, $"{value:0}%", 12, FontStyles.Bold);
-            val.alignment = TextAlignmentOptions.MidlineRight;
-            val.color = Theme.Accent;
-
-            var sliderRt = CreateRect("Slider", wrap);
-            sliderRt.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
-            AddBorderedFace(sliderRt);
-
-            var fillArea = CreateRect("Fill Area", sliderRt);
-            Stretch(fillArea);
-            fillArea.offsetMin = new Vector2(6, 9);
-            fillArea.offsetMax = new Vector2(-6, -9);
-            var fill = CreateRect("Fill", fillArea);
-            Stretch(fill);
-            fill.gameObject.AddComponent<Image>().color = Theme.Accent;
-
-            var handleArea = CreateRect("Handle Slide Area", sliderRt);
-            Stretch(handleArea);
-            handleArea.offsetMin = new Vector2(8, 0);
-            handleArea.offsetMax = new Vector2(-8, 0);
-            var handle = CreateRect("Handle", handleArea);
-            handle.sizeDelta = new Vector2(16, 20);
-            var handleImg = handle.gameObject.AddComponent<Image>();
-            handleImg.color = Color.white;
-
-            var slider = sliderRt.gameObject.AddComponent<Slider>();
-            slider.fillRect = fill;
-            slider.handleRect = handle;
-            slider.targetGraphic = handleImg;
-            var sliderColors = ColorBlock.defaultColorBlock;
-            sliderColors.normalColor = Theme.Ink;
-            sliderColors.highlightedColor = Theme.Accent;
-            sliderColors.pressedColor = Theme.Accent;
-            slider.colors = sliderColors;
-            slider.minValue = min;
-            slider.maxValue = max;
-            slider.wholeNumbers = true;
-            slider.value = value;
-            slider.onValueChanged.AddListener(_ => RefreshPreview());
-            return (slider, val);
-        }
-
-        private TMP_InputField AddInput(Transform parent, string label, string defaultText)
-        {
-            var wrap = CreateRect($"IN_{label}", parent);
-            var wrapV = wrap.gameObject.AddComponent<VerticalLayoutGroup>();
-            wrapV.spacing = 3;
-            wrapV.childControlWidth = true;
-            wrapV.childControlHeight = true;
-            wrapV.childForceExpandWidth = true;
-            wrap.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
-
-            var lbl = CreateTmp("L", wrap, label, 11, FontStyles.Bold);
-            lbl.color = Theme.InkMuted;
-            lbl.characterSpacing = 2f;
-            lbl.GetComponent<LayoutElement>().preferredHeight = 15;
-
-            var fieldRt = CreateRect("Field", wrap);
-            fieldRt.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
-            var faceImg = AddBorderedFace(fieldRt);
-
-            var textArea = CreateRect("Text Area", fieldRt);
-            Stretch(textArea);
-            textArea.offsetMin = new Vector2(10, 4);
-            textArea.offsetMax = new Vector2(-10, -4);
-            textArea.gameObject.AddComponent<RectMask2D>();
-
-            var text = CreateTmp("Text", textArea, defaultText, 14, FontStyles.Bold, withLayout: false);
-            Stretch(text.rectTransform);
-            text.alignment = TextAlignmentOptions.MidlineLeft;
-            text.color = Theme.Ink;
-
-            var placeholder = CreateTmp("Placeholder", textArea, label, 14, FontStyles.Italic, withLayout: false);
-            Stretch(placeholder.rectTransform);
-            placeholder.color = Theme.InkMuted;
-            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
-
-            var input = fieldRt.gameObject.AddComponent<TMP_InputField>();
-            input.textViewport = textArea;
-            input.textComponent = text;
-            input.placeholder = placeholder;
-            input.targetGraphic = faceImg;
-            input.colors = ControlColors();
-            input.caretColor = Theme.Accent;
-            input.customCaretColor = true;
-            input.selectionColor = new Color(Theme.Accent.r, Theme.Accent.g, Theme.Accent.b, 0.3f);
-            input.text = defaultText;
-            input.onEndEdit.AddListener(_ => RefreshPreview());
-            input.onSubmit.AddListener(_ => RefreshPreview());
-            return input;
-        }
-
-        private Button AddButton(Transform parent, string label, Action onClick)
-        {
-            var rt = CreateRect($"BTN_{label}", parent);
-            var le = rt.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 44;
-            le.minHeight = 44;
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = Color.white;
-            var btn = rt.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
-            var colors = ColorBlock.defaultColorBlock;
-            colors.normalColor = Theme.Accent;
-            colors.highlightedColor = Lighten(Theme.Accent, 0.14f);
-            colors.pressedColor = Lighten(Theme.Accent, -0.10f);
-            colors.selectedColor = Theme.Accent;
-            btn.colors = colors;
-            btn.onClick.AddListener(() => onClick?.Invoke());
-
-            var tmp = CreateTmp("T", rt, label, 14, FontStyles.Bold, withLayout: false);
-            Stretch(tmp.rectTransform);
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = Theme.AccentText;
-            tmp.characterSpacing = 4f;
-            tmp.raycastTarget = false;
-            return btn;
-        }
-
-        private static Sprite _arrowSprite;
-        private static Sprite _haloSprite;
-
-        /// <summary>Solid down-triangle, drawn white so Image.color can tint it.</summary>
-        private static Sprite ArrowSprite
-        {
-            get
-            {
-                if (_arrowSprite != null) return _arrowSprite;
-
-                const int s = 32;
-                var tex = new Texture2D(s, s, TextureFormat.RGBA32, false)
-                {
-                    filterMode = FilterMode.Bilinear,
-                    wrapMode = TextureWrapMode.Clamp,
-                    name = "DropdownArrow",
-                };
-
-                var px = new Color32[s * s];
-                var clear = new Color32(255, 255, 255, 0);
-                var solid = new Color32(255, 255, 255, 255);
-                for (int i = 0; i < px.Length; i++) px[i] = clear;
-
-                // Texture origin is bottom-left, so the apex sits at y = 0.
-                for (int y = 0; y < s; y++)
-                {
-                    float t = y / (float)(s - 1);
-                    int half = Mathf.RoundToInt(t * (s / 2f));
-                    for (int x = s / 2 - half; x <= s / 2 + half; x++)
-                        if (x >= 0 && x < s) px[y * s + x] = solid;
-                }
-
-                tex.SetPixels32(px);
-                tex.Apply(false, false);
-                _arrowSprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
-                return _arrowSprite;
-            }
-        }
-
-        /// <summary>
-        /// Radial falloff used to quieten the sheet under the symbol. Generated for the
-        /// same reason <see cref="ArrowSprite"/> is: there is no gradient asset in the
-        /// project and a UI sprite is cheaper to draw than a shader to author.
-        /// </summary>
-        private static Sprite HaloSprite
-        {
-            get
-            {
-                if (_haloSprite != null) return _haloSprite;
-
-                const int s = 128;
-                var tex = new Texture2D(s, s, TextureFormat.RGBA32, false)
-                {
-                    filterMode = FilterMode.Bilinear,
-                    wrapMode = TextureWrapMode.Clamp,
-                    name = "SymbolHalo",
-                };
-
-                var px = new Color32[s * s];
-                float centre = (s - 1) * 0.5f;
-
-                for (int y = 0; y < s; y++)
-                for (int x = 0; x < s; x++)
-                {
-                    float dx = (x - centre) / centre;
-                    float dy = (y - centre) / centre;
-                    float d  = Mathf.Sqrt(dx * dx + dy * dy);
-
-                    // Opaque out to 45% of the radius, then eased to nothing at the
-                    // edge. Smoothstep rather than linear: a linear ramp leaves a
-                    // visible ring where the gradient starts.
-                    float a = 1f - Mathf.SmoothStep(0.45f, 1f, d);
-                    px[y * s + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
-                }
-
-                tex.SetPixels32(px);
-                tex.Apply(false, false);
-                _haloSprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
-                return _haloSprite;
-            }
-        }
-
-        private static Color Lighten(Color c, float amount) => new(
-            Mathf.Clamp01(c.r + amount),
-            Mathf.Clamp01(c.g + amount),
-            Mathf.Clamp01(c.b + amount),
-            c.a);
-
-        private static void SetDrop(TMP_Dropdown drop, string[] options, int index)
-        {
-            if (drop == null) return;
-            drop.ClearOptions();
-            drop.AddOptions(new List<string>(options));
-            drop.SetValueWithoutNotify(Mathf.Clamp(index, 0, options.Length - 1));
-            drop.RefreshShownValue();
-            if (drop.captionText != null)
-            {
-                drop.captionText.color = Theme.Ink;
-                if (UiFont != null) drop.captionText.font = UiFont;
-            }
-            if (drop.itemText != null)
-            {
-                drop.itemText.color = Theme.Ink;
-                if (UiFont != null) drop.itemText.font = UiFont;
-            }
-        }
-
-        private static T Pick<T>(T[] table, TMP_Dropdown drop, T fallback)
-        {
-            if (table == null || drop == null || table.Length == 0) return fallback;
-            return table[Mathf.Clamp(drop.value, 0, table.Length - 1)];
-        }
-
-        private static int PickCode((string label, int code)[] table, TMP_Dropdown drop, int fallback)
-        {
-            if (table == null || drop == null || table.Length == 0) return fallback;
-            return table[Mathf.Clamp(drop.value, 0, table.Length - 1)].code;
-        }
 
         private static string EchelonLabel(Echelon e) => e switch
         {
