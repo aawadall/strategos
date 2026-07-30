@@ -60,6 +60,7 @@ namespace Strategos.Editor
             bad += CheckAbort(log);
             bad += CheckCancelFrom(log);
             bad += CheckLogIsAppendOnly(log);
+            bad += CheckRealMovement(log);
             bad += CheckReplayDivergence(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
@@ -335,6 +336,123 @@ namespace Strategos.Editor
             return bad;
         }
 
+        // ─── The real MoveTo executor (#8a) ───────────────────────────────────
+
+        /// <summary>
+        /// A simulation using the real MoveToExecutor rather than the stub.
+        /// </summary>
+        private static Simulation NewRealSim()
+        {
+            var scenario = ScenarioSamples.Skirmish();
+            scenario.Map.EnableErosion = false;
+            var map = scenario.GenerateMap();
+            var sim = new Simulation(scenario, map);
+            sim.AddExecutor(new MoveToExecutor());
+            return sim;
+        }
+
+        /// <summary>
+        /// The unit actually crosses ground, at the speed its own capabilities allow, and
+        /// stops on arrival rather than oscillating around the destination.
+        /// </summary>
+        private static int CheckRealMovement(StringBuilder log)
+        {
+            int bad = 0;
+            var sim = NewRealSim();
+            var unit = sim.Units[0];              // A/1-7 IN, mechanised
+            var caps = unit.Capabilities(sim.Catalogue);
+            var start = unit.Cell;
+
+            // A destination a few cells away on the same open ground.
+            var target = start + new Vector2(6f, 4f);
+            float distanceCells = (target - start).magnitude;
+
+            sim.Issue(Command.MoveTo(Blue, unit.Id, target));
+
+            // Nothing happens until a step runs: publishing is not executing.
+            if (unit.Cell != start)
+            {
+                log.AppendLine("  FAIL unit moved before any step ran");
+                bad++;
+            }
+
+            // Step delivers AND advances in the same tick, by design — an order issued at
+            // tick N takes effect at N+1 rather than sitting a further step — so the unit is
+            // expected to be under way after this.
+            sim.Step();
+            if (unit.Cell == start)
+            {
+                log.AppendLine("  FAIL unit had not begun moving after the delivery step");
+                bad++;
+            }
+
+            int steps = 0;
+            const int limit = 500;
+            while (!sim.QueueOf(unit.Id).IsEmpty && steps < limit) { sim.Step(); steps++; }
+
+            if (steps >= limit)
+            {
+                log.AppendLine($"  FAIL move did not finish within {limit} steps");
+                return bad + 1;
+            }
+
+            float error = Vector2.Distance(unit.Cell, target);
+            if (error > MoveToExecutor.ArrivalCells)
+            {
+                log.AppendLine($"  FAIL arrived {error:0.###} cells from the target");
+                bad++;
+            }
+            if (unit.Posture != Posture.Moving && unit.Posture != Posture.Halted)
+            {
+                log.AppendLine("  FAIL unexpected posture after arriving");
+                bad++;
+            }
+            if (unit.Posture == Posture.Moving)
+            {
+                log.AppendLine("  FAIL unit still in Moving posture after arriving");
+                bad++;
+            }
+
+            // Speed must come from the capability, not from a constant. Predict the tick
+            // count from metres per second and compare — a move that is right to within a
+            // couple of ticks is being driven by the capability.
+            float metresPerCell = sim.Map.Header.MetresPerCell;
+            float openSpeed = caps.SpeedMps(LandcoverClass.Open, 0f, onRoad: false);
+            float expectedTicks = distanceCells * metresPerCell / openSpeed / Simulation.SecondsPerTick;
+
+            // Ground varies along the way, so allow a wide band; the point is the order of
+            // magnitude, not the exact figure.
+            if (steps < expectedTicks * 0.5f || steps > expectedTicks * 4f)
+            {
+                log.AppendLine($"  FAIL took {steps} ticks, expected roughly {expectedTicks:0} " +
+                               $"at {openSpeed:0.#} m/s over {distanceCells * metresPerCell:0} m");
+                bad++;
+            }
+
+            // A slower unit must take longer over the same ground, which is the check that
+            // actually proves capabilities are being read per unit.
+            var sim2 = NewRealSim();
+            var foot = sim2.Units[0];
+            foot.CapabilityId = UnitCatalogue.InfantryFoot;
+            foot.Cell = start;
+            sim2.Issue(Command.MoveTo(Blue, foot.Id, target));
+            sim2.Step();
+            int footSteps = 0;
+            while (!sim2.QueueOf(foot.Id).IsEmpty && footSteps < 5000) { sim2.Step(); footSteps++; }
+
+            if (footSteps <= steps)
+            {
+                log.AppendLine($"  FAIL foot took {footSteps} ticks, mechanised {steps} — " +
+                               $"speed is not coming from capabilities");
+                bad++;
+            }
+
+            log.AppendLine($"  movement: {distanceCells * metresPerCell:0} m in {steps} ticks " +
+                           $"mechanised vs {footSteps} on foot, arrived within " +
+                           $"{error:0.###} cells  {(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
         // ─── The one that matters ─────────────────────────────────────────────
 
         /// <summary>
@@ -378,7 +496,9 @@ namespace Strategos.Editor
                 }
             }
 
-            var recorded = NewSim();
+            // Uses the real executor: determinism has to hold for the code that ships, not
+            // only for a stub with integer timing.
+            var recorded = NewRealSim();
             for (int t = 1; t <= steps; t++)
             {
                 Script(recorded, t);
@@ -388,7 +508,7 @@ namespace Strategos.Editor
             string original = recorded.Signature();
 
             // Replay: a fresh simulation fed only the recorded log, by tick.
-            var replayed = NewSim();
+            var replayed = NewRealSim();
             var byTick = new Dictionary<int, List<Command>>();
             foreach (var c in recorded.Log.Entries)
             {
@@ -417,7 +537,7 @@ namespace Strategos.Editor
 
             // And the same run twice must match, which catches ambient nondeterminism that a
             // replay comparison alone could miss.
-            var again = NewSim();
+            var again = NewRealSim();
             for (int t = 1; t <= steps; t++) { Script(again, t); again.Step(); }
             if (again.Signature() != original)
             {
