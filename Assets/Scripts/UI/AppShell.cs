@@ -17,6 +17,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Strategos.Demo;
+using Strategos.UI.Views;
 
 namespace Strategos.UI
 {
@@ -67,6 +68,7 @@ namespace Strategos.UI
             BuildChrome(out var tabStrip, out var contentHost);
             _views = new ViewHost(contentHost, tabStrip);
 
+            _views.Add<ExplorerView>(v => ((ExplorerView)v).Session = _session);
             _views.Add<SymbolBuilderPanel>();
 
             // Canvas sizes have to be settled before a view measures its own rects.
@@ -156,6 +158,13 @@ namespace Strategos.UI
         /// not.
         /// </summary>
         private static string RequestedViewKey() => CommandLineValue("-view");
+
+        /// <summary>
+        /// The requested view key, exposed so a view hosting sub-views can honour it too.
+        /// A key naming a sub-view will not match at the top level, so the shell falls back
+        /// to the first view, which then selects the sub-view itself.
+        /// </summary>
+        public static string RequestedView => CommandLineValue("-view");
 
         /// <summary>Value following <paramref name="flag"/> on the command line, or null.</summary>
         private static string CommandLineValue(string flag)

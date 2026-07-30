@@ -199,6 +199,25 @@ namespace Strategos.UI
             return $"Entity {entityCode:D2}";
         }
 
+        /// <summary>
+        /// Whether <paramref name="entityCode"/> resolves an icon, or renders as a bare
+        /// frame.
+        ///
+        /// IconDecorator.ResolveLandIcon handles 11 of the 14 LandEntityCode values;
+        /// Unknown, SpecialOperations, MissileBallistic and Cyber fall through to its
+        /// default and draw nothing inside the frame. A library that showed only the codes
+        /// that work would hide that, so this exists to caption the gap rather than to
+        /// filter it out. Keep in step with ResolveLandIcon.
+        /// </summary>
+        public static bool RendersIcon(int entityCode) => entityCode switch
+        {
+            (int)LandEntityCode.Unknown            => false,
+            (int)LandEntityCode.SpecialOperations   => false,
+            (int)LandEntityCode.MissileBallistic    => false,
+            (int)LandEntityCode.Cyber               => false,
+            _                                       => true,
+        };
+
         public static string VariantLabel(int code)
         {
             foreach (var v in Variants)

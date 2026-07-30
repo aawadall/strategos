@@ -11,6 +11,7 @@
 // whichever tab you actually wanted. Not destroyed, because rebuilding costs hundreds of
 // milliseconds — a map regeneration or a few hundred symbol bakes.
 
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -48,10 +49,16 @@ namespace Strategos.UI
         public int Count => _entries.Count;
 
         /// <summary>
-        /// Registers a view. Nothing is instantiated until the view is first selected —
-        /// only the tab button is created, so the strip is complete from the start.
+        /// Registers a view. The component is created now so <paramref name="configure"/>
+        /// can inject dependencies, but its UI is not built until the view is first
+        /// selected — only the tab button appears, so the strip is complete from the start.
         /// </summary>
-        public void Add<T>() where T : MonoBehaviour, IAppView
+        /// <param name="configure">
+        /// Runs immediately after the component exists and before Build. This is where
+        /// shared state goes: a view cannot take constructor arguments, and Build is too
+        /// late because it already needs them.
+        /// </param>
+        public void Add<T>(Action<IAppView> configure = null) where T : MonoBehaviour, IAppView
         {
             var go = new GameObject(typeof(T).Name, typeof(RectTransform));
             go.transform.SetParent(_host, false);
@@ -59,6 +66,7 @@ namespace Strategos.UI
             go.SetActive(false);
 
             var view = go.AddComponent<T>();
+            configure?.Invoke(view);
             var entry = new Entry { View = view, Go = go, Built = false };
 
             if (_tabStrip != null)
