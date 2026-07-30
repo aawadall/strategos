@@ -7,8 +7,8 @@ from reading the code.
 `docs/nato-symbol-generator.md` is the authority for *APP-6D reference detail* (SIDC
 tables, frame shapes, layer model). If you change symbol behaviour, update both.
 `docs/command-architecture.md` is the authority for *how orders and reports move* — topics,
-message shapes, delivery and ordering rules. It is a design note; nothing in it is built
-yet, so treat it as the intended shape rather than a description of the code.
+message shapes, delivery and ordering rules. Both topics are now built and it describes
+what the code does, except where it says otherwise about C3 and later phases.
 
 ---
 
@@ -18,16 +18,22 @@ Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D s
 
 **Phase 2 (the symbol system) is complete; Phase 1's map system is largely built.** The
 map has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape
-(a heightfield mesh textured with the 2D sheet). The app is a tab shell over three
-views: **EXPLORE** (a symbol-library browser and a pannable, zoomable map inspector),
-**SCENARIO** (map settings with a 2D or 3D preview) and **BUILDER** (the original
-digit-by-digit symbol composer).
+(a heightfield mesh textured with the 2D sheet). The app is a tab shell over four
+views: **PLAY** (a loaded scenario you can command), **EXPLORE** (a symbol-library
+browser and a pannable, zoomable map inspector), **SCENARIO** (map settings with a 2D or
+3D preview) and **BUILDER** (the digit-by-digit symbol composer).
 
-There is still no *world*: the 3D drape is a preview rendered into a UI card, not a
-playable space, and there is no game camera. **There is no unit or entity model at all**
-— nothing has a position, strength or ORBAT link; `SIDCCode` is a rendering key.
-Everything else in `ROADMAP.md` — units, combat, C2, AI, networking — is unbuilt, and
-there is no game loop.
+**The sandbox is playable.** A scenario loads two sides onto generated terrain; units
+have capabilities and state; a fixed-step simulation carries orders down a command topic
+into per-unit queues, moves units by terrain-cost A\*, and carries reports back up a
+situation topic. Select, order, queue, abort and time compression all work, and the whole
+run is deterministic and replayable from the command log.
+
+There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
+not a playable space, and there is no game camera. There is **no engagement model** —
+units pass through each other and nothing can be destroyed (#12), **no autonomous
+reaction** (#13) and **no victory condition** (#14). Everything past that in
+`ROADMAP.md` — C2 at echelon, AI, networking — is unbuilt.
 
 | Path | Contents |
 |---|---|
@@ -36,10 +42,17 @@ there is no game loop.
 | `Assets/Scripts/Core/Maps/Generation/` | The generation pipeline, one file per stage |
 | `Assets/Scripts/Core/Maps/Rendering2D/` | CPU topographic renderer |
 | `Assets/Scripts/Core/Maps/Rendering3D/` | Drape mesh + mipmapped drape texture |
+| `Assets/Scripts/Core/Units/` | Unit instances, capabilities, the catalogue, sides |
+| `Assets/Scripts/Core/Scenarios/` | Scenario model, validation, Newtonsoft IO, samples |
+| `Assets/Scripts/Core/Messaging/` | `MessageBus<T>` — the delivery rules, once |
+| `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |
+| `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
+| `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
-| `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` — the only thing in Resources |
-| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, mesh probe |
+| `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |
+| `Assets/Resources/Scenarios/` | Shipped scenario JSON |
+| `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, probes |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
 
 ---
@@ -111,6 +124,21 @@ those numbers before reading the image: a landcover percentage that has moved sa
 generator changed, where the image alone cannot tell you whether generation or the
 palette moved.
 
+The simulation has no picture to read, so it has probes instead. All four run under
+`-batchmode -quit -nographics` and print a summary followed by `PROBE PASSED`/`FAILED`:
+
+| `-executeMethod` | Asserts |
+|---|---|
+| `Strategos.Editor.MapMeshProbe.Run` | Drape mesh counts, extent, UVs, skirt, no NaN |
+| `Strategos.Editor.ScenarioProbe.Run` | Round trip, and that it regenerates *the same ground* |
+| `Strategos.Editor.CommandProbe.Run` | The four delivery rules, queues, A\*, replay divergence |
+| `Strategos.Editor.ReportProbe.Run` | Detection edges, report timing, replay of reports |
+
+**Run `CommandProbe` and `ReportProbe` after touching anything under `Core/Commands`,
+`Core/Reports`, `Core/Movement` or `Core/Messaging`.** Their divergence tests are the only
+thing standing between a determinism bug and finding out months later that a replay does
+not reproduce — nothing about that failure is visible at the time it is introduced.
+
 Player log (**always check after a UI change**, see UI gotchas below):
 
 ```
@@ -119,7 +147,8 @@ Player log (**always check after a UI change**, see UI gotchas below):
 
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
-`Import TMP Essential Resources`.
+`Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
+`Write Sample Scenarios`, `Import TMP Essential Resources`.
 
 ---
 
@@ -169,6 +198,56 @@ because a grid line that gives way to a road has stopped being a coordinate refe
 The two systems share `ProceduralDrawUtil`. Symbols bake into a square buffer, maps into
 a rectangular one, so every primitive has a `(w, h)` overload with the square one
 forwarding to it. Add new primitives to the rectangular overload.
+
+---
+
+## Command and reporting invariants
+
+Two topics — orders down, reports up — over one `MessageBus<T>`. `docs/command-architecture.md`
+carries the reasoning; these are the things that break silently.
+
+`Simulation.Step` fixes the order, and it is part of the contract:
+
+```
+Tick++
+  └─ Bus.Deliver()        commands published before this step
+     └─ Reports.Deliver()  reports published before this step
+        └─ AdvanceUnit ×n  in scenario order, never dictionary order
+           └─ ContactTracker.Sweep   publishes for delivery next step
+```
+
+- **Nothing in the simulation may read `Time.deltaTime`, wall-clock time,
+  `UnityEngine.Random`, or iterate a `Dictionary`/`HashSet`.** Each one makes a replay
+  diverge, and the divergence surfaces long after the change that caused it. Presentation
+  interpolates; the simulation counts ticks. `Simulation.SecondsPerTick` is a `const` and
+  not a setting because changing it changes every outcome.
+- **Both buses publish to the *next* step.** That is what bounds a report → reaction →
+  order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
+  wants. `Publish` never delivers inline even when called from outside a dispatch, or an
+  order issued by the UI would arrive a step earlier than one issued by a reacting unit.
+- **Subscriber order is `Order` ascending, ties by registration.** The insertion sort in
+  `MessageBus.Subscribe` is deliberate: `List.Sort` is introsort and **not stable**, so
+  equal orders could permute between runs. The unit layer subscribes at 0 and is the only
+  subscriber allowed to mutate anything; observers go above it.
+- **Detection publishes edges, not state.** `ContactTracker` reports a hostile *entering*
+  and *leaving* range, never the current picture. The alternative is one message per
+  observer per hostile per tick, which is a poll wearing a message's clothes and drowns the
+  log. `LossHysteresis` exists because a unit halted on the boundary would otherwise flap.
+- **Nothing downstream of `ContactTracker` may ask the world about hostiles.** A consumer
+  that reads unit positions can never be deceived, delayed or jammed, so every one written
+  that way has to be rewritten when C3 lands. Read reports. This is unenforceable by a
+  compiler and is the rule most likely to be broken by a view, which has every unit in hand
+  already — see `PlayView.OnReport`.
+- **Detection range goes through `UnitCapabilities.DetectionRangeAt`,** the documented
+  single call to replace when terrain line of sight arrives. Do not compare distances
+  anywhere else.
+- **Executors mutate their own unit and nothing else.** Reports about a finished order are
+  published by `Simulation.AdvanceUnit` from the outcome, not by the executor, so an
+  executor added later reports without being written to.
+- **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
+  queue state *and* the report log — a run that lands units correctly but reports
+  differently has diverged in what its commander knows, which is exactly what an AI will
+  act on.
 
 ---
 
@@ -506,6 +585,30 @@ The reference PDF is `Research/APP-6D…pdf` (gitignored — copyright restricte
 
 Recorded so they are not re-investigated. None are fixed.
 
+- **Detection ranges are large enough that the skirmish has almost no fog of war.** The
+  recon platoon's 4000 m sees 160 cells on a 256-cell map, so `SCT/1-7 IN` reports contact
+  on all three OPFOR units at T+0001 and the scenario's own description — *"neither side
+  knows the other is there"* — is false from the first tick. The numbers are individually
+  defensible (4 km is a reasonable ground-scout range in the open) and the map is simply
+  small: 6.4 km square is one company frontage, not a divisional area. Three fixes, none
+  taken: terrain LOS, which is the real answer and a Phase 1 / M1 item; a larger map;
+  or lower ranges, which would be tuning the model to hide a missing feature. Note the
+  *reporting* is correct — it is the visibility model that is trivial.
+- **`Side.AreHostile` is "different side, different affiliation", which is a stand-in.**
+  It gets coalitions right and gets one case wrong: two mutually hostile factions that both
+  draw as Hostile read as allies, because nothing in the data says otherwise. A three-way
+  scenario must therefore give its factions distinct affiliations until a real alliance
+  graph lands. It is one method on purpose, so replacing it is not a search.
+- **`ContactTracker.Sweep` is O(n²) per step.** Thirty-six distance tests a second at
+  sandbox scale, and a spatial index would be code with no measurable benefit. It stops
+  being acceptable in the low hundreds of units, well before the theatre scale the roadmap
+  ends at; a uniform grid bucketed by detection range drops in without changing anything
+  that consumes reports.
+- **A contact report names the real `UnitId`,** which hands the recipient a perfect
+  identification of something it has merely seen at range. When misidentification becomes
+  possible, `SituationReport.Subject` should become a *track* id resolvable to a unit only
+  by the simulation. Recorded now because every consumer written against a truthful
+  `Subject` is one that has to be revisited.
 - **Generated terrain has huge closed basins, so maps come out 18–29% lake.** Measured on
   256-cell maps at seed 20260729: Hills 11,676 lake cells with 8,396 over 5 m deep and a
   deepest point of 38.7 m; Mountains deepest 381.7 m; Desert 20% water. These are real

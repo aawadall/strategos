@@ -50,6 +50,28 @@ namespace Strategos.Units
         public static Color DefaultColour(Affiliation affiliation) =>
             AffiliationColour.ForAffiliation(affiliation);
 
+        /// <summary>
+        /// Whether two sides are enemies. **The single place that decides**, so an alliance
+        /// model replaces one method rather than a search.
+        /// </summary>
+        /// <remarks>
+        /// The rule is "different side, different affiliation", which is a stand-in and not a
+        /// model. It gets the coalition case right — two allied contingents are distinct sides
+        /// that both draw as Friend, and this correctly treats them as allies — and it gets
+        /// one case wrong: two mutually hostile factions that both draw as Hostile read as
+        /// allies here, because nothing in the data says otherwise.
+        ///
+        /// Fixing that needs an actual alliance graph on the scenario, which is a Phase 3 item
+        /// and not worth inventing for a two-sided sandbox. Until then a three-way scenario
+        /// must give its factions distinct affiliations.
+        /// </remarks>
+        public static bool AreHostile(Side a, Side b)
+        {
+            if (a == null || b == null) return false;
+            if (a.Id == b.Id) return false;
+            return a.Affiliation != b.Affiliation;
+        }
+
         public override string ToString() => $"{Id} {Name} ({Affiliation})";
     }
 }
