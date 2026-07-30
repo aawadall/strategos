@@ -69,6 +69,7 @@ namespace Strategos.UI
             _views = new ViewHost(contentHost, tabStrip);
 
             _views.Add<ExplorerView>(v => ((ExplorerView)v).Session = _session);
+            _views.Add<ScenarioSetupView>(v => ((ScenarioSetupView)v).Session = _session);
             _views.Add<SymbolBuilderPanel>();
 
             // Canvas sizes have to be settled before a view measures its own rects.

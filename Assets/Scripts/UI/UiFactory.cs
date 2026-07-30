@@ -322,14 +322,33 @@ namespace Strategos.UI
             slider.wholeNumbers = wholeNumbers;
             slider.value = value;
 
-            // The readout is the kit's own business, so a caller never has to
-            // remember to update it alongside its own handler.
-            slider.onValueChanged.AddListener(v =>
+            // The readout is the kit's own business, so a caller never has to remember to
+            // update it alongside its own handler. It lives on a component rather than in
+            // this closure so that SetSliderValue below can refresh it too — a value set
+            // through SetValueWithoutNotify does not fire this listener, and a label left
+            // showing the old number is worse than no label.
+            var readout = sliderRt.gameObject.AddComponent<UiSliderReadout>();
+            readout.Init(slider, val, format, suffix);
+
+            slider.onValueChanged.AddListener(_ =>
             {
-                val.text = v.ToString(format) + suffix;
+                readout.Refresh();
                 onChanged?.Invoke();
             });
             return (slider, val);
+        }
+
+        /// <summary>
+        /// Sets a slider's value without firing its callback, keeping the numeric label in
+        /// step. Use this for seeding controls; a bare SetValueWithoutNotify leaves the label
+        /// showing the previous value.
+        /// </summary>
+        public static void SetSliderValue(Slider slider, float value)
+        {
+            if (slider == null) return;
+            var readout = slider.GetComponent<UiSliderReadout>();
+            if (readout != null) readout.SetValueSilently(value);
+            else slider.SetValueWithoutNotify(value);
         }
 
         public static TMP_InputField AddInput(Transform parent, string label, string defaultText,
