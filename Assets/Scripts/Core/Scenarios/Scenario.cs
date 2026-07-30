@@ -101,7 +101,12 @@ namespace Strategos.Scenarios
         /// that does not exist renders with no affiliation and belongs to nobody, and a unit
         /// placed off the map is simply never drawn. Both look like rendering bugs.
         /// </summary>
-        public List<string> Validate()
+        /// <param name="catalogue">
+        /// When supplied, capability ids are checked against it. Worth passing: an unknown
+        /// id degrades to the generic fallback rather than throwing, so a typo turns a
+        /// mechanised company into a walking one and reads as a movement bug.
+        /// </param>
+        public List<string> Validate(UnitCatalogue catalogue = null)
         {
             var problems = new List<string>();
 
@@ -159,6 +164,9 @@ namespace Strategos.Scenarios
 
                 if (u.Strength < 0 || u.Strength > 100)
                     problems.Add($"Unit {who} has strength {u.Strength}, outside 0-100.");
+
+                if (catalogue != null && !catalogue.Contains(u.CapabilityId))
+                    problems.Add($"Unit {who} has unknown capability id '{u.CapabilityId}'.");
             }
 
             foreach (var s in Sides)

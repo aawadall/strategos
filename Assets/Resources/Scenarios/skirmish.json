@@ -60,11 +60,21 @@
       "Sidc": "10031000151212000000",
       "Designation": "A/1-7 IN",
       "HigherFormation": "1-7 IN",
+      "CapabilityId": "inf-mech",
       "Cell": {
         "x": 40.0,
         "y": 40.0
       },
-      "Strength": 100
+      "Strength": 100,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     },
     {
       "Id": {
@@ -79,11 +89,21 @@
       "Sidc": "10031000141611000000",
       "Designation": "1/A/2-69 AR",
       "HigherFormation": "2-69 AR",
+      "CapabilityId": "armor",
       "Cell": {
         "x": 52.0,
         "y": 34.0
       },
-      "Strength": 100
+      "Strength": 100,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     },
     {
       "Id": {
@@ -98,11 +118,21 @@
       "Sidc": "10031000141913000000",
       "Designation": "SCT/1-7 IN",
       "HigherFormation": "1-7 IN",
+      "CapabilityId": "recon-motor",
       "Cell": {
         "x": 60.0,
         "y": 52.0
       },
-      "Strength": 100
+      "Strength": 100,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     },
     {
       "Id": {
@@ -117,11 +147,21 @@
       "Sidc": "10061000151213000000",
       "Designation": "3/2 MRR",
       "HigherFormation": "2 MRR",
+      "CapabilityId": "inf-motor",
       "Cell": {
         "x": 215.0,
         "y": 210.0
       },
-      "Strength": 100
+      "Strength": 100,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     },
     {
       "Id": {
@@ -136,11 +176,21 @@
       "Sidc": "10061000141611000000",
       "Designation": "1/3/2 MRR",
       "HigherFormation": "2 MRR",
+      "CapabilityId": "armor",
       "Cell": {
         "x": 203.0,
         "y": 218.0
       },
-      "Strength": 100
+      "Strength": 100,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     },
     {
       "Id": {
@@ -155,11 +205,21 @@
       "Sidc": "10061000151311000000",
       "Designation": "BTY/2 MRR",
       "HigherFormation": "2 MRR",
+      "CapabilityId": "artillery",
       "Cell": {
         "x": 228.0,
         "y": 232.0
       },
-      "Strength": 90
+      "Strength": 90,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Posture": "Halted",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
     }
   ]
 }
