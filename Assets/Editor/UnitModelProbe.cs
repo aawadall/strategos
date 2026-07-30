@@ -49,6 +49,10 @@ namespace Strategos.Editor
             bad += CheckSides(log);
             bad += CheckUnit(map, log);
             bad += CheckCellWorldRoundTrip(map, log);
+            bad += CheckCapabilitiesShared(log);
+            bad += CheckTypesDiffer(map, log);
+            bad += CheckPassability(log);
+            bad += CheckEffectiveness(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
             if (bad == 0) Debug.Log("[UnitModelProbe]\n" + log);
@@ -177,6 +181,181 @@ namespace Strategos.Editor
 
             log.AppendLine($"  unit: {u}");
             log.AppendLine($"        {mgrs}   {elevation:0} m   {LandcoverInfo.DisplayName(cover)}");
+            return bad;
+        }
+
+        /// <summary>
+        /// The capability/state split: one shared object per type, independent state per
+        /// instance. If this is wrong, wounding one unit wounds every unit of its type.
+        /// </summary>
+        private static int CheckCapabilitiesShared(StringBuilder log)
+        {
+            int bad = 0;
+            var cat = UnitCatalogue.Default();
+
+            var a = new UnitInstance(new UnitId(1), new SideId(1), SIDCCode.Empty.Raw,
+                Vector2.zero, capabilityId: UnitCatalogue.InfantryMech);
+            var b = new UnitInstance(new UnitId(2), new SideId(1), SIDCCode.Empty.Raw,
+                Vector2.one, capabilityId: UnitCatalogue.InfantryMech);
+
+            if (!ReferenceEquals(a.Capabilities(cat), b.Capabilities(cat)))
+            {
+                log.AppendLine("  FAIL two units of one type do not share a capability object");
+                bad++;
+            }
+
+            // Damage one and the other must be untouched.
+            a.Strength = 40;
+            a.Suppression = 60f;
+            a.Supply.Ammunition = 15f;
+            a.Posture = Posture.DugIn;
+
+            if (b.Strength != 100 || b.Suppression != 0f ||
+                !Mathf.Approximately(b.Supply.Ammunition, 100f) || b.Posture != Posture.Halted)
+            {
+                log.AppendLine("  FAIL state is shared between instances");
+                bad++;
+            }
+
+            // And the shared capability must be unchanged by any of it.
+            if (!Mathf.Approximately(a.Capabilities(cat).CrossCountrySpeedMps,
+                                     b.Capabilities(cat).CrossCountrySpeedMps))
+            {
+                log.AppendLine("  FAIL damaging an instance altered the shared capability");
+                bad++;
+            }
+
+            // An unknown id must degrade, not throw.
+            var orphan = new UnitInstance(new UnitId(3), new SideId(1), SIDCCode.Empty.Raw,
+                Vector2.zero, capabilityId: "no-such-type");
+            if (orphan.Capabilities(cat) == null)
+            {
+                log.AppendLine("  FAIL unknown capability id returned null");
+                bad++;
+            }
+
+            log.AppendLine($"  capabilities shared per type, state per instance: " +
+                           $"{(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
+        /// <summary>
+        /// "An infantry-on-foot and a mechanised unit differ measurably in speed, climb limit
+        /// and range" — the issue's own acceptance criterion, asserted rather than assumed.
+        /// </summary>
+        private static int CheckTypesDiffer(MapData map, StringBuilder log)
+        {
+            int bad = 0;
+            var cat = UnitCatalogue.Default();
+
+            var foot = cat.Get(UnitCatalogue.InfantryFoot);
+            var mech = cat.Get(UnitCatalogue.InfantryMech);
+
+            if (mech.CrossCountrySpeedMps <= foot.CrossCountrySpeedMps)
+            { log.AppendLine("  FAIL mechanised is not faster than foot"); bad++; }
+            if (foot.MaxClimbDegrees <= mech.MaxClimbDegrees)
+            { log.AppendLine("  FAIL foot does not out-climb mechanised"); bad++; }
+            if (mech.EngagementRangeMetres <= foot.EngagementRangeMetres)
+            { log.AppendLine("  FAIL mechanised does not out-range foot"); bad++; }
+
+            // Recon should see furthest; artillery should shoot furthest.
+            var recon = cat.Get(UnitCatalogue.ReconMotor);
+            var arty = cat.Get(UnitCatalogue.Artillery);
+            foreach (var other in new[] { foot, mech, cat.Get(UnitCatalogue.Armor) })
+            {
+                if (recon.DetectionRangeMetres <= other.DetectionRangeMetres)
+                { log.AppendLine($"  FAIL recon does not out-see {other.Id}"); bad++; }
+                if (arty.EngagementRangeMetres <= other.EngagementRangeMetres)
+                { log.AppendLine($"  FAIL artillery does not out-range {other.Id}"); bad++; }
+            }
+
+            // Speeds must be metres per second, not cells — a figure in cells would mean
+            // something different on every map. Cross a cell and check the time is sane.
+            float secs = mech.SecondsPerCell(map.Header, LandcoverClass.Open, 0f, onRoad: false);
+            float expect = map.Header.MetresPerCell / mech.CrossCountrySpeedMps;
+            if (Mathf.Abs(secs - expect) > 0.01f)
+            { log.AppendLine($"  FAIL SecondsPerCell {secs:0.##} expected {expect:0.##}"); bad++; }
+
+            log.AppendLine($"  foot {foot.CrossCountrySpeedMps:0.#} m/s climb {foot.MaxClimbDegrees:0}deg  |  " +
+                           $"mech {mech.CrossCountrySpeedMps:0.#} m/s climb {mech.MaxClimbDegrees:0}deg  |  " +
+                           $"{map.Header.MetresPerCell:0} m cell = {secs:0.#} s for mech");
+            return bad;
+        }
+
+        /// <summary>
+        /// Impassability is a hard block, not a cost — the property #8's pathfinder depends
+        /// on for a ridge or a river to be an obstacle rather than an expensive detour.
+        /// </summary>
+        private static int CheckPassability(StringBuilder log)
+        {
+            int bad = 0;
+            var cat = UnitCatalogue.Default();
+            var mech = cat.Get(UnitCatalogue.InfantryMech);
+            var foot = cat.Get(UnitCatalogue.InfantryFoot);
+
+            if (mech.CanEnter(LandcoverClass.Water, 0f))
+            { log.AppendLine("  FAIL mechanised can enter water"); bad++; }
+            if (mech.CanEnter(LandcoverClass.Marsh, 0f))
+            { log.AppendLine("  FAIL mechanised can enter marsh"); bad++; }
+            if (!foot.CanEnter(LandcoverClass.Marsh, 0f))
+            { log.AppendLine("  FAIL foot cannot enter marsh"); bad++; }
+
+            // Past the climb limit is impassable, and impassable means infinite time.
+            float steep = mech.MaxClimbDegrees + 5f;
+            if (mech.CanEnter(LandcoverClass.Open, steep))
+            { log.AppendLine("  FAIL mechanised climbs past its limit"); bad++; }
+            if (!float.IsPositiveInfinity(
+                    mech.SecondsPerCell(new MapHeader { MetresPerCell = 25f },
+                                        LandcoverClass.Open, steep, false)))
+            { log.AppendLine("  FAIL impassable ground did not cost infinite time"); bad++; }
+
+            // Foot out-climbs mechanised on the same slope.
+            float between = (mech.MaxClimbDegrees + foot.MaxClimbDegrees) * 0.5f;
+            if (mech.CanEnter(LandcoverClass.Open, between) ||
+                !foot.CanEnter(LandcoverClass.Open, between))
+            { log.AppendLine($"  FAIL climb limits do not separate at {between:0}deg"); bad++; }
+
+            // Steeper ground should be slower, not merely passable or not.
+            float flat = mech.SpeedMps(LandcoverClass.Open, 0f, false);
+            float slope = mech.SpeedMps(LandcoverClass.Open, mech.MaxClimbDegrees * 0.8f, false);
+            if (slope >= flat) { log.AppendLine("  FAIL slope does not slow movement"); bad++; }
+
+            // Roads beat cross-country.
+            if (mech.SpeedMps(LandcoverClass.Open, 0f, true) <= flat)
+            { log.AppendLine("  FAIL roads are not faster than cross-country"); bad++; }
+
+            log.AppendLine($"  passability: water/marsh blocked, climb limit hard, " +
+                           $"slope {slope:0.#} < flat {flat:0.#} m/s  {(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
+        private static int CheckEffectiveness(StringBuilder log)
+        {
+            int bad = 0;
+            var u = new UnitInstance(new UnitId(1), new SideId(1), SIDCCode.Empty.Raw, Vector2.zero);
+
+            if (!Mathf.Approximately(u.Effectiveness, 1f))
+            { log.AppendLine("  FAIL a fresh unit is not fully effective"); bad++; }
+
+            u.Strength = 50;
+            if (u.Effectiveness > 0.51f || u.Effectiveness < 0.49f)
+            { log.AppendLine($"  FAIL half strength gave {u.Effectiveness:0.##}"); bad++; }
+
+            // Multiplicative, not additive: ruined in one dimension cannot be rescued by
+            // being fresh in another.
+            u.Strength = 100;
+            u.Suppression = 100f;
+            if (u.Effectiveness > 0.001f)
+            { log.AppendLine("  FAIL fully suppressed but still effective"); bad++; }
+
+            u.Suppression = 0f;
+            u.Readiness = 50f;
+            u.Strength = 50;
+            if (u.Effectiveness > 0.26f)
+            { log.AppendLine($"  FAIL half strength and half readiness gave {u.Effectiveness:0.##}"); bad++; }
+
+            log.AppendLine($"  effectiveness multiplies strength, readiness and suppression: " +
+                           $"{(bad == 0 ? "ok" : "FAILED")}");
             return bad;
         }
 

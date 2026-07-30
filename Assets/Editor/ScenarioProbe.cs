@@ -131,6 +131,13 @@ namespace Strategos.Editor
                 if (ua.Designation != ub.Designation) { log.AppendLine($"  FAIL {what}: unit {i} designation"); bad++; }
                 if (ua.HigherFormation != ub.HigherFormation) { log.AppendLine($"  FAIL {what}: unit {i} formation"); bad++; }
                 if (ua.Strength != ub.Strength) { log.AppendLine($"  FAIL {what}: unit {i} strength"); bad++; }
+                if (ua.CapabilityId != ub.CapabilityId) { log.AppendLine($"  FAIL {what}: unit {i} capability id"); bad++; }
+                if (ua.Posture != ub.Posture) { log.AppendLine($"  FAIL {what}: unit {i} posture"); bad++; }
+                if (!Mathf.Approximately(ua.Readiness, ub.Readiness)) { log.AppendLine($"  FAIL {what}: unit {i} readiness"); bad++; }
+                if (!Mathf.Approximately(ua.Suppression, ub.Suppression)) { log.AppendLine($"  FAIL {what}: unit {i} suppression"); bad++; }
+                if (!Mathf.Approximately(ua.Supply.Ammunition, ub.Supply.Ammunition) ||
+                    !Mathf.Approximately(ua.Supply.Fuel, ub.Supply.Fuel))
+                { log.AppendLine($"  FAIL {what}: unit {i} supply"); bad++; }
                 // Exact, not approximate: a position that drifts on every save would walk.
                 if (ua.Cell != ub.Cell)
                 { log.AppendLine($"  FAIL {what}: unit {i} cell {ua.Cell} -> {ub.Cell}"); bad++; }
@@ -258,6 +265,28 @@ namespace Strategos.Editor
 
             bad += ExpectProblem(log, "unit as its own parent", s =>
                 s.Units[0].ParentId = s.Units[0].Id);
+
+            // Only checked when a catalogue is supplied, so it needs its own case.
+            var typo = ScenarioSamples.Skirmish();
+            typo.Units[0].CapabilityId = "inf-mecha";
+            var caught = typo.Validate(UnitCatalogue.Default());
+            if (caught.Count == 0)
+            {
+                log.AppendLine("  FAIL validation missed: unknown capability id");
+                bad++;
+            }
+            else
+            {
+                log.AppendLine($"  validation catches {"unknown capability id",-28} -> \"{caught[0]}\"");
+            }
+
+            // And the shipped fixture's ids must all resolve.
+            var shippedProblems = ScenarioSamples.Skirmish().Validate(UnitCatalogue.Default());
+            foreach (var p2 in shippedProblems)
+            {
+                log.AppendLine($"  FAIL sample fails catalogue validation: {p2}");
+                bad++;
+            }
 
             return bad;
         }

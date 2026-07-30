@@ -62,7 +62,23 @@ namespace Strategos.Units
         /// <summary>Field M — parent command, e.g. "3 ID". Drawn right of the frame.</summary>
         public string HigherFormation = string.Empty;
 
+        // ─── Capability ───────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Which <see cref="UnitCapabilities"/> this unit has, by id — see
+        /// <see cref="UnitCatalogue"/>.
+        ///
+        /// An id rather than the object, so a hundred rifle companies share one set of
+        /// numbers instead of carrying a hundred copies, and a scenario file says
+        /// "inf-mech" rather than restating every stat. Resolve it through
+        /// <see cref="UnitCatalogue.Get"/>, which never returns null.
+        /// </summary>
+        public string CapabilityId = UnitCatalogue.InfantryFoot;
+
         // ─── State ────────────────────────────────────────────────────────────
+        //
+        // Everything below is per-instance and mutable. Two units of the same type share
+        // one UnitCapabilities and have their own copy of all of this.
 
         /// <summary>
         /// Position in **fractional cell coordinates**, matching MapData throughout.
@@ -80,10 +96,30 @@ namespace Strategos.Units
         /// </summary>
         [Range(0, 100)] public int Strength = 100;
 
+        /// <summary>
+        /// Freshness, 0–100. Falls with movement, action and time without rest; caps what
+        /// the unit can achieve regardless of its strength. A full-strength exhausted unit
+        /// is not a fresh one.
+        /// </summary>
+        [Range(0, 100)] public float Readiness = 100f;
+
+        /// <summary>
+        /// How pinned the unit is, 0–100. Rises under fire and decays when not. Distinct
+        /// from strength because suppression is recoverable and casualties are not.
+        /// </summary>
+        [Range(0, 100)] public float Suppression;
+
+        /// <summary>What the unit is doing, which modifies what it can do.</summary>
+        public Posture Posture = Posture.Halted;
+
+        /// <summary>Consumables remaining, as percentages of a full load.</summary>
+        public SupplyLevels Supply = SupplyLevels.Full;
+
         public UnitInstance() { }
 
         public UnitInstance(UnitId id, SideId side, string sidc, Vector2 cell,
-            string designation = "", string higherFormation = "", int strength = 100)
+            string designation = "", string higherFormation = "", int strength = 100,
+            string capabilityId = UnitCatalogue.InfantryFoot)
         {
             Id = id;
             Side = side;
@@ -92,8 +128,26 @@ namespace Strategos.Units
             Designation = designation;
             HigherFormation = higherFormation;
             Strength = Mathf.Clamp(strength, 0, 100);
+            CapabilityId = capabilityId;
             ParentId = UnitId.None;
+            Supply = SupplyLevels.Full;
         }
+
+        /// <summary>
+        /// How much of its nominal capability the unit can actually deliver, 0–1.
+        ///
+        /// Strength, readiness and suppression multiply rather than add: a unit that is
+        /// halved in any one of them is halved overall, and a unit ruined in one cannot be
+        /// rescued by being fresh in another.
+        /// </summary>
+        public float Effectiveness =>
+            Mathf.Clamp01(Strength / 100f) *
+            Mathf.Clamp01(Readiness / 100f) *
+            Mathf.Clamp01(1f - Suppression / 100f);
+
+        /// <summary>Convenience: this unit's capabilities from <paramref name="catalogue"/>.</summary>
+        public UnitCapabilities Capabilities(UnitCatalogue catalogue) =>
+            catalogue == null ? UnitCatalogue.Fallback : catalogue.Get(CapabilityId);
 
         // ─── Derived ──────────────────────────────────────────────────────────
 
