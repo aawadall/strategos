@@ -107,8 +107,31 @@ namespace Strategos.Units
         /// </remarks>
         [Range(0, 100)] public float Strength = 100f;
 
-        /// <summary>Strength as a whole percentage, for display and for symbol amplifiers.</summary>
+        /// <summary>Strength as a whole percentage, for display.</summary>
         public int StrengthPercent => Mathf.Clamp(Mathf.RoundToInt(Strength), 0, 100);
+
+        /// <summary>
+        /// Strength rounded to the nearest 5, which is what the *symbol* is baked from.
+        /// </summary>
+        /// <remarks>
+        /// A symbol is a glance-level object: its combat-power bar is a few pixels tall on the
+        /// map and cannot show one percentage point. Banding is not cosmetic, though — it is
+        /// what bounds the bake. Every distinct strength label is a separate cache entry and a
+        /// separate procedural draw, so an unbanded figure re-bakes a unit's symbol about a
+        /// hundred times as it dies, and does it in a burst at high time compression. Banding
+        /// cuts that to twenty-one.
+        ///
+        /// A surviving unit never bands to 0: an empty gauge on a unit that is still fighting
+        /// says the wrong thing, and zero is reserved for <see cref="IsDestroyed"/>.
+        /// </remarks>
+        public int StrengthBand
+        {
+            get
+            {
+                if (IsDestroyed) return 0;
+                return Mathf.Clamp(Mathf.RoundToInt(Strength / 5f) * 5, 5, 100);
+            }
+        }
 
         /// <summary>
         /// True once combat power is spent. The unit stays in the scenario and stops
@@ -186,8 +209,9 @@ namespace Strategos.Units
 
             code.Designation = Designation ?? string.Empty;
             code.HigherFormation = HigherFormation ?? string.Empty;
-            // Rounded, not raw: this string is part of the sprite cache key.
-            code.StrengthLabel = StrengthPercent.ToString();
+            // Banded, not raw: this string is part of the sprite cache key, so every distinct
+            // value is another bake and another cached texture.
+            code.StrengthLabel = StrengthBand.ToString();
             return code;
         }
 

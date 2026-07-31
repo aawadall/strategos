@@ -133,6 +133,12 @@ namespace Strategos.UI.Views
             public GameObject Go;
             public Image Icon;
             public TMP_Text Label;
+
+            /// <summary>
+            /// Strength band the current sprite was baked at, so the symbol is re-fetched when
+            /// damage actually changes it and not once a frame. −1 means "never baked".
+            /// </summary>
+            public int BakedStrength = -1;
         }
 
         public string Title => "PLAY";
@@ -437,11 +443,6 @@ namespace Strategos.UI.Views
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
-            // From the shared cache — never Destroy what this returns. Only ClearCache may,
-            // and it frees the textures for every holder.
-            icon.sprite = _session.Symbols.GetSymbolSprite(unit.ToSidcCode(), BakeSize);
-            if (icon.sprite == null) icon.color = new Color(0, 0, 0, 0);
-
             var label = CreateOverlayTmp("Label", rt, unit.Designation, 10, Theme.Ink);
             label.rectTransform.anchorMin = new Vector2(0.5f, 0f);
             label.rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -453,7 +454,44 @@ namespace Strategos.UI.Views
             label.overflowMode = TextOverflowModes.Overflow;
             label.raycastTarget = false;
 
-            return new Marker { Unit = unit, Go = rt.gameObject, Icon = icon, Label = label };
+            var marker = new Marker { Unit = unit, Go = rt.gameObject, Icon = icon, Label = label };
+            RefreshMarkerSymbol(marker);
+            return marker;
+        }
+
+        /// <summary>
+        /// Re-bakes a marker's symbol when its strength band has moved, and dims it once the
+        /// unit is out of the fight.
+        /// </summary>
+        /// <remarks>
+        /// The symbol was previously baked once in <see cref="CreateMarker"/> and never looked
+        /// at again, so a unit could be shot to pieces without its map symbol changing at all —
+        /// the combat-power bar that <see cref="ConditionDecorator"/> has drawn all along was
+        /// simply frozen at the value it had when the scenario loaded.
+        ///
+        /// Guarded on the band rather than called unconditionally because this runs inside
+        /// LayOutMarkers, which runs every frame. <see cref="UnitInstance.StrengthBand"/> is
+        /// what bounds how often the guard opens.
+        ///
+        /// The sprite comes from the shared cache: **never Destroy what this returns.** Only
+        /// ClearCache may, and it frees the textures for every holder.
+        /// </remarks>
+        private void RefreshMarkerSymbol(Marker marker)
+        {
+            int band = marker.Unit.StrengthBand;
+            if (band == marker.BakedStrength) return;
+            marker.BakedStrength = band;
+
+            var sprite = _session.Symbols.GetSymbolSprite(marker.Unit.ToSidcCode(), BakeSize);
+            if (sprite != null) marker.Icon.sprite = sprite;
+
+            // A destroyed unit stays on the map — removal is #14 — so it has to read as out of
+            // the fight without disappearing. Fading is a presentation choice and touches no
+            // symbology: the frame keeps its affiliation colour, which is the one thing on a
+            // symbol that must never be repurposed.
+            marker.Icon.color = sprite == null ? new Color(0, 0, 0, 0)
+                              : marker.Unit.IsDestroyed ? new Color(1f, 1f, 1f, 0.4f)
+                              : Color.white;
         }
 
         /// <summary>
@@ -481,6 +519,9 @@ namespace Strategos.UI.Views
                 bool visible = _card.CellToLocal(m.Unit.Cell, out var local);
                 m.Go.SetActive(visible);
                 if (!visible) continue;
+
+                // Cheap: returns immediately unless the unit's strength band has moved.
+                RefreshMarkerSymbol(m);
 
                 ((RectTransform)m.Go.transform).anchoredPosition = local - frameOffset;
                 m.Label.gameObject.SetActive(labels);
