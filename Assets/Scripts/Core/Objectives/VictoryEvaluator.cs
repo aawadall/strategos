@@ -94,6 +94,28 @@ namespace Strategos.Objectives
                 }
         }
 
+        /// <summary>
+        /// How much of its starting combat power a side still has, 0–1.
+        /// </summary>
+        /// <remarks>
+        /// Exposed for display, and measured against **the same baseline
+        /// <see cref="VictoryKind.DestroyEnemy"/> tests**. That matters more than it looks: a
+        /// force bar computed from some other denominator would move differently from the
+        /// condition it appears to predict, and a player watching it would be misled about
+        /// exactly the thing it exists to show.
+        /// </remarks>
+        public float RemainingFraction(SideId side, IReadOnlyList<UnitInstance> units)
+        {
+            if (!_startingStrength.TryGetValue(side.Value, out float start) || start <= 0f)
+                return 0f;
+
+            float now = 0f;
+            for (int i = 0; i < units.Count; i++)
+                if (units[i].Side == side) now += units[i].Strength;
+
+            return Mathf.Clamp01(now / start);
+        }
+
         // ─── Control ──────────────────────────────────────────────────────────
 
         /// <summary>Who holds an objective, by its position in the authored list.</summary>
