@@ -231,6 +231,8 @@ namespace Strategos.UI.Views
             _clockLabel.characterSpacing = 2f;
             _clockLabel.GetComponent<LayoutElement>().preferredHeight = 16;
 
+            BuildForceBars(stage);
+
             var holder = CreateRect("CardHolder", stage);
             var hle = holder.gameObject.AddComponent<LayoutElement>();
             hle.flexibleHeight = 1f;
@@ -463,6 +465,7 @@ namespace Strategos.UI.Views
                 _markers.Add(CreateMarker(unit));
 
             BuildObjectiveMarkers();
+            RebuildForceBars();
             LayOutMarkers();
         }
 
@@ -610,6 +613,114 @@ namespace Strategos.UI.Views
             _detailsBody.lineSpacing = 12f;
 
             ClearSelection();
+        }
+
+        // ─── Force bars ───────────────────────────────────────────────────────
+
+        private sealed class ForceBar
+        {
+            public SideId Side;
+            public RectTransform Fill;
+            public TMP_Text Label;
+        }
+
+        private RectTransform _forceRow;
+        private readonly List<ForceBar> _forceBars = new();
+
+        /// <summary>
+        /// A strength bar per side across the top of the stage.
+        /// </summary>
+        /// <remarks>
+        /// The one thing a player cannot otherwise see. Individual strengths are in the ORBAT
+        /// list, but "how is my force doing against theirs" needed adding up by eye — and it is
+        /// the question a commander actually asks.
+        ///
+        /// Fed by <see cref="VictoryEvaluator.RemainingFraction"/> rather than recomputed, so
+        /// the bar is **the same number the DestroyEnemy condition tests**. A bar with its own
+        /// denominator would move differently from the condition it appears to predict.
+        ///
+        /// Coloured from <see cref="Side.Colour"/>, not hard-coded blue and red. Side and
+        /// affiliation are deliberately separate here, so a coalition or a three-way scenario
+        /// colours itself correctly and this needs no special case.
+        /// </remarks>
+        private void BuildForceBars(Transform stage)
+        {
+            _forceRow = CreateRect("ForceBars", stage);
+            var le = _forceRow.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 22f;
+            le.flexibleHeight = 0f;
+
+            var row = _forceRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            row.spacing = 14;
+            row.childControlWidth = true;
+            row.childControlHeight = true;
+            row.childForceExpandWidth = true;
+            row.childForceExpandHeight = true;
+        }
+
+        private void RebuildForceBars()
+        {
+            if (_forceRow == null) return;
+
+            for (int i = _forceRow.childCount - 1; i >= 0; i--)
+                Destroy(_forceRow.GetChild(i).gameObject);
+            _forceBars.Clear();
+
+            if (_scenario == null || _sim?.Victory == null) return;
+
+            foreach (var side in _scenario.Sides)
+            {
+                var cell = CreateRect($"Force_{side.Id}", _forceRow);
+
+                var track = CreateRect("Track", cell);
+                Stretch(track);
+                track.offsetMin = new Vector2(0, 4);
+                track.offsetMax = new Vector2(0, -4);
+                track.gameObject.AddComponent<Image>().color = Theme.SectionBg;
+
+                // Anchored to the left edge so the fill shrinks from the right as the side is
+                // worn down, rather than shrinking about its centre.
+                var fill = CreateRect("Fill", track);
+                fill.anchorMin = new Vector2(0f, 0f);
+                fill.anchorMax = new Vector2(1f, 1f);
+                fill.pivot = new Vector2(0f, 0.5f);
+                fill.offsetMin = Vector2.zero;
+                fill.offsetMax = Vector2.zero;
+                fill.gameObject.AddComponent<Image>().color = side.Colour;
+
+                var label = CreateTmp("L", track, side.Name, 10, FontStyles.Bold,
+                    withLayout: false);
+                Stretch(label.rectTransform);
+                label.rectTransform.offsetMin = new Vector2(6, 0);
+                label.alignment = TextAlignmentOptions.MidlineLeft;
+                label.color = Theme.Ink;
+                label.characterSpacing = 2f;
+                label.raycastTarget = false;
+
+                _forceBars.Add(new ForceBar { Side = side.Id, Fill = fill, Label = label });
+            }
+
+            RefreshForceBars();
+        }
+
+        private void RefreshForceBars()
+        {
+            var victory = _sim?.Victory;
+            if (victory == null) return;
+
+            foreach (var bar in _forceBars)
+            {
+                float fraction = victory.RemainingFraction(bar.Side, _sim.Units);
+
+                // anchorMax.x drives the width because the fill is pinned to the left edge.
+                var max = bar.Fill.anchorMax;
+                max.x = fraction;
+                bar.Fill.anchorMax = max;
+                bar.Fill.offsetMax = Vector2.zero;
+
+                var side = _scenario.FindSide(bar.Side);
+                bar.Label.text = $"{side?.Name ?? bar.Side.ToString()}   {fraction * 100f:0}%";
+            }
         }
 
         // ─── Objective markers ────────────────────────────────────────────────
@@ -987,6 +1098,8 @@ namespace Strategos.UI.Views
                 $"T+{_sim.Tick:0000}   ·   {(_running ? $"x{_timeScale:0}" : "PAUSED")}   ·   " +
                 $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS   ·   " +
                 $"{_sim.ReportLog.Count} REPORTS{DescribeObjectives()}";
+
+            RefreshForceBars();
 
             // The details panel shows a live plan, so keep it current while one is selected.
             if (_selection.Count > 0) RefreshSelection();
