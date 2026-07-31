@@ -8,8 +8,16 @@ deterministic.
 > [CLAUDE.md](../CLAUDE.md). For the phase breakdown this feeds, see
 > [phases.md](phases.md) §5.
 
-**Status: design note, not yet implemented.** It exists so the reasoning survives outside
-the conversation that produced it. Nothing below is in the codebase yet.
+**Status: built, and this describes the code.** Both topics, the queues, the delivery rules,
+the command log and the report log are implemented under `Assets/Scripts/Core/Messaging/`,
+`Core/Commands/` and `Core/Reports/`, and are covered by `CommandProbe` and `ReportProbe`.
+
+Three things below are still forward-looking and say so where they appear: the **C3 section**
+(noise, latency, hijack), **order decomposition at echelon**, and everything filed under a
+later phase. The message shapes carry the fields those need — `ObservedTick`, `Confidence`,
+`TargetGroup`, `ParentId` — with no behaviour behind them yet, deliberately: a field that is
+currently a copy is cheap, and a message format that cannot express staleness has to be
+changed everywhere at once.
 
 ---
 
@@ -120,6 +128,12 @@ cancellation being threaded as a special case through every executor.
 
 These four are what make the difference between a bus that enables replay and one that
 quietly prevents it.
+
+Both topics are one generic `MessageBus<T>`, and that is not incidental. Two hand-written
+copies would be two places for "publish to the next step" to drift, and a drift here does
+not throw — it produces a replay that diverges some number of steps after the change that
+caused it. `CommandBus` and `ReportBus` are named subclasses rather than raw instantiations
+so that publishing a report onto the command topic is a compile error and not a surprise.
 
 ### 1. Publish to the next step
 

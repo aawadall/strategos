@@ -1,8 +1,12 @@
 // PlayView.cs
-// A scenario on its map, with both sides' units drawn where they stand.
+// A scenario on its map, with both sides' units drawn where they stand — and the one place
+// where a player selects, orders, aborts, watches the clock and reads what is being reported.
 //
-// Read-only for now: no selection, no orders. #7 adds selection, #8 movement, #10 the order
-// arrows. This is the step that makes the previous three Core-only issues visible.
+// The rail is a command post, and it is laid out as one: what is selected, what it has been
+// told, what time it is, and what has come back up. The last of those is a *subscriber* to the
+// situation topic and not a poll of world state — see OnReport. That is the acceptance rule of
+// #15 and it is easiest to break here, because a view has every unit in hand and asking them
+// directly would be one line shorter.
 //
 // 2D, NOT 3D, DELIBERATELY.
 // The 3D drape in the scenario view stays a preview. Anchoring units in a perspective world
@@ -315,6 +319,9 @@ namespace Strategos.UI.Views
                 () => _running = _runToggle.isOn);
             _speedDrop = AddDropdown(content, "TIME COMPRESSION", OnSpeedChanged);
 
+            AddSection(content, "SITUATION");
+            BuildFeedCard(content);
+
             AddSection(content, "PRESENTATION");
             _modeDrop = AddDropdown(content, "RENDER MODE", RefreshSheet);
             _showLabels = AddToggle(content, "UNIT LABELS", true, LayOutMarkers);
@@ -374,6 +381,12 @@ namespace Strategos.UI.Views
             _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
             _sim.AddExecutor(new MoveToExecutor());
             _tickAccumulator = 0f;
+
+            // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
+            // only subscriber allowed to mutate anything.
+            _feed.Clear();
+            _sim.Reports.Subscribe("ui-feed", 100, OnReport);
+            RefreshFeed();
 
             RefreshSheet();
             BuildMarkers();
@@ -520,6 +533,88 @@ namespace Strategos.UI.Views
             ClearSelection();
         }
 
+        // ─── Situation feed ───────────────────────────────────────────────────
+
+        /// <summary>How many reports the feed keeps. Older ones live in the log.</summary>
+        private const int FeedLines = 9;
+
+        private TMP_Text _feedLabel;
+        private readonly List<string> _feed = new();
+
+        private void BuildFeedCard(Transform parent)
+        {
+            var card = CreateRect("Feed", parent);
+            card.gameObject.AddComponent<LayoutElement>().preferredHeight = 128;
+            card.gameObject.AddComponent<Image>().color = UiTheme.CardBg;
+
+            _feedLabel = CreateTmp("B", card, string.Empty, 10, FontStyles.Normal,
+                withLayout: false);
+            Stretch(_feedLabel.rectTransform);
+            _feedLabel.rectTransform.offsetMin = new Vector2(10, 6);
+            _feedLabel.rectTransform.offsetMax = new Vector2(-10, -6);
+            _feedLabel.alignment = TextAlignmentOptions.TopLeft;
+            _feedLabel.color = Theme.InkMuted;
+            _feedLabel.lineSpacing = 10f;
+
+            RefreshFeed();
+        }
+
+        /// <summary>
+        /// A delivered report, turned into a line.
+        ///
+        /// **Subscribed, not polled.** The view could walk <c>_sim.Units</c> every frame and
+        /// work out which hostiles are visible in about the same amount of code, and that
+        /// version can never be deceived, delayed or jammed — so every consumer written that
+        /// way is one that C3 has to come back and rewrite. Reading the topic instead means
+        /// this panel already displays a five-minute-old contact correctly, because it never
+        /// knew when the contact happened except by being told.
+        ///
+        /// Order 100: observers run after the unit layer, which subscribes at 0 and is the only
+        /// subscriber permitted to mutate anything.
+        /// </summary>
+        private void OnReport(Strategos.Reports.SituationReport report)
+        {
+            _feed.Insert(0, FormatReport(report));
+            if (_feed.Count > FeedLines) _feed.RemoveRange(FeedLines, _feed.Count - FeedLines);
+            RefreshFeed();
+        }
+
+        private string FormatReport(Strategos.Reports.SituationReport report)
+        {
+            string who = NameOf(report.Source);
+            string colour = ColorUtility.ToHtmlStringRGB(
+                report.IsObservation ? Theme.Alert : Theme.InkMuted);
+
+            string what = report.Kind switch
+            {
+                Strategos.Reports.ReportKind.Contact => $"CONTACT  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.ContactLost => $"LOST  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.Arrived => "IN POSITION",
+                Strategos.Reports.ReportKind.OrderCompleted => "TASK COMPLETE",
+                Strategos.Reports.ReportKind.OrderFailed => "UNABLE TO COMPLY",
+                Strategos.Reports.ReportKind.Halted => "HALTED",
+                _ => report.Kind.ToString().ToUpperInvariant(),
+            };
+
+            // Hyphens and middots only — the atlas has no en dash and renders it as nothing.
+            return $"<color=#{colour}>T+{report.ObservedTick:0000}  {who}  ·  {what}</color>";
+        }
+
+        private string NameOf(UnitId id)
+        {
+            var unit = _scenario?.FindUnit(id);
+            if (unit == null) return id.ToString();
+            return string.IsNullOrEmpty(unit.Designation) ? id.ToString() : unit.Designation;
+        }
+
+        private void RefreshFeed()
+        {
+            if (_feedLabel == null) return;
+            _feedLabel.text = _feed.Count == 0
+                ? "<i>No reports.</i>"
+                : string.Join("\n", _feed);
+        }
+
         private void OnMapClicked(UnityEngine.EventSystems.PointerEventData e)
         {
             // Left selects, right orders — the convention every player already knows, and it
@@ -639,7 +734,8 @@ namespace Strategos.UI.Views
 
             _clockLabel.text =
                 $"T+{_sim.Tick:0000}   ·   {(_running ? $"x{_timeScale:0}" : "PAUSED")}   ·   " +
-                $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS ISSUED";
+                $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS   ·   " +
+                $"{_sim.ReportLog.Count} REPORTS";
 
             // The details panel shows a live plan, so keep it current while one is selected.
             if (_selection.Count > 0) RefreshSelection();

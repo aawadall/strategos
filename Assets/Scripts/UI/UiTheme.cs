@@ -36,6 +36,12 @@ namespace Strategos.UI
         public static readonly Color Accent       = Hex(0x2C, 0x5A, 0x38); //  7.6:1 on CardBg
         public static readonly Color AccentText   = Hex(0xF6, 0xF4, 0xEB); //  7.4:1 on Accent
 
+        /// <summary>
+        /// For the one line in a list that the eye should land on first — a contact in the
+        /// situation feed. Dark enough to be read as text, not as a highlight.
+        /// </summary>
+        public static readonly Color Alert        = Hex(0x8E, 0x24, 0x24); //  8.2:1 on CardBg
+
         private static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f, 1f);
 
         /// <summary>
