@@ -67,14 +67,20 @@ namespace Strategos.Scenarios
             Add(s, blue.Id, 2, LandEntityCode.Armor, IconDecorator.VarStandard,
                 Echelon.Platoon, new Vector2(76f, 60f), "1/A/2-69 AR", "2-69 AR",
                 UnitCatalogue.Armor);
+            // The scouts are green, and that is the interesting case rather than an
+            // arbitrary one: a screen exists to report, so a slow reporter is the unit whose
+            // training the commander feels first. Contacts reach the feed several ticks after
+            // they were seen, carrying their own staleness.
             Add(s, blue.Id, 3, LandEntityCode.Reconnaissance, IconDecorator.VarMotorized,
                 Echelon.Platoon, new Vector2(88f, 92f), "SCT/1-7 IN", "1-7 IN",
-                UnitCatalogue.ReconMotor);
+                UnitCatalogue.ReconMotor, training: 55f);
 
             // North-east, advancing south-west.
+            // One green formation on each side, so training is a texture of the scenario
+            // rather than a handicap on one of them.
             Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarMotorized,
                 Echelon.Company, new Vector2(180f, 176f), "3/2 MRR", "2 MRR",
-                UnitCatalogue.InfantryMotor);
+                UnitCatalogue.InfantryMotor, training: 70f);
             Add(s, red.Id, 5, LandEntityCode.Armor, IconDecorator.VarStandard,
                 Echelon.Platoon, new Vector2(178f, 196f), "1/3/2 MRR", "2 MRR",
                 UnitCatalogue.Armor);
@@ -136,7 +142,8 @@ namespace Strategos.Scenarios
 
         private static void Add(Scenario s, SideId side, int id, LandEntityCode entity,
             int variant, Echelon echelon, Vector2 cell, string designation,
-            string higherFormation, string capabilityId, int strength = 100)
+            string higherFormation, string capabilityId, int strength = 100,
+            float training = 100f)
         {
             var affiliation = s.FindSide(side)?.Affiliation ?? Affiliation.Friend;
 
@@ -146,8 +153,12 @@ namespace Strategos.Scenarios
                 entityCode: (int)entity,
                 entityType: variant);
 
-            s.Units.Add(new UnitInstance(new UnitId(id), side, code.Raw, cell,
-                designation, higherFormation, strength, capabilityId));
+            var unit = new UnitInstance(new UnitId(id), side, code.Raw, cell,
+                designation, higherFormation, strength, capabilityId)
+            {
+                Training = training,
+            };
+            s.Units.Add(unit);
         }
     }
 }

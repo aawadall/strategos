@@ -88,7 +88,13 @@ namespace Strategos.Reports
         public void Sweep(MapData map, UnitCatalogue catalogue, int tick,
             Action<SituationReport> publish)
         {
-            if (map == null || publish == null || _n == 0) return;
+            if (publish == null) return;
+
+            // Held reports first: one observed three ticks ago must reach the topic before
+            // anything seen now, or the feed reads out of order.
+            Flush(tick, publish);
+
+            if (map == null || _n == 0) return;
 
             float metresPerCell = Mathf.Max(0.0001f, map.Header.MetresPerCell);
 
@@ -129,18 +135,73 @@ namespace Strategos.Reports
                     if (!held && distance <= rangeCells)
                     {
                         _seen[slot] = true;
-                        publish(SituationReport.Contact(observer.Id, subject, tick));
+                        Send(SituationReport.Contact(observer.Id, subject, tick),
+                            observer, tick, publish);
                     }
                     else if (held && distance > lossCells)
                     {
                         _seen[slot] = false;
-                        publish(SituationReport.ContactLost(observer.Id, subject, tick));
+                        Send(SituationReport.ContactLost(observer.Id, subject, tick),
+                            observer, tick, publish);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// A report that has been observed and not yet reached anyone.
+        /// </summary>
+        /// <remarks>
+        /// This is the one place training touches what a *commander knows* rather than what a
+        /// unit does, and it is the reason the effect is worth having. A green unit does not
+        /// see less — it is slower to say so, so the picture its commander is working from is
+        /// older. That is the fog #34 and #36 are about, arriving from the command chain
+        /// rather than from a vision cone.
+        /// </remarks>
+        private readonly List<(int Due, SituationReport Report)> _pending = new();
+
+        /// <summary>
+        /// Publishes now, or holds the report until the observer has got round to sending it.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="SituationReport.ObservedTick"/> is left at the moment of observation and
+        /// only the publication tick moves — which is exactly the split Simulation.Report
+        /// documents and refuses to overwrite, so a delayed contact arrives already carrying
+        /// how stale it is. Nothing downstream needed changing to understand that.
+        /// </remarks>
+        private void Send(SituationReport report, UnitInstance observer, int tick,
+            Action<SituationReport> publish)
+        {
+            int delay = observer?.HesitationTicks ?? 0;
+            if (delay <= 0) { publish(report); return; }
+            _pending.Add((tick + delay, report));
+        }
+
+        /// <summary>
+        /// Releases everything now due, oldest first.
+        /// </summary>
+        /// <remarks>
+        /// A List walked in index order, never a Dictionary: delivery order is part of the
+        /// replay signature, and the report log would diverge if two reports due on the same
+        /// tick could swap. Appends are in observation order, so index order is observation
+        /// order.
+        /// </remarks>
+        private void Flush(int tick, Action<SituationReport> publish)
+        {
+            for (int i = 0; i < _pending.Count; i++)
+            {
+                if (_pending[i].Due > tick) continue;
+                publish(_pending[i].Report);
+                _pending.RemoveAt(i);
+                i--;
+            }
+        }
+
         /// <summary>Forgets every contact. For resetting between replays.</summary>
-        public void Reset() => Array.Clear(_seen, 0, _seen.Length);
+        public void Reset()
+        {
+            Array.Clear(_seen, 0, _seen.Length);
+            _pending.Clear();
+        }
     }
 }

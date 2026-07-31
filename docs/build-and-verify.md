@@ -111,12 +111,21 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.VictoryProbe.Run` | Objective control, hold duration, draws, precedence |
 | `Strategos.Editor.DirectorProbe.Run` | An unattended scenario reaches a decision |
 | `Strategos.Editor.DoctrineProbe.Run` | Drill pack round trip, and the T/P/U matrix |
+| `Strategos.Editor.TrainingProbe.Run` | The hesitation curve, and that training only costs time |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
 Their divergence tests are the only thing standing between a determinism bug and finding
 out months later that a replay does not reproduce — nothing about that failure is visible
 at the time it is introduced.
+
+**A change to unit state moves every divergence baseline, so "the probes still pass" is not
+evidence it is right — they pass *differently*.** Training was the first such change:
+hesitation is part of `CommandQueue`'s signature and delayed reports change the report log.
+What `TrainingProbe` asserts instead is the property that survives any retuning — **a unit at
+`Training = 100` behaves exactly as it did before the feature existed**, so anything that
+moved in another probe's numbers is a real regression rather than the new feature showing up.
+Keep that property when adding fatigue (#67) or friction.
 
 **`CombatProbe`'s table is the point of it, not its pass/fail.** Balance the combat model by
 reading the printed damage-per-minute matrix; the assertions only catch the model breaking,
@@ -134,7 +143,16 @@ Player log (**always check after a UI change**, see UI gotchas below):
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
-`Write Sample Scenarios`, `Write Sample Drills`, `Import TMP Essential Resources`.
+`Write Sample Scenarios`, `Write Sample Drills`, `Probe Training`,
+`Import TMP Essential Resources`.
+
+**A new field on a serialised type does nothing until the samples are rewritten.**
+`Assets/Resources/Scenarios/*.json` is what the game loads, not `ScenarioSamples`, so a field
+added to `UnitInstance` deserialises to its default in every shipped scenario until
+`Strategos > Write Sample Scenarios` runs. `TrainingProbe` caught exactly this — it measured a
+scout that was supposed to be green, found it fully trained, and passed anyway because its
+guard skipped when the data was uninteresting. It now fails if no unit in the sample scenario
+is below 100. **A guard that skips when the fixture is stale is a guard that cannot fail.**
 
 **Drills are content, not code.** `DoctrineSamples` holds the shipped set in C# and
 `Strategos > Write Sample Drills` serialises it to `Assets/Resources/Doctrine/`; the app

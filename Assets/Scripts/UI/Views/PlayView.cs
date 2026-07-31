@@ -1549,7 +1549,16 @@ namespace Strategos.UI.Views
                         $"{side?.Name ?? "?"}   ·   {DisplayNames.EchelonName(code.Echelon)}   ·   " +
                         $"{DisplayNames.UnitTypeLabel(code.EntityCode)}\n" +
                         $"{caps.Name}   ·   STR {unit.StrengthPercent}%   ·   " +
-                        $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%\n" +
+                        $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%   ·   " +
+                        // Training earns its place because it costs the player *time* they
+                        // would otherwise blame on the engine: a green unit sits PENDING for
+                        // a few ticks after being ordered, and with nothing on screen to
+                        // explain it that reads as a dropped click. The hesitation is stated
+                        // beside it, in the units the cost is actually paid in.
+                        $"TRN {unit.Training:0}%\n" +
+                        (unit.HesitationTicks > 0
+                            ? $"HESITATES {unit.HesitationTicks} S BEFORE ACTING   ·   "
+                            : "ACTS ON ORDERS AT ONCE   ·   ") +
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
                         $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG\n" +

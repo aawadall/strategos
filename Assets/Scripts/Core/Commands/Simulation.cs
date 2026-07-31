@@ -334,7 +334,10 @@ namespace Strategos.Commands
             var queue = QueueOf(unit.Id);
             if (queue == null || queue.IsEmpty) return;
 
-            if (!queue.TryBegin(out var entry)) return;
+            // Training costs time at the head of the queue: a green unit has received the
+            // order and has not started on it yet. Reflexes preempt onto the front, so this
+            // one gate delays returning fire as well as marching.
+            if (!queue.TryBegin(unit.HesitationTicks, out var entry)) return;
 
             var executor = ExecutorFor(entry.Command.Kind);
             if (executor == null)

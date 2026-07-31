@@ -156,6 +156,53 @@ namespace Strategos.Units
         /// </summary>
         [Range(0, 100)] public float Suppression;
 
+        /// <summary>
+        /// Proficiency on its drills, 0–100. How *quickly* the unit does what it is told.
+        /// </summary>
+        /// <remarks>
+        /// **Its own attribute, deliberately not folded into <see cref="Effectiveness"/>.**
+        /// A fresh conscript battalion and a veteran one at 60% strength are not the same
+        /// thing, and multiplying training into effectiveness would make "green" and
+        /// "shot up" the same word — you could then never write a rule that distinguishes
+        /// them, which is most of what makes training interesting.
+        ///
+        /// It costs *time*, not accuracy. Untrained units here are slow to start, slow to
+        /// answer fire and slow to report — not prone to doing the wrong thing. A model where
+        /// a unit sometimes carries out a different order than the one given is unlearnable
+        /// and indistinguishable from a bug, and a player cannot plan around it. Delay they
+        /// can see, attribute and mitigate by not putting green troops in the screen.
+        ///
+        /// **Defaults to 100 on purpose**: every existing scenario and every probe baseline
+        /// keeps its behaviour exactly, and lowering it is an explicit authoring decision.
+        /// </remarks>
+        [Range(0, 100)] public float Training = 100f;
+
+        /// <summary>
+        /// Ticks this unit hesitates before acting on the order at the head of its queue.
+        /// </summary>
+        /// <remarks>
+        /// The single mechanism behind both effects, which is why there is only one. A reflex
+        /// from <c>ReactionController</c> is issued as a preempting command onto the *front*
+        /// of the queue, so the same hesitation that delays a march order also delays
+        /// returning fire — a green unit is slow in both, and modelling them separately would
+        /// have been two knobs for one trait.
+        ///
+        /// Superlinear so the penalty is mild near the top and bites at the bottom: the
+        /// difference between an excellent unit and a good one is small, and the difference
+        /// between a poor one and a rabble is not.
+        /// </remarks>
+        public int HesitationTicks
+        {
+            get
+            {
+                float shortfall = Mathf.Clamp01(1f - Training / 100f);
+                return Mathf.RoundToInt(MaxHesitationTicks * Mathf.Pow(shortfall, 1.5f));
+            }
+        }
+
+        /// <summary>Hesitation of a wholly untrained unit, in ticks. See DoctrineProbe's table.</summary>
+        public const float MaxHesitationTicks = 8f;
+
         /// <summary>What the unit is doing, which modifies what it can do.</summary>
         public Posture Posture = Posture.Halted;
 
