@@ -426,6 +426,12 @@ namespace Strategos.UI.Views
                 (problems.Count > 0 ? $"   ·   {problems.Count} VALIDATION WARNING(S)" : string.Empty);
 
             _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
+
+            // Published so other views can read live unit state — the drill binder rates units
+            // against drills and must see the force as it actually is. Read-only for everyone
+            // else: this view builds it, steps it, and is the only thing permitted to mutate it.
+            if (_session != null) _session.Simulation = _sim;
+
             _sim.AddExecutor(new MoveToExecutor());
             _sim.AddExecutor(new EngageExecutor());
             _sim.EnableReactions();
