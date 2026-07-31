@@ -33,7 +33,7 @@ from the command log.
 There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
 not a playable space, and there is no game camera. Units still pass through each other —
 there is no collision, no zone of control and no facing. A destroyed unit stays on the map
-doing nothing, because removal belongs with victory conditions (#14). There is **no
+doing nothing — removal, casualty tracking and reconstitution are Phase 4.4. There is **no
 autonomous reaction** (#13): nothing fires unless ordered to. Everything past that in
 `ROADMAP.md` — C2 at echelon, AI, networking — is unbuilt.
 
@@ -50,6 +50,7 @@ autonomous reaction** (#13): nothing fires unless ordered to. Everything past th
 | `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |
 | `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
 | `Assets/Scripts/Core/Combat/` | `EngagementResolver` — the direct-fire model |
+| `Assets/Scripts/Core/Objectives/` | Objectives, victory conditions, the evaluator |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
@@ -137,6 +138,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CommandProbe.Run` | The four delivery rules, queues, A\*, replay divergence |
 | `Strategos.Editor.ReportProbe.Run` | Detection edges, report timing, replay of reports |
 | `Strategos.Editor.CombatProbe.Run` | The engagement matrix, terrain, simultaneity, replay |
+| `Strategos.Editor.VictoryProbe.Run` | Objective control, hold duration, draws, precedence |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -228,6 +230,7 @@ Tick++
            └─ ResolveEngagements   resolve ALL, then apply ALL
               └─ DecaySuppression ×n
                  └─ ContactTracker.Sweep   publishes for delivery next step
+                    └─ Victory.Evaluate    last, on the state the tick ended in
 ```
 
 - **Nothing in the simulation may read `Time.deltaTime`, wall-clock time,
@@ -284,6 +287,22 @@ Tick++
 - **`SuppressionPerDamage` is tuned against `SuppressionDecayPerSecond`, not chosen.** Below
   about 7 the decay out-paces the gain and suppression never rises at all — a unit under
   sustained fire that reads as perfectly calm.
+- **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data
+  today and will not stay so — under the command-chain model an objective is the content of a
+  *directive*, so "the objectives in force for this side" has to be able to change mid-scenario.
+  A constructor argument survives that; a static reach-in does not.
+- **Objective control: uncontested presence takes, contested freezes, ownership is sticky.**
+  Arriving is not taking — a side takes ground by having a living unit on it with no living
+  enemy on it, so an objective must be *cleared*. Walking off does not hand it back, which is
+  what makes holding worth doing.
+- **`DestroyEnemy` measures against STARTING strength, captured once at construction.** Against
+  a side's current total a force can never fall below a share of itself and the condition never
+  fires.
+- **Victory precedence is a `Priority` field, ties broken by authored list order.** Two
+  conditions can come true on the same evaluation, and "whichever the loop reached first" makes
+  the winner a function of list order. Evaluation tests every condition, not the first match.
+- **Evaluation runs every `EvaluationInterval` ticks, and that constant is not a setting** —
+  changing it changes when a hold duration is satisfied, which is an outcome, not a preference.
 - **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
   queue state *and* the report log — a run that lands units correctly but reports
   differently has diverged in what its commander knows, which is exactly what an AI will

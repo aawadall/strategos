@@ -18,6 +18,7 @@ using UnityEngine;
 using Strategos.Maps;
 using Strategos.Movement;
 using Strategos.NatoSymbols;
+using Strategos.Objectives;
 using Strategos.Units;
 
 namespace Strategos.Scenarios
@@ -48,6 +49,27 @@ namespace Strategos.Scenarios
         /// then carry initial state only.
         /// </summary>
         public List<UnitInstance> Units = new();
+
+        /// <summary>
+        /// Ground worth taking. Definitions only — who holds what is runtime state and lives
+        /// in <see cref="Objectives.VictoryEvaluator"/>.
+        /// </summary>
+        public List<Objective> Objectives = new();
+
+        /// <summary>
+        /// How this scenario can end. An empty list means it cannot, which is legal — a
+        /// sandbox is a scenario you are not trying to win.
+        /// </summary>
+        public List<VictoryCondition> Victory = new();
+
+        /// <summary>
+        /// Ticks after which an undecided scenario is a draw. Zero means no limit.
+        ///
+        /// Separate from a <see cref="VictoryKind.SurviveUntil"/> deadline because they are
+        /// different statements: that one says a side wins by lasting, this one says nobody
+        /// did. A scenario can have either, both or neither.
+        /// </summary>
+        public int TimeLimitTicks;
 
         // ─── Lookup ───────────────────────────────────────────────────────────
 
@@ -198,9 +220,62 @@ namespace Strategos.Scenarios
                 if (CountUnitsOf(s.Id) == 0)
                     problems.Add($"Side {s.Id} '{s.Name}' has no units.");
 
+            ValidateVictory(problems);
+
             if (catalogue != null && map != null) CheckReachability(problems, catalogue, map);
 
             return problems;
+        }
+
+        /// <summary>
+        /// Objectives and victory conditions.
+        /// </summary>
+        /// <remarks>
+        /// Every failure here is silent at runtime: a condition naming an objective that does
+        /// not exist simply never comes true, and a scenario that cannot be won looks exactly
+        /// like one you are losing.
+        /// </remarks>
+        private void ValidateVictory(List<string> problems)
+        {
+            var seen = new HashSet<int>();
+            foreach (var o in Objectives)
+            {
+                if (!seen.Add(o.Id)) problems.Add($"Duplicate objective id {o.Id}.");
+                if (o.RadiusCells <= 0f)
+                    problems.Add($"Objective {o.Id} '{o.Name}' has a radius of {o.RadiusCells}.");
+                if (Map != null &&
+                    (o.Cell.x < -0.5f || o.Cell.x > Map.Width - 0.5f ||
+                     o.Cell.y < -0.5f || o.Cell.y > Map.Height - 0.5f))
+                    problems.Add($"Objective {o.Id} '{o.Name}' is off the map.");
+                if (o.InitialOwner.IsValid && FindSide(o.InitialOwner) == null)
+                    problems.Add($"Objective {o.Id} starts owned by {o.InitialOwner}, " +
+                                 "which does not exist.");
+            }
+
+            foreach (var c in Victory)
+            {
+                if (c.Kind == VictoryKind.None)
+                    problems.Add("A victory condition has no kind.");
+                if (FindSide(c.Side) == null)
+                    problems.Add($"Victory condition '{c}' awards {c.Side}, which does not exist.");
+
+                if (c.Kind != VictoryKind.HoldObjectives) continue;
+
+                if (c.ObjectiveIds == null || c.ObjectiveIds.Length == 0)
+                {
+                    problems.Add($"Victory condition '{c}' names no objectives, so it can " +
+                                 "never come true.");
+                    continue;
+                }
+
+                foreach (int id in c.ObjectiveIds)
+                    if (!seen.Contains(id))
+                        problems.Add($"Victory condition '{c}' names objective {id}, " +
+                                     "which does not exist.");
+            }
+
+            if (TimeLimitTicks < 0)
+                problems.Add($"Time limit {TimeLimitTicks} is negative.");
         }
 
         /// <summary>

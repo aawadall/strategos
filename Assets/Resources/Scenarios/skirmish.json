@@ -65,7 +65,7 @@
         "x": 58.0,
         "y": 72.0
       },
-      "Strength": 100,
+      "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -94,7 +94,7 @@
         "x": 76.0,
         "y": 60.0
       },
-      "Strength": 100,
+      "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -123,7 +123,7 @@
         "x": 88.0,
         "y": 92.0
       },
-      "Strength": 100,
+      "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -152,7 +152,7 @@
         "x": 180.0,
         "y": 176.0
       },
-      "Strength": 100,
+      "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -181,7 +181,7 @@
         "x": 178.0,
         "y": 196.0
       },
-      "Strength": 100,
+      "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -210,7 +210,7 @@
         "x": 186.0,
         "y": 150.0
       },
-      "Strength": 90,
+      "Strength": 90.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
@@ -221,5 +221,74 @@
         "Fuel": 100.0
       }
     }
-  ]
+  ],
+  "Objectives": [
+    {
+      "Id": 1,
+      "Name": "THE CROSSROADS",
+      "Cell": {
+        "x": 120.0,
+        "y": 124.0
+      },
+      "RadiusCells": 10.0,
+      "InitialOwner": {
+        "Value": 0
+      }
+    }
+  ],
+  "Victory": [
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "BLUFOR held the crossroads for ten minutes.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 600,
+      "DeadlineTick": 0
+    },
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "OPFOR held the crossroads for ten minutes.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 600,
+      "DeadlineTick": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "OPFOR was rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "BLUFOR was rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0
+    }
+  ],
+  "TimeLimitTicks": 3600
 }
