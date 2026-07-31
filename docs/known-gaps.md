@@ -1,0 +1,94 @@
+# Known gaps
+
+Recorded so they are not re-investigated. **None are fixed.** Check here before
+chasing anything that looks like a bug in generation, detection, combat balance or CI.
+
+[CLAUDE.md](../CLAUDE.md) is the index.
+
+---
+
+## Known gaps
+
+Recorded so they are not re-investigated. None are fixed.
+
+- **Artillery is the best direct-fire weapon in the model, which is wrong.** The matrix has
+  it killing infantry in the open in 2.0 minutes against armour's 2.7. Its `Firepower` of 30
+  represents an indirect-fire battery, and #12 resolves direct fire only — so the number is
+  being spent on something it does not describe. Indirect fire is Phase 4.2 and out of scope
+  here. Until it exists, either artillery needs a separate direct-fire figure or it should
+  not be given engage orders.
+- **A destroyed unit stays on the map.** `Strength` floors at 0, `Effectiveness` goes to 0
+  so it neither inflicts nor suffers anything, and it keeps its symbol and its place in the
+  ORBAT. Removal, casualty tracking and reconstitution are #14 and Phase 4.4.
+- **A mutual firefight settles into a suppression equilibrium** at roughly 70 points each,
+  where both sides trade about 4.5 damage a minute instead of 16. That is arguably the right
+  behaviour — it makes flanking, cover and digging in the way to break a stalemate rather
+  than out-shooting it — but it means a head-on exchange between equals takes about twenty
+  minutes to decide, which is slow if it turns out not to be what the game wants.
+- **Detection ranges are large enough that the skirmish has almost no fog of war.** The
+  recon platoon's 4000 m sees 160 cells on a 256-cell map, so `SCT/1-7 IN` reports contact
+  on all three OPFOR units at T+0001 and the scenario's own description — *"neither side
+  knows the other is there"* — is false from the first tick. The numbers are individually
+  defensible (4 km is a reasonable ground-scout range in the open) and the map is simply
+  small: 6.4 km square is one company frontage, not a divisional area. Three fixes, none
+  taken: terrain LOS, which is the real answer and a Phase 1 / M1 item; a larger map;
+  or lower ranges, which would be tuning the model to hide a missing feature. Note the
+  *reporting* is correct — it is the visibility model that is trivial.
+- **`Side.AreHostile` is "different side, different affiliation", which is a stand-in.**
+  It gets coalitions right and gets one case wrong: two mutually hostile factions that both
+  draw as Hostile read as allies, because nothing in the data says otherwise. A three-way
+  scenario must therefore give its factions distinct affiliations until a real alliance
+  graph lands. It is one method on purpose, so replacing it is not a search.
+- **`ContactTracker.Sweep` is O(n²) per step.** Thirty-six distance tests a second at
+  sandbox scale, and a spatial index would be code with no measurable benefit. It stops
+  being acceptable in the low hundreds of units, well before the theatre scale the roadmap
+  ends at; a uniform grid bucketed by detection range drops in without changing anything
+  that consumes reports.
+- **A contact report names the real `UnitId`,** which hands the recipient a perfect
+  identification of something it has merely seen at range. When misidentification becomes
+  possible, `SituationReport.Subject` should become a *track* id resolvable to a unit only
+  by the simulation. Recorded now because every consumer written against a truthful
+  `Subject` is one that has to be revisited.
+- **Generated terrain has huge closed basins, so maps come out 18–29% lake.** Measured on
+  256-cell maps at seed 20260729: Hills 11,676 lake cells with 8,396 over 5 m deep and a
+  deepest point of 38.7 m; Mountains deepest 381.7 m; Desert 20% water. These are real
+  depressions in the noise, not a classification error — both flood-surface bugs above were
+  found and fixed while chasing this and neither moved the numbers. Real landscapes lack
+  them because fluvial erosion breaches them; the generator has no equivalent. The fix is a
+  breaching pass (carve an outlet from each basin's low point to its spill) or a minimum
+  catchment test before a depression is allowed to be a lake — **not** raising
+  `HydrologyStage.LakeDepth`, which would only shrink the shorelines of basins that should
+  not exist. Note `FillDepressions`' comment deliberately preserves hollows as tactical
+  features, so breaching needs a size threshold rather than being applied wholesale.
+- **There is still no test assembly anywhere under `Assets/`,** so the EditMode test job
+  has nothing to run. `com.unity.test-framework` is in the manifest, so the scaffolding is
+  one asmdef away. `build` no longer has `needs: test` — gating releases on an empty test
+  run only added a failure mode — so **restore that dependency when real tests land**.
+- **CI cannot activate Unity: no `UNITY_LICENSE` / `UNITY_EMAIL` / `UNITY_PASSWORD` secrets
+  are set on the repo.** Every hosted build and test therefore skips. The `preflight` job
+  probes for those credentials and the Unity jobs are `if`-gated on it, so a run without
+  them reports neutral-green with a warning annotation rather than a red X that says
+  nothing about the code — but note that **green CI currently means "nothing ran"**. Set
+  the secrets under Settings → Secrets → Actions to get real coverage. The `secrets`
+  context is unavailable in a job-level `if`, which is why the probe is a job and not a
+  condition.
+- **`.gitattributes` line-ending rules are overridden.** `git check-attr text filter --
+  "Assets/TextMesh Pro/Sprites/EmojiOne.png"` reports `text: auto` despite the `-text`
+  flag on `*.png` / `*.ttf`, so a later `* text=auto` rule wins. Harmless while LFS
+  carries the content (verified: committed PNG/TTF headers intact), but it would corrupt
+  a binary added without an LFS rule.
+- **Four land entity codes render as a bare frame.** `IconDecorator.ResolveLandIcon`
+  handles 11 of the 14 `LandEntityCode` values; `Unknown`, `SpecialOperations`,
+  `MissileBallistic` and `Cyber` fall through to its `default` and draw nothing inside the
+  frame. The symbol library lists them anyway, captioned `FRAME ONLY` — a catalogue that
+  hides the gaps is worse than one that shows them. `DisplayNames.RendersIcon` is the
+  lookup and must be kept in step with `ResolveLandIcon`.
+- **Only land symbol sets draw icons at all.** `IconDecorator.Contribute` returns early
+  unless the set is `LandUnit` or `LandCivilian`, and `ProceduralSymbolFactory` only draws
+  land frames, so the other 19 `SymbolSet` values would render as empty land frames. This
+  is why the library offers no symbol-set axis.
+- **Airborne and air assault share one chevron glyph.** `SectorModifierDecorator`
+  resolves `ModAirborne` and `ModAirAssault` to the same case, so they are
+  indistinguishable on screen despite being separate dropdown entries. Same for the Air
+  Assault entity-type variant.
+- `Packages/packages-lock.json` is gitignored, which undercuts reproducible CI builds.

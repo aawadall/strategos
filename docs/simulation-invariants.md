@@ -1,0 +1,142 @@
+# Simulation invariants
+
+The fixed-step simulation: two topics, per-unit queues, combat,
+reflexes, objectives. **Read before touching anything under `Core/Commands`, `Core/Reports`,
+`Core/Combat`, `Core/Reactions`, `Core/Direction`, `Core/Objectives`, `Core/Movement` or
+`Core/Messaging`.** Breaking one of these does not throw — it makes a replay diverge some
+number of steps later.
+
+[docs/command-architecture.md](command-architecture.md) carries the reasoning; this carries
+the rules. [CLAUDE.md](../CLAUDE.md) is the index.
+
+---
+
+## Command and reporting invariants
+
+Two topics — orders down, reports up — over one `MessageBus<T>`. `docs/command-architecture.md`
+carries the reasoning; these are the things that break silently.
+
+`Simulation.Step` fixes the order, and it is part of the contract:
+
+```
+Tick++
+  └─ Bus.Deliver()          commands published before this step
+     └─ Reports.Deliver()    reports published before this step
+        └─ Director.Evaluate()    side-level intent, before reflexes
+           └─ Reactions.Evaluate() reflexes, from the start-of-step picture
+           └─ AdvanceUnit ×n      in scenario order, never dictionary order
+              └─ ResolveEngagements   resolve ALL, then apply ALL
+                 └─ DecaySuppression ×n
+                    └─ ContactTracker.Sweep   publishes for delivery next step
+                       └─ Victory.Evaluate   last, on the state the tick ended in
+```
+
+- **Nothing in the simulation may read `Time.deltaTime`, wall-clock time,
+  `UnityEngine.Random`, or iterate a `Dictionary`/`HashSet`.** Each one makes a replay
+  diverge, and the divergence surfaces long after the change that caused it. Presentation
+  interpolates; the simulation counts ticks. `Simulation.SecondsPerTick` is a `const` and
+  not a setting because changing it changes every outcome.
+- **Both buses publish to the *next* step.** That is what bounds a report → reaction →
+  order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
+  wants. `Publish` never delivers inline even when called from outside a dispatch, or an
+  order issued by the UI would arrive a step earlier than one issued by a reacting unit.
+- **Subscriber order is `Order` ascending, ties by registration.** The insertion sort in
+  `MessageBus.Subscribe` is deliberate: `List.Sort` is introsort and **not stable**, so
+  equal orders could permute between runs. The unit layer subscribes at 0 and is the only
+  subscriber allowed to mutate anything; observers go above it.
+- **Detection publishes edges, not state.** `ContactTracker` reports a hostile *entering*
+  and *leaving* range, never the current picture. The alternative is one message per
+  observer per hostile per tick, which is a poll wearing a message's clothes and drowns the
+  log. `LossHysteresis` exists because a unit halted on the boundary would otherwise flap.
+- **Nothing downstream of `ContactTracker` may ask the world about hostiles.** A consumer
+  that reads unit positions can never be deceived, delayed or jammed, so every one written
+  that way has to be rewritten when C3 lands. Read reports. This is unenforceable by a
+  compiler and is the rule most likely to be broken by a view, which has every unit in hand
+  already — see `PlayView.OnReport`.
+- **Detection range goes through `UnitCapabilities.DetectionRangeAt`,** the documented
+  single call to replace when terrain line of sight arrives. Do not compare distances
+  anywhere else.
+- **Executors mutate their own unit and nothing else.** Reports about a finished order are
+  published by `Simulation.AdvanceUnit` from the outcome, not by the executor, so an
+  executor added later reports without being written to. An engagement touches two units,
+  so `EngageExecutor` appends to `ExecutionContext.Engagements` — it declares *intent* and
+  the simulation applies the effect.
+- **Fire resolves in two passes: resolve everything, then apply everything.** Every shot in
+  a tick is computed against start-of-tick state. One pass would hand whichever unit the
+  loop reached first a free shot at an undamaged enemy — a first-mover advantage set by the
+  order units happen to appear in the scenario file, invisible in any one game and very hard
+  to find once someone notices the unit listed first tends to win. `CombatProbe`'s
+  simultaneity check is what holds this.
+- **`EngagementResolver.Resolve` reads state and writes none.** `Apply` is separate for the
+  reason above. Do not fold them back together.
+- **The only stochastic term is seeded from `(tick, attacker, defender)`,** so it is
+  reproducible from state alone — no generator is carried between ticks, which means a
+  replay reproduces each *draw* rather than a random *stream*. The ids are mixed with
+  different multipliers so an exchange does not share one roll in both directions.
+- **`Strength` is a float and must stay one.** Firepower is authored per minute and the
+  simulation steps per second, so a tick of fire is a fraction of a point; held as an int,
+  every exchange rounds to zero and two units shoot at each other for ever. Display through
+  `StrengthPercent` — the raw float must never reach a symbol's `StrengthLabel`, which is
+  part of the sprite cache key.
+- **Suppression is temporary and must never cancel an order.** Sustained fire pins a unit in
+  about forty-five seconds; treating that as failure would permanently drop the engage order
+  of whoever came off worst in an opening exchange. `AttackerSuppressed` and
+  `AttackerDestroyed` are separate outcomes for exactly this reason.
+- **`SuppressionPerDamage` is tuned against `SuppressionDecayPerSecond`, not chosen.** Below
+  about 7 the decay out-paces the gain and suppression never rises at all — a unit under
+  sustained fire that reads as perfectly calm.
+- **`ReactionController` may read reports and a unit's *own* state, and nothing else.** It
+  never asks the world whether an enemy is in range, never reads another unit's position,
+  and picks targets by the cell a contact was last *reported* at. A unit that polls cannot
+  be deceived, delayed or spoofed, so reaction logic written that way has to be rebuilt
+  rather than wrapped when C3 lands. Own strength, suppression and ammunition are
+  introspection, not observation — no message has to arrive for a company to know it is out
+  of ammunition.
+- **Reactions evaluate in scenario unit order, and that order carries no advantage.** A
+  reaction issues a *command*, commands are delivered on the following step, and fire
+  resolves against start-of-tick state — so two units that notice each other on the same
+  tick open fire on the same tick. `ReactionProbe.CheckMutualReactionIsFair` holds this; it
+  would stop being true the moment somebody resolved a reaction inline to save a tick.
+- **A reflex preempts, it never deletes.** `Command.Preempt` puts a reactive engagement at
+  the head of the queue and pushes the displaced order back to Pending, so a unit fired on
+  mid-march shoots back now and resumes the march after. Appended instead, it would answer
+  fire when it arrived, twenty minutes later.
+- **ROE governs initiative, not permission.** A unit on Hold Fire still carries out an
+  engage order it was given; refusing a direct order would be a bug.
+- **Suppression is deliberately not a break-contact trigger.** It saturates near 100 within
+  about fifteen seconds of sustained fire, so any threshold below the cap made every unit
+  disengage almost the moment it was shot at — the probe caught one leaving at 67.8%
+  strength, barely scratched. It is also backwards: suppression models being *pinned*, and a
+  pinned unit is one that cannot move, not one that has decided to leave.
+- **An objective's centre must be ground a unit can occupy.** A MoveTo to an impassable
+  cell fails on the tick it is issued, so `SideDirector` finds the unit idle and reissues —
+  the shipped skirmish once ran its full hour with 1080 autonomous orders and nobody moving,
+  because the crossroads was one cell into a lake. `DirectorProbe` asserts it and names the
+  nearest passable cell.
+- **`SideDirector.RetryInterval` is the guard against that order storm,** not politeness. Any
+  unreachable destination reproduces it otherwise, and the command log is what a replay and an
+  after-action review both read.
+- **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
+  standing where it was, to be destroyed a few seconds later.
+- **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data
+  today and will not stay so — under the command-chain model an objective is the content of a
+  *directive*, so "the objectives in force for this side" has to be able to change mid-scenario.
+  A constructor argument survives that; a static reach-in does not.
+- **Objective control: uncontested presence takes, contested freezes, ownership is sticky.**
+  Arriving is not taking — a side takes ground by having a living unit on it with no living
+  enemy on it, so an objective must be *cleared*. Walking off does not hand it back, which is
+  what makes holding worth doing.
+- **`DestroyEnemy` measures against STARTING strength, captured once at construction.** Against
+  a side's current total a force can never fall below a share of itself and the condition never
+  fires.
+- **Victory precedence is a `Priority` field, ties broken by authored list order.** Two
+  conditions can come true on the same evaluation, and "whichever the loop reached first" makes
+  the winner a function of list order. Evaluation tests every condition, not the first match.
+- **Evaluation runs every `EvaluationInterval` ticks, and that constant is not a setting** —
+  changing it changes when a hold duration is satisfied, which is an outcome, not a preference.
+- **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
+  queue state *and* the report log — a run that lands units correctly but reports
+  differently has diverged in what its commander knows, which is exactly what an AI will
+  act on.
+
+---
