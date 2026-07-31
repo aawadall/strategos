@@ -188,5 +188,81 @@ namespace Strategos.UI
                 return _halo;
             }
         }
+
+        /// <summary>
+        /// GLSL-style smoothstep: 0 below <paramref name="edge0"/>, 1 above
+        /// <paramref name="edge1"/>, smoothly interpolated between.
+        /// </summary>
+        /// <remarks>
+        /// **`Mathf.SmoothStep` is not this**, and the difference is silent. Unity's version
+        /// takes <c>(from, to, t)</c> and returns a smoothed interpolation *between from and
+        /// to* — so `Mathf.SmoothStep(0.77f, 0.83f, d)` returns about 0.8 for every d, never 0
+        /// and never 1. Used as an edge function it yields a nearly constant value rather than
+        /// a transition, which for an alpha mask means a shape that is drawn, positioned and
+        /// sized correctly and is invisible.
+        /// </remarks>
+        private static float Edge(float edge0, float edge1, float x)
+        {
+            float t = Mathf.Clamp01((x - edge0) / Mathf.Max(1e-6f, edge1 - edge0));
+            return t * t * (3f - 2f * t);
+        }
+
+        private static Sprite _objectiveRing;
+
+        /// <summary>
+        /// A hollow ring marking ground worth taking, drawn white so Image.color can tint it.
+        /// </summary>
+        /// <remarks>
+        /// Hollow because it lies over terrain the player still has to read; a filled disc the
+        /// size of an objective hides the ground it is asking them to take.
+        ///
+        /// Drawn rather than typed: the bundled atlas has no geometric glyphs and would render
+        /// `○` as a tofu box. Same reason the dropdown arrow and selection brackets are here.
+        /// </remarks>
+        public static Sprite ObjectiveRing
+        {
+            get
+            {
+                if (_objectiveRing != null) return _objectiveRing;
+
+                const int s = 256;
+                var tex = new Texture2D(s, s, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    name = "ObjectiveRing",
+                };
+
+                var px = new Color32[s * s];
+                float centre = (s - 1) * 0.5f;
+
+                // Feathered both sides so the ring does not alias into a dotted circle when
+                // the card is zoomed out.
+                // Band as a fraction of the radius. Generous on purpose: a hairline ring is
+                // invisible at map scale, and this is a boundary the player has to find at a
+                // glance rather than a precise measurement.
+                const float inner = 0.88f;
+                const float outer = 0.97f;
+                const float feather = 0.03f;
+
+                for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float dx = (x - centre) / centre;
+                    float dy = (y - centre) / centre;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    float a = Edge(inner - feather, inner + feather, d) *
+                              (1f - Edge(outer - feather, outer + feather, d));
+
+                    px[y * s + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+
+                tex.SetPixels32(px);
+                tex.Apply(false, false);
+                _objectiveRing = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f));
+                return _objectiveRing;
+            }
+        }
     }
 }

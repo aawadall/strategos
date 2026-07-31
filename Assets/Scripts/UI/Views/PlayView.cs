@@ -462,6 +462,7 @@ namespace Strategos.UI.Views
             foreach (var unit in _scenario.Units)
                 _markers.Add(CreateMarker(unit));
 
+            BuildObjectiveMarkers();
             LayOutMarkers();
         }
 
@@ -545,6 +546,8 @@ namespace Strategos.UI.Views
             // symbol visibly offset. Shift by the pivot-to-frame-centre vector instead.
             Vector2 frameOffset = SymbolLayout.PivotToFrameCentre * SymbolSize;
 
+            LayOutObjectives();
+
             bool markedThisPass = false;
 
             foreach (var m in _markers)
@@ -607,6 +610,108 @@ namespace Strategos.UI.Views
             _detailsBody.lineSpacing = 12f;
 
             ClearSelection();
+        }
+
+        // ─── Objective markers ────────────────────────────────────────────────
+
+        private sealed class ObjectiveMarker
+        {
+            public Objective Objective;
+            public RectTransform Rect;
+            public Image Ring;
+            public TMP_Text Label;
+        }
+
+        private readonly List<ObjectiveMarker> _objectiveMarkers = new();
+
+        /// <summary>
+        /// Builds a ring per objective, under the same masked layer as the unit symbols.
+        /// </summary>
+        /// <remarks>
+        /// Without this an objective exists only in the status line, and a player cannot march
+        /// on ground they have no way to find — which makes the victory condition from #14
+        /// unplayable even though it evaluates correctly.
+        ///
+        /// First sibling, so rings sit behind unit symbols and order routes. An objective is
+        /// context for the units standing in it; a ring drawn over a symbol obscures the thing
+        /// being commanded.
+        /// </remarks>
+        private void BuildObjectiveMarkers()
+        {
+            foreach (var m in _objectiveMarkers) Destroy(m.Rect.gameObject);
+            _objectiveMarkers.Clear();
+
+            var victory = _sim?.Victory;
+            if (victory == null) return;
+
+            foreach (var objective in victory.Objectives)
+            {
+                var rt = CreateRect($"Obj_{objective.Id}", _unitLayer);
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(64f, 64f);
+                rt.SetAsFirstSibling();
+
+                var ring = rt.gameObject.AddComponent<Image>();
+                ring.sprite = UiSprites.ObjectiveRing;
+                ring.raycastTarget = false;
+                ring.color = Theme.InkMuted;
+
+                var label = CreateOverlayTmp("Name", rt, objective.Name, 10, Theme.Ink);
+                var lrt = label.rectTransform;
+                lrt.anchorMin = lrt.anchorMax = new Vector2(0.5f, 1f);
+                lrt.pivot = new Vector2(0.5f, 0f);
+                lrt.sizeDelta = new Vector2(220f, 14f);
+                lrt.anchoredPosition = new Vector2(0f, 2f);
+                label.alignment = TextAlignmentOptions.Bottom;
+                label.textWrappingMode = TextWrappingModes.NoWrap;
+                label.overflowMode = TextOverflowModes.Overflow;
+                label.raycastTarget = false;
+
+                _objectiveMarkers.Add(new ObjectiveMarker
+                {
+                    Objective = objective, Rect = rt, Ring = ring, Label = label,
+                });
+            }
+        }
+
+        /// <summary>
+        /// Places and tints each ring. Driven from LayOutMarkers so objectives follow pan, zoom
+        /// and re-crop exactly as unit symbols do.
+        /// </summary>
+        private void LayOutObjectives()
+        {
+            if (_card == null || _objectiveMarkers.Count == 0 || _sim?.Victory == null) return;
+
+            var victory = _sim.Victory;
+
+            for (int i = 0; i < _objectiveMarkers.Count; i++)
+            {
+                var m = _objectiveMarkers[i];
+                bool visible = _card.CellToLocal(m.Objective.Cell, out var centre);
+                m.Rect.gameObject.SetActive(visible);
+                if (!visible) continue;
+
+                // Radius measured over ONE cell and multiplied up, not by transforming the rim.
+                // CellToLocal reports false outside the crop, so measuring the rim directly
+                // yields nothing for any objective whose edge is off screen.
+                float radius = 0f;
+                if (_card.CellToLocal(m.Objective.Cell + new Vector2(1f, 0f), out var oneCell))
+                    radius = Mathf.Abs(oneCell.x - centre.x) * m.Objective.RadiusCells;
+
+                m.Rect.anchoredPosition = centre;
+                m.Rect.sizeDelta = new Vector2(radius * 2f, radius * 2f);
+
+                var owner = victory.OwnerOfIndex(i);
+                var side = owner.IsValid ? _scenario.FindSide(owner) : null;
+                var colour = side?.Colour ?? Theme.InkMuted;
+
+                m.Ring.color = new Color(colour.r, colour.g, colour.b, 0.9f);
+                m.Label.color = colour;
+                m.Label.text = side == null
+                    ? m.Objective.Name
+                    : $"{m.Objective.Name}  ·  {side.Name.ToUpperInvariant()}";
+            }
         }
 
         // ─── Outcome ──────────────────────────────────────────────────────────
