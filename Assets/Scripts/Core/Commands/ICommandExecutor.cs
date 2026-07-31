@@ -38,17 +38,14 @@ namespace Strategos.Commands
         public UnitId Attacker;
         public UnitId Defender;
 
-        /// <summary>The order this fire is being carried out under, for the report.</summary>
-        public ulong Command;
-
         /// <summary>
-        /// True on the first tick of this engagement.
+        /// The order this fire is being carried out under, for the report.
         ///
-        /// Reports are edges, not state — the same rule ContactTracker follows. An Engaged
-        /// report every tick would be twelve hundred messages for one twenty-minute firefight,
-        /// which drowns the log it is supposed to make readable.
+        /// Also how the simulation knows whether this engagement has reported opening fire
+        /// yet — reports are edges, not state, and an Engaged message every tick would be
+        /// twelve hundred of them for one twenty-minute firefight.
         /// </summary>
-        public bool Opening;
+        public ulong Command;
     }
 
     /// <summary>Everything an executor is allowed to see.</summary>

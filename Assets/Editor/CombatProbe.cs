@@ -41,6 +41,7 @@ namespace Strategos.Editor
             bad += CheckDeterminism(log);
             bad += CheckSimultaneity(log);
             bad += CheckStateChanges(log);
+            bad += CheckOutOfRangeDoesNothing(log);
             bad += CheckSuppressionDoesNotCancelOrders(log);
             bad += CheckEngagementRunsToConclusion(log);
 
@@ -428,6 +429,93 @@ namespace Strategos.Editor
                                $"{peak:0.0} and fell to {b.Suppression:0.0}, shooter ammunition " +
                                $"{ammoBefore:0.0}% -> {a.Supply.Ammunition:0.0}%, " +
                                $"{engaged} Engaged report");
+
+            return bad;
+        }
+
+        /// <summary>
+        /// An engage order given from outside the weapon's envelope does nothing at all, keeps
+        /// running, and reports opening fire on the first tick it actually shoots.
+        /// </summary>
+        /// <remarks>
+        /// Engage does not advance to contact, so ordering fire at a target 3 km away with a
+        /// 1200 m weapon is an easy thing for a player to do — and the interesting failure is
+        /// not the wasted order, it is what happens afterwards. Keying the opening report off
+        /// "first tick of the order" meant an engagement that started out of range could never
+        /// report at all, however long it later spent shooting. #13 decides things from these
+        /// reports, so one that silently never arrives is worse than one that repeats.
+        /// </remarks>
+        private static int CheckOutOfRangeDoesNothing(StringBuilder log)
+        {
+            int bad = 0;
+
+            var cat = UnitCatalogue.Default();
+            float envelope = cat.Get(UnitCatalogue.InfantryMech).EngagementRangeMetres;
+            float envelopeCells = envelope / Map().Header.MetresPerCell;
+
+            var sim = NewDuel(out var a, out var b, envelopeCells * 2f);
+            var order = sim.Issue(Command.Engage(Blue, a.Id, b.Id));
+
+            float ammoBefore = a.Supply.Ammunition;
+            sim.Step(30);
+
+            if (b.Strength < 100f || b.Suppression > 0f)
+            {
+                log.AppendLine($"  FAIL a target at {envelope * 2f:0} m took " +
+                               $"{100f - b.Strength:0.000} damage and {b.Suppression:0.0} " +
+                               $"suppression from a {envelope:0} m weapon");
+                bad++;
+            }
+
+            if (a.Supply.Ammunition < ammoBefore)
+            {
+                log.AppendLine("  FAIL ammunition was spent firing at nothing");
+                bad++;
+            }
+
+            foreach (var r in sim.ReportLog.Entries)
+                if (r.Kind == ReportKind.Engaged && r.Source == a.Id)
+                {
+                    log.AppendLine("  FAIL reported opening fire while out of range");
+                    bad++;
+                    break;
+                }
+
+            var queue = sim.QueueOf(a.Id);
+            if (queue == null || queue.IsEmpty)
+            {
+                log.AppendLine("  FAIL the order was dropped for being out of range; the " +
+                               "target may yet close");
+                return bad + 1;
+            }
+
+            // Close the range. The standing order must now start doing something, and must
+            // report that it has.
+            a.Cell = b.Cell + new Vector2(envelopeCells * 0.4f, 0f);
+            sim.Step(30);
+
+            bool opened = false;
+            foreach (var r in sim.ReportLog.Entries)
+                if (r.Kind == ReportKind.Engaged && r.Source == a.Id &&
+                    r.AboutCommand == order.Seq) opened = true;
+
+            if (b.Strength >= 100f)
+            {
+                log.AppendLine("  FAIL closing to inside the envelope produced no damage");
+                bad++;
+            }
+
+            if (!opened)
+            {
+                log.AppendLine("  FAIL an engagement that began out of range never reported " +
+                               "opening fire");
+                bad++;
+            }
+
+            if (bad == 0)
+                log.AppendLine($"  out of range: 30 ticks at {envelope * 2f:0} m cost nothing and " +
+                               $"said nothing; closing to {envelope * 0.4f:0} m took the target " +
+                               $"to {b.Strength:0.0}% and reported");
 
             return bad;
         }

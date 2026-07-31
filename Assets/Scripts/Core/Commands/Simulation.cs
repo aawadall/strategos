@@ -304,6 +304,24 @@ namespace Strategos.Commands
         private readonly List<EngagementResult> _shots = new();
 
         /// <summary>
+        /// Engage orders that have already reported opening fire, by command sequence.
+        /// </summary>
+        /// <remarks>
+        /// **The edge is the first tick that fire is actually delivered, not the first tick of
+        /// the order.** Those are the same thing only when the target starts in range. Engage
+        /// does not advance to contact, so an order given at 3 km with a 1200 m weapon spends
+        /// its opening ticks resolving as OutOfRange — and keying the report off
+        /// <c>TicksExecuting == 0</c> meant that engagement could never report at all, however
+        /// long it later spent shooting. #13 reads these reports to decide things, so a
+        /// silently missing one is worse than a duplicate.
+        ///
+        /// A HashSet is safe here for the same reason MoveToExecutor's route dictionary is:
+        /// membership is tested and the set is never iterated, so it cannot influence ordering.
+        /// It holds one entry per engage order ever issued — bounded by the command log.
+        /// </remarks>
+        private readonly HashSet<ulong> _openingReported = new();
+
+        /// <summary>
         /// Resolves every engagement declared this tick, then applies them all.
         ///
         /// TWO PASSES, AND IT MATTERS. Every shot is computed against the state at the start of
@@ -337,7 +355,7 @@ namespace Strategos.Commands
 
                 EngagementResolver.Apply(attacker, defender, shot);
 
-                if (shot.DidFire && intent.Opening)
+                if (shot.DidFire && _openingReported.Add(intent.Command))
                     Report(SituationReport.Engaged(attacker.Id, defender, Tick, intent.Command));
 
                 // Crossings, reported once each. State changes, not state.

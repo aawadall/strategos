@@ -61,7 +61,6 @@ namespace Strategos.Commands
                 Attacker = unit.Id,
                 Defender = against,
                 Command = entry.Command.Seq,
-                Opening = entry.TicksExecuting == 0,
             });
 
             // Running until the simulation says otherwise. It owns the reasons to stop —
