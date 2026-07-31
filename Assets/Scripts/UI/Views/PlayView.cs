@@ -22,6 +22,7 @@ using UnityEngine.UI;
 using Strategos.Commands;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
+using Strategos.Objectives;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -422,6 +423,8 @@ namespace Strategos.UI.Views
 
             // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
             // only subscriber allowed to mutate anything.
+            _outcomeShown = false;
+            if (_clockLabel != null) _clockLabel.color = Theme.InkMuted;
             _feed.Clear();
             _sim.Reports.Subscribe("ui-feed", 100, OnReport);
             RefreshFeed();
@@ -604,6 +607,53 @@ namespace Strategos.UI.Views
             _detailsBody.lineSpacing = 12f;
 
             ClearSelection();
+        }
+
+        // ─── Outcome ──────────────────────────────────────────────────────────
+
+        private bool _outcomeShown;
+
+        /// <summary>Objective control, appended to the status line while the game is running.</summary>
+        private string DescribeObjectives()
+        {
+            var victory = _sim?.Victory;
+            if (victory == null || victory.Objectives.Count == 0) return string.Empty;
+
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < victory.Objectives.Count; i++)
+            {
+                var owner = victory.OwnerOfIndex(i);
+                string held = owner.IsValid
+                    ? (_scenario.FindSide(owner)?.Name ?? owner.ToString())
+                    : "NEUTRAL";
+                sb.Append("   ·   ").Append(victory.Objectives[i].Name).Append(": ").Append(held);
+            }
+            return sb.ToString().ToUpperInvariant();
+        }
+
+        /// <summary>
+        /// Replaces the status line with the result, once.
+        ///
+        /// Guarded because <c>AdvanceSimulation</c> runs every frame and a decided scenario
+        /// stays decided — without it this would rewrite the same string for ever.
+        /// </summary>
+        private void ShowOutcome()
+        {
+            if (_outcomeShown || _sim?.Victory == null) return;
+            _outcomeShown = true;
+
+            var outcome = _sim.Victory.Outcome;
+            string winner = outcome.IsDraw
+                ? "DRAW"
+                : (_scenario.FindSide(outcome.Winner)?.Name ?? outcome.Winner.ToString())
+                  .ToUpperInvariant() + " WINS";
+
+            _clockLabel.text = $"T+{outcome.Tick:0000}   ·   {winner}   ·   {outcome.Summary}";
+            _clockLabel.color = Theme.Alert;
+
+            if (_runToggle != null) _runToggle.isOn = false;
+
+            Debug.Log($"[PlayView] scenario decided: {outcome}");
         }
 
         // ─── Situation feed ───────────────────────────────────────────────────
@@ -800,9 +850,14 @@ namespace Strategos.UI.Views
                 _tickAccumulator -= Simulation.SecondsPerTick;
                 _sim.Step();
                 steps++;
+
+                // Stop on the tick it was decided rather than finishing the banked batch —
+                // at x300 that would run several more minutes of a scenario already over.
+                if (_sim.IsOver) { _running = false; _tickAccumulator = 0f; break; }
             }
 
             if (steps > 0) RefreshClock();
+            if (_sim.IsOver) ShowOutcome();
         }
 
         private void OnSpeedChanged()
@@ -826,7 +881,7 @@ namespace Strategos.UI.Views
             _clockLabel.text =
                 $"T+{_sim.Tick:0000}   ·   {(_running ? $"x{_timeScale:0}" : "PAUSED")}   ·   " +
                 $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS   ·   " +
-                $"{_sim.ReportLog.Count} REPORTS";
+                $"{_sim.ReportLog.Count} REPORTS{DescribeObjectives()}";
 
             // The details panel shows a live plan, so keep it current while one is selected.
             if (_selection.Count > 0) RefreshSelection();

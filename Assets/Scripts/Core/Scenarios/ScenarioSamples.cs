@@ -9,6 +9,7 @@
 using UnityEngine;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
+using Strategos.Objectives;
 using Strategos.Units;
 
 namespace Strategos.Scenarios
@@ -80,6 +81,51 @@ namespace Strategos.Scenarios
             Add(s, red.Id, 6, LandEntityCode.Artillery, IconDecorator.VarStandard,
                 Echelon.Company, new Vector2(186f, 150f), "BTY/2 MRR", "2 MRR",
                 UnitCatalogue.Artillery, strength: 90);
+
+            // One objective, roughly equidistant, so the meeting engagement has somewhere to
+            // meet. Neutral at the start: neither side is defending, which is what makes it a
+            // meeting engagement rather than an attack.
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "THE CROSSROADS",
+                Cell = new Vector2(120f, 124f),
+                RadiusCells = 10f,
+                InitialOwner = SideId.None,
+            });
+
+            // Four ways this ends. Holding is worth more than attrition, so a side that takes
+            // the ground and keeps it beats one that merely survives — hence the priorities.
+            const int TenMinutes = 600;
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
+                Description = "BLUFOR held the crossroads for ten minutes.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = red.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
+                Description = "OPFOR held the crossroads for ten minutes.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = blue.Id, Priority = 5,
+                StrengthThresholdPercent = 25f,
+                Description = "OPFOR was rendered combat ineffective.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = red.Id, Priority = 5,
+                StrengthThresholdPercent = 25f,
+                Description = "BLUFOR was rendered combat ineffective.",
+            });
+
+            // One hour. Undecided at the deadline is a draw, which is a real outcome here:
+            // two companies that never closed have not won anything.
+            s.TimeLimitTicks = 3600;
 
             return s;
         }

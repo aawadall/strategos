@@ -38,6 +38,7 @@ using System.Text;
 using UnityEngine;
 using Strategos.Combat;
 using Strategos.Maps;
+using Strategos.Objectives;
 using Strategos.Reports;
 using Strategos.Scenarios;
 using Strategos.Units;
@@ -81,6 +82,18 @@ namespace Strategos.Commands
         public int ActiveContacts => _contacts?.ActiveContacts ?? 0;
 
         /// <summary>
+        /// Objective control and victory, or null for a scenario that cannot be won.
+        ///
+        /// Built from the scenario when it declares objectives or conditions, and absent
+        /// otherwise — a sandbox is a scenario nobody is trying to win, and it should not pay
+        /// for an evaluator that can never fire.
+        /// </summary>
+        public VictoryEvaluator Victory { get; }
+
+        /// <summary>True once a side has won or the scenario has timed out.</summary>
+        public bool IsOver => Victory != null && Victory.IsDecided;
+
+        /// <summary>
         /// Autonomous reaction, or null for a simulation where nothing acts on its own.
         /// </summary>
         /// <remarks>
@@ -114,6 +127,10 @@ namespace Strategos.Commands
             // Indexed by position in _units, so it must be built after that list is filled.
             _contacts = new ContactTracker(scenario, _units);
             _publishReport = r => Report(r);
+
+            if (scenario != null && (scenario.Objectives.Count > 0 || scenario.Victory.Count > 0))
+                Victory = new VictoryEvaluator(scenario.Objectives, scenario.Victory, _units,
+                    scenario.TimeLimitTicks);
 
             // The unit layer is the only subscriber that mutates anything — delivery rule 3.
             // Order 0 so it sees commands before any observer does.
@@ -221,6 +238,9 @@ namespace Strategos.Commands
             // After movement: a contact should name where the subject ended the tick.
             // Cached delegate, not a lambda — this runs every step of every replay.
             _contacts?.Sweep(Map, Catalogue, Tick, _publishReport);
+
+            // Last, so victory is judged on the state the tick actually ended in.
+            Victory?.Evaluate(_units, Tick);
         }
 
         public void Step(int count)
@@ -462,6 +482,8 @@ namespace Strategos.Commands
         {
             var sb = new StringBuilder();
             sb.Append("t").Append(Tick).Append('|').Append(ReportLog.Signature()).Append('|');
+            Victory?.AppendSignature(sb);
+            sb.Append('|');
 
             for (int i = 0; i < _units.Count; i++)
             {
