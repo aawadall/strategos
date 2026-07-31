@@ -53,3 +53,17 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
 `importPackageCompleted` callback instead (`TmpResources.ImportBatch`).
 
 ---
+
+## C# language surface
+
+**`init`-only setters do not compile.** Unity's scripting profile does not define
+`System.Runtime.CompilerServices.IsExternalInit`, so `public string Code { get; init; }`
+fails with `CS0518: Predefined type ... is not defined or imported` — a confusing error
+that names a type nobody wrote. Use `{ get; set; }` and treat the property as write-once
+by convention, or add the shim type yourself. `Ttp` takes the first option.
+
+The same missing-shim problem takes out `record` and `with` expressions, for the same
+reason and with the same error.
+
+---
+

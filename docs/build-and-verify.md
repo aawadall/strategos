@@ -32,7 +32,7 @@ before capturing** — a lingering window at the same coordinates will be photog
 instead.
 
 `-View <key>` selects a view without driving the UI: `explore`, `symbols`, `map`,
-`scenario`, `builder`. Add `-view3d` (passed straight to the player) to open the
+`scenario`, `ttp`, `builder`. Add `-view3d` (passed straight to the player) to open the
 scenario preview in 3D. `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
 which is the cheap check that the shell came up at all.
 

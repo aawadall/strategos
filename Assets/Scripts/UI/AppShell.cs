@@ -71,6 +71,7 @@ namespace Strategos.UI
             _views.Add<PlayView>(v => ((PlayView)v).Session = _session);
             _views.Add<ExplorerView>(v => ((ExplorerView)v).Session = _session);
             _views.Add<ScenarioSetupView>(v => ((ScenarioSetupView)v).Session = _session);
+            _views.Add<TtpView>();
             _views.Add<SymbolBuilderPanel>();
 
             // Canvas sizes have to be settled before a view measures its own rects.
