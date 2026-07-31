@@ -110,6 +110,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ReactionProbe.Run` | Each ROE, reflex preemption, break contact, fairness |
 | `Strategos.Editor.VictoryProbe.Run` | Objective control, hold duration, draws, precedence |
 | `Strategos.Editor.DirectorProbe.Run` | An unattended scenario reaches a decision |
+| `Strategos.Editor.DoctrineProbe.Run` | Drill pack round trip, and the T/P/U matrix |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -133,6 +134,20 @@ Player log (**always check after a UI change**, see UI gotchas below):
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
-`Write Sample Scenarios`, `Import TMP Essential Resources`.
+`Write Sample Scenarios`, `Write Sample Drills`, `Import TMP Essential Resources`.
+
+**Drills are content, not code.** `DoctrineSamples` holds the shipped set in C# and
+`Strategos > Write Sample Drills` serialises it to `Assets/Resources/Doctrine/`; the app
+reads the JSON. Editing a drill therefore needs no recompile — but **changing
+`DoctrineSamples` without rewriting the pack changes nothing in the player**, which is the
+one trap in this arrangement. `DoctrineProbe` catches the reverse case: it asserts the pack
+loads from Resources rather than from the in-code fallback, because the fallback is the same
+drills and is invisible on screen.
+
+`DoctrineProbe`'s readiness table is the point of it, as `CombatProbe`'s matrix is. It prints
+two: the sample force, which is all fresh companies and platoons and therefore all `T`, and a
+constructed matrix over echelon and condition which is the one that can actually fail — a
+matrix that never produces one of the three ratings is not exercising the thresholds, whatever
+it prints.
 
 ---

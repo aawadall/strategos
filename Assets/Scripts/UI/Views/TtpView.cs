@@ -24,6 +24,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Doctrine;
+using Strategos.NatoSymbols;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -77,7 +78,11 @@ namespace Strategos.UI.Views
         private RectTransform _pageRoot;
         private RectTransform _textColumn;
         private RawImage _paper;
+        private RectTransform _figurePage;
+        private RawImage _figurePaper;
         private RectTransform _indexRoot;
+        private RectTransform _readinessRoot;
+        private AppSession _session;
 
         private Ttp _current;
 
@@ -90,8 +95,14 @@ namespace Strategos.UI.Views
 
         private readonly Dictionary<string, Image> _indexRows = new();
 
+        /// <summary>Facing-page sheets, one per drill. Owned and destroyed here, like _pages.</summary>
+        private readonly Dictionary<string, Texture2D> _figures = new();
+
         public string Title => "DRILLS";
         public string Key => "ttp";
+
+        /// <summary>Read-only here: the binder rates units, it never orders them.</summary>
+        public AppSession Session { set => _session = value; }
 
         // ─── IAppView ─────────────────────────────────────────────────────────
 
@@ -110,7 +121,9 @@ namespace Strategos.UI.Views
         private void OnDestroy()
         {
             foreach (var kv in _pages) if (kv.Value != null) Destroy(kv.Value);
+            foreach (var kv in _figures) if (kv.Value != null) Destroy(kv.Value);
             _pages.Clear();
+            _figures.Clear();
         }
 
         // ─── UI ───────────────────────────────────────────────────────────────
@@ -146,25 +159,25 @@ namespace Strategos.UI.Views
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.MiddleCenter;
 
-            // A page keeps a sheet's proportions rather than filling the stage. A binder page
-            // stretched to whatever the window happens to be stops reading as paper, and the
-            // grain would be scaled differently on each axis.
-            var holder = CreateRect("PageHolder", stage);
-            var hle = holder.gameObject.AddComponent<LayoutElement>();
-            hle.preferredHeight = PageDisplayHeight;
-            hle.flexibleHeight = 0f;
+            // A SPREAD, NOT A STACK. A binder open on a desk shows two facing pages, and
+            // text and figure are wanted at the same time — a drill card is consulted
+            // mid-decision, so making the reader flip between what a drill is and what it
+            // looks like costs exactly the glance the codes exist to save.
+            var spread = CreateRect("Spread", stage);
+            var sle = spread.gameObject.AddComponent<LayoutElement>();
+            sle.preferredHeight = PageDisplayHeight;
+            sle.flexibleHeight = 0f;
 
-            _pageRoot = CreateRect("Page", holder);
-            _pageRoot.anchorMin = new Vector2(0.5f, 0.5f);
-            _pageRoot.anchorMax = new Vector2(0.5f, 0.5f);
-            _pageRoot.pivot = new Vector2(0.5f, 0.5f);
+            var sh = spread.gameObject.AddComponent<HorizontalLayoutGroup>();
+            sh.spacing = 10;
+            sh.childControlWidth = true;
+            sh.childControlHeight = true;
+            sh.childForceExpandWidth = false;
+            sh.childForceExpandHeight = true;
+            sh.childAlignment = TextAnchor.MiddleCenter;
 
-            var fitter = _pageRoot.gameObject.AddComponent<AspectRatioFitter>();
-            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-            fitter.aspectRatio = PageWidth / (float)PageHeight;
-
-            _paper = _pageRoot.gameObject.AddComponent<RawImage>();
-            _paper.color = Color.white;
+            _pageRoot = MakePage(spread, "Page", out _paper);
+            _figurePage = MakePage(spread, "Figure", out _figurePaper);
 
             _textColumn = CreateRect("Text", _pageRoot);
             _textColumn.anchorMin = new Vector2(TextInsetX, TextBottom);
@@ -179,6 +192,34 @@ namespace Strategos.UI.Views
             tv.childForceExpandWidth = true;
             tv.childForceExpandHeight = false;
             tv.childAlignment = TextAnchor.UpperLeft;
+        }
+
+        /// <summary>
+        /// One sheet of the spread: aspect-locked, its own paper, sized by the row.
+        /// </summary>
+        /// <remarks>
+        /// Aspect-locked rather than stretched. A page stretched to whatever the window
+        /// happens to be stops reading as paper, and the grain would be scaled differently on
+        /// each axis — the same reason MapSheetCard crops instead of stretching.
+        /// </remarks>
+        private static RectTransform MakePage(Transform parent, string name, out RawImage paper)
+        {
+            var holder = CreateRect($"{name}Holder", parent);
+            var le = holder.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = PageDisplayHeight * (PageWidth / (float)PageHeight);
+            le.preferredHeight = PageDisplayHeight;
+            le.flexibleWidth = 0f;
+
+            var page = CreateRect(name, holder);
+            Stretch(page);
+
+            var fitter = page.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            fitter.aspectRatio = PageWidth / (float)PageHeight;
+
+            paper = page.gameObject.AddComponent<RawImage>();
+            paper.color = Color.white;
+            return page;
         }
 
         private void BuildRail(Transform root)
@@ -234,6 +275,122 @@ namespace Strategos.UI.Views
                 ContentSizeFitter.FitMode.PreferredSize;
 
             BuildIndex();
+
+            AddSection(content, "READINESS");
+            var rhint = CreateTmp("RHint", content,
+                "T trained  ·  P needs practice  ·  U untrained." +
+                "\nRated against the force loaded in PLAY.",
+                10, FontStyles.Italic);
+            rhint.color = Theme.InkMuted;
+            rhint.GetComponent<LayoutElement>().preferredHeight = 30;
+
+            _readinessRoot = CreateRect("Readiness", content);
+            var rv = _readinessRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+            rv.spacing = 2;
+            rv.childControlWidth = true;
+            rv.childControlHeight = true;
+            rv.childForceExpandWidth = true;
+            rv.childForceExpandHeight = false;
+            _readinessRoot.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+        }
+
+        // ─── Readiness ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// How the loaded force rates against the open drill.
+        /// </summary>
+        /// <remarks>
+        /// A drill is something a unit *trains on*, so "can this unit actually do 1A right
+        /// now" is the question that turns the binder from a glossary into a readiness view —
+        /// which is a real command-post function rather than a flourish.
+        ///
+        /// Read from the live simulation through <see cref="AppSession.Simulation"/>, not from
+        /// a second copy of the scenario. A copy would be frozen at load time, so a unit shot
+        /// to pieces would still read as trained — the mistake the ORBAT list already made
+        /// once by showing load-time positions while a unit was under way.
+        /// </remarks>
+        private void RefreshReadiness(Ttp drill)
+        {
+            if (_readinessRoot == null) return;
+
+            for (int i = _readinessRoot.childCount - 1; i >= 0; i--)
+                Destroy(_readinessRoot.GetChild(i).gameObject);
+
+            var sim = _session?.Simulation;
+            if (sim == null)
+            {
+                // Honest empty state. A player who has never opened PLAY has no force to
+                // rate, and inventing one would be worse than saying so.
+                AddReadinessNote("No force loaded.  Open PLAY first.");
+                return;
+            }
+
+            foreach (var unit in sim.Units)
+                AddReadinessRow(drill, unit);
+        }
+
+        private void AddReadinessNote(string text)
+        {
+            var row = CreateRect("RNote", _readinessRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
+            row.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            var t = CreateTmp("T", row, text, 11, FontStyles.Italic, withLayout: false);
+            Stretch(t.rectTransform);
+            t.rectTransform.offsetMin = new Vector2(10, 0);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.color = Theme.InkMuted;
+        }
+
+        private void AddReadinessRow(Ttp drill, Strategos.Units.UnitInstance unit)
+        {
+            var assessment = TtpReadiness.Assess(drill, unit);
+
+            var row = CreateRect($"R_{unit.Id}", _readinessRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+            row.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            // The rating in a filled chip, because T/P/U is the thing being scanned down the
+            // column and a letter alone at this size does not carry across a rail.
+            var chip = CreateRect("Chip", row);
+            chip.anchorMin = chip.anchorMax = new Vector2(0f, 0.5f);
+            chip.pivot = new Vector2(0f, 0.5f);
+            chip.sizeDelta = new Vector2(26, 20);
+            chip.anchoredPosition = new Vector2(10, 0);
+            chip.gameObject.AddComponent<Image>().color = assessment.Rating switch
+            {
+                DrillRating.Trained => Theme.Accent,
+                DrillRating.Practice => Theme.InkMuted,
+                _ => Theme.Alert,
+            };
+
+            var code = CreateTmp("C", chip, assessment.Code, 12, FontStyles.Bold,
+                withLayout: false);
+            Stretch(code.rectTransform);
+            code.alignment = TextAlignmentOptions.Center;
+            code.color = Theme.AccentText;
+
+            var name = CreateTmp("N", row,
+                string.IsNullOrEmpty(unit.Designation) ? unit.Id.ToString() : unit.Designation,
+                11, FontStyles.Bold, withLayout: false);
+            name.rectTransform.anchorMin = new Vector2(0, 0.45f);
+            name.rectTransform.anchorMax = new Vector2(1, 1f);
+            name.rectTransform.offsetMin = new Vector2(44, 0);
+            name.rectTransform.offsetMax = new Vector2(-8, 0);
+            name.alignment = TextAlignmentOptions.MidlineLeft;
+            name.color = Theme.Ink;
+
+            var why = CreateTmp("W", row, assessment.Reason, 9, FontStyles.Normal,
+                withLayout: false);
+            why.rectTransform.anchorMin = new Vector2(0, 0f);
+            why.rectTransform.anchorMax = new Vector2(1, 0.45f);
+            why.rectTransform.offsetMin = new Vector2(44, 0);
+            why.rectTransform.offsetMax = new Vector2(-8, 0);
+            why.alignment = TextAlignmentOptions.MidlineLeft;
+            why.color = Theme.InkMuted;
+            why.textWrappingMode = TextWrappingModes.NoWrap;
+            why.overflowMode = TextOverflowModes.Ellipsis;
         }
 
         private void BuildIndex()
@@ -282,8 +439,8 @@ namespace Strategos.UI.Views
                 name.color = Theme.Ink;
 
                 var sub = CreateTmp("S", row,
-                    $"{drill.Echelon.ToUpperInvariant()}   ·   {drill.Steps.Count} STEPS   ·   " +
-                    $"{drill.MechanisedSteps} EXECUTABLE",
+                    $"{drill.EchelonName.ToUpperInvariant()}   ·   {drill.Steps.Length} STEPS" +
+                    $"   ·   {drill.MechanisedSteps} EXECUTABLE",
                     9, FontStyles.Normal, withLayout: false);
                 sub.rectTransform.anchorMin = new Vector2(0, 0f);
                 sub.rectTransform.anchorMax = new Vector2(1, 0.45f);
@@ -304,6 +461,8 @@ namespace Strategos.UI.Views
             // that is what decides how much of the sheet has to be held clear of stains.
             BuildPage(drill);
             _paper.texture = PageFor(drill, _contentHeight);
+            _figurePaper.texture = FigureFor(drill);
+            RefreshReadiness(drill);
 
             foreach (var kv in _indexRows)
                 if (kv.Value != null)
@@ -357,6 +516,58 @@ namespace Strategos.UI.Views
         /// </summary>
         private float _contentHeight;
 
+        /// <summary>
+        /// The facing sheet: paper with the drill's figure drawn into it.
+        /// </summary>
+        /// <remarks>
+        /// Composited into the paper rather than laid over it as a second image. A figure with
+        /// its own transparent texture would need another RawImage, its own disposal and its
+        /// own resize path, and would sit *on* the page rather than being printed on it — the
+        /// grain would run under the ink instead of through it.
+        ///
+        /// Seeded differently from the text page so the two sheets of a spread are not twins;
+        /// two identical stain patterns side by side read as a tiling bug.
+        /// </remarks>
+        private Texture2D FigureFor(Ttp drill)
+        {
+            if (_figures.TryGetValue(drill.Code, out var cached) && cached != null) return cached;
+
+            var area = new RectInt(
+                Mathf.RoundToInt(PageWidth * 0.08f), Mathf.RoundToInt(PageHeight * 0.10f),
+                Mathf.RoundToInt(PageWidth * 0.84f), Mathf.RoundToInt(PageHeight * 0.80f));
+
+            var tex = PaperTexture.Create(PageWidth, PageHeight,
+                PaperTexture.SeedFor(drill.Code + "/figure"), PaperOptions.Used,
+                new List<RectInt> { area });
+
+            var px = tex.GetPixels32();
+
+            if (drill.Diagram != null)
+            {
+                TtpDiagramRenderer.Render(drill.Diagram, px, PageWidth, PageHeight, area,
+                    C32(Theme.Ink), C32(Theme.Alert), C32(Theme.InkMuted));
+            }
+            else
+            {
+                // Said, not left blank. A drill with no figure is legitimate — some geometry
+                // is a line and a sentence says more — but an empty sheet reads as a failure
+                // to draw one.
+                ProceduralDrawUtil.DrawText(px, PageWidth, PageHeight,
+                    PageWidth / 2, PageHeight / 2, "NO FIGURE FOR THIS DRILL",
+                    C32(Theme.InkMuted), 3, TextAlign.Center);
+            }
+
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+
+            _figures[drill.Code] = tex;
+            return tex;
+        }
+
+        private static Color32 C32(Color c) => new(
+            (byte)(Mathf.Clamp01(c.r) * 255f), (byte)(Mathf.Clamp01(c.g) * 255f),
+            (byte)(Mathf.Clamp01(c.b) * 255f), 255);
+
         private void BuildPage(Ttp drill)
         {
             for (int i = _textColumn.childCount - 1; i >= 0; i--)
@@ -366,7 +577,7 @@ namespace Strategos.UI.Views
 
             AddLine($"{drill.Code}   {drill.Name.ToUpperInvariant()}", 24, FontStyles.Bold,
                 Theme.Ink, 34, spacingAfter: 2);
-            AddLine(drill.Echelon.ToUpperInvariant(), 11, FontStyles.Bold, Theme.Accent, 18,
+            AddLine(drill.EchelonName.ToUpperInvariant(), 11, FontStyles.Bold, Theme.Accent, 18,
                 spacingAfter: 12);
 
             AddLine(drill.Summary, 14, FontStyles.Normal, Theme.Ink, 24, spacingAfter: 4);
@@ -375,12 +586,12 @@ namespace Strategos.UI.Views
             AddLine($"NOT WHEN:  {drill.NotWhen}", 12, FontStyles.Italic, Theme.Alert, 22,
                 spacingAfter: 14);
 
-            for (int i = 0; i < drill.Steps.Count; i++)
+            for (int i = 0; i < drill.Steps.Length; i++)
                 AddStep(i + 1, drill.Steps[i]);
 
             AddLine(string.Empty, 8, FontStyles.Normal, Theme.InkMuted, 10, spacingAfter: 6);
             AddLine(
-                $"{drill.MechanisedSteps} of {drill.Steps.Count} steps have an executor. " +
+                $"{drill.MechanisedSteps} of {drill.Steps.Length} steps have an executor. " +
                 "The rest are doctrine\nthe simulation does not model yet.",
                 10, FontStyles.Italic, Theme.InkMuted, 26);
         }

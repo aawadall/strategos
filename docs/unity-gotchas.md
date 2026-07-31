@@ -59,8 +59,12 @@ must *not* use `-quit` or the editor exits before the import runs; exit from the
 **`init`-only setters do not compile.** Unity's scripting profile does not define
 `System.Runtime.CompilerServices.IsExternalInit`, so `public string Code { get; init; }`
 fails with `CS0518: Predefined type ... is not defined or imported` — a confusing error
-that names a type nobody wrote. Use `{ get; set; }` and treat the property as write-once
-by convention, or add the shim type yourself. `Ttp` takes the first option.
+that names a type nobody wrote. Use `{ get; set; }` and treat the member as write-once by
+convention, or add the shim type yourself.
+
+Note that anything *persisted* has to be a public field anyway: `FieldsOnlyResolver`
+serialises fields and ignores properties, so a property on a saved type silently writes
+nothing. `Ttp` is fields throughout for that reason, which sidesteps `init` entirely.
 
 The same missing-shim problem takes out `record` and `with` expressions, for the same
 reason and with the same error.

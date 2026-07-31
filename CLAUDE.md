@@ -75,11 +75,12 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Direction/` | `SideDirector` — side-level intent for an unplayed side |
 | `Assets/Scripts/Core/Objectives/` | Objectives, victory conditions, the evaluator |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
-| `Assets/Scripts/Core/Doctrine/` | TTPs — coded drills and the shipped library |
+| `Assets/Scripts/Core/Doctrine/` | TTPs — coded drills, figures, readiness, pack IO |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |
 | `Assets/Resources/Scenarios/` | Shipped scenario JSON |
+| `Assets/Resources/Doctrine/` | Shipped doctrine packs — drills as JSON |
 | `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, probes |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
 
