@@ -159,6 +159,12 @@ namespace Strategos.Units
         /// <summary>What the unit is doing, which modifies what it can do.</summary>
         public Posture Posture = Posture.Halted;
 
+        /// <summary>
+        /// Whether this unit may start a fight on its own. Defaults to returning fire, which
+        /// is the setting that does the least surprising thing.
+        /// </summary>
+        public RulesOfEngagement Roe = RulesOfEngagement.ReturnFire;
+
         /// <summary>Consumables remaining, as percentages of a full load.</summary>
         public SupplyLevels Supply = SupplyLevels.Full;
 
