@@ -421,6 +421,17 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new MoveToExecutor());
             _sim.AddExecutor(new EngageExecutor());
             _sim.EnableReactions();
+
+            // Everything the player does not command gets its own intent, so the scenario is a
+            // contest rather than a diorama. With no player side declared, nothing is directed
+            // and both sides remain fully playable — a hot-seat game.
+            if (_scenario.PlayerSide.IsValid)
+            {
+                var opposing = new List<SideId>();
+                foreach (var side in _scenario.Sides)
+                    if (side.Id != _scenario.PlayerSide) opposing.Add(side.Id);
+                _sim.EnableDirector(opposing);
+            }
             _tickAccumulator = 0f;
 
             // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
@@ -988,7 +999,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
 
             var unit = _scenario.FindUnit(_selection[0]);
-            if (unit == null) return;
+            if (unit == null || !IsPlayerCommanded(unit)) return;
 
             var actor = ActorId.ForSide(unit.Side);
 
@@ -1010,6 +1021,21 @@ namespace Strategos.UI.Views
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
         }
+
+        /// <summary>
+        /// Whether the player may give this unit orders.
+        /// </summary>
+        /// <remarks>
+        /// Selection is deliberately *not* restricted — inspecting an enemy is useful and
+        /// harmless, and what a player is allowed to know is the fog-of-war question rather
+        /// than this one. Only issuing orders is gated.
+        ///
+        /// A scenario with no declared player side leaves everything commandable, which is how
+        /// a hot-seat game is spelled.
+        /// </remarks>
+        private bool IsPlayerCommanded(UnitInstance unit) =>
+            _scenario == null || !_scenario.PlayerSide.IsValid ||
+            unit.Side == _scenario.PlayerSide;
 
         private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
             Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
@@ -1154,7 +1180,7 @@ namespace Strategos.UI.Views
         {
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
-            if (unit == null) return;
+            if (unit == null || !IsPlayerCommanded(unit)) return;
             _sim.Issue(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
         }
 
@@ -1196,6 +1222,13 @@ namespace Strategos.UI.Views
             string more = q.Count > 1 ? $"   (+{q.Count - 1} QUEUED)" : string.Empty;
             return $"{head.Status.ToString().ToUpperInvariant()}: {what}{more}";
         }
+
+        /// <summary>
+        /// Shown instead of a plan for a unit the player cannot order. Without it, right-click
+        /// doing nothing reads as a broken control rather than as a rule.
+        /// </summary>
+        private string DescribeCommandability(UnitInstance unit) =>
+            IsPlayerCommanded(unit) ? string.Empty : "   ·   NOT UNDER YOUR COMMAND";
 
         /// <summary>
         /// An engage order, with the range to the target and whether it is inside the weapon's
@@ -1270,7 +1303,7 @@ namespace Strategos.UI.Views
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
                         $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG\n" +
-                        DescribePlan(unit);
+                        DescribePlan(unit) + DescribeCommandability(unit);
                 }
             }
 

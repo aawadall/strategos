@@ -69,6 +69,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -98,6 +99,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -127,6 +129,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -156,6 +159,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -185,6 +189,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -214,6 +219,7 @@
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Posture": "Halted",
+      "Roe": "ReturnFire",
       "Supply": {
         "Rations": 100.0,
         "Water": 100.0,
@@ -222,13 +228,16 @@
       }
     }
   ],
+  "PlayerSide": {
+    "Value": 1
+  },
   "Objectives": [
     {
       "Id": 1,
       "Name": "THE CROSSROADS",
       "Cell": {
-        "x": 120.0,
-        "y": 124.0
+        "x": 119.0,
+        "y": 123.0
       },
       "RadiusCells": 10.0,
       "InitialOwner": {

@@ -51,6 +51,18 @@ namespace Strategos.Scenarios
         public List<UnitInstance> Units = new();
 
         /// <summary>
+        /// The side the player commands. <see cref="SideId.None"/> means every side is
+        /// playable, which is how a hot-seat or an observer session is spelled.
+        /// </summary>
+        /// <remarks>
+        /// Until this existed the player could select and order *any* unit on the map,
+        /// including the enemy's — not a bug so much as a concept that was never introduced,
+        /// and it meant a scenario had no adversary at all. #36 will extend this with the
+        /// echelon the player occupies, which decides what they can see and address.
+        /// </remarks>
+        public SideId PlayerSide;
+
+        /// <summary>
         /// Ground worth taking. Definitions only — who holds what is runtime state and lives
         /// in <see cref="Objectives.VictoryEvaluator"/>.
         /// </summary>
@@ -219,6 +231,9 @@ namespace Strategos.Scenarios
             foreach (var s in Sides)
                 if (CountUnitsOf(s.Id) == 0)
                     problems.Add($"Side {s.Id} '{s.Name}' has no units.");
+
+            if (PlayerSide.IsValid && FindSide(PlayerSide) == null)
+                problems.Add($"Scenario is played as {PlayerSide}, which does not exist.");
 
             ValidateVictory(problems);
 
