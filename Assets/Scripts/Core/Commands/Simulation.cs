@@ -93,6 +93,20 @@ namespace Strategos.Commands
         /// <summary>True once a side has won or the scenario has timed out.</summary>
         public bool IsOver => Victory != null && Victory.IsDecided;
 
+        /// <summary>
+        /// Autonomous reaction, or null for a simulation where nothing acts on its own.
+        /// </summary>
+        /// <remarks>
+        /// Opt-in rather than always present, because most probes want a world where units do
+        /// exactly what they were told and nothing else — a firefight that starts itself is
+        /// very hard to write an assertion against.
+        /// </remarks>
+        public Reactions.ReactionController Reactions { get; private set; }
+
+        /// <summary>Turns on autonomous reaction. Call once, before stepping.</summary>
+        public Reactions.ReactionController EnableReactions() =>
+            Reactions ??= new Reactions.ReactionController(this);
+
         public int Tick { get; private set; }
 
         public IReadOnlyList<UnitInstance> Units => _units;
@@ -204,6 +218,12 @@ namespace Strategos.Commands
             Bus.Deliver();
             Reports.Deliver();
 
+            // Reflexes decide from the picture as it stands at the START of the step, before
+            // anyone has moved or fired. A reaction therefore cannot be influenced by something
+            // that happens later in the same tick, and the orders it issues are delivered on
+            // the next step like everyone else's.
+            Reactions?.Evaluate();
+
             _context.Engagements.Clear();
 
             // Stable order, by the scenario's unit order. Never by dictionary iteration.
@@ -259,7 +279,8 @@ namespace Strategos.Commands
                     break;
 
                 default:
-                    queue.Enqueue(command);
+                    if (command.Preempt) queue.InsertFront(command);
+                    else queue.Enqueue(command);
                     break;
             }
         }

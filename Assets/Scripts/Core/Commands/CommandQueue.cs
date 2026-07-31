@@ -68,6 +68,40 @@ namespace Strategos.Commands
             });
         }
 
+        /// <summary>
+        /// Puts a command at the head of the plan, ahead of whatever was running.
+        /// </summary>
+        /// <remarks>
+        /// This is what makes a reaction a reflex rather than an item on a to-do list. A unit
+        /// marching across the map that is fired on has to shoot back *now*; appended to the
+        /// back of its queue, it would return fire after finishing a twenty-minute march, by
+        /// which time whoever shot at it is elsewhere.
+        ///
+        /// The displaced command goes back to Pending and keeps its <see cref="
+        /// QueuedCommand.TicksExecuting"/>, so it resumes where it left off once the reflex is
+        /// done — the player's orders are interrupted, never discarded. That distinction is the
+        /// whole reason this exists rather than the reaction issuing an Abort.
+        /// </remarks>
+        public void InsertFront(in Command command)
+        {
+            if (_entries.Count > 0)
+            {
+                var displaced = _entries[0];
+                if (displaced.Status == CommandStatus.Executing)
+                {
+                    displaced.Status = CommandStatus.Pending;
+                    _entries[0] = displaced;
+                }
+            }
+
+            _entries.Insert(0, new QueuedCommand
+            {
+                Command = command,
+                Status = CommandStatus.Pending,
+                TicksExecuting = 0,
+            });
+        }
+
         /// <summary>Marks the head as executing and returns it. No-op if already executing.</summary>
         public bool TryBegin(out QueuedCommand entry)
         {
