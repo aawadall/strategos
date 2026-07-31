@@ -23,16 +23,18 @@ views: **PLAY** (a loaded scenario you can command), **EXPLORE** (a symbol-libra
 browser and a pannable, zoomable map inspector), **SCENARIO** (map settings with a 2D or
 3D preview) and **BUILDER** (the digit-by-digit symbol composer).
 
-**The sandbox is playable.** A scenario loads two sides onto generated terrain; units
-have capabilities and state; a fixed-step simulation carries orders down a command topic
-into per-unit queues, moves units by terrain-cost A\*, and carries reports back up a
-situation topic. Select, order, queue, abort and time compression all work, and the whole
-run is deterministic and replayable from the command log.
+**The sandbox is playable and units can fight.** A scenario loads two sides onto generated
+terrain; units have capabilities and state; a fixed-step simulation carries orders down a
+command topic into per-unit queues, moves units by terrain-cost A\*, resolves direct fire
+between them, and carries reports back up a situation topic. Select, order, engage, queue,
+abort and time compression all work, and the whole run is deterministic and replayable
+from the command log.
 
 There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
-not a playable space, and there is no game camera. There is **no engagement model** —
-units pass through each other and nothing can be destroyed (#12), **no autonomous
-reaction** (#13) and **no victory condition** (#14). Everything past that in
+not a playable space, and there is no game camera. Units still pass through each other —
+there is no collision, no zone of control and no facing. A destroyed unit stays on the map
+doing nothing, because removal belongs with victory conditions (#14). There is **no
+autonomous reaction** (#13): nothing fires unless ordered to. Everything past that in
 `ROADMAP.md` — C2 at echelon, AI, networking — is unbuilt.
 
 | Path | Contents |
@@ -47,6 +49,7 @@ reaction** (#13) and **no victory condition** (#14). Everything past that in
 | `Assets/Scripts/Core/Messaging/` | `MessageBus<T>` — the delivery rules, once |
 | `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |
 | `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
+| `Assets/Scripts/Core/Combat/` | `EngagementResolver` — the direct-fire model |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
@@ -133,11 +136,20 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ScenarioProbe.Run` | Round trip, and that it regenerates *the same ground* |
 | `Strategos.Editor.CommandProbe.Run` | The four delivery rules, queues, A\*, replay divergence |
 | `Strategos.Editor.ReportProbe.Run` | Detection edges, report timing, replay of reports |
+| `Strategos.Editor.CombatProbe.Run` | The engagement matrix, terrain, simultaneity, replay |
 
-**Run `CommandProbe` and `ReportProbe` after touching anything under `Core/Commands`,
-`Core/Reports`, `Core/Movement` or `Core/Messaging`.** Their divergence tests are the only
-thing standing between a determinism bug and finding out months later that a replay does
-not reproduce — nothing about that failure is visible at the time it is introduced.
+**Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
+`Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
+Their divergence tests are the only thing standing between a determinism bug and finding
+out months later that a replay does not reproduce — nothing about that failure is visible
+at the time it is introduced.
+
+**`CombatProbe`'s table is the point of it, not its pass/fail.** Balance the combat model by
+reading the printed damage-per-minute matrix; the assertions only catch the model breaking,
+not the model being wrong. It stamps landcover onto one fixed pair of cells rather than
+hunting the map for a forest cell — searching varies elevation and distance along with the
+cover, so "forest halves incoming fire" gets measured against a different slope on a
+different hill, and the number cannot be attributed to anything.
 
 Player log (**always check after a UI change**, see UI gotchas below):
 
@@ -210,10 +222,12 @@ carries the reasoning; these are the things that break silently.
 
 ```
 Tick++
-  └─ Bus.Deliver()        commands published before this step
-     └─ Reports.Deliver()  reports published before this step
-        └─ AdvanceUnit ×n  in scenario order, never dictionary order
-           └─ ContactTracker.Sweep   publishes for delivery next step
+  └─ Bus.Deliver()          commands published before this step
+     └─ Reports.Deliver()    reports published before this step
+        └─ AdvanceUnit ×n    in scenario order, never dictionary order
+           └─ ResolveEngagements   resolve ALL, then apply ALL
+              └─ DecaySuppression ×n
+                 └─ ContactTracker.Sweep   publishes for delivery next step
 ```
 
 - **Nothing in the simulation may read `Time.deltaTime`, wall-clock time,
@@ -243,7 +257,33 @@ Tick++
   anywhere else.
 - **Executors mutate their own unit and nothing else.** Reports about a finished order are
   published by `Simulation.AdvanceUnit` from the outcome, not by the executor, so an
-  executor added later reports without being written to.
+  executor added later reports without being written to. An engagement touches two units,
+  so `EngageExecutor` appends to `ExecutionContext.Engagements` — it declares *intent* and
+  the simulation applies the effect.
+- **Fire resolves in two passes: resolve everything, then apply everything.** Every shot in
+  a tick is computed against start-of-tick state. One pass would hand whichever unit the
+  loop reached first a free shot at an undamaged enemy — a first-mover advantage set by the
+  order units happen to appear in the scenario file, invisible in any one game and very hard
+  to find once someone notices the unit listed first tends to win. `CombatProbe`'s
+  simultaneity check is what holds this.
+- **`EngagementResolver.Resolve` reads state and writes none.** `Apply` is separate for the
+  reason above. Do not fold them back together.
+- **The only stochastic term is seeded from `(tick, attacker, defender)`,** so it is
+  reproducible from state alone — no generator is carried between ticks, which means a
+  replay reproduces each *draw* rather than a random *stream*. The ids are mixed with
+  different multipliers so an exchange does not share one roll in both directions.
+- **`Strength` is a float and must stay one.** Firepower is authored per minute and the
+  simulation steps per second, so a tick of fire is a fraction of a point; held as an int,
+  every exchange rounds to zero and two units shoot at each other for ever. Display through
+  `StrengthPercent` — the raw float must never reach a symbol's `StrengthLabel`, which is
+  part of the sprite cache key.
+- **Suppression is temporary and must never cancel an order.** Sustained fire pins a unit in
+  about forty-five seconds; treating that as failure would permanently drop the engage order
+  of whoever came off worst in an opening exchange. `AttackerSuppressed` and
+  `AttackerDestroyed` are separate outcomes for exactly this reason.
+- **`SuppressionPerDamage` is tuned against `SuppressionDecayPerSecond`, not chosen.** Below
+  about 7 the decay out-paces the gain and suppression never rises at all — a unit under
+  sustained fire that reads as perfectly calm.
 - **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
   queue state *and* the report log — a run that lands units correctly but reports
   differently has diverged in what its commander knows, which is exactly what an AI will
@@ -585,6 +625,20 @@ The reference PDF is `Research/APP-6D…pdf` (gitignored — copyright restricte
 
 Recorded so they are not re-investigated. None are fixed.
 
+- **Artillery is the best direct-fire weapon in the model, which is wrong.** The matrix has
+  it killing infantry in the open in 2.0 minutes against armour's 2.7. Its `Firepower` of 30
+  represents an indirect-fire battery, and #12 resolves direct fire only — so the number is
+  being spent on something it does not describe. Indirect fire is Phase 4.2 and out of scope
+  here. Until it exists, either artillery needs a separate direct-fire figure or it should
+  not be given engage orders.
+- **A destroyed unit stays on the map.** `Strength` floors at 0, `Effectiveness` goes to 0
+  so it neither inflicts nor suffers anything, and it keeps its symbol and its place in the
+  ORBAT. Removal, casualty tracking and reconstitution are #14 and Phase 4.4.
+- **A mutual firefight settles into a suppression equilibrium** at roughly 70 points each,
+  where both sides trade about 4.5 damage a minute instead of 16. That is arguably the right
+  behaviour — it makes flanking, cover and digging in the way to break a stalemate rather
+  than out-shooting it — but it means a head-on exchange between equals takes about twenty
+  minutes to decide, which is slow if it turns out not to be what the game wants.
 - **Detection ranges are large enough that the skirmish has almost no fog of war.** The
   recon platoon's 4000 m sees 160 cells on a 256-cell map, so `SCT/1-7 IN` reports contact
   on all three OPFOR units at T+0001 and the scenario's own description — *"neither side

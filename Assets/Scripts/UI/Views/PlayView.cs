@@ -133,6 +133,12 @@ namespace Strategos.UI.Views
             public GameObject Go;
             public Image Icon;
             public TMP_Text Label;
+
+            /// <summary>
+            /// Strength band the current sprite was baked at, so the symbol is re-fetched when
+            /// damage actually changes it and not once a frame. −1 means "never baked".
+            /// </summary>
+            public int BakedStrength = -1;
         }
 
         public string Title => "PLAY";
@@ -309,7 +315,8 @@ namespace Strategos.UI.Views
 
             AddSection(content, "ORDERS");
             var hint = CreateTmp("Hint", content,
-                "Left-click selects.  Right-click orders a move.\nHold Shift to queue behind the current plan.",
+                "Left-click selects.  Right-click orders a move, or fire if it lands on an enemy." +
+                "\nHold Shift to queue behind the current plan.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
             hint.GetComponent<LayoutElement>().preferredHeight = 30;
@@ -380,6 +387,7 @@ namespace Strategos.UI.Views
 
             _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
             _sim.AddExecutor(new MoveToExecutor());
+            _sim.AddExecutor(new EngageExecutor());
             _tickAccumulator = 0f;
 
             // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
@@ -435,11 +443,6 @@ namespace Strategos.UI.Views
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
-            // From the shared cache — never Destroy what this returns. Only ClearCache may,
-            // and it frees the textures for every holder.
-            icon.sprite = _session.Symbols.GetSymbolSprite(unit.ToSidcCode(), BakeSize);
-            if (icon.sprite == null) icon.color = new Color(0, 0, 0, 0);
-
             var label = CreateOverlayTmp("Label", rt, unit.Designation, 10, Theme.Ink);
             label.rectTransform.anchorMin = new Vector2(0.5f, 0f);
             label.rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -451,7 +454,44 @@ namespace Strategos.UI.Views
             label.overflowMode = TextOverflowModes.Overflow;
             label.raycastTarget = false;
 
-            return new Marker { Unit = unit, Go = rt.gameObject, Icon = icon, Label = label };
+            var marker = new Marker { Unit = unit, Go = rt.gameObject, Icon = icon, Label = label };
+            RefreshMarkerSymbol(marker);
+            return marker;
+        }
+
+        /// <summary>
+        /// Re-bakes a marker's symbol when its strength band has moved, and dims it once the
+        /// unit is out of the fight.
+        /// </summary>
+        /// <remarks>
+        /// The symbol was previously baked once in <see cref="CreateMarker"/> and never looked
+        /// at again, so a unit could be shot to pieces without its map symbol changing at all —
+        /// the combat-power bar that <see cref="ConditionDecorator"/> has drawn all along was
+        /// simply frozen at the value it had when the scenario loaded.
+        ///
+        /// Guarded on the band rather than called unconditionally because this runs inside
+        /// LayOutMarkers, which runs every frame. <see cref="UnitInstance.StrengthBand"/> is
+        /// what bounds how often the guard opens.
+        ///
+        /// The sprite comes from the shared cache: **never Destroy what this returns.** Only
+        /// ClearCache may, and it frees the textures for every holder.
+        /// </remarks>
+        private void RefreshMarkerSymbol(Marker marker)
+        {
+            int band = marker.Unit.StrengthBand;
+            if (band == marker.BakedStrength) return;
+            marker.BakedStrength = band;
+
+            var sprite = _session.Symbols.GetSymbolSprite(marker.Unit.ToSidcCode(), BakeSize);
+            if (sprite != null) marker.Icon.sprite = sprite;
+
+            // A destroyed unit stays on the map — removal is #14 — so it has to read as out of
+            // the fight without disappearing. Fading is a presentation choice and touches no
+            // symbology: the frame keeps its affiliation colour, which is the one thing on a
+            // symbol that must never be repurposed.
+            marker.Icon.color = sprite == null ? new Color(0, 0, 0, 0)
+                              : marker.Unit.IsDestroyed ? new Color(1f, 1f, 1f, 0.4f)
+                              : Color.white;
         }
 
         /// <summary>
@@ -479,6 +519,9 @@ namespace Strategos.UI.Views
                 bool visible = _card.CellToLocal(m.Unit.Cell, out var local);
                 m.Go.SetActive(visible);
                 if (!visible) continue;
+
+                // Cheap: returns immediately unless the unit's strength band has moved.
+                RefreshMarkerSymbol(m);
 
                 ((RectTransform)m.Go.transform).anchoredPosition = local - frameOffset;
                 m.Label.gameObject.SetActive(labels);
@@ -589,6 +632,9 @@ namespace Strategos.UI.Views
             {
                 Strategos.Reports.ReportKind.Contact => $"CONTACT  {NameOf(report.Subject)}",
                 Strategos.Reports.ReportKind.ContactLost => $"LOST  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.Engaged => $"ENGAGING  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.Destroyed => "COMBAT INEFFECTIVE",
+                Strategos.Reports.ReportKind.Depleted => "AMMUNITION EXPENDED",
                 Strategos.Reports.ReportKind.Arrived => "IN POSITION",
                 Strategos.Reports.ReportKind.OrderCompleted => "TASK COMPLETE",
                 Strategos.Reports.ReportKind.OrderFailed => "UNABLE TO COMPLY",
@@ -632,16 +678,18 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Issues a MoveTo for the selected unit to the clicked ground.
+        /// Right-click: engage if the click landed on an enemy, otherwise march to the ground.
         ///
-        /// The order goes onto the bus rather than moving anything: it is logged, delivered on
-        /// the next step, and carried out by the executor. That indirection is the whole point
-        /// of #9 — the same path serves a player, a replay and, later, an AI.
+        /// One button for both because the distinction is in the world, not in the input —
+        /// right-clicking an enemy has meant "attack that" for thirty years, and a separate
+        /// attack mode would be a mode to forget you were in. The order goes onto the bus
+        /// rather than doing anything: logged, delivered next step, carried out by an executor.
+        /// That indirection is the whole point of #9 — the same path serves a player, a replay
+        /// and, later, an AI.
         /// </summary>
         private void OrderMoveTo(UnityEngine.EventSystems.PointerEventData e)
         {
             if (_sim == null || _selection.Count == 0) return;
-            if (!CellAt(e, out var cell)) return;
 
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null) return;
@@ -652,10 +700,23 @@ namespace Strategos.UI.Views
             // that silently grew every time you clicked would be worse than one that did not
             // exist.
             bool queue = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
 
+            var target = UnitAt(e);
+            if (target != null && IsHostileTo(unit, target))
+            {
+                if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
+                _sim.Issue(Command.Engage(actor, unit.Id, target.Id));
+                return;
+            }
+
+            if (!CellAt(e, out var cell)) return;
+
+            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
         }
+
+        private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
+            Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
 
         /// <summary>Cell under the pointer. The inverse of the transform that draws markers.</summary>
         private bool CellAt(UnityEngine.EventSystems.PointerEventData e, out Vector2 cell)
@@ -821,12 +882,45 @@ namespace Strategos.UI.Views
             if (q == null || q.IsEmpty) return "NO ORDERS";
 
             var head = q[0];
-            string what = head.Command.Kind == CommandKind.MoveTo
-                ? $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}"
-                : head.Command.Kind.ToString().ToUpperInvariant();
+            string what = head.Command.Kind switch
+            {
+                CommandKind.MoveTo =>
+                    $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}",
+                CommandKind.Engage => DescribeEngagement(unit, head.Command.AgainstUnit),
+                _ => head.Command.Kind.ToString().ToUpperInvariant(),
+            };
 
             string more = q.Count > 1 ? $"   (+{q.Count - 1} QUEUED)" : string.Empty;
             return $"{head.Status.ToString().ToUpperInvariant()}: {what}{more}";
+        }
+
+        /// <summary>
+        /// An engage order, with the range to the target and whether it is inside the weapon's
+        /// envelope.
+        /// </summary>
+        /// <remarks>
+        /// The range matters more than it looks. Engage does **not** advance to contact — a
+        /// unit ordered to fire at something 3 km away with a 1200 m weapon sits there
+        /// declaring intent for twenty minutes while nothing happens, and without this line
+        /// the panel says "EXECUTING" the whole time. Naming the gap is the difference between
+        /// a rule the player learns in one engagement and one they file as a bug.
+        /// </remarks>
+        private string DescribeEngagement(UnitInstance unit, UnitId against)
+        {
+            var target = _scenario?.FindUnit(against);
+            if (target == null) return "ENGAGING";
+
+            string who = string.IsNullOrEmpty(target.Designation)
+                ? against.ToString() : target.Designation;
+
+            if (_map == null) return $"ENGAGING {who}";
+
+            float metres = Vector2.Distance(unit.Cell, target.Cell) * _map.Header.MetresPerCell;
+            float envelope = unit.Capabilities(UnitCatalogue.Default()).EngagementRangeMetres;
+
+            return metres > envelope
+                ? $"ENGAGING {who}   ·   {metres:0} M   ·   OUT OF RANGE ({envelope:0} M)"
+                : $"ENGAGING {who}   ·   {metres:0} M";
         }
 
         private void RefreshSelection()
@@ -859,7 +953,7 @@ namespace Strategos.UI.Views
                     _detailsBody.text =
                         $"{side?.Name ?? "?"}   ·   {DisplayNames.EchelonName(code.Echelon)}   ·   " +
                         $"{DisplayNames.UnitTypeLabel(code.EntityCode)}\n" +
-                        $"{caps.Name}   ·   STR {unit.Strength}%   ·   " +
+                        $"{caps.Name}   ·   STR {unit.StrengthPercent}%   ·   " +
                         $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%\n" +
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
@@ -1064,7 +1158,7 @@ namespace Strategos.UI.Views
                     // the details panel while a unit was under way. Live position belongs in
                     // the details panel, which is refreshed on every tick.
                     var detail = CreateTmp("D", row,
-                        $"{caps.Name}   ·   STR {unit.Strength}%",
+                        $"{caps.Name}   ·   STR {unit.StrengthPercent}%",
                         10, FontStyles.Normal, withLayout: false);
                     detail.rectTransform.anchorMin = new Vector2(0, 0f);
                     detail.rectTransform.anchorMax = new Vector2(1, 0.5f);

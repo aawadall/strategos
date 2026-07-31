@@ -94,7 +94,54 @@ namespace Strategos.Units
         /// Combat power as a percentage. A game amplifier with no APP-6D equivalent — only
         /// the + / - / ± Field F marker is standard.
         /// </summary>
-        [Range(0, 100)] public int Strength = 100;
+        /// <remarks>
+        /// **A float, and it has to be.** Firepower is authored per *minute* and the simulation
+        /// steps per *second*, so a tick of fire is a fraction of a strength point. Held as an
+        /// integer, every exchange rounds to zero and two units shoot at each other for ever
+        /// without either one weakening — which reads as a broken combat model rather than as
+        /// a rounding bug.
+        ///
+        /// Display rounds through <see cref="StrengthPercent"/>. Do not format the raw float
+        /// into a symbol's amplifier: <c>StrengthLabel</c> is part of the sprite cache key, so
+        /// "93.47184" would bake a new sprite every tick.
+        /// </remarks>
+        [Range(0, 100)] public float Strength = 100f;
+
+        /// <summary>Strength as a whole percentage, for display.</summary>
+        public int StrengthPercent => Mathf.Clamp(Mathf.RoundToInt(Strength), 0, 100);
+
+        /// <summary>
+        /// Strength rounded to the nearest 5, which is what the *symbol* is baked from.
+        /// </summary>
+        /// <remarks>
+        /// A symbol is a glance-level object: its combat-power bar is a few pixels tall on the
+        /// map and cannot show one percentage point. Banding is not cosmetic, though — it is
+        /// what bounds the bake. Every distinct strength label is a separate cache entry and a
+        /// separate procedural draw, so an unbanded figure re-bakes a unit's symbol about a
+        /// hundred times as it dies, and does it in a burst at high time compression. Banding
+        /// cuts that to twenty-one.
+        ///
+        /// A surviving unit never bands to 0: an empty gauge on a unit that is still fighting
+        /// says the wrong thing, and zero is reserved for <see cref="IsDestroyed"/>.
+        /// </remarks>
+        public int StrengthBand
+        {
+            get
+            {
+                if (IsDestroyed) return 0;
+                return Mathf.Clamp(Mathf.RoundToInt(Strength / 5f) * 5, 5, 100);
+            }
+        }
+
+        /// <summary>
+        /// True once combat power is spent. The unit stays in the scenario and stops
+        /// contributing: <see cref="Effectiveness"/> is already zero here, so it neither
+        /// inflicts nor suffers anything further.
+        ///
+        /// Removal from the map, casualty tracking and reconstitution are not this — they are
+        /// #14 and Phase 4.4. This is only the floor.
+        /// </summary>
+        public bool IsDestroyed => Strength <= 0.0001f;
 
         /// <summary>
         /// Freshness, 0–100. Falls with movement, action and time without rest; caps what
@@ -118,7 +165,7 @@ namespace Strategos.Units
         public UnitInstance() { }
 
         public UnitInstance(UnitId id, SideId side, string sidc, Vector2 cell,
-            string designation = "", string higherFormation = "", int strength = 100,
+            string designation = "", string higherFormation = "", float strength = 100f,
             string capabilityId = UnitCatalogue.InfantryFoot)
         {
             Id = id;
@@ -127,7 +174,7 @@ namespace Strategos.Units
             Cell = cell;
             Designation = designation;
             HigherFormation = higherFormation;
-            Strength = Mathf.Clamp(strength, 0, 100);
+            Strength = Mathf.Clamp(strength, 0f, 100f);
             CapabilityId = capabilityId;
             ParentId = UnitId.None;
             Supply = SupplyLevels.Full;
@@ -162,7 +209,9 @@ namespace Strategos.Units
 
             code.Designation = Designation ?? string.Empty;
             code.HigherFormation = HigherFormation ?? string.Empty;
-            code.StrengthLabel = Strength.ToString();
+            // Banded, not raw: this string is part of the sprite cache key, so every distinct
+            // value is another bake and another cached texture.
+            code.StrengthLabel = StrengthBand.ToString();
             return code;
         }
 
@@ -195,6 +244,6 @@ namespace Strategos.Units
 
         public override string ToString() =>
             $"{Id} {(string.IsNullOrEmpty(Designation) ? Sidc : Designation)} " +
-            $"@ ({Cell.x:0.##}, {Cell.y:0.##}) {Strength}%";
+            $"@ ({Cell.x:0.##}, {Cell.y:0.##}) {StrengthPercent}%";
     }
 }

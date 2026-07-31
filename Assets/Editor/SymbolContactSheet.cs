@@ -100,7 +100,9 @@ namespace Strategos.Editor
                 list.Add(new Case($"status {s}", Make(status: s)));
 
             // Combat power.
-            foreach (var pct in new[] { "100", "75", "40", "0" })
+            // 15 is here so the red band appears with an actual fill; 0 shows what a spent
+            // unit looks like, which is the case the neutral remainder used to hide.
+            foreach (var pct in new[] { "100", "75", "40", "15", "0" })
                 list.Add(new Case($"strength {pct}%", Make(strength: pct)));
 
             // Field F markers.

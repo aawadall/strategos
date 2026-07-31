@@ -45,9 +45,13 @@ namespace Strategos.Reports
         OrderFailed = 12,
         Halted = 13,
 
-        // ─── Reserved. Nothing publishes these; #12 and #13 will. ───
+        // ─── Combat ───
+        /// <summary>Fire has been opened. Published once per engagement, not per tick.</summary>
         Engaged = 20,
+        /// <summary>Out of ammunition.</summary>
         Depleted = 21,
+        /// <summary>Combat power spent. The unit remains in the scenario and does nothing.</summary>
+        Destroyed = 22,
     }
 
     /// <summary>
@@ -150,6 +154,19 @@ namespace Strategos.Reports
             Subject = subject.Id, SubjectSide = subject.Side, Cell = subject.Cell,
         };
 
+        /// <summary>
+        /// Fire opened on a hostile. Published once per engagement, not once per tick — a
+        /// twenty-minute firefight is one report, the same edges-not-state rule contacts obey.
+        /// </summary>
+        public static SituationReport Engaged(UnitId source, UnitInstance subject, int tick,
+            ulong aboutCommand = 0) => new()
+        {
+            Tick = tick, ObservedTick = tick, Source = source,
+            Kind = ReportKind.Engaged, Confidence = Confidence.Confirmed,
+            Subject = subject.Id, SubjectSide = subject.Side, Cell = subject.Cell,
+            AboutCommand = aboutCommand,
+        };
+
         /// <summary>A unit reporting on itself: arrival, completion, failure, a halt.</summary>
         public static SituationReport Status(ReportKind kind, UnitInstance unit, int tick,
             ulong aboutCommand = 0) => new()
@@ -161,7 +178,10 @@ namespace Strategos.Reports
         };
 
         /// <summary>True for the kinds that describe somebody else rather than the source.</summary>
-        public bool IsObservation => Kind == ReportKind.Contact || Kind == ReportKind.ContactLost;
+        public bool IsObservation =>
+            Kind == ReportKind.Contact ||
+            Kind == ReportKind.ContactLost ||
+            Kind == ReportKind.Engaged;
 
         public override string ToString()
         {

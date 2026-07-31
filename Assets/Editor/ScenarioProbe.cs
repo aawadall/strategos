@@ -130,7 +130,7 @@ namespace Strategos.Editor
                 if (ua.Sidc != ub.Sidc) { log.AppendLine($"  FAIL {what}: unit {i} sidc"); bad++; }
                 if (ua.Designation != ub.Designation) { log.AppendLine($"  FAIL {what}: unit {i} designation"); bad++; }
                 if (ua.HigherFormation != ub.HigherFormation) { log.AppendLine($"  FAIL {what}: unit {i} formation"); bad++; }
-                if (ua.Strength != ub.Strength) { log.AppendLine($"  FAIL {what}: unit {i} strength"); bad++; }
+                if (!Mathf.Approximately(ua.Strength, ub.Strength)) { log.AppendLine($"  FAIL {what}: unit {i} strength"); bad++; }
                 if (ua.CapabilityId != ub.CapabilityId) { log.AppendLine($"  FAIL {what}: unit {i} capability id"); bad++; }
                 if (ua.Posture != ub.Posture) { log.AppendLine($"  FAIL {what}: unit {i} posture"); bad++; }
                 if (!Mathf.Approximately(ua.Readiness, ub.Readiness)) { log.AppendLine($"  FAIL {what}: unit {i} readiness"); bad++; }

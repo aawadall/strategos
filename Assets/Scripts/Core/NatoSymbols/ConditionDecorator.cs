@@ -22,8 +22,17 @@ namespace Strategos.NatoSymbols
         public static readonly Color32 Destroyed     = new Color32(198,  52,  52, 255); // red
         public static readonly Color32 FullCapacity  = new Color32( 47, 116, 200, 255); // blue
 
-        private static readonly Color32 Ink   = new Color32(0, 0, 0, 255);
-        private static readonly Color32 Empty = new Color32(230, 230, 230, 255);
+        private static readonly Color32 Ink = new Color32(0, 0, 0, 255);
+
+        /// <summary>How far the unfilled remainder is washed out toward white.</summary>
+        private const float PaleAmount = 0.78f;
+
+        /// <summary>The same hue, washed out, for the unfilled part of a gauge.</summary>
+        private static Color32 Pale(Color32 c) => new(
+            (byte)(c.r + (255 - c.r) * PaleAmount),
+            (byte)(c.g + (255 - c.g) * PaleAmount),
+            (byte)(c.b + (255 - c.b) * PaleAmount),
+            255);
 
         public ConditionDecorator(INatoSymbol inner) : base(inner) { }
 
@@ -41,11 +50,37 @@ namespace Strategos.NatoSymbols
 
             if (TryStrengthFraction(text.StrengthLabel, out float fraction))
             {
+                Color32 power = CombatPowerColour(fraction);
                 layers.Add(SymbolLayerDraw.FromProcedural(
                     SymbolLayer.Amplifier, "CombatPower",
-                    (buf, sz, sc) => DrawBar(buf, sz, sc, SymbolLayout.StrengthBarY, fraction, Ink),
+                    (buf, sz, sc) => DrawBar(buf, sz, sc, SymbolLayout.StrengthBarY, fraction, power),
                     sortOrder: 3));
             }
+        }
+
+        /// <summary>
+        /// The combat-power bar's colour, from the same three-colour palette the APP-6D
+        /// condition bar uses.
+        /// </summary>
+        /// <remarks>
+        /// Reusing the condition palette rather than inventing a gradient is deliberate: the
+        /// two bars sit one above the other, and a symbol whose two indicators disagree about
+        /// what amber means is worse than one with no colour at all.
+        ///
+        /// Three bands, not a continuous ramp. The bar is a few pixels tall at map scale, where
+        /// a smooth green-to-red gradient is unreadable — the eye can tell three colours apart
+        /// there and cannot rank thirty. The exact figure is on the unit's details panel for
+        /// anyone who needs it.
+        ///
+        /// **The frame fill is not touched and must not be.** Fill colour is affiliation in
+        /// APP-6D — blue friend, red hostile — and it is the first thing anyone reads on a
+        /// symbol. Tinting it by damage would make a badly-mauled friendly unit read as enemy.
+        /// </remarks>
+        public static Color32 CombatPowerColour(float fraction)
+        {
+            if (fraction >= 0.67f) return FullyCapable;
+            if (fraction >= 0.34f) return Damaged;
+            return Destroyed;
         }
 
         /// <summary>
@@ -80,8 +115,17 @@ namespace Strategos.NatoSymbols
 
         /// <summary>
         /// Bar spanning the frame width. A fill below 1 draws the remainder in a
-        /// light tone so the bar reads as a gauge rather than a shorter bar.
+        /// pale tint of the same colour, so the bar reads as a gauge rather than a
+        /// shorter bar.
         /// </summary>
+        /// <remarks>
+        /// The remainder is tinted rather than neutral grey because of the one case that
+        /// matters most: at zero strength there is no filled portion at all, and a neutral
+        /// remainder made a destroyed unit's bar look identical to an empty one — no colour,
+        /// nothing to read. Tinting means a spent unit shows a pale red bar and a healthy one
+        /// a pale green remainder behind a mostly-green fill, so the band is legible at every
+        /// value including the ends.
+        /// </remarks>
         private static void DrawBar(Color32[] buf, int sz, float sc, int yConst,
             float fill, Color32 colour)
         {
@@ -92,11 +136,12 @@ namespace Strategos.NatoSymbols
 
             fill = Mathf.Clamp01(fill);
             int split = l + Mathf.RoundToInt((r - l) * fill);
+            Color32 rest = Pale(colour);
 
             if (split > l)
                 ProceduralDrawUtil.FillRect(buf, sz, l, b, split, t, colour, colour, 0);
             if (split < r)
-                ProceduralDrawUtil.FillRect(buf, sz, split, b, r, t, Empty, Empty, 0);
+                ProceduralDrawUtil.FillRect(buf, sz, split, b, r, t, rest, rest, 0);
 
             // Thin outline keeps the bar legible on a pale frame fill.
             int th = Mathf.Max(1, SymbolLayout.Scale(2, sc));
