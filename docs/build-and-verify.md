@@ -73,6 +73,30 @@ those numbers before reading the image: a landcover percentage that has moved sa
 generator changed, where the image alone cannot tell you whether generation or the
 palette moved.
 
+The procedurally aged paper stock (`PaperTexture`) has its own sheet, and the same rule
+applies twice over — it produces both a picture and a contrast ratio, and neither catches
+what the other does:
+
+```powershell
+# Menu: Strategos > Bake Paper Contact Sheet
+& "C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Unity.exe" `
+    -batchmode -quit -nographics -projectPath . `
+    -executeMethod Strategos.Editor.PaperContactSheet.Bake -logFile paper-sheet.log
+# -> Artifacts/paper-contact-sheet.png, Artifacts/paper-detail.png
+```
+
+It prints, per cell, the darkest pixel produced and the WCAG contrast of `UiTheme.Ink`
+against it — measured from the baked texture, not predicted from the options. **A stain
+that costs contrast is invisible as a bug**, because it reads as styling rather than as a
+failure, so the number is the only thing that catches it. The detail page reports two
+figures and *the second is the one that matters*: whole-sheet contrast includes the inside
+of a coffee ring, where no text is ever placed, while the in-reserve figure is what text
+will actually be read against.
+
+`PROBE PASSED` here asserts only what each preset claims — `PaperOptions.RequiresReservedText`
+decides whether a preset is held to 7:1 across its whole surface or only inside its reserved
+rects. A preset that says it is safe unreserved and is not will fail the bake.
+
 The simulation has no picture to read, so it has probes instead. All four run under
 `-batchmode -quit -nographics` and print a summary followed by `PROBE PASSED`/`FAILED`:
 

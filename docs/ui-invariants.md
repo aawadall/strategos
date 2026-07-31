@@ -90,6 +90,19 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   viewport width there is nothing to scroll horizontally and the right-hand columns are
   simply unreachable. `UiScroll.CreateGridColumn` anchors content to the corner alone so
   the `ContentSizeFitter` drives both dimensions.
+- **Text on aged paper must be reserved, and the presets say which.** `PaperTexture` takes
+  a `keepClear` list of the rects text will occupy and suppresses stains inside them, for
+  the same reason `MapLabelPlacer.Reserve` exists — placement can only avoid collisions it
+  can see. Without it, `PaperOptions.Used` drops to about 4.8:1 against `UiTheme.Ink` inside
+  a ring and `Worn` to about 4.0:1, against the 7:1 AAA floor every other pair in the palette
+  holds. With it, the reserved rects measure above 9:1. `RequiresReservedText` carries that
+  contract on the preset itself so `PaperContactSheet` asserts it rather than trusting prose.
+  Grain and mottling are deliberately *not* suppressed inside a reserve: they cannot move a
+  contrast ratio, and suppressing them would leave a visibly clean rectangle behind every
+  block of text.
+- **A `PaperTexture` is owned by whoever asked for it and must be `Destroy`ed** — the
+  opposite of the `AppSession.Symbols` rule above. Sheets are per-size and per-seed, so
+  caching them centrally would be a leak with no clear owner.
 - **Baked symbol sprites are not frame-centred.** `FrameRight = 160` of `BASE = 256`
   reserves a right-hand amplifier column, so the symbol sits left of centre in its texture.
   The library's tiles are 4:3 rather than square for this reason — in a square tile it reads
