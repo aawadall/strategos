@@ -12,7 +12,14 @@
 //   2. The command bus delivers everything published before this step (delivery rule 1).
 //   3. The report bus does the same.
 //   4. Each unit advances its plan by one step, in a stable order.
-//   5. Detection sweeps, publishing what changed — for delivery at the next step.
+//   5. Every engagement declared in 4 resolves SIMULTANEOUSLY, then applies.
+//   6. Suppression decays.
+//   7. Detection sweeps, publishing what changed — for delivery at the next step.
+//
+// Step 5 is split from step 4 on purpose and the reason is in ExecutionContext.Engagements:
+// resolving fire inside the unit loop hands whichever unit the loop reached first a free shot
+// at an undamaged enemy, which is a first-mover advantage decided by the order units happen to
+// appear in the scenario file.
 //
 // Delivering before executing means an order issued at tick N is acted on at N+1 rather than
 // sitting a further step — and doing it in a fixed place means "when does my order take
@@ -29,6 +36,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using Strategos.Combat;
 using Strategos.Maps;
 using Strategos.Reports;
 using Strategos.Scenarios;
@@ -179,9 +187,16 @@ namespace Strategos.Commands
             Bus.Deliver();
             Reports.Deliver();
 
+            _context.Engagements.Clear();
+
             // Stable order, by the scenario's unit order. Never by dictionary iteration.
             for (int i = 0; i < _units.Count; i++)
                 AdvanceUnit(_units[i]);
+
+            ResolveEngagements();
+
+            for (int i = 0; i < _units.Count; i++)
+                EngagementResolver.DecaySuppression(_units[i], SecondsPerTick);
 
             // After movement: a contact should name where the subject ended the tick.
             // Cached delegate, not a lambda — this runs every step of every replay.
@@ -284,6 +299,94 @@ namespace Strategos.Commands
                 entry.Command.Seq));
         }
 
+        // ─── Engagement ───────────────────────────────────────────────────────
+
+        private readonly List<EngagementResult> _shots = new();
+
+        /// <summary>
+        /// Resolves every engagement declared this tick, then applies them all.
+        ///
+        /// TWO PASSES, AND IT MATTERS. Every shot is computed against the state at the start of
+        /// the tick, so two units firing at each other both fire at full strength and neither
+        /// gets to shoot an already-damaged opponent. One pass would make the outcome depend on
+        /// the order units appear in the scenario file — a bias nobody would see in a single
+        /// game and nobody could trace after a hundred.
+        /// </summary>
+        private void ResolveEngagements()
+        {
+            var intents = _context.Engagements;
+            if (intents.Count == 0) return;
+
+            _shots.Clear();
+            for (int i = 0; i < intents.Count; i++)
+                _shots.Add(EngagementResolver.Resolve(
+                    UnitOf(intents[i].Attacker), UnitOf(intents[i].Defender),
+                    Map, Catalogue, Tick, SecondsPerTick));
+
+            for (int i = 0; i < intents.Count; i++)
+            {
+                var intent = intents[i];
+                var attacker = UnitOf(intent.Attacker);
+                var defender = UnitOf(intent.Defender);
+                if (attacker == null || defender == null) continue;
+
+                var shot = _shots[i];
+
+                bool hadAmmunition = attacker.Supply.Ammunition > 0f;
+                bool wasAlive = !defender.IsDestroyed;
+
+                EngagementResolver.Apply(attacker, defender, shot);
+
+                if (shot.DidFire && intent.Opening)
+                    Report(SituationReport.Engaged(attacker.Id, defender, Tick, intent.Command));
+
+                // Crossings, reported once each. State changes, not state.
+                if (wasAlive && defender.IsDestroyed)
+                    Report(SituationReport.Status(ReportKind.Destroyed, defender, Tick));
+
+                if (hadAmmunition && attacker.Supply.Ammunition <= 0f)
+                    Report(SituationReport.Status(ReportKind.Depleted, attacker, Tick,
+                        intent.Command));
+
+                EndEngagementIfOver(attacker, shot, intent.Command);
+            }
+        }
+
+        /// <summary>
+        /// Ends an engage order when the shot says there is no point continuing.
+        ///
+        /// The executor cannot decide this: it declares intent and never learns what came of
+        /// it.
+        ///
+        /// TWO OUTCOMES ARE DELIBERATELY NOT REASONS TO STOP. *Out of range* is temporary — a
+        /// target that has pulled away may come back. *Suppressed* is temporary too, and it is
+        /// the one that would actually bite: sustained fire pins a unit inside a minute, so
+        /// treating it as failure would cancel the order of every unit that came off worst in
+        /// an opening exchange, permanently, for a condition that clears in under a minute.
+        /// <see cref="EngageExecutor.MaxTicks"/> is what bounds both until #13 gives a unit a
+        /// real break-contact rule.
+        /// </summary>
+        private void EndEngagementIfOver(UnitInstance attacker, in EngagementResult shot,
+            ulong command)
+        {
+            ReportKind kind;
+            switch (shot.Outcome)
+            {
+                case EngagementOutcome.TargetDestroyed: kind = ReportKind.OrderCompleted; break;
+                case EngagementOutcome.NoAmmunition:
+                case EngagementOutcome.AttackerDestroyed: kind = ReportKind.OrderFailed; break;
+                default: return;
+            }
+
+            var queue = QueueOf(attacker.Id);
+            if (queue == null || queue.IsEmpty) return;
+            if (!queue.TryPeek(out var head) || head.Command.Kind != CommandKind.Engage) return;
+
+            queue.Finish();
+            attacker.Posture = Posture.Halted;
+            Report(SituationReport.Status(kind, attacker, Tick, command));
+        }
+
         /// <summary>
         /// Which report a finished command produces.
         ///
@@ -327,7 +430,7 @@ namespace Strategos.Commands
                 sb.Append(u.Id.Value).Append(':')
                   .Append(u.Cell.x.ToString("F4")).Append(',')
                   .Append(u.Cell.y.ToString("F4")).Append(':')
-                  .Append(u.Strength).Append(':')
+                  .Append(u.Strength.ToString("F3")).Append(':')
                   .Append(u.Readiness.ToString("F2")).Append(':')
                   .Append(u.Suppression.ToString("F2")).Append(':')
                   .Append((int)u.Posture).Append(':')

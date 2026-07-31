@@ -309,7 +309,8 @@ namespace Strategos.UI.Views
 
             AddSection(content, "ORDERS");
             var hint = CreateTmp("Hint", content,
-                "Left-click selects.  Right-click orders a move.\nHold Shift to queue behind the current plan.",
+                "Left-click selects.  Right-click orders a move, or fire if it lands on an enemy." +
+                "\nHold Shift to queue behind the current plan.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
             hint.GetComponent<LayoutElement>().preferredHeight = 30;
@@ -380,6 +381,7 @@ namespace Strategos.UI.Views
 
             _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
             _sim.AddExecutor(new MoveToExecutor());
+            _sim.AddExecutor(new EngageExecutor());
             _tickAccumulator = 0f;
 
             // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
@@ -589,6 +591,9 @@ namespace Strategos.UI.Views
             {
                 Strategos.Reports.ReportKind.Contact => $"CONTACT  {NameOf(report.Subject)}",
                 Strategos.Reports.ReportKind.ContactLost => $"LOST  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.Engaged => $"ENGAGING  {NameOf(report.Subject)}",
+                Strategos.Reports.ReportKind.Destroyed => "COMBAT INEFFECTIVE",
+                Strategos.Reports.ReportKind.Depleted => "AMMUNITION EXPENDED",
                 Strategos.Reports.ReportKind.Arrived => "IN POSITION",
                 Strategos.Reports.ReportKind.OrderCompleted => "TASK COMPLETE",
                 Strategos.Reports.ReportKind.OrderFailed => "UNABLE TO COMPLY",
@@ -632,16 +637,18 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Issues a MoveTo for the selected unit to the clicked ground.
+        /// Right-click: engage if the click landed on an enemy, otherwise march to the ground.
         ///
-        /// The order goes onto the bus rather than moving anything: it is logged, delivered on
-        /// the next step, and carried out by the executor. That indirection is the whole point
-        /// of #9 — the same path serves a player, a replay and, later, an AI.
+        /// One button for both because the distinction is in the world, not in the input —
+        /// right-clicking an enemy has meant "attack that" for thirty years, and a separate
+        /// attack mode would be a mode to forget you were in. The order goes onto the bus
+        /// rather than doing anything: logged, delivered next step, carried out by an executor.
+        /// That indirection is the whole point of #9 — the same path serves a player, a replay
+        /// and, later, an AI.
         /// </summary>
         private void OrderMoveTo(UnityEngine.EventSystems.PointerEventData e)
         {
             if (_sim == null || _selection.Count == 0) return;
-            if (!CellAt(e, out var cell)) return;
 
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null) return;
@@ -652,10 +659,23 @@ namespace Strategos.UI.Views
             // that silently grew every time you clicked would be worse than one that did not
             // exist.
             bool queue = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
 
+            var target = UnitAt(e);
+            if (target != null && IsHostileTo(unit, target))
+            {
+                if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
+                _sim.Issue(Command.Engage(actor, unit.Id, target.Id));
+                return;
+            }
+
+            if (!CellAt(e, out var cell)) return;
+
+            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
         }
+
+        private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
+            Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
 
         /// <summary>Cell under the pointer. The inverse of the transform that draws markers.</summary>
         private bool CellAt(UnityEngine.EventSystems.PointerEventData e, out Vector2 cell)
@@ -859,7 +879,7 @@ namespace Strategos.UI.Views
                     _detailsBody.text =
                         $"{side?.Name ?? "?"}   ·   {DisplayNames.EchelonName(code.Echelon)}   ·   " +
                         $"{DisplayNames.UnitTypeLabel(code.EntityCode)}\n" +
-                        $"{caps.Name}   ·   STR {unit.Strength}%   ·   " +
+                        $"{caps.Name}   ·   STR {unit.StrengthPercent}%   ·   " +
                         $"RDY {unit.Readiness:0}%   ·   EFF {unit.Effectiveness * 100f:0}%\n" +
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
@@ -1064,7 +1084,7 @@ namespace Strategos.UI.Views
                     // the details panel while a unit was under way. Live position belongs in
                     // the details panel, which is refreshed on every tick.
                     var detail = CreateTmp("D", row,
-                        $"{caps.Name}   ·   STR {unit.Strength}%",
+                        $"{caps.Name}   ·   STR {unit.StrengthPercent}%",
                         10, FontStyles.Normal, withLayout: false);
                     detail.rectTransform.anchorMin = new Vector2(0, 0f);
                     detail.rectTransform.anchorMax = new Vector2(1, 0.5f);

@@ -60,6 +60,7 @@ namespace Strategos.Commands
 
         // ─── World commands (take time, need an executor) ───
         MoveTo = 1,
+        Engage = 2,
 
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
@@ -110,12 +111,28 @@ namespace Strategos.Commands
         /// <summary>Queue index, for <see cref="CommandKind.CancelFrom"/>.</summary>
         public int Index;
 
+        /// <summary>
+        /// The unit being acted *upon*, for <see cref="CommandKind.Engage"/>.
+        ///
+        /// Distinct from <see cref="TargetUnit"/>, which is the addressee — the one being
+        /// told. An engage order has both: "you, fire at him". Collapsing them into one field
+        /// would make the addressee ambiguous the moment a command names a second unit, which
+        /// is every interesting command from here on.
+        /// </summary>
+        public UnitId AgainstUnit;
+
         // ─── Construction ─────────────────────────────────────────────────────
 
         public static Command MoveTo(ActorId by, UnitId unit, Vector2 cell, int tick = 0) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit,
             Kind = CommandKind.MoveTo, TargetCell = cell,
+        };
+
+        public static Command Engage(ActorId by, UnitId unit, UnitId against, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Engage, AgainstUnit = against,
         };
 
         public static Command Abort(ActorId by, UnitId unit, int tick = 0) => new()
@@ -139,6 +156,7 @@ namespace Strategos.Commands
             string what = Kind switch
             {
                 CommandKind.MoveTo => $"MoveTo({TargetCell.x:0.#},{TargetCell.y:0.#})",
+                CommandKind.Engage => $"Engage({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 _ => Kind.ToString(),
             };

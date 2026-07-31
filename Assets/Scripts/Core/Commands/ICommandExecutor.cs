@@ -28,6 +28,29 @@ namespace Strategos.Commands
         Failed = 2,
     }
 
+    /// <summary>
+    /// An executor's declaration that its unit is shooting at another one this tick.
+    ///
+    /// **Intent, not effect.** See <see cref="ExecutionContext.Engagements"/>.
+    /// </summary>
+    public struct EngagementIntent
+    {
+        public UnitId Attacker;
+        public UnitId Defender;
+
+        /// <summary>The order this fire is being carried out under, for the report.</summary>
+        public ulong Command;
+
+        /// <summary>
+        /// True on the first tick of this engagement.
+        ///
+        /// Reports are edges, not state — the same rule ContactTracker follows. An Engaged
+        /// report every tick would be twelve hundred messages for one twenty-minute firefight,
+        /// which drowns the log it is supposed to make readable.
+        /// </summary>
+        public bool Opening;
+    }
+
     /// <summary>Everything an executor is allowed to see.</summary>
     public sealed class ExecutionContext
     {
@@ -39,6 +62,26 @@ namespace Strategos.Commands
 
         /// <summary>Seconds of simulated time per step. Fixed — see Simulation.</summary>
         public float SecondsPerTick;
+
+        /// <summary>
+        /// Where an executor declares that its unit is firing at another one.
+        /// </summary>
+        /// <remarks>
+        /// An engagement is the first thing in the project that inherently touches two units,
+        /// and delivery rule 3 says an executor mutates only the unit it was given. Both hold,
+        /// because this list carries *intent*: the executor says who it is shooting at, and
+        /// the simulation resolves every declaration afterwards and applies the damage.
+        ///
+        /// That indirection is not bookkeeping. Resolving inside the unit loop would hand
+        /// whichever unit the loop reached first a free shot at an undamaged enemy — a
+        /// first-mover advantage set by the order units happen to appear in the scenario file,
+        /// invisible in any single game, and very hard to find once someone notices that the
+        /// unit listed first tends to win.
+        ///
+        /// Cleared by the simulation at the start of every step. An executor appends; nothing
+        /// else touches it.
+        /// </remarks>
+        public List<EngagementIntent> Engagements = new();
     }
 
     /// <summary>
