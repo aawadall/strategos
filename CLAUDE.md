@@ -54,6 +54,7 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
 | `Assets/Scripts/Core/Combat/` | `EngagementResolver` — the direct-fire model |
 | `Assets/Scripts/Core/Reactions/` | `ReactionController` — ROE and reflexes |
+| `Assets/Scripts/Core/Direction/` | `SideDirector` — side-level intent for an unplayed side |
 | `Assets/Scripts/Core/Objectives/` | Objectives, victory conditions, the evaluator |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
@@ -144,6 +145,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CombatProbe.Run` | The engagement matrix, terrain, simultaneity, replay |
 | `Strategos.Editor.ReactionProbe.Run` | Each ROE, reflex preemption, break contact, fairness |
 | `Strategos.Editor.VictoryProbe.Run` | Objective control, hold duration, draws, precedence |
+| `Strategos.Editor.DirectorProbe.Run` | An unattended scenario reaches a decision |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -231,7 +233,8 @@ carries the reasoning; these are the things that break silently.
 Tick++
   └─ Bus.Deliver()          commands published before this step
      └─ Reports.Deliver()    reports published before this step
-        └─ Reactions.Evaluate()   reflexes, from the start-of-step picture
+        └─ Director.Evaluate()    side-level intent, before reflexes
+           └─ Reactions.Evaluate() reflexes, from the start-of-step picture
            └─ AdvanceUnit ×n      in scenario order, never dictionary order
               └─ ResolveEngagements   resolve ALL, then apply ALL
                  └─ DecaySuppression ×n
@@ -316,6 +319,14 @@ Tick++
   disengage almost the moment it was shot at — the probe caught one leaving at 67.8%
   strength, barely scratched. It is also backwards: suppression models being *pinned*, and a
   pinned unit is one that cannot move, not one that has decided to leave.
+- **An objective's centre must be ground a unit can occupy.** A MoveTo to an impassable
+  cell fails on the tick it is issued, so `SideDirector` finds the unit idle and reissues —
+  the shipped skirmish once ran its full hour with 1080 autonomous orders and nobody moving,
+  because the crossroads was one cell into a lake. `DirectorProbe` asserts it and names the
+  nearest passable cell.
+- **`SideDirector.RetryInterval` is the guard against that order storm,** not politeness. Any
+  unreachable destination reproduces it otherwise, and the command log is what a replay and an
+  after-action review both read.
 - **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
   standing where it was, to be destroyed a few seconds later.
 - **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data

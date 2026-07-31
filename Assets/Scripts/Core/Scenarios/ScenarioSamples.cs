@@ -58,6 +58,7 @@ namespace Strategos.Scenarios
 
             s.Sides.Add(blue);
             s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
 
             // South-west, advancing north-east.
             Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarMechanized,
@@ -89,7 +90,10 @@ namespace Strategos.Scenarios
             {
                 Id = 1,
                 Name = "THE CROSSROADS",
-                Cell = new Vector2(120f, 124f),
+                // On the lake shore, not in it. DirectorProbe asserts this: the centre must be
+                // ground a unit can occupy, or every MoveTo to it fails on the tick it is
+                // issued and the scenario runs its full hour with nobody going anywhere.
+                Cell = new Vector2(119f, 123f),
                 RadiusCells = 10f,
                 InitialOwner = SideId.None,
             });

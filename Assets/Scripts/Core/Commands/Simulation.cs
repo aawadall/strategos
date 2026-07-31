@@ -107,6 +107,19 @@ namespace Strategos.Commands
         public Reactions.ReactionController EnableReactions() =>
             Reactions ??= new Reactions.ReactionController(this);
 
+        /// <summary>
+        /// Side-level intent for whoever is not being played, or null.
+        ///
+        /// Separate from <see cref="Reactions"/> and deliberately so: that one is scoped to
+        /// reflexes that read *reports*, and objective-seeking reads the objective list. One
+        /// class doing both would blur a boundary that took an issue to draw.
+        /// </summary>
+        public Direction.SideDirector Director { get; private set; }
+
+        /// <summary>Turns on side-level intent for the given sides. Call once, before stepping.</summary>
+        public Direction.SideDirector EnableDirector(System.Collections.Generic.IEnumerable<SideId> sides) =>
+            Director ??= new Direction.SideDirector(this, sides);
+
         public int Tick { get; private set; }
 
         public IReadOnlyList<UnitInstance> Units => _units;
@@ -222,6 +235,10 @@ namespace Strategos.Commands
             // anyone has moved or fired. A reaction therefore cannot be influenced by something
             // that happens later in the same tick, and the orders it issues are delivered on
             // the next step like everyone else's.
+            // Intent before reflexes: a side decides where it is going, then units react to
+            // what they meet on the way. The reverse would let a reflex be overwritten by an
+            // order issued in the same step.
+            Director?.Evaluate();
             Reactions?.Evaluate();
 
             _context.Engagements.Clear();
