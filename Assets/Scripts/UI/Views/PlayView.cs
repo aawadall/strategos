@@ -321,6 +321,7 @@ namespace Strategos.UI.Views
             hint.color = Theme.InkMuted;
             hint.GetComponent<LayoutElement>().preferredHeight = 30;
 
+            _roeDrop = AddDropdown(content, "RULES OF ENGAGEMENT", OnRoeChanged);
             AddButton(content, "ABORT PLAN", AbortSelected);
             _runToggle = AddToggle(content, "CLOCK RUNNING  (SPACE)", true,
                 () => _running = _runToggle.isOn);
@@ -345,6 +346,33 @@ namespace Strategos.UI.Views
         }
 
         private RectTransform _orbatRoot;
+        private TMP_Dropdown _roeDrop;
+
+        /// <summary>Rail order matches <see cref="RulesOfEngagement"/>'s own values.</summary>
+        private static readonly string[] RoeLabels =
+        {
+            "Hold fire  ·  never initiate",
+            "Return fire  ·  answer only",
+            "Fire at will  ·  engage on sight",
+        };
+
+        /// <summary>
+        /// Applies the rail's setting to the selected unit.
+        ///
+        /// Per unit rather than per side, because the interesting orders are the asymmetric
+        /// ones — the recon screen on Hold Fire so it observes without being drawn into a
+        /// fight, while everything behind it is free to shoot.
+        /// </summary>
+        private void OnRoeChanged()
+        {
+            if (_suppress || _roeDrop == null || _selection.Count == 0) return;
+
+            var unit = _scenario?.FindUnit(_selection[0]);
+            if (unit == null) return;
+
+            unit.Roe = (RulesOfEngagement)Mathf.Clamp(_roeDrop.value, 0, RoeLabels.Length - 1);
+            RefreshSelection();
+        }
 
         private void PopulateOptions()
         {
@@ -355,6 +383,7 @@ namespace Strategos.UI.Views
             speeds[0] = "x1   (real time)";
             for (int i = 1; i < TimeScales.Length; i++) speeds[i] = $"x{TimeScales[i]:0}";
             SetDrop(_speedDrop, speeds, 0);
+            SetDrop(_roeDrop, RoeLabels, (int)RulesOfEngagement.ReturnFire);
             _suppress = false;
         }
 
@@ -388,6 +417,7 @@ namespace Strategos.UI.Views
             _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
             _sim.AddExecutor(new MoveToExecutor());
             _sim.AddExecutor(new EngageExecutor());
+            _sim.EnableReactions();
             _tickAccumulator = 0f;
 
             // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
@@ -928,6 +958,15 @@ namespace Strategos.UI.Views
             UnitInstance unit = null;
             if (_selection.Count > 0 && _scenario != null)
                 unit = _scenario.FindUnit(_selection[0]);
+
+            // The rail shows the selected unit's own setting. Suppressed so that following the
+            // selection does not read as the player changing it.
+            if (_roeDrop != null && unit != null)
+            {
+                _suppress = true;
+                _roeDrop.value = (int)unit.Roe;
+                _suppress = false;
+            }
 
             if (_detailsTitle != null)
             {

@@ -30,12 +30,15 @@ between them, and carries reports back up a situation topic. Select, order, enga
 abort and time compression all work, and the whole run is deterministic and replayable
 from the command log.
 
+Units also fight on their own initiative under rules of engagement, answer fire while
+marching, and withdraw when they are being destroyed.
+
 There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
 not a playable space, and there is no game camera. Units still pass through each other —
 there is no collision, no zone of control and no facing. A destroyed unit stays on the map
-doing nothing, because removal belongs with victory conditions (#14). There is **no
-autonomous reaction** (#13): nothing fires unless ordered to. Everything past that in
-`ROADMAP.md` — C2 at echelon, AI, networking — is unbuilt.
+doing nothing, because removal belongs with victory conditions (#14), and **a scenario has
+no way to end**. Everything past that in `ROADMAP.md` — C2 at echelon, AI, networking — is
+unbuilt. Reflexes are not intelligence: nothing plans or manoeuvres, which is Phase 8.
 
 | Path | Contents |
 |---|---|
@@ -50,6 +53,7 @@ autonomous reaction** (#13): nothing fires unless ordered to. Everything past th
 | `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |
 | `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
 | `Assets/Scripts/Core/Combat/` | `EngagementResolver` — the direct-fire model |
+| `Assets/Scripts/Core/Reactions/` | `ReactionController` — ROE and reflexes |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
@@ -137,6 +141,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CommandProbe.Run` | The four delivery rules, queues, A\*, replay divergence |
 | `Strategos.Editor.ReportProbe.Run` | Detection edges, report timing, replay of reports |
 | `Strategos.Editor.CombatProbe.Run` | The engagement matrix, terrain, simultaneity, replay |
+| `Strategos.Editor.ReactionProbe.Run` | Each ROE, reflex preemption, break contact, fairness |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -224,10 +229,11 @@ carries the reasoning; these are the things that break silently.
 Tick++
   └─ Bus.Deliver()          commands published before this step
      └─ Reports.Deliver()    reports published before this step
-        └─ AdvanceUnit ×n    in scenario order, never dictionary order
-           └─ ResolveEngagements   resolve ALL, then apply ALL
-              └─ DecaySuppression ×n
-                 └─ ContactTracker.Sweep   publishes for delivery next step
+        └─ Reactions.Evaluate()   reflexes, from the start-of-step picture
+           └─ AdvanceUnit ×n      in scenario order, never dictionary order
+              └─ ResolveEngagements   resolve ALL, then apply ALL
+                 └─ DecaySuppression ×n
+                    └─ ContactTracker.Sweep   publishes for delivery next step
 ```
 
 - **Nothing in the simulation may read `Time.deltaTime`, wall-clock time,
@@ -284,6 +290,31 @@ Tick++
 - **`SuppressionPerDamage` is tuned against `SuppressionDecayPerSecond`, not chosen.** Below
   about 7 the decay out-paces the gain and suppression never rises at all — a unit under
   sustained fire that reads as perfectly calm.
+- **`ReactionController` may read reports and a unit's *own* state, and nothing else.** It
+  never asks the world whether an enemy is in range, never reads another unit's position,
+  and picks targets by the cell a contact was last *reported* at. A unit that polls cannot
+  be deceived, delayed or spoofed, so reaction logic written that way has to be rebuilt
+  rather than wrapped when C3 lands. Own strength, suppression and ammunition are
+  introspection, not observation — no message has to arrive for a company to know it is out
+  of ammunition.
+- **Reactions evaluate in scenario unit order, and that order carries no advantage.** A
+  reaction issues a *command*, commands are delivered on the following step, and fire
+  resolves against start-of-tick state — so two units that notice each other on the same
+  tick open fire on the same tick. `ReactionProbe.CheckMutualReactionIsFair` holds this; it
+  would stop being true the moment somebody resolved a reaction inline to save a tick.
+- **A reflex preempts, it never deletes.** `Command.Preempt` puts a reactive engagement at
+  the head of the queue and pushes the displaced order back to Pending, so a unit fired on
+  mid-march shoots back now and resumes the march after. Appended instead, it would answer
+  fire when it arrived, twenty minutes later.
+- **ROE governs initiative, not permission.** A unit on Hold Fire still carries out an
+  engage order it was given; refusing a direct order would be a bug.
+- **Suppression is deliberately not a break-contact trigger.** It saturates near 100 within
+  about fifteen seconds of sustained fire, so any threshold below the cap made every unit
+  disengage almost the moment it was shot at — the probe caught one leaving at 67.8%
+  strength, barely scratched. It is also backwards: suppression models being *pinned*, and a
+  pinned unit is one that cannot move, not one that has decided to leave.
+- **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
+  standing where it was, to be destroyed a few seconds later.
 - **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
   queue state *and* the report log — a run that lands units correctly but reports
   differently has diverged in what its commander knows, which is exactly what an AI will

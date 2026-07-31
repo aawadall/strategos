@@ -121,6 +121,16 @@ namespace Strategos.Commands
         /// </summary>
         public UnitId AgainstUnit;
 
+        /// <summary>
+        /// Go to the head of the queue rather than the back, interrupting whatever is running.
+        ///
+        /// For reflexes — a unit fired on mid-march returns fire now and resumes the march
+        /// afterwards. On the message rather than implied by the kind, because the same Engage
+        /// is a deliberate order when a player issues it and a reflex when a unit does, and
+        /// only the issuer knows which.
+        /// </summary>
+        public bool Preempt;
+
         // ─── Construction ─────────────────────────────────────────────────────
 
         public static Command MoveTo(ActorId by, UnitId unit, Vector2 cell, int tick = 0) => new()
@@ -129,10 +139,11 @@ namespace Strategos.Commands
             Kind = CommandKind.MoveTo, TargetCell = cell,
         };
 
-        public static Command Engage(ActorId by, UnitId unit, UnitId against, int tick = 0) => new()
+        public static Command Engage(ActorId by, UnitId unit, UnitId against, int tick = 0,
+            bool preempt = false) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit,
-            Kind = CommandKind.Engage, AgainstUnit = against,
+            Kind = CommandKind.Engage, AgainstUnit = against, Preempt = preempt,
         };
 
         public static Command Abort(ActorId by, UnitId unit, int tick = 0) => new()
