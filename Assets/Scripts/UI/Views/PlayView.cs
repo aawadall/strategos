@@ -841,12 +841,45 @@ namespace Strategos.UI.Views
             if (q == null || q.IsEmpty) return "NO ORDERS";
 
             var head = q[0];
-            string what = head.Command.Kind == CommandKind.MoveTo
-                ? $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}"
-                : head.Command.Kind.ToString().ToUpperInvariant();
+            string what = head.Command.Kind switch
+            {
+                CommandKind.MoveTo =>
+                    $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}",
+                CommandKind.Engage => DescribeEngagement(unit, head.Command.AgainstUnit),
+                _ => head.Command.Kind.ToString().ToUpperInvariant(),
+            };
 
             string more = q.Count > 1 ? $"   (+{q.Count - 1} QUEUED)" : string.Empty;
             return $"{head.Status.ToString().ToUpperInvariant()}: {what}{more}";
+        }
+
+        /// <summary>
+        /// An engage order, with the range to the target and whether it is inside the weapon's
+        /// envelope.
+        /// </summary>
+        /// <remarks>
+        /// The range matters more than it looks. Engage does **not** advance to contact — a
+        /// unit ordered to fire at something 3 km away with a 1200 m weapon sits there
+        /// declaring intent for twenty minutes while nothing happens, and without this line
+        /// the panel says "EXECUTING" the whole time. Naming the gap is the difference between
+        /// a rule the player learns in one engagement and one they file as a bug.
+        /// </remarks>
+        private string DescribeEngagement(UnitInstance unit, UnitId against)
+        {
+            var target = _scenario?.FindUnit(against);
+            if (target == null) return "ENGAGING";
+
+            string who = string.IsNullOrEmpty(target.Designation)
+                ? against.ToString() : target.Designation;
+
+            if (_map == null) return $"ENGAGING {who}";
+
+            float metres = Vector2.Distance(unit.Cell, target.Cell) * _map.Header.MetresPerCell;
+            float envelope = unit.Capabilities(UnitCatalogue.Default()).EngagementRangeMetres;
+
+            return metres > envelope
+                ? $"ENGAGING {who}   ·   {metres:0} M   ·   OUT OF RANGE ({envelope:0} M)"
+                : $"ENGAGING {who}   ·   {metres:0} M";
         }
 
         private void RefreshSelection()
