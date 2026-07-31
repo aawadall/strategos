@@ -32,7 +32,7 @@ before capturing** — a lingering window at the same coordinates will be photog
 instead.
 
 `-View <key>` selects a view without driving the UI: `explore`, `symbols`, `map`,
-`scenario`, `builder`. Add `-view3d` (passed straight to the player) to open the
+`scenario`, `ttp`, `builder`. Add `-view3d` (passed straight to the player) to open the
 scenario preview in 3D. `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
 which is the cheap check that the shell came up at all.
 
@@ -73,6 +73,30 @@ those numbers before reading the image: a landcover percentage that has moved sa
 generator changed, where the image alone cannot tell you whether generation or the
 palette moved.
 
+The procedurally aged paper stock (`PaperTexture`) has its own sheet, and the same rule
+applies twice over — it produces both a picture and a contrast ratio, and neither catches
+what the other does:
+
+```powershell
+# Menu: Strategos > Bake Paper Contact Sheet
+& "C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Unity.exe" `
+    -batchmode -quit -nographics -projectPath . `
+    -executeMethod Strategos.Editor.PaperContactSheet.Bake -logFile paper-sheet.log
+# -> Artifacts/paper-contact-sheet.png, Artifacts/paper-detail.png
+```
+
+It prints, per cell, the darkest pixel produced and the WCAG contrast of `UiTheme.Ink`
+against it — measured from the baked texture, not predicted from the options. **A stain
+that costs contrast is invisible as a bug**, because it reads as styling rather than as a
+failure, so the number is the only thing that catches it. The detail page reports two
+figures and *the second is the one that matters*: whole-sheet contrast includes the inside
+of a coffee ring, where no text is ever placed, while the in-reserve figure is what text
+will actually be read against.
+
+`PROBE PASSED` here asserts only what each preset claims — `PaperOptions.RequiresReservedText`
+decides whether a preset is held to 7:1 across its whole surface or only inside its reserved
+rects. A preset that says it is safe unreserved and is not will fail the bake.
+
 The simulation has no picture to read, so it has probes instead. All four run under
 `-batchmode -quit -nographics` and print a summary followed by `PROBE PASSED`/`FAILED`:
 
@@ -86,6 +110,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ReactionProbe.Run` | Each ROE, reflex preemption, break contact, fairness |
 | `Strategos.Editor.VictoryProbe.Run` | Objective control, hold duration, draws, precedence |
 | `Strategos.Editor.DirectorProbe.Run` | An unattended scenario reaches a decision |
+| `Strategos.Editor.DoctrineProbe.Run` | Drill pack round trip, and the T/P/U matrix |
 | `Strategos.Editor.TrainingProbe.Run` | The hesitation curve, and that training only costs time |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
@@ -118,6 +143,29 @@ Player log (**always check after a UI change**, see UI gotchas below):
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
-`Write Sample Scenarios`, `Import TMP Essential Resources`.
+`Write Sample Scenarios`, `Write Sample Drills`, `Probe Training`,
+`Import TMP Essential Resources`.
+
+**A new field on a serialised type does nothing until the samples are rewritten.**
+`Assets/Resources/Scenarios/*.json` is what the game loads, not `ScenarioSamples`, so a field
+added to `UnitInstance` deserialises to its default in every shipped scenario until
+`Strategos > Write Sample Scenarios` runs. `TrainingProbe` caught exactly this — it measured a
+scout that was supposed to be green, found it fully trained, and passed anyway because its
+guard skipped when the data was uninteresting. It now fails if no unit in the sample scenario
+is below 100. **A guard that skips when the fixture is stale is a guard that cannot fail.**
+
+**Drills are content, not code.** `DoctrineSamples` holds the shipped set in C# and
+`Strategos > Write Sample Drills` serialises it to `Assets/Resources/Doctrine/`; the app
+reads the JSON. Editing a drill therefore needs no recompile — but **changing
+`DoctrineSamples` without rewriting the pack changes nothing in the player**, which is the
+one trap in this arrangement. `DoctrineProbe` catches the reverse case: it asserts the pack
+loads from Resources rather than from the in-code fallback, because the fallback is the same
+drills and is invisible on screen.
+
+`DoctrineProbe`'s readiness table is the point of it, as `CombatProbe`'s matrix is. It prints
+two: the sample force, which is all fresh companies and platoons and therefore all `T`, and a
+constructed matrix over echelon and condition which is the one that can actually fail — a
+matrix that never produces one of the three ratings is not exercising the thresholds, whatever
+it prints.
 
 ---
