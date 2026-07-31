@@ -48,7 +48,10 @@ abort and time compression all work, and the whole run is deterministic and repl
 from the command log.
 
 Units also fight on their own initiative under rules of engagement, answer fire while
-marching, and withdraw when they are being destroyed.
+marching, and withdraw when they are being destroyed. **Training is a unit attribute and
+costs time**: a green unit hesitates before acting on an order — the same delay covering
+both marching and returning fire, since a reflex preempts onto the head of the queue — and
+is slower to report what it sees, so its commander works from an older picture.
 
 There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
 not a playable space, and there is no game camera. Units still pass through each other —

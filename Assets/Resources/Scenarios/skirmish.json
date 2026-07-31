@@ -68,6 +68,7 @@
       "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 100.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {
@@ -98,6 +99,7 @@
       "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 100.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {
@@ -128,6 +130,7 @@
       "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 55.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {
@@ -158,6 +161,7 @@
       "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 70.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {
@@ -188,6 +192,7 @@
       "Strength": 100.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 100.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {
@@ -218,6 +223,7 @@
       "Strength": 90.0,
       "Readiness": 100.0,
       "Suppression": 0.0,
+      "Training": 100.0,
       "Posture": "Halted",
       "Roe": "ReturnFire",
       "Supply": {

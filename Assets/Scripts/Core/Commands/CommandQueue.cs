@@ -32,6 +32,17 @@ namespace Strategos.Commands
         /// <summary>Ticks this command has been executing. Executors use it to pace themselves.</summary>
         public int TicksExecuting;
 
+        /// <summary>
+        /// Ticks this command has sat at the head of the queue without starting.
+        /// </summary>
+        /// <remarks>
+        /// Forming up, not waiting its turn: only the head accrues this, and only while the
+        /// unit is still hesitating (<see cref="Strategos.Units.UnitInstance.HesitationTicks"/>).
+        /// Part of the replay signature — it decides *when* an order starts, so a replay that
+        /// did not reproduce it would diverge on the next tick.
+        /// </remarks>
+        public int TicksPending;
+
         public override string ToString() => $"{Command} [{Status}]";
     }
 
@@ -90,6 +101,11 @@ namespace Strategos.Commands
                 if (displaced.Status == CommandStatus.Executing)
                 {
                     displaced.Status = CommandStatus.Pending;
+
+                    // Its hesitation restarts. A unit interrupted mid-march has to form up
+                    // again on the task it returns to, and keeping the old count would let a
+                    // green unit resume instantly by having been interrupted.
+                    displaced.TicksPending = 0;
                     _entries[0] = displaced;
                 }
             }
@@ -103,7 +119,19 @@ namespace Strategos.Commands
         }
 
         /// <summary>Marks the head as executing and returns it. No-op if already executing.</summary>
-        public bool TryBegin(out QueuedCommand entry)
+        public bool TryBegin(out QueuedCommand entry) => TryBegin(0, out entry);
+
+        /// <summary>
+        /// Marks the head as executing once it has hesitated for <paramref name="hesitationTicks"/>.
+        /// </summary>
+        /// <remarks>
+        /// Returns false while still forming up, which reads to the caller exactly like a unit
+        /// with nothing to do — deliberately, because that is what it is: the order has been
+        /// received and has not been begun. The entry stays <see cref="CommandStatus.Pending"/>
+        /// throughout, so the plan card and the map both show it as not yet under way without
+        /// needing a third status to mean "about to".
+        /// </remarks>
+        public bool TryBegin(int hesitationTicks, out QueuedCommand entry)
         {
             entry = default;
             if (_entries.Count == 0) return false;
@@ -111,6 +139,14 @@ namespace Strategos.Commands
             var e = _entries[0];
             if (e.Status == CommandStatus.Pending)
             {
+                if (e.TicksPending < hesitationTicks)
+                {
+                    e.TicksPending++;
+                    _entries[0] = e;
+                    entry = e;
+                    return false;
+                }
+
                 e.Status = CommandStatus.Executing;
                 _entries[0] = e;
             }
@@ -182,6 +218,7 @@ namespace Strategos.Commands
                 sb.Append((int)e.Command.Kind).Append(':')
                   .Append((int)e.Status).Append(':')
                   .Append(e.TicksExecuting).Append(':')
+                  .Append(e.TicksPending).Append(':')
                   .Append(e.Command.TargetCell.x.ToString("F4")).Append(',')
                   .Append(e.Command.TargetCell.y.ToString("F4")).Append(';');
             }

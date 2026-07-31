@@ -36,6 +36,19 @@ Tick++
   diverge, and the divergence surfaces long after the change that caused it. Presentation
   interpolates; the simulation counts ticks. `Simulation.SecondsPerTick` is a `const` and
   not a setting because changing it changes every outcome.
+- **Training costs time and only time.** `UnitInstance.Training` produces
+  `HesitationTicks`, and the head of a `CommandQueue` will not leave `Pending` until it has
+  waited that many ticks. **One gate covers both effects on purpose**: a reflex is issued as a
+  preempting command onto the *front* of the queue, so the same hesitation that delays a march
+  delays returning fire. `TicksPending` is part of the queue signature — it decides *when* an
+  order starts, so a replay that did not reproduce it would diverge on the next tick — and
+  `InsertFront` resets it, or a green unit could dodge its own hesitation by being interrupted.
+  A green observer's contact is held in `ContactTracker` and published late with
+  `ObservedTick` untouched, which is what that field was always for. **Training must never
+  make a unit do the *wrong* thing** — a model where an order is sometimes carried out
+  differently is unlearnable, indistinguishable from a bug, and impossible to plan around.
+  Default is 100, meaning zero hesitation and behaviour identical to before the feature, so
+  any movement in another probe's numbers is a real regression.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an
