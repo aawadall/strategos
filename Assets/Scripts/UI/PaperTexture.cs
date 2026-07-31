@@ -325,8 +325,11 @@ namespace Strategos.UI
                     X = cx,
                     Y = cy,
                     // Wide enough to read as a mug, not a droplet, and bounded so one ring
-                    // cannot cover a whole page.
-                    Radius = small * Mathf.Lerp(0.10f, 0.26f, Rand(seed, i, 3)),
+                    // cannot cover a whole page. Tuned down after the binder: at the old range
+                    // a ring on a 1152x768 sheet was 200 px across, which is a blot rather
+                    // than a mug, and one laid in the free band below the text was clipped by
+                    // the page edge.
+                    Radius = small * Mathf.Lerp(0.06f, 0.13f, Rand(seed, i, 3)),
                     Wobble = Mathf.Lerp(0.03f, 0.09f, Rand(seed, i, 4)),
                 });
             }

@@ -35,10 +35,11 @@ Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D s
 
 **Phase 2 (the symbol system) is complete; Phase 1's map system is largely built.** The
 map has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape
-(a heightfield mesh textured with the 2D sheet). The app is a tab shell over four
+(a heightfield mesh textured with the 2D sheet). The app is a tab shell over five
 views: **PLAY** (a loaded scenario you can command), **EXPLORE** (a symbol-library
 browser and a pannable, zoomable map inspector), **SCENARIO** (map settings with a 2D or
-3D preview) and **BUILDER** (the digit-by-digit symbol composer).
+3D preview), **DRILLS** (the TTP binder, read-only) and **BUILDER** (the digit-by-digit
+symbol composer).
 
 **The sandbox is playable and units can fight.** A scenario loads two sides onto generated
 terrain; units have capabilities and state; a fixed-step simulation carries orders down a
@@ -74,10 +75,12 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Direction/` | `SideDirector` — side-level intent for an unplayed side |
 | `Assets/Scripts/Core/Objectives/` | Objectives, victory conditions, the evaluator |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
+| `Assets/Scripts/Core/Doctrine/` | TTPs — coded drills, figures, readiness, pack IO |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |
 | `Assets/Resources/Scenarios/` | Shipped scenario JSON |
+| `Assets/Resources/Doctrine/` | Shipped doctrine packs — drills as JSON |
 | `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, probes |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
 

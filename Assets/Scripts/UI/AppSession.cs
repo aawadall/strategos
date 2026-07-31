@@ -73,6 +73,25 @@ namespace Strategos.UI
         public event Action MapChanged;
 
         /// <summary>
+        /// The running scenario, published by PLAY, or null before it has loaded one.
+        /// </summary>
+        /// <remarks>
+        /// A **reference to the live simulation**, deliberately, not a copy of anything out of
+        /// it. The drill binder rates units against drills and has to read their real condition
+        /// — a unit shot to pieces must not still show as trained. Loading a second copy of the
+        /// scenario here would give exactly that: two sets of units, one of them frozen at load
+        /// time, and the ORBAT list has already made that mistake once by showing load-time
+        /// positions while a unit was under way.
+        ///
+        /// Null is a normal state, not an error: a player who has never opened PLAY has no
+        /// force to rate, and a reader must say so rather than invent one.
+        ///
+        /// This does not make AppSession own the simulation. PLAY builds it, PLAY steps it, and
+        /// nothing else may mutate it — reading unit state is the only use intended here.
+        /// </remarks>
+        public Commands.Simulation Simulation { get; set; }
+
+        /// <summary>
         /// One cached symbol factory for the whole app.
         ///
         /// IMPORTANT: the sprites this returns are cached and shared. Never Destroy one —

@@ -1,0 +1,1068 @@
+{
+  "Name": "Field Drills",
+  "Source": "FM 7-8 lineage, abridged",
+  "Drills": [
+    {
+      "Code": "T1",
+      "Name": "Fire and Movement",
+      "Series": "Team",
+      "Summary": "Move by buddy teams so one pair is always firing while the other moves.",
+      "NotWhen": "You have nothing to suppress with - moving alone under fire is worse.",
+      "Echelon": "Team",
+      "Steps": [
+        {
+          "Text": "One buddy team fires",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "The other bounds forward",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Bounding team takes cover and fires",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Alternate until the objective is reached",
+          "Kind": "MoveTo"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.78,
+                "y": 0.74
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.32
+              }
+            ],
+            "Label": "A",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.46,
+                "y": 0.24
+              }
+            ],
+            "Label": "B",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.2,
+                "y": 0.4
+              },
+              {
+                "x": 0.72,
+                "y": 0.66
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Bound",
+            "Points": [
+              {
+                "x": 0.48,
+                "y": 0.32
+              },
+              {
+                "x": 0.62,
+                "y": 0.48
+              }
+            ],
+            "Label": "BOUND",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "ONE PAIR FIRES WHILE THE OTHER MOVES - NEVER BOTH AT ONCE"
+      }
+    },
+    {
+      "Code": "T2",
+      "Name": "React to Contact (Team)",
+      "Series": "Team",
+      "Summary": "The team's answer to unexpected fire, before anyone gives an order.",
+      "NotWhen": "Never - this one is reflex, which is why it is drilled.",
+      "Echelon": "Team",
+      "Steps": [
+        {
+          "Text": "Return fire at once",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Take the nearest cover",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Call the direction and distance",
+          "Kind": "None"
+        },
+        {
+          "Text": "Await the squad leader's order",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.74,
+                "y": 0.76
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.26,
+                "y": 0.38
+              }
+            ],
+            "Label": "TEAM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.34,
+                "y": 0.44
+              },
+              {
+                "x": 0.66,
+                "y": 0.7
+              }
+            ],
+            "Label": "RETURN FIRE",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Bound",
+            "Points": [
+              {
+                "x": 0.24,
+                "y": 0.32
+              },
+              {
+                "x": 0.14,
+                "y": 0.18
+              }
+            ],
+            "Label": "COVER",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "FIRE FIRST - THEN COVER - THE REPORT COMES AFTER BOTH"
+      }
+    },
+    {
+      "Code": "T3",
+      "Name": "React to Indirect Fire",
+      "Series": "Team",
+      "Summary": "Get out of the impact area. Do not go to ground and wait it out.",
+      "NotWhen": "You are already in prepared overhead cover.",
+      "Echelon": "Team",
+      "Steps": [
+        {
+          "Text": "Shout INCOMING",
+          "Kind": "None"
+        },
+        {
+          "Text": "Move out of the impact area at once",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Disperse while moving",
+          "Kind": "None"
+        },
+        {
+          "Text": "Report the shelling",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Objective",
+            "Points": [
+              {
+                "x": 0.64,
+                "y": 0.64
+              }
+            ],
+            "Label": "IMPACT",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.58,
+                "y": 0.54
+              }
+            ],
+            "Label": "TEAM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.48,
+                "y": 0.46
+              },
+              {
+                "x": 0.18,
+                "y": 0.24
+              }
+            ],
+            "Label": "OUT",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "MOVE OUT OF IT - GROUND OFFERS NOTHING AGAINST AIRBURST"
+      }
+    },
+    {
+      "Code": "T4",
+      "Name": "Break Contact (Team)",
+      "Series": "Team",
+      "Summary": "Disengage a team that is outmatched, bounding away under its own fire.",
+      "NotWhen": "Decisively engaged at close range - turning your back is worse.",
+      "Echelon": "Team",
+      "Steps": [
+        {
+          "Text": "Suppress to buy the first bound",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Bound back by pairs",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Continue until out of contact",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Report and reorganise",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.8,
+                "y": 0.72
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.54,
+                "y": 0.46
+              }
+            ],
+            "Label": "A",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.26,
+                "y": 0.28
+              }
+            ],
+            "Label": "B",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.56,
+                "y": 0.52
+              },
+              {
+                "x": 0.76,
+                "y": 0.66
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Bound",
+            "Points": [
+              {
+                "x": 0.24,
+                "y": 0.22
+              },
+              {
+                "x": 0.1,
+                "y": 0.12
+              }
+            ],
+            "Label": "BREAK",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "THE SAME ALTERNATION AS T1 - RUN BACKWARDS"
+      }
+    },
+    {
+      "Code": "1",
+      "Name": "Platoon Attack",
+      "Series": "BattleDrill",
+      "Summary": "Close with and destroy a position with a platoon's weight.",
+      "NotWhen": "The position is not fixed, or you have not found its flank.",
+      "Echelon": "Platoon",
+      "Steps": [
+        {
+          "Text": "Fix the position with a base of fire",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Find and report a flank",
+          "Kind": "None"
+        },
+        {
+          "Text": "Manoeuvre the assault squads",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Assault through",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Consolidate and reorganise",
+          "Kind": "Hold"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.62,
+                "y": 0.8
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.16,
+                "y": 0.46
+              }
+            ],
+            "Label": "1 SQD",
+            "Echelon": "squad"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.42,
+                "y": 0.18
+              }
+            ],
+            "Label": "2 SQD",
+            "Echelon": "squad"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.52
+              },
+              {
+                "x": 0.54,
+                "y": 0.74
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.5,
+                "y": 0.22
+              },
+              {
+                "x": 0.76,
+                "y": 0.46
+              },
+              {
+                "x": 0.7,
+                "y": 0.7
+              }
+            ],
+            "Label": "ASSAULT",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "ONE ELEMENT FIXES FROM THE FRONT - ANOTHER TAKES THE FLANK"
+      }
+    },
+    {
+      "Code": "1A",
+      "Name": "Squad Attack",
+      "Series": "BattleDrill",
+      "Summary": "The same shape at squad level: one team fixes, the other assaults.",
+      "NotWhen": "The enemy is not yet fixed, or you are the smaller force.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Establish a base of fire",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Suppress the position",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Manoeuvre the assault team",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Assault through",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Consolidate and reorganise",
+          "Kind": "Hold"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.7,
+                "y": 0.78
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Objective",
+            "Points": [
+              {
+                "x": 0.7,
+                "y": 0.78
+              }
+            ],
+            "Label": "OBJ",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.16,
+                "y": 0.42
+              }
+            ],
+            "Label": "A TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.4,
+                "y": 0.16
+              }
+            ],
+            "Label": "B TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.48
+              },
+              {
+                "x": 0.62,
+                "y": 0.72
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.48,
+                "y": 0.2
+              },
+              {
+                "x": 0.78,
+                "y": 0.44
+              },
+              {
+                "x": 0.76,
+                "y": 0.66
+              }
+            ],
+            "Label": "ASSAULT",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "BASE OF FIRE LEFT - ASSAULT RIGHT - FIRE SHIFTS AS THE TEAM CLOSES"
+      }
+    },
+    {
+      "Code": "2",
+      "Name": "React to Contact",
+      "Series": "BattleDrill",
+      "Summary": "Answer unexpected fire, find who is firing, and take the initiative.",
+      "NotWhen": "In the open with no cover within 50 m - break contact instead.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Return fire immediately",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Take the nearest cover",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Report contact to higher",
+          "Kind": "None"
+        },
+        {
+          "Text": "Locate and suppress",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Assault or break contact",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.74,
+                "y": 0.76
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.2,
+                "y": 0.48
+              }
+            ],
+            "Label": "A TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.3,
+                "y": 0.2
+              }
+            ],
+            "Label": "B TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.22,
+                "y": 0.54
+              },
+              {
+                "x": 0.66,
+                "y": 0.7
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Bound",
+            "Points": [
+              {
+                "x": 0.28,
+                "y": 0.14
+              },
+              {
+                "x": 0.1,
+                "y": 0.08
+              }
+            ],
+            "Label": "OR BREAK",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "SUPPRESS FIRST - ASSAULT OR BREAK IS DECIDED AFTER"
+      }
+    },
+    {
+      "Code": "3",
+      "Name": "Break Contact",
+      "Series": "BattleDrill",
+      "Summary": "Disengage from a fight you should not be having and open the distance.",
+      "NotWhen": "Decisively engaged at close range - breaking exposes your flank.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Suppress to buy movement",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Bound back by team",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Continue until out of contact",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Report and reorganise",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.82,
+                "y": 0.74
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.54,
+                "y": 0.48
+              }
+            ],
+            "Label": "A TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.26,
+                "y": 0.28
+              }
+            ],
+            "Label": "B TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.56,
+                "y": 0.54
+              },
+              {
+                "x": 0.78,
+                "y": 0.68
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Bound",
+            "Points": [
+              {
+                "x": 0.24,
+                "y": 0.22
+              },
+              {
+                "x": 0.1,
+                "y": 0.12
+              }
+            ],
+            "Label": "BOUND",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "ALTERNATING BOUNDS - SOMEONE IS ALWAYS FIRING"
+      }
+    },
+    {
+      "Code": "4",
+      "Name": "React to Ambush",
+      "Series": "BattleDrill",
+      "Summary": "Answer a near ambush by assaulting through the killing zone.",
+      "NotWhen": "The ambush is far and covered - suppress and manoeuvre instead.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Return fire without waiting for an order",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Assault through the near side",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Clear and consolidate beyond it",
+          "Kind": "Hold"
+        },
+        {
+          "Text": "Treat casualties and report",
+          "Kind": "None"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.68,
+                "y": 0.68
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Objective",
+            "Points": [
+              {
+                "x": 0.42,
+                "y": 0.46
+              }
+            ],
+            "Label": "KZ",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.42
+              }
+            ],
+            "Label": "SQD",
+            "Echelon": "squad"
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.28,
+                "y": 0.44
+              },
+              {
+                "x": 0.62,
+                "y": 0.6
+              }
+            ],
+            "Label": "ASSAULT",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "THROUGH IT - THE KILLING ZONE IS THE WORST PLACE TO STAY"
+      }
+    },
+    {
+      "Code": "5",
+      "Name": "Knock Out a Bunker",
+      "Series": "BattleDrill",
+      "Summary": "Suppress the aperture, work a team to its blind side, and clear it.",
+      "NotWhen": "The bunker is mutually supported and the supporting one is unlocated.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Suppress the aperture",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Move a team to the blind side",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Clear the position",
+          "Kind": "None"
+        },
+        {
+          "Text": "Consolidate beyond it",
+          "Kind": "Hold"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Hostile",
+            "Points": [
+              {
+                "x": 0.66,
+                "y": 0.76
+              }
+            ],
+            "Label": "ENY",
+            "Echelon": ""
+          },
+          {
+            "Kind": "BattlePosition",
+            "Points": [
+              {
+                "x": 0.66,
+                "y": 0.76
+              },
+              {
+                "x": 235.0,
+                "y": 0.0
+              }
+            ],
+            "Label": "",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.44
+              }
+            ],
+            "Label": "A TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.44,
+                "y": 0.16
+              }
+            ],
+            "Label": "B TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.2,
+                "y": 0.5
+              },
+              {
+                "x": 0.58,
+                "y": 0.7
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.52,
+                "y": 0.2
+              },
+              {
+                "x": 0.82,
+                "y": 0.46
+              },
+              {
+                "x": 0.76,
+                "y": 0.68
+              }
+            ],
+            "Label": "BLIND SIDE",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "APPROACH OUT OF THE APERTURE ARC - NEVER ACROSS ITS FRONT"
+      }
+    },
+    {
+      "Code": "6",
+      "Name": "Enter Building and Clear Room",
+      "Series": "BattleDrill",
+      "Summary": "Enter at a point of your choosing and clear the building room by room.",
+      "NotWhen": "The building is not isolated - clearing into reinforcement is a trap.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Isolate the building",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Suppress the entry point",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Enter at a corner, not the doorway centre",
+          "Kind": "None"
+        },
+        {
+          "Text": "Clear by room, marking as you go",
+          "Kind": "None"
+        },
+        {
+          "Text": "Consolidate and report cleared",
+          "Kind": "Hold"
+        }
+      ],
+      "Diagram": {
+        "Elements": [
+          {
+            "Kind": "Objective",
+            "Points": [
+              {
+                "x": 0.62,
+                "y": 0.64
+              }
+            ],
+            "Label": "BLDG",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.18,
+                "y": 0.64
+              }
+            ],
+            "Label": "A TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "Friendly",
+            "Points": [
+              {
+                "x": 0.34,
+                "y": 0.2
+              }
+            ],
+            "Label": "B TM",
+            "Echelon": "team"
+          },
+          {
+            "Kind": "SupportByFire",
+            "Points": [
+              {
+                "x": 0.22,
+                "y": 0.64
+              },
+              {
+                "x": 0.5,
+                "y": 0.64
+              }
+            ],
+            "Label": "SBF",
+            "Echelon": ""
+          },
+          {
+            "Kind": "Axis",
+            "Points": [
+              {
+                "x": 0.4,
+                "y": 0.26
+              },
+              {
+                "x": 0.56,
+                "y": 0.5
+              }
+            ],
+            "Label": "ENTRY",
+            "Echelon": ""
+          }
+        ],
+        "Caption": "ISOLATE FIRST - A BUILDING CLEARED INTO REINFORCEMENT IS NOT CLEARED"
+      }
+    },
+    {
+      "Code": "7",
+      "Name": "Enter and Clear a Trench",
+      "Series": "BattleDrill",
+      "Summary": "Gain a foothold in the trench, then clear along it in both directions.",
+      "NotWhen": "You have no way to suppress along the length of the trench.",
+      "Echelon": "Squad",
+      "Steps": [
+        {
+          "Text": "Suppress the trench line",
+          "Kind": "Engage"
+        },
+        {
+          "Text": "Gain a foothold",
+          "Kind": "MoveTo"
+        },
+        {
+          "Text": "Clear along the trench in both directions",
+          "Kind": "None"
+        },
+        {
+          "Text": "Consolidate and report",
+          "Kind": "Hold"
+        }
+      ]
+    }
+  ]
+}
