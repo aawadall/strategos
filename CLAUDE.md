@@ -45,8 +45,8 @@ symbol composer).
 terrain; units have capabilities and state; a fixed-step simulation carries orders down a
 command topic into per-unit queues, moves units by terrain-cost A\*, resolves direct fire
 between them, and carries reports back up a situation topic. Select, order, engage, queue,
-abort and time compression all work, and the whole run is deterministic and replayable
-from the command log.
+abort, hold and time compression all work; the live plan is listed order by order and can be
+cut at any entry; and the whole run is deterministic and replayable from the command log.
 
 Units also fight on their own initiative under rules of engagement, answer fire while
 marching, and withdraw when they are being destroyed.

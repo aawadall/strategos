@@ -103,6 +103,13 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
 - **A `PaperTexture` is owned by whoever asked for it and must be `Destroy`ed** — the
   opposite of the `AppSession.Symbols` rule above. Sheets are per-size and per-seed, so
   caching them centrally would be a leak with no clear owner.
+- **A list of buttons rebuilt from live state needs a guard on what it was built from.** The
+  PLAY rail's plan card lists `CommandQueue.Entries` with a cancel on each row, and its
+  refresh runs from `RefreshSelection`, which runs every tick. Rebuilding unconditionally
+  destroys and recreates every button once a second — the row under the pointer disappears
+  between press and release, so roughly one click in ten does nothing. `PlayView._planKey` is
+  the fix: a string of everything a row draws, compared before rebuilding. It deliberately
+  omits `QueuedCommand.TicksExecuting`, which changes every tick and appears nowhere on a row.
 - **Baked symbol sprites are not frame-centred.** `FrameRight = 160` of `BASE = 256`
   reserves a right-hand amplifier column, so the symbol sits left of centre in its texture.
   The library's tiles are 4:3 rather than square for this reason — in a square tile it reads

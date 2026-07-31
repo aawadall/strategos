@@ -319,13 +319,21 @@ namespace Strategos.UI.Views
             AddSection(content, "ORDERS");
             var hint = CreateTmp("Hint", content,
                 "Left-click selects.  Right-click orders a move, or fire if it lands on an enemy." +
-                "\nHold Shift to queue behind the current plan.",
+                "\nHold Shift to queue behind the current plan." +
+                "\nCANCEL drops that order and every one queued behind it.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
-            hint.GetComponent<LayoutElement>().preferredHeight = 30;
+            hint.GetComponent<LayoutElement>().preferredHeight = 42;
+
+            BuildPlanCard(content);
+
+            // Side by side, because they are the same kind of decision taken about the same
+            // plan. Stacked, HOLD reads as belonging to the clock controls below it.
+            var controls = AddButtonRow(content);
+            AddButton(controls, "ABORT PLAN", AbortSelected);
+            AddButton(controls, "HOLD", HoldSelected);
 
             _roeDrop = AddDropdown(content, "RULES OF ENGAGEMENT", OnRoeChanged);
-            AddButton(content, "ABORT PLAN", AbortSelected);
             _runToggle = AddToggle(content, "CLOCK RUNNING  (SPACE)", true,
                 () => _running = _runToggle.isOn);
             _speedDrop = AddDropdown(content, "TIME COMPRESSION", OnSpeedChanged);
@@ -1190,6 +1198,26 @@ namespace Strategos.UI.Views
             _sim.Issue(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
         }
 
+        /// <summary>
+        /// Orders the selected unit to stand where it is.
+        /// </summary>
+        /// <remarks>
+        /// <c>Command.Hold</c> and <c>CommandKind.Hold</c> have existed since #9 and had no way
+        /// in; this is it. **It does the same thing to the queue as ABORT PLAN does today** —
+        /// <c>Simulation.OnCommandDelivered</c> handles the two kinds identically — and the two
+        /// buttons are here anyway because the *log* tells them apart, so a replay reconstructs
+        /// "the commander stopped this unit on purpose" separately from "the commander threw the
+        /// plan away". Issue #58 tracks giving Hold its own effect: hold means stay here and
+        /// keep watching, which should imply a posture and an ROE, not just an empty queue.
+        /// </remarks>
+        private void HoldSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Hold(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
         private void Select(UnitId id)
         {
             _selection.Clear();
@@ -1213,21 +1241,25 @@ namespace Strategos.UI.Views
         /// </summary>
         private string DescribePlan(UnitInstance unit)
         {
-            var q = _sim?.QueueOf(unit.Id);
-            if (q == null || q.IsEmpty) return "NO ORDERS";
+            var plan = BelievedPlanOf(unit);
+            if (plan == null || plan.Count == 0) return "NO ORDERS";
 
-            var head = q[0];
-            string what = head.Command.Kind switch
-            {
-                CommandKind.MoveTo =>
-                    $"MOVE TO {head.Command.TargetCell.x:0},{head.Command.TargetCell.y:0}",
-                CommandKind.Engage => DescribeEngagement(unit, head.Command.AgainstUnit),
-                _ => head.Command.Kind.ToString().ToUpperInvariant(),
-            };
-
-            string more = q.Count > 1 ? $"   (+{q.Count - 1} QUEUED)" : string.Empty;
-            return $"{head.Status.ToString().ToUpperInvariant()}: {what}{more}";
+            var head = plan[0];
+            string more = plan.Count > 1 ? $"   (+{plan.Count - 1} QUEUED)" : string.Empty;
+            return $"{head.Status.ToString().ToUpperInvariant()}: " +
+                   $"{DescribeOrder(unit, head.Command)}{more}";
         }
+
+        /// <summary>
+        /// One order as a phrase, shared by the details line and the plan rows so the head of
+        /// the plan cannot be described two different ways in the same panel.
+        /// </summary>
+        private string DescribeOrder(UnitInstance unit, in Command command) => command.Kind switch
+        {
+            CommandKind.MoveTo => $"MOVE TO {command.TargetCell.x:0},{command.TargetCell.y:0}",
+            CommandKind.Engage => DescribeEngagement(unit, command.AgainstUnit),
+            _ => command.Kind.ToString().ToUpperInvariant(),
+        };
 
         /// <summary>
         /// Shown instead of a plan for a unit the player cannot order. Without it, right-click
@@ -1263,6 +1295,218 @@ namespace Strategos.UI.Views
             return metres > envelope
                 ? $"ENGAGING {who}   ·   {metres:0} M   ·   OUT OF RANGE ({envelope:0} M)"
                 : $"ENGAGING {who}   ·   {metres:0} M";
+        }
+
+        // ─── Plan card ────────────────────────────────────────────────────────
+
+        private RectTransform _planRoot;
+
+        /// <summary>
+        /// What the listed rows were built from.
+        /// </summary>
+        /// <remarks>
+        /// Rebuilding a row is destroy-and-recreate and <see cref="RefreshSelection"/> runs on
+        /// every tick, so the rows are rebuilt only when the plan they describe has actually
+        /// moved. Deliberately excludes <see cref="QueuedCommand.TicksExecuting"/>: it changes
+        /// every single tick and no row displays it, so including it would rebuild the whole
+        /// list — and destroy the button under the player's cursor — once a second.
+        /// </remarks>
+        private string _planKey;
+
+        private void BuildPlanCard(Transform parent)
+        {
+            _planRoot = CreateRect("Plan", parent);
+            var v = _planRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 2;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            _planRoot.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+        }
+
+        /// <summary>
+        /// Two buttons on one line. Its own row rather than two entries in the rail's column,
+        /// because the column stacks and a full-width HOLD under a full-width ABORT PLAN reads
+        /// as a list of unrelated actions.
+        /// </summary>
+        private static RectTransform AddButtonRow(Transform parent)
+        {
+            var row = CreateRect("Buttons", parent);
+            var le = row.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 44;
+            le.minHeight = 44;
+
+            var h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 6;
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = true;
+            h.childForceExpandHeight = true;
+            return row;
+        }
+
+        /// <summary>
+        /// Identity of the listed plan: whose it is, and every entry a row draws.
+        /// </summary>
+        private string PlanKey(UnitInstance unit, IReadOnlyList<QueuedCommand> plan)
+        {
+            if (unit == null) return "none";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append(unit.Id.Value).Append(IsPlayerCommanded(unit) ? '+' : '-').Append('|');
+            if (plan != null)
+                for (int i = 0; i < plan.Count; i++)
+                {
+                    var c = plan[i].Command;
+                    sb.Append((int)c.Kind).Append(':').Append((int)plan[i].Status).Append(':')
+                      .Append(c.TargetCell.x.ToString("F1")).Append(',')
+                      .Append(c.TargetCell.y.ToString("F1")).Append(':')
+                      .Append(c.AgainstUnit.Value).Append(';');
+                }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Lists the selected unit's live plan, one row per queued order, with a cancel on each.
+        /// </summary>
+        /// <remarks>
+        /// Read from <see cref="BelievedPlanOf"/> — the same accessor the map routes use — so
+        /// the list and the arrows on the map can never disagree about what a unit is doing,
+        /// and both become fog-of-war-aware in one edit rather than two.
+        ///
+        /// An enemy's plan is listed without cancels, matching the map: its route is already
+        /// drawn there, and hiding it here while drawing it there would be an inconsistency
+        /// rather than a rule.
+        /// </remarks>
+        private void RefreshPlan()
+        {
+            if (_planRoot == null) return;
+
+            UnitInstance unit = null;
+            if (_selection.Count > 0 && _scenario != null)
+                unit = _scenario.FindUnit(_selection[0]);
+
+            var plan = unit == null ? null : BelievedPlanOf(unit);
+
+            string key = PlanKey(unit, plan);
+            if (key == _planKey) return;
+            _planKey = key;
+
+            for (int i = _planRoot.childCount - 1; i >= 0; i--)
+                Destroy(_planRoot.GetChild(i).gameObject);
+
+            if (unit == null) { AddPlanNote("No unit selected."); return; }
+            if (plan == null || plan.Count == 0) { AddPlanNote("NO ORDERS"); return; }
+
+            bool commandable = IsPlayerCommanded(unit);
+            for (int i = 0; i < plan.Count; i++)
+                AddPlanRow(unit, i, plan[i], commandable);
+        }
+
+        private void AddPlanNote(string text)
+        {
+            var row = CreateRect("PlanNote", _planRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
+            row.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            var t = CreateTmp("T", row, text, 11, FontStyles.Italic, withLayout: false);
+            Stretch(t.rectTransform);
+            t.rectTransform.offsetMin = new Vector2(10, 0);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.color = Theme.InkMuted;
+        }
+
+        private void AddPlanRow(UnitInstance unit, int index, in QueuedCommand entry,
+            bool commandable)
+        {
+            var row = CreateRect($"Plan_{index}", _planRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
+            row.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            // The order under way is marked by a bar down the left rather than by colouring the
+            // whole row: the rows carry a red cancel each, and a second tinted field behind it
+            // makes the one destructive control on the row harder to pick out, not easier.
+            var flag = CreateRect("Flag", row);
+            flag.anchorMin = new Vector2(0, 0);
+            flag.anchorMax = new Vector2(0, 1);
+            flag.pivot = new Vector2(0, 0.5f);
+            flag.sizeDelta = new Vector2(4, 0);
+            flag.gameObject.AddComponent<Image>().color =
+                entry.Status == CommandStatus.Executing ? Theme.Accent : Theme.CardLine;
+
+            // Hyphens and middots only — the atlas renders an en dash as nothing at all.
+            var t = CreateTmp("T", row,
+                $"{index + 1}.   {entry.Status.ToString().ToUpperInvariant()}   ·   " +
+                DescribeOrder(unit, entry.Command),
+                11, FontStyles.Normal, withLayout: false);
+            Stretch(t.rectTransform);
+            t.rectTransform.offsetMin = new Vector2(12, 0);
+            t.rectTransform.offsetMax = new Vector2(commandable ? -80 : -8, 0);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.color = Theme.Ink;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Ellipsis;
+
+            if (!commandable) return;
+
+            var btn = CreateRect("Cancel", row);
+            btn.anchorMin = btn.anchorMax = new Vector2(1f, 0.5f);
+            btn.pivot = new Vector2(1f, 0.5f);
+            btn.sizeDelta = new Vector2(68, 20);
+            btn.anchoredPosition = new Vector2(-6, 0);
+
+            var img = btn.gameObject.AddComponent<Image>();
+            img.color = Color.white;
+            var button = btn.gameObject.AddComponent<Button>();
+            button.targetGraphic = img;
+            button.colors = AccentButtonColors(Theme.Alert);
+
+            int captured = index;
+            var target = unit.Id;
+            button.onClick.AddListener(() => CancelPlanFrom(target, captured));
+
+            var label = CreateTmp("T", btn, "CANCEL", 9, FontStyles.Bold, withLayout: false);
+            Stretch(label.rectTransform);
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = Theme.AccentText;
+            label.characterSpacing = 2f;
+        }
+
+        /// <summary>
+        /// Cuts the plan at one entry, issued as a command so it is logged and replayable.
+        /// </summary>
+        /// <remarks>
+        /// CANCEL FROM is what the queue offers and what the button therefore means: entries
+        /// before <paramref name="index"/> are untouched and everything from it onward goes.
+        /// There is no cancel-one-in-the-middle, because a plan is a sequence and removing a leg
+        /// from the middle of a route silently rewrites the two legs either side of it.
+        ///
+        /// **Index 0 goes out as an Abort, not as CancelFrom(0).** The two do the same thing to
+        /// the queue, but <c>Simulation.OnCommandDelivered</c> follows an Abort with a halt
+        /// report and <c>ApplyAbortPosture</c> and follows a CancelFrom with neither — so
+        /// cancelling a running move through CancelFrom leaves the unit standing still while
+        /// still flagged <c>Posture.Moving</c>, which is a silent 1.25x to every round fired at
+        /// it (<c>EngagementResolver.PostureFactor</c>). Issue #56 tracks fixing that in Core;
+        /// until it lands, the button that cancels the whole plan sends the command that also
+        /// stops the unit.
+        ///
+        /// The index is resolved when the command is *delivered*, one step later, so a head that
+        /// completes in between shifts every row up by one — see #57.
+        /// </remarks>
+        private void CancelPlanFrom(UnitId id, int index)
+        {
+            if (_sim == null) return;
+            var unit = _scenario?.FindUnit(id);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            var actor = ActorId.ForSide(unit.Side);
+            _sim.Issue(index <= 0
+                ? Command.Abort(actor, unit.Id)
+                : Command.CancelFrom(actor, unit.Id, index));
+
+            RefreshSelection();
         }
 
         private void RefreshSelection()
@@ -1313,6 +1557,7 @@ namespace Strategos.UI.Views
                 }
             }
 
+            RefreshPlan();
             LayOutMarkers();
             RefreshOrbatHighlight();
         }
