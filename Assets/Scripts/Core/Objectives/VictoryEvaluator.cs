@@ -54,6 +54,27 @@ namespace Strategos.Objectives
         private SideId[] _owner;
         private int[] _heldSince;
 
+        /// <summary>
+        /// Tick the owner's *continuous presence* began, or <see cref="NotOccupied"/>.
+        /// </summary>
+        /// <remarks>
+        /// **Ownership and occupation are different facts and used to share one field.** Owner
+        /// answers "who took this ground" and is deliberately sticky — walking out does not
+        /// hand it back, which is what makes taking ground mean something. Occupation answers
+        /// "who is standing in it now", and a hold clock has to run on the second.
+        ///
+        /// With only `_heldSince`, which moves only when *ownership* changes, `HoldTicks`
+        /// measured "took it this long ago and nobody has taken it since" — so a unit routed
+        /// through an objective for one tick won a ten-minute hold by leaving and doing
+        /// nothing. On the shipped skirmish that was the primary victory condition, satisfiable
+        /// by an accident of pathfinding, and invisible because the ring turns your colour
+        /// either way.
+        /// </remarks>
+        private int[] _occupiedSince;
+
+        /// <summary>No unit of the owning side is inside.</summary>
+        public const int NotOccupied = -1;
+
         private readonly Dictionary<int, float> _startingStrength = new();
 
         /// <summary>Ticks after which an undecided scenario is a draw. Zero means no limit.</summary>
@@ -75,11 +96,16 @@ namespace Strategos.Objectives
 
             _owner = new SideId[_objectives.Count];
             _heldSince = new int[_objectives.Count];
+            _occupiedSince = new int[_objectives.Count];
 
             for (int i = 0; i < _objectives.Count; i++)
             {
                 _owner[i] = _objectives[i].InitialOwner;
                 _heldSince[i] = 0;
+
+                // Not occupied until somebody is actually seen standing in it. An initial
+                // owner has taken the ground on paper, which is not the same as being on it.
+                _occupiedSince[i] = NotOccupied;
             }
 
             // Starting strength per side, captured once. "Reduced below 25%" has to mean 25% of
@@ -161,15 +187,53 @@ namespace Strategos.Objectives
                     else if (present != unit.Side) { contested = true; break; }
                 }
 
+                // Occupation is about the *owner* being present, and is judged every tick
+                // whatever ownership does. Contested counts as occupied for whoever owns it:
+                // a defender fighting for its own ground has not abandoned it.
+                bool ownerInside = OwnerIsInside(objective, _owner[i], units);
+                if (!ownerInside) _occupiedSince[i] = NotOccupied;
+                else if (_occupiedSince[i] == NotOccupied) _occupiedSince[i] = tick;
+
                 if (contested || !present.IsValid) continue;
 
                 if (_owner[i] != present)
                 {
                     _owner[i] = present;
                     _heldSince[i] = tick;
+
+                    // A new owner starts its clock now, and it is standing there by
+                    // definition — uncontested presence is how it took the ground.
+                    _occupiedSince[i] = tick;
                 }
             }
         }
+
+        /// <summary>Whether the owning side has a living unit inside the objective.</summary>
+        private static bool OwnerIsInside(Objective objective, SideId owner,
+            IReadOnlyList<UnitInstance> units)
+        {
+            if (!owner.IsValid) return false;
+
+            for (int u = 0; u < units.Count; u++)
+            {
+                var unit = units[u];
+                if (unit.IsDestroyed || unit.Side != owner) continue;
+                if (objective.Contains(unit.Cell)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// How long the owner has been standing in an objective, in ticks, or 0.
+        /// </summary>
+        /// <remarks>
+        /// Exposed so a view can show the clock a hold condition depends on. It was invisible
+        /// before, which is most of why a hold that never happened went unnoticed.
+        /// </remarks>
+        public int HeldTicksOfIndex(int i, int tick) =>
+            (uint)i < (uint)_occupiedSince.Length && _occupiedSince[i] != NotOccupied
+                ? tick - _occupiedSince[i]
+                : 0;
 
         // ─── Evaluation ───────────────────────────────────────────────────────
 
@@ -305,7 +369,12 @@ namespace Strategos.Objectives
 
                 if (index < 0) return false;                       // names an objective that does not exist
                 if (_owner[index] != condition.Side) return false;
-                if (tick - _heldSince[index] < condition.HoldTicks) return false;
+
+                // Occupation, not ownership. Ownership is sticky by design, so measuring the
+                // hold against it counts time the ground was abandoned — which is the whole
+                // of the bug this replaced.
+                if (_occupiedSince[index] == NotOccupied) return false;
+                if (tick - _occupiedSince[index] < condition.HoldTicks) return false;
             }
 
             return true;
@@ -321,7 +390,8 @@ namespace Strategos.Objectives
         {
             sb.Append("obj[");
             for (int i = 0; i < _owner.Length; i++)
-                sb.Append(_owner[i].Value).Append(':').Append(_heldSince[i]).Append(';');
+                sb.Append(_owner[i].Value).Append(':').Append(_heldSince[i]).Append(':')
+                  .Append(_occupiedSince[i]).Append(';');
             sb.Append(']');
             if (Outcome.Decided)
                 sb.Append("win:").Append(Outcome.Winner.Value).Append(':').Append(Outcome.Tick);
