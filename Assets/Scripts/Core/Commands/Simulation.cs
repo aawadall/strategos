@@ -364,11 +364,11 @@ namespace Strategos.Commands
             // #94: this is the log entry that used to not exist. Appended before the report so
             // a probe reading DirectiveResponses mid-call never observes the report without the
             // response that caused it — the same reason Issue() logs before it publishes.
-            DirectiveResponses.Append(new Directives.DirectiveResponse
+            DirectiveResponses.Append(new DirectiveResponse
             {
                 Tick = Tick,
                 DirectiveSeq = directive.Seq,
-                Kind = Directives.DirectiveResponseKind.Acknowledged,
+                Kind = DirectiveResponseKind.Acknowledged,
             });
 
             var unit = Hierarchy.Find(directive.TargetUnit);
