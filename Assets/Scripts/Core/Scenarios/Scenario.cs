@@ -257,9 +257,56 @@ namespace Strategos.Scenarios
             ValidateVictory(problems);
             ValidateDirective(problems);
 
-            if (catalogue != null && map != null) CheckReachability(problems, catalogue, map);
+            if (catalogue != null && map != null)
+            {
+                CheckReachability(problems, catalogue, map);
+                CheckObjectivesPassable(problems, catalogue, map);
+            }
 
             return problems;
+        }
+
+        /// <summary>
+        /// Every objective's cell must be ground at least one fielded unit type can occupy.
+        /// </summary>
+        /// <remarks>
+        /// The failure this catches is completely silent: a <c>MoveTo</c> to an objective's
+        /// centre fails on the tick it is issued, so a unit told to hold it or a director
+        /// sending idle units there simply never arrives — the scenario looks like an
+        /// opponent that will not move rather than an objective sitting in a lake. #95 was
+        /// exactly this: <c>THE CROSSROADS</c> shipped one cell into open water once erosion
+        /// ran as authored, and nothing here caught it because this check did not exist. Only
+        /// checked when the caller supplies enough to check it, same as
+        /// <see cref="CheckReachability"/> just above — one landcover class can be passable to
+        /// a foot unit and not a tank, so "passable" needs a capability to mean anything.
+        /// </remarks>
+        private void CheckObjectivesPassable(List<string> problems, UnitCatalogue catalogue, MapData map)
+        {
+            var capabilityIds = new HashSet<string>();
+            foreach (var u in Units) capabilityIds.Add(u.CapabilityId);
+
+            foreach (var o in Objectives)
+            {
+                if (o.Cell.x < -0.5f || o.Cell.x > map.Width - 0.5f ||
+                    o.Cell.y < -0.5f || o.Cell.y > map.Height - 0.5f)
+                    continue;   // already reported as off-map by ValidateVictory
+
+                int cx = Mathf.Clamp(Mathf.RoundToInt(o.Cell.x), 0, map.Width - 1);
+                int cy = Mathf.Clamp(Mathf.RoundToInt(o.Cell.y), 0, map.Height - 1);
+                var cover = map.GetLandcover(cx, cy);
+                float slope = map.SampleSlopeDegrees(cx, cy);
+
+                foreach (var capabilityId in capabilityIds)
+                {
+                    if (!catalogue.Contains(capabilityId)) continue;   // reported above already
+                    var caps = catalogue.Get(capabilityId);
+                    if (caps.CanEnter(cover, slope)) continue;
+
+                    problems.Add(
+                        $"Objective {o.Id} '{o.Name}' at ({cx}, {cy}) is " +
+                        $"{LandcoverInfo.DisplayName(cover)}, which '{capabilityId}' cannot occupy.");
+                }
+            }
         }
 
         /// <summary>
