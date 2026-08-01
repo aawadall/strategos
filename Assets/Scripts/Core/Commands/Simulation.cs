@@ -252,6 +252,14 @@ namespace Strategos.Commands
             for (int i = 0; i < _units.Count; i++)
                 EngagementResolver.DecaySuppression(_units[i], SecondsPerTick);
 
+            // Fatigue after the engagements resolve, so "was this unit in a fight this tick"
+            // is answerable — the intent list is still populated here and is cleared at the
+            // top of the next step's unit loop. Marching and fighting cost readiness; halted
+            // and unengaged gives it back, more slowly.
+            for (int i = 0; i < _units.Count; i++)
+                FatigueModel.Apply(_units[i], WasEngagedThisTick(_units[i].Id), Map, Catalogue,
+                    SecondsPerTick);
+
             // After movement: a contact should name where the subject ended the tick.
             // Cached delegate, not a lambda — this runs every step of every replay.
             _contacts?.Sweep(Map, Catalogue, Tick, _publishReport);
@@ -358,6 +366,23 @@ namespace Strategos.Commands
             queue.Finish();
             Report(SituationReport.Status(OutcomeKind(entry.Command.Kind, outcome), unit, Tick,
                 entry.Command.Seq));
+        }
+
+        /// <summary>
+        /// Whether a unit was attacker or defender in any engagement declared this tick.
+        /// </summary>
+        /// <remarks>
+        /// A linear scan of the tick's intents rather than a flag on the unit. The list is a
+        /// handful of entries at this scale, and a flag would be state that has to be cleared
+        /// somewhere — which is exactly the sort of thing that survives one tick too long and
+        /// makes a replay diverge in a way nothing points at.
+        /// </remarks>
+        private bool WasEngagedThisTick(UnitId id)
+        {
+            var intents = _context.Engagements;
+            for (int i = 0; i < intents.Count; i++)
+                if (intents[i].Attacker == id || intents[i].Defender == id) return true;
+            return false;
         }
 
         // ─── Engagement ───────────────────────────────────────────────────────
