@@ -6,8 +6,8 @@
 // hydrology's fill and D8 routing run *after* erosion and depend on the surface it leaves, so
 // disabling it changes where water pools, drains and gets classified — every one of those
 // probes has been validating against a map the player never sees. #95 is the concrete result:
-// `THE CROSSROADS` sits on `Forest` with erosion off and `Water` with it on, and the shipped
-// scenario ships `EnableErosion: true`.
+// `THE CROSSROADS` (now `OBJECTIVE ANVIL`) sits on `Forest` with erosion off and `Water` with
+// it on, and the shipped scenario ships `EnableErosion: true`.
 //
 // This probe is deliberately the ONE place in the suite that reads `scenario.Map.EnableErosion`
 // instead of overriding it. It does not replace the fourteen — they stay fast and erosion-off,

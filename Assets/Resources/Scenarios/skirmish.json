@@ -310,7 +310,7 @@
   "Objectives": [
     {
       "Id": 1,
-      "Name": "THE CROSSROADS",
+      "Name": "OBJECTIVE ANVIL",
       "Cell": {
         "x": 119.0,
         "y": 114.0
@@ -327,7 +327,7 @@
       "Side": {
         "Value": 1
       },
-      "Description": "BLUFOR held the crossroads for ten minutes.",
+      "Description": "BLUFOR held OBJECTIVE ANVIL for ten minutes.",
       "Priority": 10,
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [
@@ -342,7 +342,7 @@
       "Side": {
         "Value": 2
       },
-      "Description": "OPFOR held the crossroads for ten minutes.",
+      "Description": "OPFOR held OBJECTIVE ANVIL for ten minutes.",
       "Priority": 10,
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [
@@ -388,7 +388,7 @@
       "Value": 7
     },
     "From": "3 BDE",
-    "Intent": "Seize and hold THE CROSSROADS. Task force denies 2 MRR's advance through the valley and keeps the road junction open for brigade's follow-on forces.",
+    "Intent": "Seize and hold OBJECTIVE ANVIL. Task force denies 2 MRR's advance through the valley and holds the open high ground brigade's follow-on forces will cross.",
     "Constraints": "Do not become decisively engaged beyond the objective. Preserve combat power for brigade's main effort.",
     "DeadlineTick": 1200,
     "ObjectiveIds": [

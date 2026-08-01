@@ -107,10 +107,10 @@ namespace Strategos.Scenarios
             s.Objectives.Add(new Objective
             {
                 Id = 1,
-                Name = "THE CROSSROADS",
+                Name = "OBJECTIVE ANVIL",
                 // #95/#96: (119,123) was one cell into the lake once erosion ran as shipped
                 // (EnableErosion: true) — every leaf unit on both sides got goalPassable=False
-                // and the crossroads was never contested. (119,114) keeps the same x, so the
+                // and the objective was never contested. (119,114) keeps the same x, so the
                 // east-west balance between the two forces is unchanged, and moves 9 cells
                 // south onto open, 0.6deg ground about 8 m above the lake — real margin, not
                 // the next cell over. NetworkStage's road network (a 5-edge spanning tree over
@@ -135,9 +135,9 @@ namespace Strategos.Scenarios
                 Id = 1,
                 TargetUnit = new UnitId(7),
                 From = "3 BDE",
-                Intent = "Seize and hold THE CROSSROADS. Task force denies 2 MRR's advance " +
-                         "through the valley and keeps the road junction open for brigade's " +
-                         "follow-on forces.",
+                Intent = "Seize and hold OBJECTIVE ANVIL. Task force denies 2 MRR's advance " +
+                         "through the valley and holds the open high ground brigade's " +
+                         "follow-on forces will cross.",
                 Constraints = "Do not become decisively engaged beyond the objective. " +
                               "Preserve combat power for brigade's main effort.",
                 DeadlineTick = 1200,
@@ -153,13 +153,13 @@ namespace Strategos.Scenarios
                 Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
                 ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
                 DirectiveId = 1,
-                Description = "BLUFOR held the crossroads for ten minutes.",
+                Description = "BLUFOR held OBJECTIVE ANVIL for ten minutes.",
             });
             s.Victory.Add(new VictoryCondition
             {
                 Kind = VictoryKind.HoldObjectives, Side = red.Id, Priority = 10,
                 ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
-                Description = "OPFOR held the crossroads for ten minutes.",
+                Description = "OPFOR held OBJECTIVE ANVIL for ten minutes.",
             });
             s.Victory.Add(new VictoryCondition
             {
