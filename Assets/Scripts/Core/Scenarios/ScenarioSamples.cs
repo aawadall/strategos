@@ -108,10 +108,20 @@ namespace Strategos.Scenarios
             {
                 Id = 1,
                 Name = "THE CROSSROADS",
-                // On the lake shore, not in it. DirectorProbe asserts this: the centre must be
-                // ground a unit can occupy, or every MoveTo to it fails on the tick it is
-                // issued and the scenario runs its full hour with nobody going anywhere.
-                Cell = new Vector2(119f, 123f),
+                // #95/#96: (119,123) was one cell into the lake once erosion ran as shipped
+                // (EnableErosion: true) — every leaf unit on both sides got goalPassable=False
+                // and the crossroads was never contested. (119,114) keeps the same x, so the
+                // east-west balance between the two forces is unchanged, and moves 9 cells
+                // south onto open, 0.6deg ground about 8 m above the lake — real margin, not
+                // the next cell over. NetworkStage's road network (a 5-edge spanning tree over
+                // 6 perimeter settlements, no loops) does not reach this valley on this seed:
+                // the closest a road gets is 68 cells away, so "beside a junction" was not
+                // achievable without abandoning the equidistant premise; this is deliberately
+                // chosen high ground instead, verified with a real PathFinder.Find from every
+                // leaf unit of both sides (see Artifacts/agents/shipped-map.md).
+                // ShippedMapProbe is what exercises this against the real shipped map;
+                // DirectorProbe and the other erosion-off probes cannot, which is #96.
+                Cell = new Vector2(119f, 114f),
                 RadiusCells = 10f,
                 InitialOwner = SideId.None,
             });
