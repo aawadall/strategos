@@ -327,10 +327,33 @@ namespace Strategos.Editor
                 }
             }
 
+            // A second press of the same button. #93 review: nothing guarded ACKNOWLEDGE
+            // against being pressed twice, and appending is per-call, not per-directive -- five
+            // presses would append five DirectiveAcknowledged reports, all entering
+            // ReportLog.Signature() and therefore Simulation.Signature(). Acknowledging must be
+            // idempotent per directive: a second call is a no-op, proven two ways -- no second
+            // report reaches the log, and the call itself reports nothing back.
+            SituationReport? secondResponse = sim.AcknowledgeDirective(before);
+            int reportsAfterSecond = sim.ReportLog.Count;
+            if (reportsAfterSecond != reportsAfter)
+            {
+                log.AppendLine($"  FAIL acknowledging #{before.Seq} a second time appended " +
+                               $"another report ({reportsAfter} -> {reportsAfterSecond}); " +
+                               "acknowledgement must be idempotent per directive");
+                bad++;
+            }
+            if (secondResponse.HasValue)
+            {
+                log.AppendLine("  FAIL a second acknowledgement returned a report instead of " +
+                               "null (no-op)");
+                bad++;
+            }
+
             if (bad == 0)
                 log.AppendLine($"  response: acknowledging #{before.Seq} appended exactly one " +
                                "DirectiveAcknowledged report citing it; the directive entry is " +
-                               "byte-for-byte unchanged");
+                               "byte-for-byte unchanged; a second acknowledgement of the same " +
+                               "directive appended nothing more");
 
             return bad;
         }

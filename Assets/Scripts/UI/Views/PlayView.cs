@@ -20,6 +20,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Commands;
+using Strategos.Directives;
 using Strategos.Doctrine;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
@@ -127,6 +128,30 @@ namespace Strategos.UI.Views
         private RectTransform _detailsCard;
         private TMP_Text _detailsTitle;
         private TMP_Text _detailsBody;
+
+        /// <summary>
+        /// The scenario's directive, as last delivered on <see cref="Simulation.Directives"/> —
+        /// never read from <c>Scenario.Directive</c> directly, per this file's own header on
+        /// subscribing rather than polling. Null both before delivery (rule 1: not visible on
+        /// the tick it was published) and for a scenario that carries none.
+        /// </summary>
+        private Directive? _directive;
+        private RectTransform _directiveSection;
+        private TMP_Text _directiveTitle;
+        private TMP_Text _directiveBody;
+        private Button _directiveAckButton;
+        private TMP_Text _directiveAckLabel;
+
+        /// <summary>
+        /// Whether the standing directive has been acknowledged — read off <see cref="OnReport"/>
+        /// (a <see cref="Strategos.Reports.ReportKind.DirectiveAcknowledged"/> report citing it),
+        /// never set from the click handler directly. The simulation is the truth; this is a
+        /// cached reflection of what it reported, one tick behind the button press like every
+        /// other observer of either bus (rule 1) — not an optimistic flip made at click time,
+        /// which a future save/load or replay would have no way to reproduce.
+        /// </summary>
+        private bool _directiveAcknowledged;
+        private int _directiveAcknowledgedTick;
 
         /// <summary>One unit's on-map presence: the symbol and its caption.</summary>
         private sealed class Marker
@@ -316,6 +341,11 @@ namespace Strategos.UI.Views
             srt.offsetMin = new Vector2(2, 0);
             srt.offsetMax = new Vector2(0, -38);
 
+            // Standing state, not tied to selection — see BuildDirectiveCard. First in the
+            // rail, immediately after the ORDER OF BATTLE chrome, so it reads as something the
+            // whole command is under rather than a property of whichever unit is picked.
+            BuildDirectiveCard(content);
+
             AddSection(content, "SELECTED UNIT");
             BuildDetailsCard(content);
 
@@ -477,6 +507,15 @@ namespace Strategos.UI.Views
             _feed.Clear();
             _sim.Reports.Subscribe("ui-feed", 100, OnReport);
             RefreshFeed();
+
+            // Standing state, reset per scenario load like the feed above it. Subscribed, not
+            // read from Scenario.Directive — a fresh directive (or none) arrives through the
+            // bus on the scenario's first step, same one-tick delay as every other message.
+            _directive = null;
+            _directiveAcknowledged = false;
+            _directiveAcknowledgedTick = 0;
+            RefreshDirectiveCard();
+            _sim.Directives.Subscribe("ui-directive", 100, OnDirective);
 
             RefreshSheet();
             BuildMarkers();
@@ -640,6 +679,170 @@ namespace Strategos.UI.Views
                 _selectionMark.gameObject.SetActive(false);
 
             LayOutOrders();
+        }
+
+        // ─── Directive ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// A mission from higher, standing for the whole scenario — not tied to selection
+        /// (unlike <see cref="BuildDetailsCard"/>, which clears to nothing on deselect) and not
+        /// only logged to the feed (unlike <see cref="BuildFeedCard"/>, which scrolls). Built
+        /// the same shape as those two cards: a title and a body TMP over a coloured rect, plus
+        /// a left accent strip — the device <see cref="UiFactory.AddSection"/> uses for its own
+        /// header bar — so the card reads as correspondence from outside the ORBAT rather than
+        /// another unit-status panel.
+        ///
+        /// The whole section, header and card and button together, lives in one container so
+        /// hiding it for "no directive" is a single SetActive rather than three. There is no
+        /// empty-state card: a scenario without a directive shows nothing here at all.
+        /// </summary>
+        private void BuildDirectiveCard(Transform parent)
+        {
+            _directiveSection = CreateRect("DirectiveSection", parent);
+            var v = _directiveSection.gameObject.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 6;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            _directiveSection.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+
+            AddSection(_directiveSection, "DIRECTIVE");
+
+            var card = CreateRect("Directive", _directiveSection);
+            card.gameObject.AddComponent<LayoutElement>().preferredHeight = 208;
+            card.gameObject.AddComponent<Image>().color = UiTheme.CardBg;
+
+            var accent = CreateRect("Accent", card);
+            accent.anchorMin = new Vector2(0, 0);
+            accent.anchorMax = new Vector2(0, 1);
+            accent.pivot = new Vector2(0, 0.5f);
+            accent.sizeDelta = new Vector2(4, 0);
+            accent.gameObject.AddComponent<Image>().color = Theme.Accent;
+
+            _directiveTitle = CreateTmp("T", card, string.Empty, 13, FontStyles.Bold,
+                withLayout: false);
+            _directiveTitle.rectTransform.anchorMin = new Vector2(0, 1);
+            _directiveTitle.rectTransform.anchorMax = new Vector2(1, 1);
+            _directiveTitle.rectTransform.pivot = new Vector2(0.5f, 1);
+            _directiveTitle.rectTransform.sizeDelta = new Vector2(-24, 22);
+            _directiveTitle.rectTransform.anchoredPosition = new Vector2(6, -6);
+            _directiveTitle.alignment = TextAlignmentOptions.MidlineLeft;
+            _directiveTitle.color = Theme.Accent;
+            _directiveTitle.characterSpacing = 2f;
+
+            _directiveBody = CreateTmp("B", card, string.Empty, 11, FontStyles.Normal,
+                withLayout: false);
+            Stretch(_directiveBody.rectTransform);
+            _directiveBody.rectTransform.offsetMin = new Vector2(16, 8);
+            _directiveBody.rectTransform.offsetMax = new Vector2(-10, -28);
+            _directiveBody.alignment = TextAlignmentOptions.TopLeft;
+            _directiveBody.color = Theme.InkMuted;
+            _directiveBody.lineSpacing = 12f;
+
+            // One button, ACKNOWLEDGE only. There is no REFUSE: Simulation.AcknowledgeDirective
+            // is deliberately the only response the core exposes, because #73/#36 never state
+            // what refusing would change mechanically, and a control with no mechanical
+            // consequence is a dead one. Same row shape as ABORT PLAN/HOLD (AddButtonRow +
+            // AddButton), just with one entry instead of two.
+            var controls = AddButtonRow(_directiveSection);
+            _directiveAckButton = AddButton(controls, "ACKNOWLEDGE", AcknowledgeSelectedDirective);
+            _directiveAckLabel = _directiveAckButton.GetComponentInChildren<TMP_Text>();
+
+            RefreshDirectiveCard();
+        }
+
+        /// <summary>
+        /// Runs on delivery of <see cref="Simulation.Directives"/> — subscribed, not polled, so
+        /// this view never reads <c>Scenario.Directive</c> directly (see the file header). One
+        /// step delayed from publication like everything else on either bus (rule 1), which is
+        /// invisible here in practice: v1 ships exactly one directive, published from the
+        /// constructor and delivered on the scenario's first step.
+        /// </summary>
+        private void OnDirective(Directive directive)
+        {
+            _directive = directive;
+            RefreshDirectiveCard();
+        }
+
+        private void RefreshDirectiveCard()
+        {
+            if (_directiveSection == null) return;
+
+            bool has = _directive.HasValue;
+            _directiveSection.gameObject.SetActive(has);
+            if (!has) return;
+
+            var d = _directive.Value;
+
+            _directiveTitle.text = string.IsNullOrEmpty(d.From)
+                ? "DIRECTIVE"
+                : $"DIRECTIVE  ·  FROM {d.From.ToUpperInvariant()}";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("INTENT\n").Append(d.Intent);
+            if (!string.IsNullOrEmpty(d.Constraints))
+                sb.Append("\n\nCONSTRAINTS\n").Append(d.Constraints);
+            sb.Append("\n\nOBJECTIVE: ").Append(ObjectiveNamesOf(d.ObjectiveIds));
+            if (d.DeadlineTick > 0)
+                sb.Append("\nDEADLINE: T+").Append(d.DeadlineTick.ToString("0000"));
+            if (_directiveAcknowledged)
+                sb.Append("\nACKNOWLEDGED  T+").Append(_directiveAcknowledgedTick.ToString("0000"));
+
+            _directiveBody.text = sb.ToString();
+
+            // Same idiom ScenarioSetupView.GenerateRoutine uses for "this button has already
+            // done its job": disable it and relabel it, rather than leaving it sitting there
+            // identical to before — the button itself is the only signal a player has that a
+            // second press would do nothing, now that it correctly does nothing (Simulation
+            // guards the repeat too; this is the visible half of that).
+            if (_directiveAckButton != null) _directiveAckButton.interactable = !_directiveAcknowledged;
+            if (_directiveAckLabel != null)
+                _directiveAckLabel.text = _directiveAcknowledged ? "ACKNOWLEDGED" : "ACKNOWLEDGE";
+        }
+
+        /// <summary>
+        /// Objective names for a directive's <see cref="Directive.ObjectiveIds"/>, cross-
+        /// referencing <see cref="Scenario.Objectives"/> rather than duplicating the name —
+        /// the same "one place tests whether they are held" reasoning that keeps the ids rather
+        /// than a copy of the objective payload in the directive itself.
+        /// </summary>
+        private string ObjectiveNamesOf(int[] ids)
+        {
+            if (ids == null || ids.Length == 0 || _scenario == null) return "NONE NAMED";
+
+            var names = new List<string>();
+            foreach (int id in ids)
+            {
+                Objective found = null;
+                foreach (var o in _scenario.Objectives)
+                    if (o.Id == id) { found = o; break; }
+                names.Add(found != null ? found.Name : $"#{id}");
+            }
+            return string.Join(", ", names);
+        }
+
+        /// <summary>
+        /// The one response v1 offers. Publishes exactly one report through
+        /// <see cref="Simulation.AcknowledgeDirective"/> and touches nothing else — no unit's
+        /// queue, no command log entry. It is deliberately not a decision about *what to do*;
+        /// the player expresses that afterward by issuing their own orders, which is the entire
+        /// point of "leaves the how to the receiver".
+        /// </summary>
+        /// <remarks>
+        /// Guarded by <see cref="_directiveAcknowledged"/> as well as by
+        /// <see cref="Simulation.AcknowledgeDirective"/>'s own idempotency — belt and braces,
+        /// not a substitute for it. This flag is one report-delivery tick behind a press (it is
+        /// only ever set from <see cref="OnReport"/>), so a second press landing inside that
+        /// window would still reach the simulation; the simulation is what actually cannot be
+        /// driven twice, keyed by <c>Directive.Seq</c>. This guard only stops the common case —
+        /// a disabled button a player clicks again anyway — from making a redundant call at all.
+        /// </remarks>
+        private void AcknowledgeSelectedDirective()
+        {
+            if (_sim == null || !_directive.HasValue || _directiveAcknowledged) return;
+            _sim.AcknowledgeDirective(_directive.Value);
         }
 
         // ─── Selection ────────────────────────────────────────────────────────
@@ -987,6 +1190,20 @@ namespace Strategos.UI.Views
             _feed.Insert(0, FormatReport(report));
             if (_feed.Count > FeedLines) _feed.RemoveRange(FeedLines, _feed.Count - FeedLines);
             RefreshFeed();
+
+            // The DIRECTIVE card's acknowledged state is read off this same stream, never set
+            // directly by the click handler — see _directiveAcknowledged's own note. Matched by
+            // AboutDirective against the standing directive's Seq, not merely "any
+            // DirectiveAcknowledged", so a hypothetical future second directive could not flip
+            // this one's card.
+            if (!_directiveAcknowledged && _directive.HasValue &&
+                report.Kind == Strategos.Reports.ReportKind.DirectiveAcknowledged &&
+                report.AboutDirective == _directive.Value.Seq)
+            {
+                _directiveAcknowledged = true;
+                _directiveAcknowledgedTick = report.ObservedTick;
+                RefreshDirectiveCard();
+            }
         }
 
         private string FormatReport(Strategos.Reports.SituationReport report)
@@ -1006,6 +1223,7 @@ namespace Strategos.UI.Views
                 Strategos.Reports.ReportKind.OrderCompleted => "TASK COMPLETE",
                 Strategos.Reports.ReportKind.OrderFailed => "UNABLE TO COMPLY",
                 Strategos.Reports.ReportKind.Halted => "HALTED",
+                Strategos.Reports.ReportKind.DirectiveAcknowledged => "DIRECTIVE ACKNOWLEDGED",
                 _ => report.Kind.ToString().ToUpperInvariant(),
             };
 

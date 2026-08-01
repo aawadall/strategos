@@ -7,6 +7,7 @@
 // shipped file fails the probe rather than failing in front of a player.
 
 using UnityEngine;
+using Strategos.Directives;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
 using Strategos.Objectives;
@@ -115,6 +116,24 @@ namespace Strategos.Scenarios
                 InitialOwner = SideId.None,
             });
 
+            // #73/#36: a directive from higher, addressed to the one BLUFOR root (TF 1-7 IN,
+            // unit 7) and never decomposed into orders — the player reads it, acknowledges it,
+            // and works out the how themselves. From is TF 1-7 IN's own HigherFormation, not
+            // invented here: "3 BDE" already exists on the unit below.
+            s.Directive = new Directive
+            {
+                Id = 1,
+                TargetUnit = new UnitId(7),
+                From = "3 BDE",
+                Intent = "Seize and hold THE CROSSROADS. Task force denies 2 MRR's advance " +
+                         "through the valley and keeps the road junction open for brigade's " +
+                         "follow-on forces.",
+                Constraints = "Do not become decisively engaged beyond the objective. " +
+                              "Preserve combat power for brigade's main effort.",
+                DeadlineTick = 1200,
+                ObjectiveIds = new[] { 1 },
+            };
+
             // Four ways this ends. Holding is worth more than attrition, so a side that takes
             // the ground and keeps it beats one that merely survives — hence the priorities.
             const int TenMinutes = 600;
@@ -123,6 +142,7 @@ namespace Strategos.Scenarios
             {
                 Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
                 ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
+                DirectiveId = 1,
                 Description = "BLUFOR held the crossroads for ten minutes.",
             });
             s.Victory.Add(new VictoryCondition
