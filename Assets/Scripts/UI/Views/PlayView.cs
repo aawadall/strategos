@@ -274,6 +274,8 @@ namespace Strategos.UI.Views
             _card.Image.raycastTarget = true;
             var region = _card.Rect.gameObject.AddComponent<PointerRegion>();
             region.Clicked = OnMapClicked;
+            region.Dragged = OnMapDragged;
+            region.Scrolled = OnMapScrolled;
 
             // The marginalia strip is built by the card but must stay above the symbols.
             var strip = stack.Find("Marginalia");
@@ -1005,9 +1007,15 @@ namespace Strategos.UI.Views
             // depending on what happens to be under the cursor.
             if (e.button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
             {
+                _dragDistance = 0f;
                 OrderMoveTo(e);
                 return;
             }
+
+            // A pan ends in a click Unity delivers anyway, so a drag that moved would
+            // otherwise select whatever the cursor happened to stop over.
+            if (_dragDistance > ClickSlop) { _dragDistance = 0f; return; }
+            _dragDistance = 0f;
 
             var hit = UnitAt(e);
             if (hit == null) ClearSelection();
@@ -1070,6 +1078,159 @@ namespace Strategos.UI.Views
 
         private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
             Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
+
+        // --- Pan and zoom ---------------------------------------------------
+
+        /// <summary>
+        /// How far the pointer may travel during a press and still count as a click.
+        /// </summary>
+        /// <remarks>
+        /// Unity delivers OnPointerClick on release whether or not the pointer moved, so
+        /// without this every pan would also select whatever happened to be under the cursor
+        /// when the drag stopped. Screen pixels, generous enough to survive a shaky hand on a
+        /// press that was meant to be a click.
+        /// </remarks>
+        private const float ClickSlop = 6f;
+
+        private float _dragDistance;
+
+        /// <summary>
+        /// Drag pans. Left button, because every map pans with a left drag and right has to
+        /// stay free for orders, which is the gesture that must not be ambiguous.
+        /// </summary>
+        private void OnMapDragged(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (e.button != UnityEngine.EventSystems.PointerEventData.InputButton.Left) return;
+            if (_card == null) return;
+
+            _dragDistance += e.delta.magnitude;
+
+            Rect card = _card.Rect.rect;
+            if (card.width < 1f || card.height < 1f) return;
+
+            var uv = _card.Image.uvRect;
+
+            // The sheet follows the cursor, so the window moves against it.
+            uv.x -= e.delta.x / card.width * uv.width;
+            uv.y -= e.delta.y / card.height * uv.height;
+
+            _card.Image.uvRect = ClampWindow(uv);
+            LayOutMarkers();
+        }
+
+        /// <summary>
+        /// Scroll zooms, smoothly, about the cursor and within the echelon band.
+        /// </summary>
+        /// <remarks>
+        /// About the cursor rather than the centre so the ground under the pointer stays under
+        /// it. Continuous rather than stepped: stops belong to symbol LOD, where a level means
+        /// "draw formations, or draw their subordinates", and inventing them before that
+        /// exists would be steps that quantise nothing.
+        /// </remarks>
+        private void OnMapScrolled(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (_card == null || Mathf.Approximately(e.scrollDelta.y, 0f)) return;
+
+            var uv = _card.Image.uvRect;
+            float factor = e.scrollDelta.y > 0f ? 0.9f : 1f / 0.9f;
+
+            if (!PointerToUv(e, out var pivot)) return;
+
+            float w = uv.width * factor;
+            float h = uv.height * factor;
+            uv.x = pivot.x - (pivot.x - uv.x) * (w / uv.width);
+            uv.y = pivot.y - (pivot.y - uv.y) * (h / uv.height);
+            uv.width = w;
+            uv.height = h;
+
+            _card.Image.uvRect = ClampWindow(uv);
+            LayOutMarkers();
+        }
+
+        /// <summary>Where the pointer is, in the sheet's uv space.</summary>
+        private bool PointerToUv(UnityEngine.EventSystems.PointerEventData e, out Vector2 uv)
+        {
+            uv = default;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _card.Rect, e.position, e.pressEventCamera, out var local))
+                return false;
+
+            Rect r = _card.Rect.rect;
+            if (r.width < 1f || r.height < 1f) return false;
+
+            var shown = _card.Image.uvRect;
+            uv = new Vector2(
+                shown.x + (local.x - r.xMin) / r.width * shown.width,
+                shown.y + (local.y - r.yMin) / r.height * shown.height);
+            return true;
+        }
+
+        /// <summary>
+        /// Holds the view inside the echelon band and on the sheet.
+        /// </summary>
+        /// <remarks>
+        /// **The zoom limits are the echelon's, and that is the point.** A squad leader may not
+        /// widen to a theatre picture and a corps commander may not drop to a single platoon,
+        /// because the natural thing to do with a platoon on screen is to order it directly —
+        /// which is the command problem ROADMAP.md says height is supposed to take away. The
+        /// bands are contiguous and configurable; see EchelonSpans.
+        ///
+        /// Both axes scale from one factor, because a sheet with a different scale on each
+        /// axis misreports every distance on it.
+        /// </remarks>
+        private Rect ClampWindow(Rect uv)
+        {
+            float mapMetres = _map == null ? 0f : _map.Header.WidthMetres;
+
+            if (mapMetres > 0f)
+            {
+                var span = CommandSpan();
+                float minW = Mathf.Clamp01(span.MinMetres / mapMetres);
+                float maxW = Mathf.Clamp01(span.MaxMetres / mapMetres);
+                if (maxW < minW) maxW = minW;
+
+                float width = Mathf.Clamp(uv.width, minW, maxW);
+                float scale = uv.width > 0.0001f ? width / uv.width : 1f;
+
+                uv.x += (uv.width - width) * 0.5f;
+                uv.y += (uv.height - uv.height * scale) * 0.5f;
+                uv.width = width;
+                uv.height *= scale;
+            }
+
+            uv.width = Mathf.Min(uv.width, 1f);
+            uv.height = Mathf.Min(uv.height, 1f);
+            uv.x = Mathf.Clamp(uv.x, 0f, 1f - uv.width);
+            uv.y = Mathf.Clamp(uv.y, 0f, 1f - uv.height);
+            return uv;
+        }
+
+        /// <summary>
+        /// The echelon the player commands, and therefore how much ground they may see.
+        /// </summary>
+        /// <remarks>
+        /// Taken from the top of their own ORBAT, so it follows the scenario rather than a
+        /// setting and will follow rank once #76 gates which formations a player is given.
+        /// With no player side declared the game is hot-seat and nobody's echelon is
+        /// privileged, so the highest on the map wins.
+        /// </remarks>
+        private EchelonSpan CommandSpan()
+        {
+            var echelon = NatoSymbols.Echelon.None;
+
+            if (_sim != null)
+                foreach (var unit in _sim.AllUnits)
+                {
+                    if (_scenario != null && _scenario.PlayerSide.IsValid &&
+                        unit.Side != _scenario.PlayerSide) continue;
+
+                    var e = unit.ToSidcCode().Echelon;
+                    if ((int)e > (int)echelon) echelon = e;
+                }
+
+            return EchelonSpanIO.Current.For(echelon)
+                .ClampedTo(_map == null ? 0f : _map.Header.WidthMetres);
+        }
 
         /// <summary>Cell under the pointer. The inverse of the transform that draws markers.</summary>
         private bool CellAt(UnityEngine.EventSystems.PointerEventData e, out Vector2 cell)

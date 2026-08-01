@@ -110,6 +110,21 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   between press and release, so roughly one click in ten does nothing. `PlayView._planKey` is
   the fix: a string of everything a row draws, compared before rebuilding. It deliberately
   omits `QueuedCommand.TicksExecuting`, which changes every tick and appears nowhere on a row.
+- **PLAY's zoom is bounded by the echelon the player commands, and that is a mechanic.**
+  `EchelonSpans` gives each echelon a contiguous band of ground widths; PLAY clamps the
+  card's `uvRect` to it. A squad leader may not widen to a theatre picture and a corps
+  commander may not drop to a single platoon — because the natural thing to do with a platoon
+  on screen is to order it directly, which is the command problem `ROADMAP.md:47` says height
+  is meant to remove. The bands are **configurable JSON** in `Resources/Config`, because they
+  are balance numbers.
+  **Clamp the ceiling and the floor together.** Clamping only the top to a small map left a
+  battalion with 1.1x of zoom on the shipped 6.4 km sheet — the feature was dead in the only
+  scenario that ships, and the probe passed because a collapsed range is still a range.
+  `ClampedTo` preserves the band's *ratio*; `EchelonProbe` now fails under 2x.
+- **A drag must not also select.** Unity delivers `OnPointerClick` on release whether or not
+  the pointer moved, so panning would select whatever the cursor stopped over.
+  `PlayView.ClickSlop` is the threshold; right-click ordering resets it so a stale drag cannot
+  swallow an order.
 - **Baked symbol sprites are not frame-centred.** `FrameRight = 160` of `BASE = 256`
   reserves a right-hand amplifier column, so the symbol sits left of centre in its texture.
   The library's tiles are 4:3 rather than square for this reason — in a square tile it reads
