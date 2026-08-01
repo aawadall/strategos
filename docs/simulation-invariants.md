@@ -222,7 +222,7 @@ Tick++
   — against the smallest shipped objective, THE CROSSROADS, at `RadiusCells: 10` (20 cells
   across, 25 ticks to cross). 25 > 10, so a sample must land inside any transit.
   `Scenario.ValidateVictory` rejects only `RadiusCells <= 0`; nothing enforces the bound
-  above, break-even is `RadiusCells = 4`, and an objective that size would be legal and
+  above — break-even is `RadiusCells = 4`, still sound, and anything smaller is legal and
   crossable unseen. The same interval also gates when the occupancy clock (`_occupiedSince`)
   is refreshed, which is a live gap in its own right and not something this note resolves.
 - **`DestroyEnemy` measures against STARTING strength, captured once at construction.** Against
