@@ -89,7 +89,8 @@ namespace Strategos.Reports
                   .Append(r.Subject.Value).Append(':')
                   .Append(r.Cell.x.ToString("F4")).Append(',')
                   .Append(r.Cell.y.ToString("F4")).Append(':')
-                  .Append(r.AboutCommand).Append(';');
+                  .Append(r.AboutCommand).Append(':')
+                  .Append(r.AboutDirective).Append(';');
             }
             return sb.ToString();
         }
