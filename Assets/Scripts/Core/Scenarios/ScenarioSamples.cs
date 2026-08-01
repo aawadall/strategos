@@ -136,8 +136,8 @@ namespace Strategos.Scenarios
                 TargetUnit = new UnitId(7),
                 From = "3 BDE",
                 Intent = "Seize and hold OBJECTIVE ANVIL. Task force denies 2 MRR's advance " +
-                         "through the valley and holds the open high ground brigade's " +
-                         "follow-on forces will cross.",
+                         "through the valley, holding the open ground in their path and " +
+                         "keeping it clear for brigade's follow-on forces.",
                 Constraints = "Do not become decisively engaged beyond the objective. " +
                               "Preserve combat power for brigade's main effort.",
                 DeadlineTick = 1200,
