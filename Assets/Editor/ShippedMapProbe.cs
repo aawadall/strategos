@@ -146,6 +146,17 @@ namespace Strategos.Editor
                 }
             }
 
+            // Zero objectives is a legal scenario state — Scenario.ValidateVictory only
+            // requires ObjectiveIds on a HoldObjectives condition, not that the scenario
+            // field itself be non-empty — so this is not a FAIL. But a loop over an empty
+            // list prints nothing either way, and "nothing printed" is indistinguishable from
+            // "checked and found zero problems" versus "never ran, or scenario.Objectives was
+            // silently empty by a bug upstream." Match CheckUnitsPassable just below: state
+            // the count so the difference is visible in the log, same as #96's whole point —
+            // this probe exists so nothing about the real shipped map goes unstated.
+            if (bad == 0)
+                log.AppendLine($"  all {scenario.Objectives.Count} objective cell(s) passable");
+
             return bad;
         }
 
