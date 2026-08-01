@@ -367,7 +367,7 @@
         },
         {
           "Text": "Consolidate and reorganise",
-          "Kind": "Hold"
+          "Kind": "Defend"
         }
       ],
       "Diagram": {
@@ -469,7 +469,7 @@
         },
         {
           "Text": "Consolidate and reorganise",
-          "Kind": "Hold"
+          "Kind": "Defend"
         }
       ],
       "Diagram": {
@@ -766,7 +766,7 @@
         },
         {
           "Text": "Clear and consolidate beyond it",
-          "Kind": "Hold"
+          "Kind": "Defend"
         },
         {
           "Text": "Treat casualties and report",
@@ -849,7 +849,7 @@
         },
         {
           "Text": "Consolidate beyond it",
-          "Kind": "Hold"
+          "Kind": "Defend"
         }
       ],
       "Diagram": {
@@ -966,7 +966,7 @@
         },
         {
           "Text": "Consolidate and report cleared",
-          "Kind": "Hold"
+          "Kind": "Defend"
         }
       ],
       "Diagram": {
@@ -1060,7 +1060,7 @@
         },
         {
           "Text": "Consolidate and report",
-          "Kind": "Hold"
+          "Kind": "Defend"
         }
       ]
     }

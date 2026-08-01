@@ -95,6 +95,15 @@ Tick++
   with the same strengths but different losses have diverged in everything a campaign carries
   forward. The symbol uses APP-6D's own `PresentDestroyed` status, which `ConditionDecorator`
   already drew.
+- **`Defend` is a state, not a task, and it is the first order that never ends.** MoveTo
+  completes on arrival and Engage when the target dies; Defend returns `Running` for ever and
+  leaves the queue only by being cancelled. It is also **the first thing in the project to set
+  `Posture.DugIn`** — `EngagementResolver.PostureFactor` has paid out 0.5 for it since combat
+  landed and nothing had ever produced it, so the value was unreachable. Digging in takes
+  `DefendExecutor.DigInTicks` and is re-applied every tick rather than set once, because a
+  reflex sends the unit to `Halted` while it returns fire and the posture has to come back.
+  **`Hold` moved from the control range into the world range** to make this possible, which is
+  what stopped it being a byte-for-byte copy of `Abort`.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an

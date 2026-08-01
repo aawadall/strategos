@@ -32,11 +32,6 @@ Recorded so they are not re-investigated. None are fixed.
   completes in between shifts every entry down one and the cancel lands on the wrong order.
   One tick wide, so it is rare at x1 and likely at x60+. Fixing it means addressing the entry
   by `Command.Seq` instead — #57.
-- **`Hold` is a byte-for-byte copy of `Abort`.** Two `CommandKind` values, one behaviour; the
-  PLAY rail offers both buttons because the *log* distinguishes them, not because the world
-  does. Hold should mean stay here and keep watching — a posture and a task that survives a
-  reaction — which makes it a world command with an executor rather than a control command
-  that empties the queue. #58.
 - **An order issued while the clock is paused has no visible effect.** `AdvanceSimulation`
   returns early when paused, so `CommandBus.Deliver` never runs and every order — move,
   engage, abort, hold, cancel — sits on the bus until the clock restarts. The command path is

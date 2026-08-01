@@ -334,11 +334,6 @@ namespace Strategos.Commands
                     queue.CancelFrom(command.Index);
                     break;
 
-                case CommandKind.Hold:
-                    ReportHalt(command, queue.Abort(includeExecuting: true));
-                    ApplyAbortPosture(command.TargetUnit);
-                    break;
-
                 default:
                     if (command.Preempt) queue.InsertFront(command);
                     else queue.Enqueue(command);
