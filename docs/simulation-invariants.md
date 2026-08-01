@@ -240,7 +240,7 @@ Tick++
   full evaluation interval to cross at the fastest catalogue road speed.** Today's numbers
   hold it, but only by authored coincidence: the fastest catalogue unit, Recon, covers
   `RoadSpeedMps = 20` at `MetresPerCell = 25` — 0.8 cells/tick, 8 cells over the 10-tick gap
-  — against the smallest shipped objective, THE CROSSROADS, at `RadiusCells: 10` (20 cells
+  — against the smallest shipped objective, OBJECTIVE ANVIL, at `RadiusCells: 10` (20 cells
   across, 25 ticks to cross). 25 > 10, so a sample must land inside any transit.
   `Scenario.ValidateVictory` rejects only `RadiusCells <= 0`; nothing enforces the bound
   above — break-even is `RadiusCells = 4`, still sound, and anything smaller is legal and

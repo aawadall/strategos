@@ -107,11 +107,21 @@ namespace Strategos.Scenarios
             s.Objectives.Add(new Objective
             {
                 Id = 1,
-                Name = "THE CROSSROADS",
-                // On the lake shore, not in it. DirectorProbe asserts this: the centre must be
-                // ground a unit can occupy, or every MoveTo to it fails on the tick it is
-                // issued and the scenario runs its full hour with nobody going anywhere.
-                Cell = new Vector2(119f, 123f),
+                Name = "OBJECTIVE ANVIL",
+                // #95/#96: (119,123) was one cell into the lake once erosion ran as shipped
+                // (EnableErosion: true) — every leaf unit on both sides got goalPassable=False
+                // and the objective was never contested. (119,114) keeps the same x, so the
+                // east-west balance between the two forces is unchanged, and moves 9 cells
+                // south onto open, 0.6deg ground about 8 m above the lake — real margin, not
+                // the next cell over. NetworkStage's road network (a 5-edge spanning tree over
+                // 6 perimeter settlements, no loops) does not reach this valley on this seed:
+                // the closest a road gets is 68 cells away, so "beside a junction" was not
+                // achievable without abandoning the equidistant premise; this is deliberately
+                // chosen high ground instead, verified with a real PathFinder.Find from every
+                // leaf unit of both sides (see Artifacts/agents/shipped-map.md).
+                // ShippedMapProbe is what exercises this against the real shipped map;
+                // DirectorProbe and the other erosion-off probes cannot, which is #96.
+                Cell = new Vector2(119f, 114f),
                 RadiusCells = 10f,
                 InitialOwner = SideId.None,
             });
@@ -125,9 +135,9 @@ namespace Strategos.Scenarios
                 Id = 1,
                 TargetUnit = new UnitId(7),
                 From = "3 BDE",
-                Intent = "Seize and hold THE CROSSROADS. Task force denies 2 MRR's advance " +
-                         "through the valley and keeps the road junction open for brigade's " +
-                         "follow-on forces.",
+                Intent = "Seize and hold OBJECTIVE ANVIL. Task force denies 2 MRR's advance " +
+                         "through the valley, holding the open ground in their path and " +
+                         "keeping it clear for brigade's follow-on forces.",
                 Constraints = "Do not become decisively engaged beyond the objective. " +
                               "Preserve combat power for brigade's main effort.",
                 DeadlineTick = 1200,
@@ -143,13 +153,13 @@ namespace Strategos.Scenarios
                 Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
                 ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
                 DirectiveId = 1,
-                Description = "BLUFOR held the crossroads for ten minutes.",
+                Description = "BLUFOR held OBJECTIVE ANVIL for ten minutes.",
             });
             s.Victory.Add(new VictoryCondition
             {
                 Kind = VictoryKind.HoldObjectives, Side = red.Id, Priority = 10,
                 ObjectiveIds = new[] { 1 }, HoldTicks = TenMinutes,
-                Description = "OPFOR held the crossroads for ten minutes.",
+                Description = "OPFOR held OBJECTIVE ANVIL for ten minutes.",
             });
             s.Victory.Add(new VictoryCondition
             {

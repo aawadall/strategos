@@ -137,6 +137,24 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.EchelonProbe.Run` | Zoom bands contiguous, round-tripping, and usable on a small map |
 | `Strategos.Editor.DefendProbe.Run` | Defend never ends, digging in costs time and pays, Hold is not Abort |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
+| `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
+
+**Fourteen of the probes above run with `scenario.Map.EnableErosion = false`** —
+`CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`, `DirectiveProbe`,
+`DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`, `ReactionProbe`,
+`ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because erosion is the
+dominant generation cost and none of them are *reasoning about terrain*: they need a unit to
+stand on, not a faithful landscape. That used to be a silent gap rather than a deliberate
+trade-off: `skirmish.json` ships `EnableErosion: true`, erosion runs before hydrology (see
+CLAUDE.md's pipeline diagram), so disabling it changes where water pools and what gets
+classified where — at `(119,123)` that was the difference between `Forest` and `Water`, and
+`THE CROSSROADS` shipped sitting in the lake that only the real, erosion-on map has (#95),
+invisible to eighteen green probes that never generated it (#96). **`ShippedMapProbe` is what
+makes running the other fourteen erosion-off safe rather than merely fast**: it is the one
+probe that reads `EnableErosion` from the scenario instead of overriding it, so it is the one
+thing in the suite that ever looks at the map the player actually loads. Do not turn erosion on
+in any of the fourteen to "fix" this — that was considered and rejected (see #96): it would
+make the whole suite slow for a property this one cheap probe already covers.
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**

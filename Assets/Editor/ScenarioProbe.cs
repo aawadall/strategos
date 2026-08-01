@@ -311,6 +311,25 @@ namespace Strategos.Editor
                 }
             }
 
+            // #95's own gap: an objective's cell was never checked against passability at all.
+            // Prove it fires the same way the unit case above does.
+            var drownedObjective = ScenarioSamples.Skirmish();
+            var waterCell = FindCell(sampleMap, LandcoverClass.Water);
+            if (waterCell.x >= 0f)
+            {
+                drownedObjective.Objectives[0].Cell = waterCell;
+                var caught3 = drownedObjective.Validate(UnitCatalogue.Default(), sampleMap);
+                if (caught3.Count == 0)
+                {
+                    log.AppendLine("  FAIL validation missed: objective standing in water");
+                    bad++;
+                }
+                else
+                {
+                    log.AppendLine($"  validation catches {"objective in impassable terrain",-28} -> \"{caught3[0]}\"");
+                }
+            }
+
             return bad;
         }
 
