@@ -17,9 +17,11 @@ Recorded so they are not re-investigated. None are fixed.
   being spent on something it does not describe. Indirect fire is Phase 4.2 and out of scope
   here. Until it exists, either artillery needs a separate direct-fire figure or it should
   not be given engage orders.
-- **A destroyed unit stays on the map.** `Strength` floors at 0, `Effectiveness` goes to 0
-  so it neither inflicts nor suffers anything, and it keeps its symbol and its place in the
-  ORBAT. Removal, casualty tracking and reconstitution are #14 and Phase 4.4.
+- **A destroyed unit stays on the map — deliberately now, as a wreck.** It is not
+  commandable, not detected, and not counted among a side's troops, and the loss is recorded
+  in `CasualtyLog` with tick and killer. What is still missing is **reconstitution**: a
+  formation brought back to strength is indistinguishable from one that never fought, which
+  matters only once a campaign carries an ORBAT between operations (#75).
 - **`CancelFrom` does not halt the unit it stops, and `Abort` does.** `Simulation.
   OnCommandDelivered` follows an Abort with a halt report and `ApplyAbortPosture` and follows
   a CancelFrom with neither, so cancelling a *running* move empties the queue while leaving

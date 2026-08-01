@@ -45,8 +45,16 @@ symbol composer).
 terrain; units have capabilities and state; a fixed-step simulation carries orders down a
 command topic into per-unit queues, moves units by terrain-cost A\*, resolves direct fire
 between them, and carries reports back up a situation topic. Select, order, engage, queue,
-abort, hold and time compression all work; the live plan is listed order by order and can be
-cut at any entry; and the whole run is deterministic and replayable from the command log.
+abort and time compression all work; the live plan is listed order by order and can be cut at
+any entry; and the whole run is deterministic and replayable from the command log.
+
+**Hold is a real order**: a unit told to hold digs in over two minutes and takes half the
+incoming fire once it has. **The ORBAT is a tree** — a formation is a `UnitInstance` that owns
+subordinates, its state rolls up from them, and an order addressed to it decomposes one echelon
+per step. **Units tire and units are green**: training costs time before an order is acted on,
+fatigue costs capability and recovers with rest. **A destroyed unit becomes a wreck** that is
+neither commandable nor a contact, and the loss is recorded. The map pans and zooms, bounded by
+the echelon the player commands.
 
 Units also fight on their own initiative under rules of engagement, answer fire while
 marching, and withdraw when they are being destroyed. **Training is a unit attribute and
