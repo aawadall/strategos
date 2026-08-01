@@ -280,7 +280,7 @@ namespace Strategos.Doctrine
                     new TtpStep("Find and report a flank"),
                     new TtpStep("Manoeuvre the assault squads", CommandKind.MoveTo),
                     new TtpStep("Assault through", CommandKind.Engage),
-                    new TtpStep("Consolidate and reorganise", CommandKind.Hold),
+                    new TtpStep("Consolidate and reorganise", CommandKind.Defend),
                 },
                 Diagram = TtpDiagram.Of(
                     "ONE ELEMENT FIXES FROM THE FRONT - ANOTHER TAKES THE FLANK",
@@ -303,7 +303,7 @@ namespace Strategos.Doctrine
                     new TtpStep("Suppress the position", CommandKind.Engage),
                     new TtpStep("Manoeuvre the assault team", CommandKind.MoveTo),
                     new TtpStep("Assault through", CommandKind.Engage),
-                    new TtpStep("Consolidate and reorganise", CommandKind.Hold),
+                    new TtpStep("Consolidate and reorganise", CommandKind.Defend),
                 },
                 Diagram = TtpDiagram.Of(
                     "BASE OF FIRE LEFT - ASSAULT RIGHT - FIRE SHIFTS AS THE TEAM CLOSES",
@@ -368,7 +368,7 @@ namespace Strategos.Doctrine
                 {
                     new TtpStep("Return fire without waiting for an order", CommandKind.Engage),
                     new TtpStep("Assault through the near side", CommandKind.MoveTo),
-                    new TtpStep("Clear and consolidate beyond it", CommandKind.Hold),
+                    new TtpStep("Clear and consolidate beyond it", CommandKind.Defend),
                     new TtpStep("Treat casualties and report"),
                 },
                 Diagram = TtpDiagram.Of(
@@ -389,7 +389,7 @@ namespace Strategos.Doctrine
                     new TtpStep("Suppress the aperture", CommandKind.Engage),
                     new TtpStep("Move a team to the blind side", CommandKind.MoveTo),
                     new TtpStep("Clear the position"),
-                    new TtpStep("Consolidate beyond it", CommandKind.Hold),
+                    new TtpStep("Consolidate beyond it", CommandKind.Defend),
                 },
                 Diagram = TtpDiagram.Of(
                     "APPROACH OUT OF THE APERTURE ARC - NEVER ACROSS ITS FRONT",
@@ -413,7 +413,7 @@ namespace Strategos.Doctrine
                     new TtpStep("Suppress the entry point", CommandKind.Engage),
                     new TtpStep("Enter at a corner, not the doorway centre"),
                     new TtpStep("Clear by room, marking as you go"),
-                    new TtpStep("Consolidate and report cleared", CommandKind.Hold),
+                    new TtpStep("Consolidate and report cleared", CommandKind.Defend),
                 },
                 Diagram = TtpDiagram.Of(
                     "ISOLATE FIRST - A BUILDING CLEARED INTO REINFORCEMENT IS NOT CLEARED",
@@ -434,7 +434,7 @@ namespace Strategos.Doctrine
                     new TtpStep("Suppress the trench line", CommandKind.Engage),
                     new TtpStep("Gain a foothold", CommandKind.MoveTo),
                     new TtpStep("Clear along the trench in both directions"),
-                    new TtpStep("Consolidate and report", CommandKind.Hold),
+                    new TtpStep("Consolidate and report", CommandKind.Defend),
                 },
                 // No figure on purpose. The geometry is a line and a foothold, and a drawing
                 // of it says less than the sentence does — a page is allowed to have none, and

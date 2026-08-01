@@ -62,10 +62,25 @@ namespace Strategos.Commands
         MoveTo = 1,
         Engage = 2,
 
+        /// <summary>
+        /// Hold this ground. A *state*, not a task: it never completes on its own.
+        /// </summary>
+        /// <remarks>
+        /// **This was a control command and is now a world one**, which is the resolution of
+        /// the complaint that Hold was a byte-for-byte copy of Abort. As a control command it
+        /// emptied the queue and was therefore indistinguishable in effect from throwing the
+        /// plan away; as a world command it occupies the queue, sets a posture and gives the
+        /// unit something it is doing. "Stay here and keep watching" is a task, and a task
+        /// needs an executor.
+        ///
+        /// Numbered in the world range deliberately — <see cref="CommandKindExtensions.IsControl"/>
+        /// keys off the value, so the number is the declaration.
+        /// </remarks>
+        Defend = 3,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
-        Hold = 102,
     }
 
     public static class CommandKindExtensions
@@ -157,9 +172,17 @@ namespace Strategos.Commands
             Kind = CommandKind.CancelFrom, Index = index,
         };
 
-        public static Command Hold(ActorId by, UnitId unit, int tick = 0) => new()
+        /// <summary>
+        /// Hold where you stand. Kept as a named constructor because it is what a player asks
+        /// for, and because HOLD is a button; it produces a Defend.
+        /// </summary>
+        public static Command Hold(ActorId by, UnitId unit, int tick = 0) =>
+            Defend(by, unit, tick);
+
+        /// <summary>Occupy and hold the ground the unit is on.</summary>
+        public static Command Defend(ActorId by, UnitId unit, int tick = 0) => new()
         {
-            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Hold,
+            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Defend,
         };
 
         public override string ToString()

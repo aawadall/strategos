@@ -153,7 +153,7 @@ namespace Strategos.Editor
             int inner = 0;
             reentrant.Subscribe("republish", 0, c =>
             {
-                if (c.Kind == CommandKind.Hold)
+                if (c.Kind == CommandKind.Defend)
                     reentrant.Publish(Command.Abort(Blue, new UnitId(2)));
                 else inner++;
             });

@@ -441,6 +441,7 @@ namespace Strategos.UI.Views
 
             _sim.AddExecutor(new MoveToExecutor());
             _sim.AddExecutor(new EngageExecutor());
+            _sim.AddExecutor(new DefendExecutor());
             _sim.EnableReactions();
 
             // Everything the player does not command gets its own intent, so the scenario is a
@@ -632,7 +633,10 @@ namespace Strategos.UI.Views
         private void BuildDetailsCard(Transform parent)
         {
             _detailsCard = CreateRect("Details", parent);
-            _detailsCard.gameObject.AddComponent<LayoutElement>().preferredHeight = 92;
+            // Six lines now: identity, capability and training, hesitation and ground,
+            // and the plan. It was 92 and the plan line — the one that says what the
+            // unit is actually doing — was being clipped off the bottom unseen.
+            _detailsCard.gameObject.AddComponent<LayoutElement>().preferredHeight = 118;
             _detailsCard.gameObject.AddComponent<Image>().color = UiTheme.CardBg;
 
             _detailsTitle = CreateTmp("T", _detailsCard, string.Empty, 13, FontStyles.Bold,
@@ -1380,13 +1384,14 @@ namespace Strategos.UI.Views
         /// Orders the selected unit to stand where it is.
         /// </summary>
         /// <remarks>
-        /// <c>Command.Hold</c> and <c>CommandKind.Hold</c> have existed since #9 and had no way
-        /// in; this is it. **It does the same thing to the queue as ABORT PLAN does today** —
-        /// <c>Simulation.OnCommandDelivered</c> handles the two kinds identically — and the two
-        /// buttons are here anyway because the *log* tells them apart, so a replay reconstructs
-        /// "the commander stopped this unit on purpose" separately from "the commander threw the
-        /// plan away". Issue #58 tracks giving Hold its own effect: hold means stay here and
-        /// keep watching, which should imply a posture and an ROE, not just an empty queue.
+        /// Issues a Defend, which is a *world* command: it occupies the queue rather than
+        /// emptying it, and the unit is doing something for as long as it holds.
+        ///
+        /// It used to be a control command that was a byte-for-byte copy of Abort, so the two
+        /// buttons differed only in what the log called them. Now HOLD means stay here and
+        /// prepare — the unit halts, and digs in after two minutes, which halves incoming fire
+        /// — while ABORT PLAN still means stop and do nothing. They are different orders at
+        /// last, which is what #58 asked for.
         /// </remarks>
         private void HoldSelected()
         {
@@ -1417,6 +1422,14 @@ namespace Strategos.UI.Views
         /// Read, not reconstructed from the command stream — delivery rule 4. A shadow copy
         /// built by listening would be a second source of truth and would drift.
         /// </summary>
+        /// <summary>The plan as the details card states it, where live figures are affordable.</summary>
+        private string DescribePlanLive(UnitInstance unit)
+        {
+            _detailsLine = true;
+            try { return DescribePlan(unit); }
+            finally { _detailsLine = false; }
+        }
+
         private string DescribePlan(UnitInstance unit)
         {
             var plan = BelievedPlanOf(unit);
@@ -1436,6 +1449,7 @@ namespace Strategos.UI.Views
         {
             CommandKind.MoveTo => $"MOVE TO {command.TargetCell.x:0},{command.TargetCell.y:0}",
             CommandKind.Engage => DescribeEngagement(unit, command.AgainstUnit),
+            CommandKind.Defend => DescribeDefence(unit),
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 
@@ -1544,6 +1558,12 @@ namespace Strategos.UI.Views
                       .Append(c.TargetCell.x.ToString("F1")).Append(',')
                       .Append(c.TargetCell.y.ToString("F1")).Append(':')
                       .Append(c.AgainstUnit.Value).Append(';');
+
+                // Posture, because a defence changes what a row says when it finishes digging
+                // in and that transition happens once rather than every tick. TicksExecuting
+                // still stays out: a row showing a live percentage would rebuild the list —
+                // and destroy the button under the pointer — once a second.
+                sb.Append('p').Append((int)unit.Posture);
                 }
             return sb.ToString();
         }
@@ -1689,6 +1709,39 @@ namespace Strategos.UI.Views
             RefreshSelection();
         }
 
+        /// <summary>
+        /// A defence, and how far along its preparation is.
+        /// </summary>
+        /// <remarks>
+        /// The progress matters more than it looks. Digging in halves incoming fire
+        /// (EngagementResolver.PostureFactor) and takes two minutes, so "holding" and "dug in"
+        /// are materially different states and a player deciding whether to move a unit needs
+        /// to know which one it is in. Without this the order reads as EXECUTING for the whole
+        /// scenario and the benefit arrives invisibly.
+        /// </remarks>
+        /// <summary>
+        /// True while the details card is composing its body, which is a text assignment
+        /// refreshed every tick, as against the plan rows, which are GameObjects rebuilt only
+        /// when <see cref="_planKey"/> moves. Live figures belong on the former.
+        /// </summary>
+        private bool _detailsLine;
+
+        private string DescribeDefence(UnitInstance unit)
+        {
+            var q = _sim?.QueueOf(unit.Id);
+            if (q == null || q.IsEmpty) return "HOLDING";
+
+            if (unit.Posture == Posture.DugIn) return "HOLDING   ·   DUG IN";
+
+            // A percentage only where it can actually keep up. The plan row is rebuilt from
+            // _planKey and deliberately does not track TicksExecuting, so a figure there
+            // would freeze at whatever it was when the row was built — which is exactly what
+            // the first cut of this shipped: PREPARING 0% for the whole scenario.
+            int percent = Mathf.Clamp(
+                q[0].TicksExecuting * 100 / DefendExecutor.DigInTicks, 0, 99);
+            return _detailsLine ? $"HOLDING   ·   PREPARING {percent}%" : "HOLDING   ·   PREPARING";
+        }
+
         private void RefreshSelection()
         {
             UnitInstance unit = null;
@@ -1742,7 +1795,7 @@ namespace Strategos.UI.Views
                         $"{unit.Mgrs(_map)}   ·   {unit.Elevation(_map):0} M   ·   " +
                         $"{LandcoverInfo.DisplayName(unit.Landcover(_map)).ToUpperInvariant()}   ·   " +
                         $"SLOPE {_map.SampleSlopeDegrees(cx, cy):0} DEG\n" +
-                        DescribePlan(unit) + DescribeCommandability(unit);
+                        DescribePlanLive(unit) + DescribeCommandability(unit);
                 }
             }
 

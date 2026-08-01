@@ -116,6 +116,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.HierarchyProbe.Run` | The ORBAT tree, rollup, decomposition, and that formations never fight |
 | `Strategos.Editor.CasualtyProbe.Run` | A wreck is not a contact; losses recorded and in the signature |
 | `Strategos.Editor.EchelonProbe.Run` | Zoom bands contiguous, round-tripping, and usable on a small map |
+| `Strategos.Editor.DefendProbe.Run` | Defend never ends, digging in costs time and pays, Hold is not Abort |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -169,6 +170,12 @@ added to `UnitInstance` deserialises to its default in every shipped scenario un
 scout that was supposed to be green, found it fully trained, and passed anyway because its
 guard skipped when the data was uninteresting. It now fails if no unit in the sample scenario
 is below 100. **A guard that skips when the fixture is stale is a guard that cannot fail.**
+
+**Renaming a `CommandKind` is a content migration.** Enums serialise *by name*, which survives
+reordering and does not survive renaming: `Hold` becoming `Defend` made every shipped drill
+that referenced it fail to deserialise, and `DoctrineProbe` threw on load. That is the right
+behaviour — loud, with the file and line — but it means `Strategos > Write Sample Drills` has
+to run in the same change. The same will apply to saves once #74 lands.
 
 **Never index into `Scenario.Units` by position.** `ReportProbe` took `Units[0]` and `Units[3]`
 as "the mover and an enemy"; adding battalion formations to the sample ORBAT shifted every
