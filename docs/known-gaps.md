@@ -110,3 +110,19 @@ Recorded so they are not re-investigated. None are fixed.
   indistinguishable on screen despite being separate dropdown entries. Same for the Air
   Assault entity-type variant.
 - `Packages/packages-lock.json` is gitignored, which undercuts reproducible CI builds.
+- **Objectives are authored by coordinate, not by map feature, so a fixed cell can drown or
+  drift out of reach whenever the generator changes underneath it.** #95 was exactly this:
+  `THE CROSSROADS` at `(119,123)` was `Forest` with erosion off and `Water` with it on — the
+  shipped setting — and shipped unreachable to every unit type on both sides.
+  `Scenario.Validate` now checks an objective's cell is passable when given a catalogue and
+  map, and `ShippedMapProbe` (`docs/build-and-verify.md`) checks it against the real shipped
+  map, so the specific failure is caught; the underlying fragility is not. The fix moved the
+  objective to `(119,114)`, chosen for defensible, low-slope, well-buffered ground rather than
+  the next dry cell over — but it is still a hardcoded coordinate. Worth recording precisely:
+  on seed `20260729` at 256×256, `NetworkStage`'s road network (a 5-edge spanning tree over 6
+  perimeter settlements, no loops on this seed) never reaches the interior valley where the
+  two forces meet — the closest any road gets to the contested ground is 68 cells (1700 m).
+  "Place the objective on a real road junction" is not achievable there without abandoning the
+  scenario's roughly-equidistant meeting-engagement premise, which is itself evidence for #51
+  ("place objectives by map feature, not only by coordinate") over patching individual
+  coordinates as they are found broken.
