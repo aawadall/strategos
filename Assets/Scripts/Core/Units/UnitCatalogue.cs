@@ -82,6 +82,11 @@ namespace Strategos.Units
                 EngagementRangeMetres = 500f,
                 Firepower = 10f,
                 Protection = 1f,
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 20f, PerHourEngaged = 26f,
+                    RecoveryPerHourResting = 11f,
+                },
             });
 
             // Mechanised: fast, well protected, stopped by marsh and steep ground.
@@ -104,6 +109,11 @@ namespace Strategos.Units
                     RationsPerHour = 0.6f, WaterPerHour = 1.2f,
                     AmmunitionPerHourEngaged = 30f, FuelPerHourMoving = 12f,
                 },
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 7f, PerHourEngaged = 24f,
+                    RecoveryPerHourResting = 12f,
+                },
             });
 
             // Motorised: road-bound. Fast on a road, poor off it.
@@ -121,6 +131,11 @@ namespace Strategos.Units
                 EngagementRangeMetres = 800f,
                 Firepower = 12f,
                 Protection = 1.6f,
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 9f, PerHourEngaged = 24f,
+                    RecoveryPerHourResting = 12f,
+                },
             });
 
             c.Types.Add(new UnitCapabilities
@@ -142,6 +157,11 @@ namespace Strategos.Units
                     RationsPerHour = 0.5f, WaterPerHour = 1f,
                     AmmunitionPerHourEngaged = 40f, FuelPerHourMoving = 22f,
                 },
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 6f, PerHourEngaged = 22f,
+                    RecoveryPerHourResting = 12f,
+                },
             });
 
             // Recon: sees furthest, fights least.
@@ -160,6 +180,11 @@ namespace Strategos.Units
                 EngagementRangeMetres = 900f,
                 Firepower = 6f,
                 Protection = 1.4f,
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 10f, PerHourEngaged = 26f,
+                    RecoveryPerHourResting = 12f,
+                },
             });
 
             // Artillery: outranges everything and cannot defend itself.
@@ -181,6 +206,11 @@ namespace Strategos.Units
                 {
                     RationsPerHour = 0.5f, WaterPerHour = 1f,
                     AmmunitionPerHourEngaged = 60f, FuelPerHourMoving = 10f,
+                },
+                Fatigue = new FatigueRates
+                {
+                    PerHourMoving = 8f, PerHourEngaged = 18f,
+                    RecoveryPerHourResting = 12f,
                 },
             });
 

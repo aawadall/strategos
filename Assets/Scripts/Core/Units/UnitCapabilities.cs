@@ -80,6 +80,32 @@ namespace Strategos.Units
         public float FuelPerHourMoving;
     }
 
+    /// <summary>
+    /// How fast a unit tires and recovers, in readiness points per hour.
+    /// </summary>
+    /// <remarks>
+    /// Shaped and named like <see cref="ConsumptionRates"/> deliberately: readiness is a
+    /// consumable in everything but name, spent by the same activities and restored by rest
+    /// instead of resupply. Per hour rather than per tick for the same reason as supply — an
+    /// authored number a human can reason about, converted once at the point of use.
+    ///
+    /// Recovery is deliberately slower than either cost. If a unit refilled as fast as it
+    /// emptied, fatigue would be a resource you top up rather than one you spend, and pacing
+    /// a force over a long scenario would stop being a decision.
+    /// </remarks>
+    [Serializable]
+    public struct FatigueRates
+    {
+        /// <summary>Spent while <see cref="Posture.Moving"/>, scaled by how hard the going is.</summary>
+        public float PerHourMoving;
+
+        /// <summary>Spent while firing or being fired at. Combat is the expensive one.</summary>
+        public float PerHourEngaged;
+
+        /// <summary>Regained while halted and out of contact.</summary>
+        public float RecoveryPerHourResting;
+    }
+
     [Serializable]
     public sealed class UnitCapabilities
     {
@@ -174,6 +200,12 @@ namespace Strategos.Units
         /// Slope scales linearly to zero at the climb limit: ground at the edge of what a
         /// unit can climb should crawl, not run.
         /// </summary>
+        /// <summary>
+        /// How quickly this unit tires. Zero rates mean a unit that never tires, which is
+        /// what an unconfigured type gets — see <see cref="UnitCatalogue"/>.
+        /// </summary>
+        public FatigueRates Fatigue;
+
         public float SpeedMps(LandcoverClass cover, float slopeDegrees, bool onRoad)
         {
             if (!CanEnter(cover, slopeDegrees)) return 0f;

@@ -112,6 +112,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.DirectorProbe.Run` | An unattended scenario reaches a decision |
 | `Strategos.Editor.DoctrineProbe.Run` | Drill pack round trip, and the T/P/U matrix |
 | `Strategos.Editor.TrainingProbe.Run` | The hesitation curve, and that training only costs time |
+| `Strategos.Editor.FatigueProbe.Run` | Fatigue and recovery curves, the floor, and that idling is free |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -125,7 +126,18 @@ hesitation is part of `CommandQueue`'s signature and delayed reports change the 
 What `TrainingProbe` asserts instead is the property that survives any retuning — **a unit at
 `Training = 100` behaves exactly as it did before the feature existed**, so anything that
 moved in another probe's numbers is a real regression rather than the new feature showing up.
-Keep that property when adding fatigue (#67) or friction.
+**Fatigue could not keep that property** and did not try: it is a world rule rather than an
+opt-in attribute, so every scenario's numbers move by design. What `FatigueProbe` asserts
+instead is the *shape* — costs only fall, recovery only rises, neither passes its bound, a
+destroyed unit is inert, and **a unit that does nothing is not worn down by time alone**.
+That last one is a design decision held in place by a test: a slow drift for "time without
+rest" is realistic and would make a long scenario unwinnable regardless of what the player
+does, so it is deliberately absent and the probe fails if it comes back.
+
+The movement it caused was small and attributable: the reference firefight went from 139 to
+140 ticks because engaged units now tire, and `CombatProbe`'s terrain matrix is unchanged
+because it is sampled from full readiness — which is now stated in the matrix header, since
+readiness stopped being a constant.
 
 **`CombatProbe`'s table is the point of it, not its pass/fail.** Balance the combat model by
 reading the printed damage-per-minute matrix; the assertions only catch the model breaking,
@@ -143,7 +155,7 @@ Player log (**always check after a UI change**, see UI gotchas below):
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
-`Write Sample Scenarios`, `Write Sample Drills`, `Probe Training`,
+`Write Sample Scenarios`, `Write Sample Drills`, `Probe Training`, `Probe Fatigue`,
 `Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**

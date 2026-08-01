@@ -148,7 +148,11 @@ namespace Strategos.Editor
             LandcoverClass[] covers = { LandcoverClass.Open, LandcoverClass.Forest,
                                         LandcoverClass.Urban };
 
-            log.AppendLine("  engagement matrix at 300 m, defender halted, 100% strength:");
+            // Readiness is named because it is no longer a constant: FatigueModel moves it,
+            // and without stating it the matrix would stop being comparable between runs the
+            // moment a sample was taken from a unit that had been marching.
+            log.AppendLine("  engagement matrix at 300 m, defender halted, " +
+                           "100% strength, 100% readiness:");
             log.AppendLine("    attacker         defender      terrain   dmg/min   minutes to kill");
 
             foreach (var ac in attackers)

@@ -49,6 +49,17 @@ Tick++
   differently is unlearnable, indistinguishable from a bug, and impossible to plan around.
   Default is 100, meaning zero hesitation and behaviour identical to before the feature, so
   any movement in another probe's numbers is a real regression.
+- **Fatigue is a world rule, and it has a floor.** `FatigueModel.Apply` runs once per unit
+  per step, after engagements resolve so "was this unit in a fight this tick" is answerable
+  from the intent list. Marching and fighting spend `Readiness`; halted and unengaged gives
+  it back, more slowly, because a resource that refills as fast as it empties is topped up
+  rather than spent. **`MinReadiness` is not tuning** — `Effectiveness` multiplies strength,
+  readiness and suppression, so an unfloored readiness is a fourth independent path to zero
+  and a long march alone would render a unit combat ineffective without a shot fired. Only
+  casualties may reach zero, and `IsDestroyed` is for that. Terrain difficulty is the
+  reciprocal of the unit's own landcover speed factor, so what slows a unit also tires it,
+  from one authored number rather than a second table that could drift. Deterministic
+  throughout: no draw anywhere, only posture, terrain and whether an engagement named it.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an
