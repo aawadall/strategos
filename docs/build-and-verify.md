@@ -117,6 +117,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CasualtyProbe.Run` | A wreck is not a contact; losses recorded and in the signature |
 | `Strategos.Editor.EchelonProbe.Run` | Zoom bands contiguous, round-tripping, and usable on a small map |
 | `Strategos.Editor.DefendProbe.Run` | Defend never ends, digging in costs time and pays, Hold is not Abort |
+| `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**

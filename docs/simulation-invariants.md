@@ -104,6 +104,23 @@ Tick++
   reflex sends the unit to `Halted` while it returns fire and the posture has to come back.
   **`Hold` moved from the control range into the world range** to make this possible, which is
   what stopped it being a byte-for-byte copy of `Abort`.
+- **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
+  code and is unpacked into the orders its steps become, each issued through `Issue` so the log
+  records the drill **and** what it became. The formation check runs first, so a drill given to
+  a battalion decomposes to its companies and each of them expands it — which is what
+  "2 Squad, React to Contact" has to mean.
+- **A drill's steps are unbound, and the only thing to bind against is the threat.** Most of
+  doctrine is directional relative to contact — assault toward it, break away from it, hold
+  where you are — so `StepBinding` says which way and `Simulation` supplies the nearest hostile.
+  Ground chosen for its own qualities (a reverse slope, a treeline) needs terrain reasoning and
+  is not attempted. **It binds against ground truth, which is a shortcut**: once belief layers
+  land (#34) it must bind against the threat the commander *knows about*, or a unit is reacting
+  to an enemy it cannot see.
+- **A step that is not an order is not silently dropped.** `StepNature` separates the three
+  cases — an order it issues, something the simulation already does (reporting), and a mechanic
+  that does not exist. Calling every non-order step "no executor" was wrong about two thirds of
+  them: `ContactTracker` publishes *report contact to higher* unasked. The honest split is 71%
+  orders, 17% inherent, 11% unmodelled, and `DrillProbe` prints it.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an

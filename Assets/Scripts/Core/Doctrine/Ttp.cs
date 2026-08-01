@@ -54,6 +54,58 @@ namespace Strategos.Doctrine
         BattleDrill = 1,
     }
 
+    /// <summary>
+    /// What kind of thing a step is, which is not the same question as which command it becomes.
+    /// </summary>
+    /// <remarks>
+    /// The binder used to call every step without a `CommandKind` "no executor", and that was
+    /// the wrong statement about two thirds of them. *Report contact to higher* does not need
+    /// an executor — `ContactTracker` publishes it without being asked, so the engine already
+    /// does it and marking it missing implied it could not. Separating the two makes the
+    /// honest count: of 52 authored steps, 6 are genuinely unmodelled and 9 happen by
+    /// themselves.
+    /// </remarks>
+    public enum StepNature
+    {
+        /// <summary>Becomes a command in the unit's queue.</summary>
+        Command = 0,
+
+        /// <summary>The simulation already does this — reporting, mostly. Nothing to issue.</summary>
+        Inherent = 1,
+
+        /// <summary>Wants a mechanic that does not exist. Room clearing, dispersal.</summary>
+        Unmodelled = 2,
+    }
+
+    /// <summary>
+    /// Where a step's command points, when the drill is invoked.
+    /// </summary>
+    /// <remarks>
+    /// **A drill is parameterised and its steps are unbound** — "take the nearest cover" names
+    /// no cell and "return fire" names no target, which is exactly what makes a drill reusable
+    /// rather than an order. Binding needs something to bind *to*, and the only thing available
+    /// without a tactical planner is the threat: where the enemy is.
+    ///
+    /// That is enough for most of doctrine, because most of doctrine is directional relative to
+    /// contact — you assault toward it, you break away from it, you hold where you are. What it
+    /// cannot express is ground chosen for its own qualities ("the reverse slope", "the treeline
+    /// on the left"), which needs terrain reasoning and is Phase 8.
+    /// </remarks>
+    public enum StepBinding
+    {
+        /// <summary>No parameter needed. Defend, and anything acting in place.</summary>
+        Here = 0,
+
+        /// <summary>Fire at the threat.</summary>
+        AtThreat = 1,
+
+        /// <summary>Move toward it — assault, bound forward, close.</summary>
+        TowardThreat = 2,
+
+        /// <summary>Move away from it — cover, break contact, out of the impact area.</summary>
+        AwayFromThreat = 3,
+    }
+
     /// <summary>One step of a drill.</summary>
     public struct TtpStep
     {
@@ -75,14 +127,32 @@ namespace Strategos.Doctrine
         /// </remarks>
         public CommandKind Kind;
 
-        public TtpStep(string text, CommandKind kind = CommandKind.None) : this()
+        /// <summary>Whether this becomes an order, happens by itself, or is not modelled.</summary>
+        public StepNature Nature;
+
+        /// <summary>What the step's command points at when the drill is invoked.</summary>
+        public StepBinding Binding;
+
+        public TtpStep(string text, CommandKind kind = CommandKind.None,
+            StepBinding binding = StepBinding.Here, StepNature nature = StepNature.Command)
+            : this()
         {
             Text = text;
             Kind = kind;
+            Binding = binding;
+
+            // A step with no command cannot be a Command step whatever it claims, so the
+            // default corrects itself rather than letting the two fields disagree.
+            Nature = kind == CommandKind.None && nature == StepNature.Command
+                ? StepNature.Unmodelled
+                : nature;
         }
 
-        /// <summary>True when an executor exists for this step today.</summary>
-        public bool IsMechanised => Kind != CommandKind.None;
+        /// <summary>True when invoking the drill puts this step in the unit's queue.</summary>
+        public bool IsMechanised => Nature == StepNature.Command && Kind != CommandKind.None;
+
+        /// <summary>True when the simulation does this without being told.</summary>
+        public bool IsInherent => Nature == StepNature.Inherent;
     }
 
     /// <summary>
@@ -127,7 +197,7 @@ namespace Strategos.Doctrine
         /// <summary>The figure on the facing page, or null where geometry adds nothing.</summary>
         public TtpDiagram Diagram;
 
-        /// <summary>How many steps the simulation can actually carry out today.</summary>
+        /// <summary>How many steps invoking the drill actually issues.</summary>
         public int MechanisedSteps
         {
             get
@@ -137,6 +207,20 @@ namespace Strategos.Doctrine
                 return n;
             }
         }
+
+        /// <summary>How many steps the simulation performs without being told.</summary>
+        public int InherentSteps
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < Steps.Length; i++) if (Steps[i].IsInherent) n++;
+                return n;
+            }
+        }
+
+        /// <summary>How many steps want a mechanic that does not exist yet.</summary>
+        public int UnmodelledSteps => Steps.Length - MechanisedSteps - InherentSteps;
 
         public string EchelonName => Echelon switch
         {
@@ -190,10 +274,10 @@ namespace Strategos.Doctrine
                 NotWhen = "You have nothing to suppress with - moving alone under fire is worse.",
                 Steps = new[]
                 {
-                    new TtpStep("One buddy team fires", CommandKind.Engage),
-                    new TtpStep("The other bounds forward", CommandKind.MoveTo),
-                    new TtpStep("Bounding team takes cover and fires", CommandKind.Engage),
-                    new TtpStep("Alternate until the objective is reached", CommandKind.MoveTo),
+                    new TtpStep("One buddy team fires", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("The other bounds forward", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Bounding team takes cover and fires", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Alternate until the objective is reached", CommandKind.MoveTo, StepBinding.TowardThreat),
                 },
                 Diagram = TtpDiagram.Of(
                     "ONE PAIR FIRES WHILE THE OTHER MOVES - NEVER BOTH AT ONCE",
@@ -212,10 +296,10 @@ namespace Strategos.Doctrine
                 NotWhen = "Never - this one is reflex, which is why it is drilled.",
                 Steps = new[]
                 {
-                    new TtpStep("Return fire at once", CommandKind.Engage),
-                    new TtpStep("Take the nearest cover", CommandKind.MoveTo),
-                    new TtpStep("Call the direction and distance"),
-                    new TtpStep("Await the squad leader's order"),
+                    new TtpStep("Return fire at once", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Take the nearest cover", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Call the direction and distance", CommandKind.None, StepBinding.Here, StepNature.Inherent),
+                    new TtpStep("Await the squad leader's order", CommandKind.None, StepBinding.Here, StepNature.Inherent),
                 },
                 Diagram = TtpDiagram.Of(
                     "FIRE FIRST - THEN COVER - THE REPORT COMES AFTER BOTH",
@@ -233,10 +317,10 @@ namespace Strategos.Doctrine
                 NotWhen = "You are already in prepared overhead cover.",
                 Steps = new[]
                 {
-                    new TtpStep("Shout INCOMING"),
-                    new TtpStep("Move out of the impact area at once", CommandKind.MoveTo),
-                    new TtpStep("Disperse while moving"),
-                    new TtpStep("Report the shelling"),
+                    new TtpStep("Shout INCOMING", CommandKind.None, StepBinding.Here, StepNature.Inherent),
+                    new TtpStep("Move out of the impact area at once", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Disperse while moving", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
+                    new TtpStep("Report the shelling", CommandKind.None, StepBinding.Here, StepNature.Inherent),
                 },
                 Diagram = TtpDiagram.Of(
                     "MOVE OUT OF IT - GROUND OFFERS NOTHING AGAINST AIRBURST",
@@ -253,10 +337,10 @@ namespace Strategos.Doctrine
                 NotWhen = "Decisively engaged at close range - turning your back is worse.",
                 Steps = new[]
                 {
-                    new TtpStep("Suppress to buy the first bound", CommandKind.Engage),
-                    new TtpStep("Bound back by pairs", CommandKind.MoveTo),
-                    new TtpStep("Continue until out of contact", CommandKind.MoveTo),
-                    new TtpStep("Report and reorganise"),
+                    new TtpStep("Suppress to buy the first bound", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Bound back by pairs", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Continue until out of contact", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Report and reorganise", CommandKind.None, StepBinding.Here, StepNature.Inherent),
                 },
                 Diagram = TtpDiagram.Of(
                     "THE SAME ALTERNATION AS T1 - RUN BACKWARDS",
@@ -276,11 +360,11 @@ namespace Strategos.Doctrine
                 NotWhen = "The position is not fixed, or you have not found its flank.",
                 Steps = new[]
                 {
-                    new TtpStep("Fix the position with a base of fire", CommandKind.Engage),
-                    new TtpStep("Find and report a flank"),
-                    new TtpStep("Manoeuvre the assault squads", CommandKind.MoveTo),
-                    new TtpStep("Assault through", CommandKind.Engage),
-                    new TtpStep("Consolidate and reorganise", CommandKind.Defend),
+                    new TtpStep("Fix the position with a base of fire", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Find and report a flank", CommandKind.None, StepBinding.Here, StepNature.Inherent),
+                    new TtpStep("Manoeuvre the assault squads", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Assault through", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Consolidate and reorganise", CommandKind.Defend, StepBinding.Here),
                 },
                 Diagram = TtpDiagram.Of(
                     "ONE ELEMENT FIXES FROM THE FRONT - ANOTHER TAKES THE FLANK",
@@ -299,11 +383,11 @@ namespace Strategos.Doctrine
                 NotWhen = "The enemy is not yet fixed, or you are the smaller force.",
                 Steps = new[]
                 {
-                    new TtpStep("Establish a base of fire", CommandKind.Engage),
-                    new TtpStep("Suppress the position", CommandKind.Engage),
-                    new TtpStep("Manoeuvre the assault team", CommandKind.MoveTo),
-                    new TtpStep("Assault through", CommandKind.Engage),
-                    new TtpStep("Consolidate and reorganise", CommandKind.Defend),
+                    new TtpStep("Establish a base of fire", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Suppress the position", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Manoeuvre the assault team", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Assault through", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Consolidate and reorganise", CommandKind.Defend, StepBinding.Here),
                 },
                 Diagram = TtpDiagram.Of(
                     "BASE OF FIRE LEFT - ASSAULT RIGHT - FIRE SHIFTS AS THE TEAM CLOSES",
@@ -323,11 +407,11 @@ namespace Strategos.Doctrine
                 NotWhen = "In the open with no cover within 50 m - break contact instead.",
                 Steps = new[]
                 {
-                    new TtpStep("Return fire immediately", CommandKind.Engage),
-                    new TtpStep("Take the nearest cover", CommandKind.MoveTo),
-                    new TtpStep("Report contact to higher"),
-                    new TtpStep("Locate and suppress", CommandKind.Engage),
-                    new TtpStep("Assault or break contact"),
+                    new TtpStep("Return fire immediately", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Take the nearest cover", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Report contact to higher", CommandKind.None, StepBinding.Here, StepNature.Inherent),
+                    new TtpStep("Locate and suppress", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Assault or break contact", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
                 },
                 Diagram = TtpDiagram.Of(
                     "SUPPRESS FIRST - ASSAULT OR BREAK IS DECIDED AFTER",
@@ -345,10 +429,10 @@ namespace Strategos.Doctrine
                 NotWhen = "Decisively engaged at close range - breaking exposes your flank.",
                 Steps = new[]
                 {
-                    new TtpStep("Suppress to buy movement", CommandKind.Engage),
-                    new TtpStep("Bound back by team", CommandKind.MoveTo),
-                    new TtpStep("Continue until out of contact", CommandKind.MoveTo),
-                    new TtpStep("Report and reorganise"),
+                    new TtpStep("Suppress to buy movement", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Bound back by team", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Continue until out of contact", CommandKind.MoveTo, StepBinding.AwayFromThreat),
+                    new TtpStep("Report and reorganise", CommandKind.None, StepBinding.Here, StepNature.Inherent),
                 },
                 Diagram = TtpDiagram.Of(
                     "ALTERNATING BOUNDS - SOMEONE IS ALWAYS FIRING",
@@ -366,10 +450,10 @@ namespace Strategos.Doctrine
                 NotWhen = "The ambush is far and covered - suppress and manoeuvre instead.",
                 Steps = new[]
                 {
-                    new TtpStep("Return fire without waiting for an order", CommandKind.Engage),
-                    new TtpStep("Assault through the near side", CommandKind.MoveTo),
-                    new TtpStep("Clear and consolidate beyond it", CommandKind.Defend),
-                    new TtpStep("Treat casualties and report"),
+                    new TtpStep("Return fire without waiting for an order", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Assault through the near side", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Clear and consolidate beyond it", CommandKind.Defend, StepBinding.Here),
+                    new TtpStep("Treat casualties and report", CommandKind.None, StepBinding.Here, StepNature.Inherent),
                 },
                 Diagram = TtpDiagram.Of(
                     "THROUGH IT - THE KILLING ZONE IS THE WORST PLACE TO STAY",
@@ -386,10 +470,10 @@ namespace Strategos.Doctrine
                 NotWhen = "The bunker is mutually supported and the supporting one is unlocated.",
                 Steps = new[]
                 {
-                    new TtpStep("Suppress the aperture", CommandKind.Engage),
-                    new TtpStep("Move a team to the blind side", CommandKind.MoveTo),
-                    new TtpStep("Clear the position"),
-                    new TtpStep("Consolidate beyond it", CommandKind.Defend),
+                    new TtpStep("Suppress the aperture", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Move a team to the blind side", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Clear the position", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
+                    new TtpStep("Consolidate beyond it", CommandKind.Defend, StepBinding.Here),
                 },
                 Diagram = TtpDiagram.Of(
                     "APPROACH OUT OF THE APERTURE ARC - NEVER ACROSS ITS FRONT",
@@ -409,11 +493,11 @@ namespace Strategos.Doctrine
                 NotWhen = "The building is not isolated - clearing into reinforcement is a trap.",
                 Steps = new[]
                 {
-                    new TtpStep("Isolate the building", CommandKind.Engage),
-                    new TtpStep("Suppress the entry point", CommandKind.Engage),
-                    new TtpStep("Enter at a corner, not the doorway centre"),
-                    new TtpStep("Clear by room, marking as you go"),
-                    new TtpStep("Consolidate and report cleared", CommandKind.Defend),
+                    new TtpStep("Isolate the building", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Suppress the entry point", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Enter at a corner, not the doorway centre", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
+                    new TtpStep("Clear by room, marking as you go", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
+                    new TtpStep("Consolidate and report cleared", CommandKind.Defend, StepBinding.Here),
                 },
                 Diagram = TtpDiagram.Of(
                     "ISOLATE FIRST - A BUILDING CLEARED INTO REINFORCEMENT IS NOT CLEARED",
@@ -431,10 +515,10 @@ namespace Strategos.Doctrine
                 NotWhen = "You have no way to suppress along the length of the trench.",
                 Steps = new[]
                 {
-                    new TtpStep("Suppress the trench line", CommandKind.Engage),
-                    new TtpStep("Gain a foothold", CommandKind.MoveTo),
-                    new TtpStep("Clear along the trench in both directions"),
-                    new TtpStep("Consolidate and report", CommandKind.Defend),
+                    new TtpStep("Suppress the trench line", CommandKind.Engage, StepBinding.AtThreat),
+                    new TtpStep("Gain a foothold", CommandKind.MoveTo, StepBinding.TowardThreat),
+                    new TtpStep("Clear along the trench in both directions", CommandKind.None, StepBinding.Here, StepNature.Unmodelled),
+                    new TtpStep("Consolidate and report", CommandKind.Defend, StepBinding.Here),
                 },
                 // No figure on purpose. The geometry is a line and a foothold, and a drawing
                 // of it says less than the sentence does — a page is allowed to have none, and
