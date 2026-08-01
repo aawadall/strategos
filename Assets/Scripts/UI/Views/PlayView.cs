@@ -139,6 +139,19 @@ namespace Strategos.UI.Views
         private RectTransform _directiveSection;
         private TMP_Text _directiveTitle;
         private TMP_Text _directiveBody;
+        private Button _directiveAckButton;
+        private TMP_Text _directiveAckLabel;
+
+        /// <summary>
+        /// Whether the standing directive has been acknowledged — read off <see cref="OnReport"/>
+        /// (a <see cref="Strategos.Reports.ReportKind.DirectiveAcknowledged"/> report citing it),
+        /// never set from the click handler directly. The simulation is the truth; this is a
+        /// cached reflection of what it reported, one tick behind the button press like every
+        /// other observer of either bus (rule 1) — not an optimistic flip made at click time,
+        /// which a future save/load or replay would have no way to reproduce.
+        /// </summary>
+        private bool _directiveAcknowledged;
+        private int _directiveAcknowledgedTick;
 
         /// <summary>One unit's on-map presence: the symbol and its caption.</summary>
         private sealed class Marker
@@ -499,6 +512,8 @@ namespace Strategos.UI.Views
             // read from Scenario.Directive — a fresh directive (or none) arrives through the
             // bus on the scenario's first step, same one-tick delay as every other message.
             _directive = null;
+            _directiveAcknowledged = false;
+            _directiveAcknowledgedTick = 0;
             RefreshDirectiveCard();
             _sim.Directives.Subscribe("ui-directive", 100, OnDirective);
 
@@ -732,7 +747,8 @@ namespace Strategos.UI.Views
             // consequence is a dead one. Same row shape as ABORT PLAN/HOLD (AddButtonRow +
             // AddButton), just with one entry instead of two.
             var controls = AddButtonRow(_directiveSection);
-            AddButton(controls, "ACKNOWLEDGE", AcknowledgeSelectedDirective);
+            _directiveAckButton = AddButton(controls, "ACKNOWLEDGE", AcknowledgeSelectedDirective);
+            _directiveAckLabel = _directiveAckButton.GetComponentInChildren<TMP_Text>();
 
             RefreshDirectiveCard();
         }
@@ -771,8 +787,19 @@ namespace Strategos.UI.Views
             sb.Append("\n\nOBJECTIVE: ").Append(ObjectiveNamesOf(d.ObjectiveIds));
             if (d.DeadlineTick > 0)
                 sb.Append("\nDEADLINE: T+").Append(d.DeadlineTick.ToString("0000"));
+            if (_directiveAcknowledged)
+                sb.Append("\nACKNOWLEDGED  T+").Append(_directiveAcknowledgedTick.ToString("0000"));
 
             _directiveBody.text = sb.ToString();
+
+            // Same idiom ScenarioSetupView.GenerateRoutine uses for "this button has already
+            // done its job": disable it and relabel it, rather than leaving it sitting there
+            // identical to before — the button itself is the only signal a player has that a
+            // second press would do nothing, now that it correctly does nothing (Simulation
+            // guards the repeat too; this is the visible half of that).
+            if (_directiveAckButton != null) _directiveAckButton.interactable = !_directiveAcknowledged;
+            if (_directiveAckLabel != null)
+                _directiveAckLabel.text = _directiveAcknowledged ? "ACKNOWLEDGED" : "ACKNOWLEDGE";
         }
 
         /// <summary>
@@ -803,9 +830,18 @@ namespace Strategos.UI.Views
         /// the player expresses that afterward by issuing their own orders, which is the entire
         /// point of "leaves the how to the receiver".
         /// </summary>
+        /// <remarks>
+        /// Guarded by <see cref="_directiveAcknowledged"/> as well as by
+        /// <see cref="Simulation.AcknowledgeDirective"/>'s own idempotency — belt and braces,
+        /// not a substitute for it. This flag is one report-delivery tick behind a press (it is
+        /// only ever set from <see cref="OnReport"/>), so a second press landing inside that
+        /// window would still reach the simulation; the simulation is what actually cannot be
+        /// driven twice, keyed by <c>Directive.Seq</c>. This guard only stops the common case —
+        /// a disabled button a player clicks again anyway — from making a redundant call at all.
+        /// </remarks>
         private void AcknowledgeSelectedDirective()
         {
-            if (_sim == null || !_directive.HasValue) return;
+            if (_sim == null || !_directive.HasValue || _directiveAcknowledged) return;
             _sim.AcknowledgeDirective(_directive.Value);
         }
 
@@ -1154,6 +1190,20 @@ namespace Strategos.UI.Views
             _feed.Insert(0, FormatReport(report));
             if (_feed.Count > FeedLines) _feed.RemoveRange(FeedLines, _feed.Count - FeedLines);
             RefreshFeed();
+
+            // The DIRECTIVE card's acknowledged state is read off this same stream, never set
+            // directly by the click handler — see _directiveAcknowledged's own note. Matched by
+            // AboutDirective against the standing directive's Seq, not merely "any
+            // DirectiveAcknowledged", so a hypothetical future second directive could not flip
+            // this one's card.
+            if (!_directiveAcknowledged && _directive.HasValue &&
+                report.Kind == Strategos.Reports.ReportKind.DirectiveAcknowledged &&
+                report.AboutDirective == _directive.Value.Seq)
+            {
+                _directiveAcknowledged = true;
+                _directiveAcknowledgedTick = report.ObservedTick;
+                RefreshDirectiveCard();
+            }
         }
 
         private string FormatReport(Strategos.Reports.SituationReport report)
