@@ -212,6 +212,23 @@ append-only, sequence-numbered, and replayable.
 - **AI training** — expose the stream at a process boundary (Phase 8).
 - **After-action review** — read the stream.
 
+**Replay is production code, not a test fixture.** `Strategos.Commands.Replayer` (`Core/Commands/`)
+is the single definition of what replaying a run means, and it is what `CommandProbe`'s
+divergence check calls — the check does not keep its own copy. Until #94, it did: the only
+replay mechanism in this project was reimplemented privately inside the probe that tested it,
+which meant the property "a recorded run replays" was never actually exercised on anything that
+shipped. #94 found the gap because it is exactly the shape a directive's *response* falls
+into: a directive itself is a message and replays like any other, but a player *acknowledging*
+one is not on the command topic (see the C2 note above — a directive never reaches
+`OnCommandDelivered`, so it gets neither a `CommandKind` nor a route through `Bus`) and so was
+invisible to a replay driven from `CommandLog` alone. The command stream is still the one
+`CommandLog` carries; `Replayer` additionally reads a second, parallel log —
+`DirectiveResponseLog` — for exactly the class of player action that happens outside the command
+topic on purpose, and drives both by tick with the same one-step delivery delay. Acknowledging
+replays through `Simulation.AcknowledgeDirective` itself, never by re-publishing its report
+directly, because that method is also where the idempotence guard over acknowledged directives
+lives and rebuilds.
+
 ### Determinism caveat
 
 Same build on the same machine: replay is achievable and enough for review and what-if
