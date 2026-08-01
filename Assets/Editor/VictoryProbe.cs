@@ -34,6 +34,7 @@ namespace Strategos.Editor
             bad += CheckSampleIsWinnable(log);
             bad += CheckControl(log);
             bad += CheckHoldDuration(log);
+            bad += CheckVacatedGroundDoesNotHold(log);
             bad += CheckDestroy(log);
             bad += CheckDrawOnTimeout(log);
             bad += CheckPrecedence(log);
@@ -246,6 +247,87 @@ namespace Strategos.Editor
             if (bad == 0)
                 log.AppendLine("  control: neutral -> taken uncontested -> frozen while " +
                                "contested -> transferred when cleared -> sticky when vacated");
+            return bad;
+        }
+
+        /// <summary>
+        /// A hold clock must not run while the ground is abandoned.
+        /// </summary>
+        /// <remarks>
+        /// **The case that was missing, and the reason the bug shipped.** CheckHoldDuration
+        /// passes a unit into the objective and leaves it there, so it never exercised the
+        /// difference between owning ground and standing on it — and ownership is sticky by
+        /// design, so a hold measured against ownership counted time nobody was there.
+        ///
+        /// On the shipped skirmish that made the primary victory condition satisfiable by
+        /// routing a unit through the crossroads for one tick and then doing nothing for ten
+        /// minutes. A test that never leaves cannot fail on that, whatever else it asserts.
+        /// </remarks>
+        private static int CheckVacatedGroundDoesNotHold(StringBuilder log)
+        {
+            int bad = 0;
+            var objective = Centre();
+            const int hold = 200;
+
+            var sim = NewContest(out var blue, out _, objective, new[]
+            {
+                new VictoryCondition
+                {
+                    Kind = VictoryKind.HoldObjectives, Side = new SideId(1),
+                    ObjectiveIds = new[] { 1 }, HoldTicks = hold,
+                    Description = "held long enough",
+                },
+            });
+
+            // Long enough to be *seen*: control is sampled every EvaluationInterval ticks,
+            // not continuously, so a three-tick visit can fall between two evaluations and
+            // never register at all. That sampling is itself worth knowing — a unit can cross
+            // an objective faster than the evaluator looks.
+            blue.Cell = objective.Cell;
+            sim.Step(VictoryEvaluator.EvaluationInterval * 2);
+
+            blue.Cell = objective.Cell + new Vector2(objective.RadiusCells * 4f, 0f);
+            sim.Step(hold * 2);
+
+            if (sim.IsOver)
+            {
+                log.AppendLine($"  FAIL won at t{sim.Victory.Outcome.Tick} having stood in the " +
+                               "objective for 3 ticks and then left — the hold clock is " +
+                               "running on ownership, not occupation");
+                return bad + 1;
+            }
+
+            // Ownership must still be sticky: the ground was taken and nobody else took it.
+            if (sim.Victory.OwnerOfIndex(0) != blue.Side)
+            {
+                log.AppendLine($"  FAIL vacating handed the ground back: owner is " +
+                               $"{sim.Victory.OwnerOfIndex(0)}, expected {blue.Side} — " +
+                               "ownership should be sticky, only the hold clock should stop");
+                bad++;
+            }
+
+            if (sim.Victory.HeldTicksOfIndex(0, sim.Tick) != 0)
+            {
+                log.AppendLine($"  FAIL held clock reads " +
+                               $"{sim.Victory.HeldTicksOfIndex(0, sim.Tick)} on empty ground");
+                bad++;
+            }
+
+            // And coming back restarts it rather than resuming.
+            blue.Cell = objective.Cell;
+            sim.Step(10);
+
+            int resumed = sim.Victory.HeldTicksOfIndex(0, sim.Tick);
+            if (resumed > 12)
+            {
+                log.AppendLine($"  FAIL returning resumed the old clock at {resumed} ticks " +
+                               "rather than starting a new one");
+                bad++;
+            }
+
+            if (bad == 0)
+                log.AppendLine($"  vacated: touched, left for {hold * 2} ticks without " +
+                               $"winning, ownership kept, clock restarted at {resumed}");
             return bad;
         }
 

@@ -903,7 +903,17 @@ namespace Strategos.UI.Views
                 string held = owner.IsValid
                     ? (_scenario.FindSide(owner)?.Name ?? owner.ToString())
                     : "NEUTRAL";
+
                 sb.Append("   ·   ").Append(victory.Objectives[i].Name).Append(": ").Append(held);
+
+                // The clock a hold condition actually depends on. It was invisible, which is
+                // most of why an objective that had been walked away from went on reading as
+                // held: the ring stays your colour, and nothing said nobody was standing in it.
+                if (owner.IsValid)
+                {
+                    int ticks = victory.HeldTicksOfIndex(i, _sim.Tick);
+                    sb.Append(ticks > 0 ? $" {ticks / 60}:{ticks % 60:00}" : " (VACATED)");
+                }
             }
             return sb.ToString().ToUpperInvariant();
         }
