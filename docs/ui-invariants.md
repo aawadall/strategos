@@ -129,6 +129,16 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   reserves a right-hand amplifier column, so the symbol sits left of centre in its texture.
   The library's tiles are 4:3 rather than square for this reason — in a square tile it reads
   as a layout bug. Do not "centre" it.
+- **A standing rail section that can be entirely absent needs one container to hide, not
+  several.** `PlayView.BuildDirectiveCard` (the `DIRECTIVE` card, #73) wraps its section
+  header, card and button row in one `VerticalLayoutGroup` + `ContentSizeFitter` container
+  (the same shape `_orbatRoot` already used) so "no directive" is a single
+  `gameObject.SetActive(false)` on the container rather than three calls that can drift out
+  of sync. There is no empty-state card — the rule is "the section is absent, not empty."
+  It is built once in `BuildRail` (before the scenario is loaded, so it starts hidden) and
+  its content is refreshed from a bus subscription exactly as `BuildFeedCard`/`OnReport`
+  does, never from reading scenario state directly — see this file's own note on that
+  discipline above.
 
 ---
 
