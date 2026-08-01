@@ -66,6 +66,7 @@
         "y": 66.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -97,6 +98,7 @@
         "y": 180.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -128,6 +130,7 @@
         "y": 72.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -159,6 +162,7 @@
         "y": 60.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -190,6 +194,7 @@
         "y": 92.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 55.0,
@@ -221,6 +226,7 @@
         "y": 176.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 70.0,
@@ -252,6 +258,7 @@
         "y": 196.0
       },
       "Strength": 100.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -283,6 +290,7 @@
         "y": 150.0
       },
       "Strength": 90.0,
+      "DestroyedAtTick": -1,
       "Readiness": 100.0,
       "Suppression": 0.0,
       "Training": 100.0,
@@ -326,7 +334,8 @@
         1
       ],
       "HoldTicks": 600,
-      "DeadlineTick": 0
+      "DeadlineTick": 0,
+      "DirectiveId": 1
     },
     {
       "Kind": "HoldObjectives",
@@ -340,7 +349,8 @@
         1
       ],
       "HoldTicks": 600,
-      "DeadlineTick": 0
+      "DeadlineTick": 0,
+      "DirectiveId": 0
     },
     {
       "Kind": "DestroyEnemy",
@@ -352,7 +362,8 @@
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [],
       "HoldTicks": 0,
-      "DeadlineTick": 0
+      "DeadlineTick": 0,
+      "DirectiveId": 0
     },
     {
       "Kind": "DestroyEnemy",
@@ -364,8 +375,24 @@
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [],
       "HoldTicks": 0,
-      "DeadlineTick": 0
+      "DeadlineTick": 0,
+      "DirectiveId": 0
     }
   ],
-  "TimeLimitTicks": 3600
+  "TimeLimitTicks": 3600,
+  "Directive": {
+    "Id": 1,
+    "Seq": 0,
+    "Tick": 0,
+    "TargetUnit": {
+      "Value": 7
+    },
+    "From": "3 BDE",
+    "Intent": "Seize and hold THE CROSSROADS. Task force denies 2 MRR's advance through the valley and keeps the road junction open for brigade's follow-on forces.",
+    "Constraints": "Do not become decisively engaged beyond the objective. Preserve combat power for brigade's main effort.",
+    "DeadlineTick": 1200,
+    "ObjectiveIds": [
+      1
+    ]
+  }
 }
