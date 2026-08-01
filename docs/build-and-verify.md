@@ -114,6 +114,8 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.TrainingProbe.Run` | The hesitation curve, and that training only costs time |
 | `Strategos.Editor.FatigueProbe.Run` | Fatigue and recovery curves, the floor, and that idling is free |
 | `Strategos.Editor.HierarchyProbe.Run` | The ORBAT tree, rollup, decomposition, and that formations never fight |
+| `Strategos.Editor.CasualtyProbe.Run` | A wreck is not a contact; losses recorded and in the signature |
+| `Strategos.Editor.EchelonProbe.Run` | Zoom bands contiguous, round-tripping, and usable on a small map |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -156,7 +158,8 @@ Player log (**always check after a UI change**, see UI gotchas below):
 Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scene` (F5),
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
-`Write Sample Scenarios`, `Write Sample Drills`, `Probe Training`, `Probe Fatigue`,
+`Write Sample Scenarios`, `Write Sample Drills`, `Write Sample Config`, `Probe Training`,
+`Probe Fatigue`,
 `Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**

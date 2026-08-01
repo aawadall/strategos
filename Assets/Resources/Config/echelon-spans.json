@@ -1,0 +1,65 @@
+{
+  "Name": "Contiguous frontage bands",
+  "Spans": [
+    {
+      "Echelon": "None",
+      "MinMetres": 120.0,
+      "MaxMetres": 600.0
+    },
+    {
+      "Echelon": "Team",
+      "MinMetres": 120.0,
+      "MaxMetres": 600.0
+    },
+    {
+      "Echelon": "Squad",
+      "MinMetres": 600.0,
+      "MaxMetres": 1200.0
+    },
+    {
+      "Echelon": "Section",
+      "MinMetres": 600.0,
+      "MaxMetres": 1200.0
+    },
+    {
+      "Echelon": "Platoon",
+      "MinMetres": 1200.0,
+      "MaxMetres": 2500.0
+    },
+    {
+      "Echelon": "Company",
+      "MinMetres": 2500.0,
+      "MaxMetres": 6000.0
+    },
+    {
+      "Echelon": "Battalion",
+      "MinMetres": 6000.0,
+      "MaxMetres": 15000.0
+    },
+    {
+      "Echelon": "Regiment",
+      "MinMetres": 15000.0,
+      "MaxMetres": 30000.0
+    },
+    {
+      "Echelon": "Brigade",
+      "MinMetres": 15000.0,
+      "MaxMetres": 30000.0
+    },
+    {
+      "Echelon": "Division",
+      "MinMetres": 30000.0,
+      "MaxMetres": 80000.0
+    },
+    {
+      "Echelon": "Corps",
+      "MinMetres": 80000.0,
+      "MaxMetres": 200000.0
+    },
+    {
+      "Echelon": "Army",
+      "MinMetres": 200000.0,
+      "MaxMetres": 500000.0
+    }
+  ]
+}
