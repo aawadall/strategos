@@ -11,12 +11,13 @@
 //   1. Tick advances.
 //   2. The command bus delivers everything published before this step (delivery rule 1).
 //   3. The report bus does the same.
-//   4. Each unit advances its plan by one step, in a stable order.
-//   5. Every engagement declared in 4 resolves SIMULTANEOUSLY, then applies.
-//   6. Suppression decays.
-//   7. Detection sweeps, publishing what changed — for delivery at the next step.
+//   4. The directive bus does the same — see below.
+//   5. Each unit advances its plan by one step, in a stable order.
+//   6. Every engagement declared in 5 resolves SIMULTANEOUSLY, then applies.
+//   7. Suppression decays.
+//   8. Detection sweeps, publishing what changed — for delivery at the next step.
 //
-// Step 5 is split from step 4 on purpose and the reason is in ExecutionContext.Engagements:
+// Step 6 is split from step 5 on purpose and the reason is in ExecutionContext.Engagements:
 // resolving fire inside the unit loop hands whichever unit the loop reached first a free shot
 // at an undamaged enemy, which is a first-mover advantage decided by the order units happen to
 // appear in the scenario file.
@@ -25,10 +26,13 @@
 // sitting a further step — and doing it in a fixed place means "when does my order take
 // effect" has one answer rather than depending on who published it.
 //
-// Commands before reports is arbitrary in its effect and not in its status: because both
-// buses publish to the *next* step, nothing observable depends on which delivers first, so it
-// costs nothing to fix — and fixing it means a reacting subscriber added later cannot make it
-// matter by accident.
+// Commands before reports before directives is arbitrary in its effect and not in its status:
+// because all three buses publish to the *next* step, nothing observable depends on which
+// delivers first, so it costs nothing to fix — and fixing it means a reacting subscriber added
+// later cannot make it matter by accident. The directive bus in particular reaches no
+// subscriber that mutates simulation state in v1 (#73's own requirement — see
+// OnCommandDelivered's note on why a directive never reaches it), so its position here is
+// inert today and only matters once something consumes directives mid-step.
 //
 // Detection last, after movement, so a contact reports where a unit ended the tick rather
 // than where it began it.
@@ -37,6 +41,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Strategos.Combat;
+using Strategos.Directives;
 using Strategos.Doctrine;
 using Strategos.Maps;
 using Strategos.Objectives;
@@ -75,6 +80,16 @@ namespace Strategos.Commands
 
         /// <summary>Everything ever reported. The counterpart to <see cref="Log"/>.</summary>
         public ReportLog ReportLog { get; } = new();
+
+        /// <summary>
+        /// The directive topic: a message from higher, standing rather than addressed to a
+        /// task. A third <c>MessageBus&lt;T&gt;</c> instantiation, not a reuse of either
+        /// existing one — see <c>DirectiveBus.cs</c> for why.
+        /// </summary>
+        public DirectiveBus Directives { get; } = new();
+
+        /// <summary>Everything ever published on <see cref="Directives"/>. The counterpart to <see cref="Log"/>.</summary>
+        public DirectiveLog DirectiveLog { get; } = new();
 
         /// <summary>What this scenario cost, in the order it was paid.</summary>
         public CasualtyLog Casualties { get; } = new();
@@ -176,6 +191,25 @@ namespace Strategos.Commands
             // The unit layer is the only subscriber that mutates anything — delivery rule 3.
             // Order 0 so it sees commands before any observer does.
             Bus.Subscribe("units", 0, OnCommandDelivered);
+
+            // The scenario's one directive, published once — mirroring how Victory is built
+            // from scenario data above, not appended to as play continues. #36 explicitly
+            // defers a FRAGO stream past this issue; v1 is one directive, published near
+            // scenario start, standing for the whole run.
+            //
+            // DELIBERATELY GOES THROUGH Directives, NEVER Bus. A directive published onto the
+            // command topic would reach OnCommandDelivered, which decomposes any
+            // formation-addressed command unconditionally before inspecting its kind — exactly
+            // the auto-decomposition #73 forbids. Publishing here only stamps it into
+            // DirectiveLog and queues it on DirectiveBus for delivery next step, same as
+            // everything else on either topic (rule 1).
+            if (scenario?.Directive != null)
+            {
+                var directive = scenario.Directive.Value;
+                directive.Tick = Tick;
+                directive = DirectiveLog.Append(directive);
+                Directives.Publish(directive);
+            }
         }
 
         public void AddExecutor(ICommandExecutor executor)
@@ -245,6 +279,44 @@ namespace Strategos.Commands
             return report;
         }
 
+        /// <summary>
+        /// The addressed formation acknowledges a directive from higher. Appends and publishes
+        /// exactly one <see cref="ReportKind.DirectiveAcknowledged"/> report; the directive
+        /// entry in <see cref="DirectiveLog"/> is never touched — the same "nothing is ever
+        /// rewritten" rule <see cref="CommandLog"/> and <see cref="Reports.ReportLog"/> hold.
+        /// </summary>
+        /// <remarks>
+        /// ACKNOWLEDGE ONLY, NO REFUSAL, DELIBERATELY. #73 says a directive "can be refused, or
+        /// failed", but nothing in either issue states what refusal changes mechanically, and
+        /// building a refusal path with no mechanical consequence is an unreachable branch
+        /// pretending to be a feature. Add <c>ReportKind.DirectiveRefused</c> and the matching
+        /// helper when a caller actually needs one, not "for later".
+        ///
+        /// Sourced from <see cref="UnitHierarchy.Find"/> rather than <see cref="UnitOf"/>: the
+        /// addressee is the formation the directive named, and formations are not in the
+        /// fighting-unit list <see cref="UnitOf"/> searches — the same leaves-vs-all-units split
+        /// <see cref="Units"/> and <see cref="AllUnits"/> document.
+        /// </remarks>
+        public SituationReport AcknowledgeDirective(in Directive directive)
+        {
+            var unit = Hierarchy.Find(directive.TargetUnit);
+
+            var report = unit != null
+                ? SituationReport.DirectiveAcknowledged(unit, Tick, directive.Seq)
+                : new SituationReport
+                {
+                    Tick = Tick,
+                    ObservedTick = Tick,
+                    Source = directive.TargetUnit,
+                    Kind = ReportKind.DirectiveAcknowledged,
+                    Confidence = Confidence.Confirmed,
+                    Subject = directive.TargetUnit,
+                    AboutDirective = directive.Seq,
+                };
+
+            return Report(report);
+        }
+
         // ─── Stepping ─────────────────────────────────────────────────────────
 
         public void Step()
@@ -258,6 +330,7 @@ namespace Strategos.Commands
 
             Bus.Deliver();
             Reports.Deliver();
+            Directives.Deliver();
 
             // Reflexes decide from the picture as it stands at the START of the step, before
             // anyone has moved or fired. A reaction therefore cannot be influenced by something
@@ -310,9 +383,14 @@ namespace Strategos.Commands
         /// </summary>
         private void OnCommandDelivered(Command command)
         {
-            // A formation has no queue. An order addressed to one is a directive: it becomes
+            // A formation has no queue. An order addressed to one decomposes at delivery into
             // one order per subordinate, each issued through the same path so the log records
-            // the directive *and* what it became, and a replay reconstructs both.
+            // the parent order *and* what it became, and a replay reconstructs both.
+            //
+            // NOT CALLED "A DIRECTIVE": that word is reserved for Core/Directives/Directive — a
+            // message from higher that must NOT decompose, which is the opposite of what
+            // happens here. A Directive is published on Directives, never on Bus, and never
+            // reaches this method at all; see Simulation's constructor and DirectiveBus.cs.
             if (Hierarchy.IsFormation(command.TargetUnit))
             {
                 Decompose(command);
@@ -734,15 +812,19 @@ namespace Strategos.Commands
         /// A deterministic signature of everything a replay must reproduce.
         ///
         /// This is what the divergence test compares. It deliberately covers unit state, queue
-        /// state *and* what was reported: a replay that lands units in the right places with
-        /// the wrong plans has still diverged and would drift apart on the next step, and one
-        /// that produces different reports has diverged in what its commander knows — which is
-        /// exactly what an AI or a reacting unit will act on.
+        /// state, what was reported *and* what was directed: a replay that lands units in the
+        /// right places with the wrong plans has still diverged and would drift apart on the
+        /// next step; one that produces different reports has diverged in what its commander
+        /// knows, which is exactly what an AI or a reacting unit will act on; and two runs that
+        /// land identical units and reports while disagreeing on whether a directive had been
+        /// acknowledged have diverged in what the *player* knows — <c>DirectiveLog.Signature()</c>
+        /// is folded in for the same reason <c>ReportLog.Signature()</c> already is.
         /// </summary>
         public string Signature()
         {
             var sb = new StringBuilder();
             sb.Append("t").Append(Tick).Append('|').Append(ReportLog.Signature()).Append('|');
+            sb.Append(DirectiveLog.Signature()).Append('|');
             Casualties.AppendSignature(sb);
             sb.Append('|');
             Victory?.AppendSignature(sb);

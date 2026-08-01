@@ -52,6 +52,20 @@ namespace Strategos.Reports
         Depleted = 21,
         /// <summary>Combat power spent. The unit remains in the scenario and does nothing.</summary>
         Destroyed = 22,
+
+        // ─── Directive response (#73): the player answering a directive from higher ───
+        /// <summary>
+        /// The addressed formation acknowledges a directive. See
+        /// <see cref="SituationReport.AboutDirective"/> and
+        /// <see cref="Commands.Simulation.AcknowledgeDirective"/>.
+        /// </summary>
+        /// <remarks>
+        /// Acknowledge-only in v1 — no <c>DirectiveRefused</c>. #73 says a directive "can be
+        /// refused, or failed", but nothing states what refusal changes mechanically, and an
+        /// unreachable code path is untested code pretending to be a feature. Add it when a
+        /// caller actually needs it.
+        /// </remarks>
+        DirectiveAcknowledged = 30,
     }
 
     /// <summary>
@@ -138,6 +152,14 @@ namespace Strategos.Reports
         /// </summary>
         public ulong AboutCommand;
 
+        /// <summary>
+        /// The directive this concerns, by <see cref="Strategos.Directives.Directive.Seq"/>, for
+        /// <see cref="ReportKind.DirectiveAcknowledged"/>. Zero when the report is not about a
+        /// directive. Same idiom as <see cref="AboutCommand"/>, and the same reasoning: the
+        /// directive log already holds it, so copying it in would give two versions of one fact.
+        /// </summary>
+        public ulong AboutDirective;
+
         // ─── Construction ─────────────────────────────────────────────────────
 
         public static SituationReport Contact(UnitId source, UnitInstance subject, int tick) => new()
@@ -175,6 +197,21 @@ namespace Strategos.Reports
             Kind = kind, Confidence = Confidence.Confirmed,
             Subject = unit.Id, SubjectSide = unit.Side, Cell = unit.Cell,
             AboutCommand = aboutCommand,
+        };
+
+        /// <summary>
+        /// The addressed formation answering a directive from higher. See
+        /// <see cref="Commands.Simulation.AcknowledgeDirective"/>, the only caller — a directive
+        /// response is appended and published from there, never constructed and reported
+        /// separately, so there is exactly one path that produces this kind.
+        /// </summary>
+        public static SituationReport DirectiveAcknowledged(UnitInstance unit, int tick,
+            ulong aboutDirective) => new()
+        {
+            Tick = tick, ObservedTick = tick, Source = unit.Id,
+            Kind = ReportKind.DirectiveAcknowledged, Confidence = Confidence.Confirmed,
+            Subject = unit.Id, SubjectSide = unit.Side, Cell = unit.Cell,
+            AboutDirective = aboutDirective,
         };
 
         /// <summary>True for the kinds that describe somebody else rather than the source.</summary>

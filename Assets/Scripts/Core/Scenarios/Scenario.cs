@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using Strategos.Directives;
 using Strategos.Maps;
 using Strategos.Movement;
 using Strategos.NatoSymbols;
@@ -82,6 +83,24 @@ namespace Strategos.Scenarios
         /// did. A scenario can have either, both or neither.
         /// </summary>
         public int TimeLimitTicks;
+
+        /// <summary>
+        /// A message from higher, standing for the whole scenario. Null for a sandbox — a
+        /// scenario nobody sent a directive to needs none.
+        /// </summary>
+        /// <remarks>
+        /// Nullable rather than a sentinel <c>Id == 0</c>, matching
+        /// <c>MapGenerationSettings.ParameterOverride</c>'s precedent for an optional struct
+        /// field through <c>ScenarioIO</c> — Newtonsoft handles <c>Nullable&lt;T&gt;</c> and
+        /// <c>NullValueHandling.Ignore</c> omits it entirely from a scenario with no directive,
+        /// rather than cluttering every hand-authored file with an empty one.
+        ///
+        /// One directive, published once at simulation start
+        /// (<see cref="Strategos.Commands.Simulation"/>'s constructor) — not a list. #36 explicitly defers
+        /// a FRAGO stream and the AI that would author one past this issue; v1 is "one directive,
+        /// referencing the scenario's own objectives, published once near scenario start".
+        /// </remarks>
+        public Directive? Directive;
 
         // ─── Lookup ───────────────────────────────────────────────────────────
 
@@ -236,6 +255,7 @@ namespace Strategos.Scenarios
                 problems.Add($"Scenario is played as {PlayerSide}, which does not exist.");
 
             ValidateVictory(problems);
+            ValidateDirective(problems);
 
             if (catalogue != null && map != null) CheckReachability(problems, catalogue, map);
 
@@ -274,6 +294,14 @@ namespace Strategos.Scenarios
                 if (FindSide(c.Side) == null)
                     problems.Add($"Victory condition '{c}' awards {c.Side}, which does not exist.");
 
+                // Provenance only — see VictoryCondition.DirectiveId. Still checked, the same
+                // way ObjectiveIds is: a reference to something that does not exist is silent
+                // at runtime and would simply never show the player where the condition came
+                // from.
+                if (c.DirectiveId != 0 && (!Directive.HasValue || Directive.Value.Id != c.DirectiveId))
+                    problems.Add($"Victory condition '{c}' cites directive {c.DirectiveId}, " +
+                                 "which does not exist.");
+
                 if (c.Kind != VictoryKind.HoldObjectives) continue;
 
                 if (c.ObjectiveIds == null || c.ObjectiveIds.Length == 0)
@@ -291,6 +319,75 @@ namespace Strategos.Scenarios
 
             if (TimeLimitTicks < 0)
                 problems.Add($"Time limit {TimeLimitTicks} is negative.");
+        }
+
+        /// <summary>
+        /// The scenario's one directive, if it has one.
+        /// </summary>
+        /// <remarks>
+        /// Needs only <see cref="Units"/> — not a catalogue or a generated map — so it runs
+        /// unconditionally, unlike <see cref="CheckReachability"/>. A <see cref="UnitHierarchy"/>
+        /// built here is throwaway: cheap at scenario-validation scale, and building the real
+        /// one is <see cref="Strategos.Commands.Simulation"/>'s job at construction.
+        /// </remarks>
+        private void ValidateDirective(List<string> problems)
+        {
+            if (!Directive.HasValue) return;
+            var d = Directive.Value;
+
+            if (!d.TargetUnit.IsValid)
+            {
+                problems.Add("Directive has no target unit.");
+                return;
+            }
+
+            var target = FindUnit(d.TargetUnit);
+            if (target == null)
+            {
+                problems.Add($"Directive targets unit {d.TargetUnit}, which does not exist.");
+                return;
+            }
+
+            if (!PlayerSide.IsValid)
+            {
+                problems.Add("Directive is present but PlayerSide is not set — a directive " +
+                             "has to arrive for somebody.");
+                return;
+            }
+
+            if (target.Side != PlayerSide)
+                problems.Add($"Directive targets unit {d.TargetUnit}, which belongs to " +
+                             $"{target.Side}, not the player side {PlayerSide}.");
+
+            // Exactly one root under PlayerSide, and the directive must be addressed to it.
+            // More than one root is legitimate ORBAT (the tree is deliberately ragged — see
+            // #36's comment thread) but there is no stated rule for which root receives a
+            // directive, so it is a validation error rather than a silent pick.
+            var hierarchy = new UnitHierarchy(Units);
+            var roots = new List<UnitInstance>();
+            foreach (var r in hierarchy.Roots)
+                if (r.Side == PlayerSide) roots.Add(r);
+
+            if (roots.Count == 0)
+                problems.Add($"Directive targets {d.TargetUnit} but side {PlayerSide} has no " +
+                             "root unit for it to address.");
+            else if (roots.Count > 1)
+                problems.Add($"Side {PlayerSide} has {roots.Count} root units under it; a " +
+                             "directive cannot resolve to exactly one without picking silently.");
+            else if (roots[0].Id != d.TargetUnit)
+                problems.Add($"Directive targets {d.TargetUnit}, but the player side's one " +
+                             $"root is {roots[0].Id} — a directive from higher addresses the " +
+                             "top of the command the player holds.");
+
+            if (d.ObjectiveIds != null)
+            {
+                var objectiveIds = new HashSet<int>();
+                foreach (var o in Objectives) objectiveIds.Add(o.Id);
+
+                foreach (int id in d.ObjectiveIds)
+                    if (!objectiveIds.Contains(id))
+                        problems.Add($"Directive names objective {id}, which does not exist.");
+            }
         }
 
         /// <summary>
