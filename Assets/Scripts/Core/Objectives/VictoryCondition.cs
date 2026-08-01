@@ -73,6 +73,25 @@ namespace Strategos.Objectives
         /// <summary>For <see cref="VictoryKind.SurviveUntil"/>: the tick to reach.</summary>
         public int DeadlineTick;
 
+        /// <summary>
+        /// The <see cref="Strategos.Directives.Directive.Id"/> this condition was sourced from, or 0 for
+        /// a condition authored directly against map objectives.
+        /// </summary>
+        /// <remarks>
+        /// PROVENANCE ONLY — NOT A SECOND AUTHORITY. #73's third acceptance bullet ("victory
+        /// can be expressed against a directive rather than only against map objectives") is
+        /// satisfied by *where this condition came from*, not by a parallel success test a
+        /// directive carries and this evaluator does not already know how to run. There remains
+        /// exactly one evaluator (<see cref="VictoryEvaluator"/>) and one source of truth for
+        /// whether the condition is met; this field only answers "why does this condition
+        /// exist" for display, the same way <see cref="ObjectiveIds"/> answers "against what".
+        ///
+        /// References <see cref="Strategos.Directives.Directive.Id"/> — the author-assigned identity, not
+        /// <see cref="Strategos.Directives.Directive.Seq"/>, which is assigned by <c>DirectiveLog</c> at
+        /// simulation runtime and does not exist yet when this scenario data is authored.
+        /// </remarks>
+        public int DirectiveId;
+
         public override string ToString()
         {
             string what = Kind switch
