@@ -280,10 +280,33 @@ namespace Strategos.Commands
         }
 
         /// <summary>
+        /// Directive <see cref="Directive.Seq"/> values already acknowledged, so a second call
+        /// for the same directive is a no-op rather than a second report.
+        /// </summary>
+        /// <remarks>
+        /// #93 review: nothing guarded the UI's ACKNOWLEDGE button against a second press, and
+        /// appending was per-call rather than per-directive — five presses would have appended
+        /// five <see cref="ReportKind.DirectiveAcknowledged"/> reports, all entering
+        /// <see cref="Reports.ReportLog.Signature"/> and therefore <see cref="Signature"/>.
+        /// The button-level guard alone cannot close this: the view only learns a directive was
+        /// acknowledged one step later, off the same report stream every other observer reads
+        /// (rule 1), so a second press inside that one-tick window would reach this method
+        /// before the view knew better. The membership test has to live here, at the one place
+        /// that cannot be raced.
+        ///
+        /// A HashSet tested by membership and never iterated, the same idiom
+        /// <see cref="_openingReported"/> uses for the same reason: order cannot depend on it.
+        /// </remarks>
+        private readonly HashSet<ulong> _acknowledgedDirectives = new();
+
+        /// <summary>
         /// The addressed formation acknowledges a directive from higher. Appends and publishes
-        /// exactly one <see cref="ReportKind.DirectiveAcknowledged"/> report; the directive
-        /// entry in <see cref="DirectiveLog"/> is never touched — the same "nothing is ever
-        /// rewritten" rule <see cref="CommandLog"/> and <see cref="Reports.ReportLog"/> hold.
+        /// exactly one <see cref="ReportKind.DirectiveAcknowledged"/> report the first time a
+        /// given directive is acknowledged; the directive entry in <see cref="DirectiveLog"/> is
+        /// never touched — the same "nothing is ever rewritten" rule <see cref="CommandLog"/>
+        /// and <see cref="Reports.ReportLog"/> hold. Idempotent per <see cref="Directive.Seq"/>
+        /// thereafter: a second call returns null and appends nothing (see
+        /// <see cref="_acknowledgedDirectives"/>).
         /// </summary>
         /// <remarks>
         /// ACKNOWLEDGE ONLY, NO REFUSAL, DELIBERATELY. #73 says a directive "can be refused, or
@@ -297,8 +320,10 @@ namespace Strategos.Commands
         /// fighting-unit list <see cref="UnitOf"/> searches — the same leaves-vs-all-units split
         /// <see cref="Units"/> and <see cref="AllUnits"/> document.
         /// </remarks>
-        public SituationReport AcknowledgeDirective(in Directive directive)
+        public SituationReport? AcknowledgeDirective(in Directive directive)
         {
+            if (!_acknowledgedDirectives.Add(directive.Seq)) return null;
+
             var unit = Hierarchy.Find(directive.TargetUnit);
 
             var report = unit != null
