@@ -75,8 +75,8 @@ Tick++
   owns others. Position especially: a stored one would let a battalion stand where its troops
   are not.
 - **A formation holds no queue.** An order addressed to one decomposes at *delivery* into one
-  order per immediate subordinate, each issued through `Issue` so the log records the directive
-  **and** what it became. One echelon per step, which is not an inefficiency — it is the
+  order per immediate subordinate, each issued through `Issue` so the log records the parent
+  order **and** what it became. One echelon per step, which is not an inefficiency — it is the
   propagation delay phases.md 5.2 wants, arriving from the structure rather than from a timer.
   Subordinate order is fixed at construction from the scenario's own list; dictionary order
   there would diverge a replay.
