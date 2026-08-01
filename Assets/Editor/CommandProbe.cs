@@ -599,6 +599,16 @@ namespace Strategos.Editor
         /// breaks silently: every run still looks right, and the failure only appears when
         /// someone tries to reproduce one.
         /// </summary>
+        /// <remarks>
+        /// **#94: this now calls <see cref="Replayer.Run"/> instead of keeping its own private
+        /// replay shape.** Before, this method built its own <c>Dictionary&lt;int,
+        /// List&lt;Command&gt;&gt;</c> from <c>Log.Entries</c> inline — the only replay
+        /// mechanism this project had, reimplemented in a probe rather than shipped as
+        /// production code. That meant this check was guarding a mechanism nothing used: a
+        /// project's only replay-divergence check has to exercise the replay path production
+        /// (and #74) will actually run, or it can pass while the real thing has no path to
+        /// diverge on at all. The scripted run and the assertion below are otherwise unchanged.
+        /// </remarks>
         private static int CheckReplayDivergence(StringBuilder log)
         {
             int bad = 0;
@@ -642,23 +652,11 @@ namespace Strategos.Editor
 
             string original = recorded.Signature();
 
-            // Replay: a fresh simulation fed only the recorded log, by tick.
+            // Replay: a fresh simulation fed only what the recorded run's logs hold. One
+            // definition (Replayer), used here and by DirectiveProbe alike — see the remarks
+            // above.
             var replayed = NewRealSim();
-            var byTick = new Dictionary<int, List<Command>>();
-            foreach (var c in recorded.Log.Entries)
-            {
-                if (!byTick.TryGetValue(c.Tick, out var list))
-                    byTick[c.Tick] = list = new List<Command>();
-                list.Add(c);
-            }
-
-            for (int t = 1; t <= steps; t++)
-            {
-                // Issue in recorded sequence order — the log's order is the authority.
-                if (byTick.TryGetValue(t - 1, out var due))
-                    foreach (var c in due) replayed.Issue(c);
-                replayed.Step();
-            }
+            Replayer.Run(recorded, replayed, steps);
 
             string replayedSig = replayed.Signature();
 
