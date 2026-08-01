@@ -296,6 +296,19 @@ namespace Strategos.Commands
         ///
         /// A HashSet tested by membership and never iterated, the same idiom
         /// <see cref="_openingReported"/> uses for the same reason: order cannot depend on it.
+        ///
+        /// MEMBERSHIP ONLY. NEVER ENUMERATE THIS SET. `docs/simulation-invariants.md`'s own
+        /// rule bans iterating a `Dictionary`/`HashSet` anywhere in the simulation, because
+        /// enumeration order is not part of .NET's contract and a replay would diverge on
+        /// whichever run happened to walk it differently. `.Add()`'s bool return is a membership
+        /// test, not iteration, and must stay the only operation this field is used for.
+        ///
+        /// Deliberately absent from <see cref="Signature"/>: unlike the rest of the simulation's
+        /// state, this set is fully derivable from <see cref="Reports.ReportLog"/>, which the
+        /// signature already covers — a run that acknowledged and one that did not already
+        /// differ there. #74 (save/load) will need to reconstruct it from the loaded
+        /// `ReportLog` rather than assume a fresh save always starts empty, or a loaded game
+        /// would let an already-acknowledged directive be acknowledged again.
         /// </remarks>
         private readonly HashSet<ulong> _acknowledgedDirectives = new();
 
