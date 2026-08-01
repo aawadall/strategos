@@ -113,6 +113,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.DoctrineProbe.Run` | Drill pack round trip, and the T/P/U matrix |
 | `Strategos.Editor.TrainingProbe.Run` | The hesitation curve, and that training only costs time |
 | `Strategos.Editor.FatigueProbe.Run` | Fatigue and recovery curves, the floor, and that idling is free |
+| `Strategos.Editor.HierarchyProbe.Run` | The ORBAT tree, rollup, decomposition, and that formations never fight |
 
 **Run `CommandProbe`, `ReportProbe` and `CombatProbe` after touching anything under
 `Core/Commands`, `Core/Reports`, `Core/Combat`, `Core/Movement` or `Core/Messaging`.**
@@ -165,6 +166,14 @@ added to `UnitInstance` deserialises to its default in every shipped scenario un
 scout that was supposed to be green, found it fully trained, and passed anyway because its
 guard skipped when the data was uninteresting. It now fails if no unit in the sample scenario
 is below 100. **A guard that skips when the fixture is stale is a guard that cannot fail.**
+
+**Never index into `Scenario.Units` by position.** `ReportProbe` took `Units[0]` and `Units[3]`
+as "the mover and an enemy"; adding battalion formations to the sample ORBAT shifted every
+index by two, and the probe spent 900 ticks testing detection between two units on the *same
+side* — five failures, none of which pointed at the cause. `DirectorProbe` had the same bug
+and was worse: it set a formation's stored strength, which the rollup ignores and the director
+never sees, so its assertion passed while being unable to fail. Select by designation, or from
+`Simulation.Units`, which is fighting units only.
 
 **Drills are content, not code.** `DoctrineSamples` holds the shipped set in C# and
 `Strategos > Write Sample Drills` serialises it to `Assets/Resources/Doctrine/`; the app

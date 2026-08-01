@@ -209,7 +209,12 @@ namespace Strategos.Editor
             int bad = 0;
             var sim = NewUnattended(out var scenario);
 
-            var spent = scenario.Units[0];
+            // sim.Units, not scenario.Units: the former is fighting units only. Taken from
+            // the scenario this picked up a battalion formation once the ORBAT gained one,
+            // and setting a formation's stored strength does nothing — the rollup ignores it
+            // and the director never sees it — so the assertion below passed without ever
+            // being able to fail.
+            var spent = sim.Units[0];
             spent.Strength = ReactionController.BreakStrengthPercent - 5f;
 
             sim.Step(200);

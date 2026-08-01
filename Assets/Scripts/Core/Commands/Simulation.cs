@@ -122,7 +122,27 @@ namespace Strategos.Commands
 
         public int Tick { get; private set; }
 
+        /// <summary>
+        /// The units that fight — leaves of the ORBAT tree.
+        /// </summary>
+        /// <remarks>
+        /// **This deliberately keeps meaning exactly what it has always meant.** Every consumer
+        /// in Core enumerates units to answer "what can be seen, shot at, moved or counted",
+        /// and a formation appearing in those lists would be detected separately from its
+        /// subordinates, engaged separately and counted separately for victory — every one of
+        /// them double-counting the same troops. Leaving this as the things that fight means
+        /// none of them needed changing when the tree arrived.
+        ///
+        /// Ask for <see cref="AllUnits"/> when you want formations too. The dangerous list is
+        /// the one you have to name.
+        /// </remarks>
         public IReadOnlyList<UnitInstance> Units => _units;
+
+        /// <summary>Every unit including formations, in scenario order.</summary>
+        public IReadOnlyList<UnitInstance> AllUnits => Hierarchy.All;
+
+        /// <summary>The ORBAT as a tree. Built once; the shape does not change mid-scenario.</summary>
+        public UnitHierarchy Hierarchy { get; }
 
         public Simulation(Scenario scenario, MapData map, UnitCatalogue catalogue = null)
         {
@@ -130,12 +150,16 @@ namespace Strategos.Commands
             Map = map;
             Catalogue = catalogue ?? UnitCatalogue.Default();
 
-            if (scenario != null)
-                foreach (var u in scenario.Units)
-                {
-                    _units.Add(u);
-                    _queues[u.Id.Value] = new CommandQueue();
-                }
+            Hierarchy = new UnitHierarchy(scenario?.Units);
+
+            // Leaves only. A formation holds no queue: an order addressed to one decomposes at
+            // delivery into orders for its subordinates, so there is never anything for it to
+            // execute and no second place for plan state to live.
+            foreach (var u in Hierarchy.Leaves)
+            {
+                _units.Add(u);
+                _queues[u.Id.Value] = new CommandQueue();
+            }
 
             // Indexed by position in _units, so it must be built after that list is filled.
             _contacts = new ContactTracker(scenario, _units);
@@ -282,6 +306,15 @@ namespace Strategos.Commands
         /// </summary>
         private void OnCommandDelivered(Command command)
         {
+            // A formation has no queue. An order addressed to one is a directive: it becomes
+            // one order per subordinate, each issued through the same path so the log records
+            // the directive *and* what it became, and a replay reconstructs both.
+            if (Hierarchy.IsFormation(command.TargetUnit))
+            {
+                Decompose(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -307,6 +340,39 @@ namespace Strategos.Commands
                     if (command.Preempt) queue.InsertFront(command);
                     else queue.Enqueue(command);
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Hands a formation's order down to its immediate subordinates.
+        /// </summary>
+        /// <remarks>
+        /// **One level at a time, not straight to the leaves.** A brigade order becomes
+        /// battalion orders, which become company orders on the next step. That costs a tick
+        /// per echelon and it is not an inefficiency — it *is* the propagation delay
+        /// phases.md 5.2 wants, arriving free from the structure rather than as a timer bolted
+        /// on top, and it is why commanding at height feels different from commanding at hand.
+        ///
+        /// Issued rather than enqueued directly, so each derived order is logged, is delivered
+        /// on the next step like everything else, and is visible to any observer of the topic.
+        /// A subordinate that is itself a formation decomposes again when its turn comes.
+        ///
+        /// Subordinates are walked in scenario order, which UnitHierarchy fixes at
+        /// construction. Dictionary order here would diverge a replay.
+        /// </remarks>
+        private void Decompose(in Command command)
+        {
+            var subordinates = Hierarchy.SubordinatesOf(command.TargetUnit);
+
+            for (int i = 0; i < subordinates.Count; i++)
+            {
+                var derived = command;
+                derived.TargetUnit = subordinates[i].Id;
+
+                // Cleared so the derived order is stamped afresh by the log rather than
+                // carrying its parent's sequence number, which two orders must never share.
+                derived.Seq = 0;
+                Issue(derived);
             }
         }
 

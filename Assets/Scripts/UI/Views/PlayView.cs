@@ -419,13 +419,18 @@ namespace Strategos.UI.Views
 
             _headerLabel.text = _scenario.Name.ToUpperInvariant();
 
+            _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
+
+            // After the simulation exists, because the unit count it reports is the count of
+            // things that *fight* — formations are not troops and must not be totalled with
+            // them. Reading it before construction is a null dereference, and a null here
+            // truncates the whole layout in silence: a coloured window and nothing else.
             // Hyphens and middots only; the atlas has no en dash and renders it as nothing.
             _statusLabel.text =
-                $"{_scenario.Sides.Count} SIDES   ·   {_scenario.Units.Count} UNITS   ·   " +
+                $"{_scenario.Sides.Count} SIDES   ·   {_sim.Units.Count} UNITS   ·   " +
                 $"{_map.Header.WidthMetres / 1000f:0.#} × {_map.Header.HeightMetres / 1000f:0.#} KM" +
                 (problems.Count > 0 ? $"   ·   {problems.Count} VALIDATION WARNING(S)" : string.Empty);
 
-            _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
 
             // Published so other views can read live unit state — the drill binder rates units
             // against drills and must see the force as it actually is. Read-only for everyone
@@ -486,7 +491,12 @@ namespace Strategos.UI.Views
             _markers.Clear();
             if (_scenario == null) return;
 
-            foreach (var unit in _scenario.Units)
+            // Fighting units only. A formation's symbol *stands for* its subordinates, so
+            // drawing both puts a battalion on top of its own companies — which is exactly
+            // what the first build of the ORBAT tree did, and no probe could see it.
+            // Drawing the formation instead of its children at low zoom is symbol LOD, and
+            // it is Phase 2.2 rather than this.
+            foreach (var unit in _sim.Units)
                 _markers.Add(CreateMarker(unit));
 
             BuildObjectiveMarkers();
@@ -1715,7 +1725,7 @@ namespace Strategos.UI.Views
                 swatch.gameObject.AddComponent<Image>().color = side.Colour;
 
                 var t = CreateTmp("T", head,
-                    $"{side.Name.ToUpperInvariant()}   ·   {_scenario.CountUnitsOf(side.Id)} UNITS",
+                    $"{side.Name.ToUpperInvariant()}   ·   {FightingUnitsOf(side.Id)} UNITS",
                     12, FontStyles.Bold, withLayout: false);
                 Stretch(t.rectTransform);
                 t.rectTransform.offsetMin = new Vector2(14, 0);
@@ -1723,56 +1733,98 @@ namespace Strategos.UI.Views
                 t.color = Theme.Ink;
                 t.characterSpacing = 2f;
 
-                foreach (var unit in _scenario.UnitsOf(side.Id))
-                {
-                    var caps = unit.Capabilities(catalogue);
-                    var row = CreateRect($"Unit_{unit.Id}", _orbatRoot);
-                    row.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
-
-                    // Selectable from the list as well as the map. Cheap, and the list is the
-                    // only way to reach a unit that is currently cropped off the sheet.
-                    var rowImg = row.gameObject.AddComponent<Image>();
-                    rowImg.color = UiTheme.CardBg;
-                    var rowBtn = row.gameObject.AddComponent<Button>();
-                    rowBtn.targetGraphic = rowImg;
-                    var rowColors = ColorBlock.defaultColorBlock;
-                    rowColors.normalColor = Color.white;
-                    rowColors.highlightedColor = new Color(0.94f, 0.94f, 0.90f);
-                    rowColors.pressedColor = new Color(0.88f, 0.90f, 0.86f);
-                    rowColors.selectedColor = Color.white;
-                    rowColors.fadeDuration = 0.05f;
-                    rowBtn.colors = rowColors;
-
-                    var captured = unit.Id;
-                    rowBtn.onClick.AddListener(() => Select(captured));
-                    _orbatRows[captured.Value] = rowImg;
-
-                    var name = CreateTmp("N", row,
-                        string.IsNullOrEmpty(unit.Designation) ? unit.Id.ToString() : unit.Designation,
-                        12, FontStyles.Bold, withLayout: false);
-                    name.rectTransform.anchorMin = new Vector2(0, 0.5f);
-                    name.rectTransform.anchorMax = new Vector2(1, 1f);
-                    name.rectTransform.offsetMin = new Vector2(14, 0);
-                    name.rectTransform.offsetMax = new Vector2(-8, 0);
-                    name.alignment = TextAlignmentOptions.MidlineLeft;
-                    name.color = Theme.Ink;
-
-                    // Composition only, no position. The order of battle is built once and
-                    // units move, so anything positional here would be the load-time value
-                    // presented as current -- and it was, reading three grid squares behind
-                    // the details panel while a unit was under way. Live position belongs in
-                    // the details panel, which is refreshed on every tick.
-                    var detail = CreateTmp("D", row,
-                        $"{caps.Name}   ·   STR {unit.StrengthPercent}%",
-                        10, FontStyles.Normal, withLayout: false);
-                    detail.rectTransform.anchorMin = new Vector2(0, 0f);
-                    detail.rectTransform.anchorMax = new Vector2(1, 0.5f);
-                    detail.rectTransform.offsetMin = new Vector2(14, 0);
-                    detail.rectTransform.offsetMax = new Vector2(-8, 0);
-                    detail.alignment = TextAlignmentOptions.MidlineLeft;
-                    detail.color = Theme.InkMuted;
-                }
+                // Walked as a tree, root first, so the list reads as an order of battle
+                // rather than an alphabetised inventory. Depth is the indent.
+                foreach (var unit in _sim.Hierarchy.Roots)
+                    if (unit.Side == side.Id) AddOrbatRow(unit, catalogue);
             }
+        }
+
+        /// <summary>How many fighting units a side has. Formations are not troops.</summary>
+        private int FightingUnitsOf(SideId side)
+        {
+            int n = 0;
+            foreach (var u in _sim.Units) if (u.Side == side) n++;
+            return n;
+        }
+
+        /// <summary>
+        /// One ORBAT row and, beneath it, its subordinates.
+        /// </summary>
+        /// <remarks>
+        /// A formation's numbers are **rolled up**, never read from its own fields — those are
+        /// meaningless on a unit that owns others, and reading them would show a battalion at
+        /// full strength while its companies were being destroyed.
+        ///
+        /// Formations are not selectable here. Selection drives the details card and the map
+        /// brackets, both of which assume something that stands somewhere and fights; a
+        /// formation does neither. Ordering a formation works in Core — an order to one
+        /// decomposes to its subordinates — but giving it a UI path belongs with the mission
+        /// orders in #72, not here.
+        /// </remarks>
+        private void AddOrbatRow(UnitInstance unit, UnitCatalogue catalogue)
+        {
+            var h = _sim.Hierarchy;
+            bool formation = h.IsFormation(unit.Id);
+            int depth = h.DepthOf(unit.Id);
+            float indent = 14f + depth * 14f;
+
+            var row = CreateRect($"Unit_{unit.Id}", _orbatRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = formation ? 30 : 34;
+
+            var rowImg = row.gameObject.AddComponent<Image>();
+            rowImg.color = formation ? UiTheme.RowStripe : UiTheme.CardBg;
+
+            if (!formation)
+            {
+                // Selectable from the list as well as the map. Cheap, and the list is the
+                // only way to reach a unit that is currently cropped off the sheet.
+                var rowBtn = row.gameObject.AddComponent<Button>();
+                rowBtn.targetGraphic = rowImg;
+                var rowColors = ColorBlock.defaultColorBlock;
+                rowColors.normalColor = Color.white;
+                rowColors.highlightedColor = new Color(0.94f, 0.94f, 0.90f);
+                rowColors.pressedColor = new Color(0.88f, 0.90f, 0.86f);
+                rowColors.selectedColor = Color.white;
+                rowColors.fadeDuration = 0.05f;
+                rowBtn.colors = rowColors;
+
+                var captured = unit.Id;
+                rowBtn.onClick.AddListener(() => Select(captured));
+                _orbatRows[captured.Value] = rowImg;
+            }
+
+            var name = CreateTmp("N", row,
+                string.IsNullOrEmpty(unit.Designation) ? unit.Id.ToString() : unit.Designation,
+                formation ? 11 : 12, FontStyles.Bold, withLayout: false);
+            name.rectTransform.anchorMin = new Vector2(0, 0.5f);
+            name.rectTransform.anchorMax = new Vector2(1, 1f);
+            name.rectTransform.offsetMin = new Vector2(indent, 0);
+            name.rectTransform.offsetMax = new Vector2(-8, 0);
+            name.alignment = TextAlignmentOptions.MidlineLeft;
+            name.color = formation ? Theme.Accent : Theme.Ink;
+
+            // Composition only, no position. The order of battle is built once and units
+            // move, so anything positional here would be the load-time value presented as
+            // current -- and it was, reading three grid squares behind the details panel
+            // while a unit was under way. Live position belongs in the details panel, which
+            // is refreshed on every tick.
+            string detailText = formation
+                ? $"{DisplayNames.EchelonName(unit.ToSidcCode().Echelon)}   ·   " +
+                  $"{h.SubordinatesOf(unit.Id).Count} SUBORDINATE(S)   ·   " +
+                  $"STR {h.StrengthOf(unit.Id):0}%"
+                : $"{unit.Capabilities(catalogue).Name}   ·   STR {unit.StrengthPercent}%";
+
+            var detail = CreateTmp("D", row, detailText, 10, FontStyles.Normal,
+                withLayout: false);
+            detail.rectTransform.anchorMin = new Vector2(0, 0f);
+            detail.rectTransform.anchorMax = new Vector2(1, 0.5f);
+            detail.rectTransform.offsetMin = new Vector2(indent, 0);
+            detail.rectTransform.offsetMax = new Vector2(-8, 0);
+            detail.alignment = TextAlignmentOptions.MidlineLeft;
+            detail.color = Theme.InkMuted;
+
+            foreach (var child in h.SubordinatesOf(unit.Id)) AddOrbatRow(child, catalogue);
         }
     }
 }

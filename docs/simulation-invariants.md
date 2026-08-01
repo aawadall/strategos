@@ -60,6 +60,26 @@ Tick++
   reciprocal of the unit's own landcover speed factor, so what slows a unit also tires it,
   from one authored number rather than a second table that could drift. Deterministic
   throughout: no draw anywhere, only posture, terrain and whether an engagement named it.
+- **A formation is a `UnitInstance` that owns subordinates, and it is not a combatant.**
+  `Simulation.Units` deliberately keeps meaning what it always meant — the things that fight —
+  and now returns **leaves**, so every consumer that enumerates units to answer "what can be
+  seen, shot at, moved or counted" stayed correct with no edit. `AllUnits` is the explicit way
+  to ask for formations too: the dangerous list is the one you have to name. A formation
+  leaking into the fighting list is invisible — a battalion detected separately from its own
+  companies, engaged separately and counted separately for victory, all of it merely *wrong*
+  rather than broken — which is why `HierarchyProbe`'s first assertion is that boring one.
+  **This applies to views as well**, and PlayView got it wrong first time: drawing
+  `_scenario.Units` put a battalion symbol on top of its own companies.
+- **State rolls up; it is never stored twice.** A formation's strength, readiness and position
+  come from `UnitHierarchy`, not from its own fields, which are meaningless on a unit that
+  owns others. Position especially: a stored one would let a battalion stand where its troops
+  are not.
+- **A formation holds no queue.** An order addressed to one decomposes at *delivery* into one
+  order per immediate subordinate, each issued through `Issue` so the log records the directive
+  **and** what it became. One echelon per step, which is not an inefficiency — it is the
+  propagation delay phases.md 5.2 wants, arriving from the structure rather than from a timer.
+  Subordinate order is fixed at construction from the scenario's own list; dictionary order
+  there would diverge a replay.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an
