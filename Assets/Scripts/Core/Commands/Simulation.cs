@@ -91,6 +91,15 @@ namespace Strategos.Commands
         /// <summary>Everything ever published on <see cref="Directives"/>. The counterpart to <see cref="Log"/>.</summary>
         public DirectiveLog DirectiveLog { get; } = new();
 
+        /// <summary>
+        /// Every player action ever taken against a directive — acknowledgement today. The
+        /// counterpart to <see cref="Log"/> for the directive topic's response side: #94 found
+        /// that <see cref="AcknowledgeDirective"/> touched no log at all, so a replay driven
+        /// from <see cref="Log"/> alone never acknowledged anything the original run had.
+        /// <see cref="Replayer"/> is what reads this back.
+        /// </summary>
+        public Directives.DirectiveResponseLog DirectiveResponses { get; } = new();
+
         /// <summary>What this scenario cost, in the order it was paid.</summary>
         public CasualtyLog Casualties { get; } = new();
 
@@ -309,8 +318,23 @@ namespace Strategos.Commands
         /// differ there. #74 (save/load) will need to reconstruct it from the loaded
         /// `ReportLog` rather than assume a fresh save always starts empty, or a loaded game
         /// would let an already-acknowledged directive be acknowledged again.
+        ///
+        /// #94 built the mechanism that reconstruction can now use: <see cref="Replayer"/>
+        /// rebuilds this set for free by calling this same method for every logged
+        /// <see cref="Directives.DirectiveResponse"/>, exactly as a live run would have. #74
+        /// still has its own problem — a save is not always a full log to replay from — but
+        /// "replay the response log through this method" is now a real option rather than
+        /// something to invent from scratch.
         /// </remarks>
         private readonly HashSet<ulong> _acknowledgedDirectives = new();
+
+        /// <summary>
+        /// Whether <paramref name="directiveSeq"/> has been acknowledged. A membership test,
+        /// same idiom and same restriction as <see cref="_acknowledgedDirectives"/> itself:
+        /// this exists so a probe can compare a replayed run's acknowledgement state against
+        /// the original's one directive at a time — never by enumerating the set.
+        /// </summary>
+        public bool HasAcknowledged(ulong directiveSeq) => _acknowledgedDirectives.Contains(directiveSeq);
 
         /// <summary>
         /// The addressed formation acknowledges a directive from higher. Appends and publishes
@@ -336,6 +360,16 @@ namespace Strategos.Commands
         public SituationReport? AcknowledgeDirective(in Directive directive)
         {
             if (!_acknowledgedDirectives.Add(directive.Seq)) return null;
+
+            // #94: this is the log entry that used to not exist. Appended before the report so
+            // a probe reading DirectiveResponses mid-call never observes the report without the
+            // response that caused it — the same reason Issue() logs before it publishes.
+            DirectiveResponses.Append(new Directives.DirectiveResponse
+            {
+                Tick = Tick,
+                DirectiveSeq = directive.Seq,
+                Kind = Directives.DirectiveResponseKind.Acknowledged,
+            });
 
             var unit = Hierarchy.Find(directive.TargetUnit);
 
@@ -854,9 +888,20 @@ namespace Strategos.Commands
         /// right places with the wrong plans has still diverged and would drift apart on the
         /// next step; one that produces different reports has diverged in what its commander
         /// knows, which is exactly what an AI or a reacting unit will act on; and two runs that
-        /// land identical units and reports while disagreeing on whether a directive had been
-        /// acknowledged have diverged in what the *player* knows — <c>DirectiveLog.Signature()</c>
-        /// is folded in for the same reason <c>ReportLog.Signature()</c> already is.
+        /// land identical units and reports while disagreeing on which directives from higher
+        /// were ever published have diverged in what the *player* was told —
+        /// <c>DirectiveLog.Signature()</c> is folded in for the same reason
+        /// <c>ReportLog.Signature()</c> already is.
+        ///
+        /// <c>DirectiveResponses</c> — the player's answers to a directive (#94) — is
+        /// deliberately NOT folded in here, and that is a decision rather than an oversight.
+        /// Acknowledging one already produces a <see cref="ReportKind.DirectiveAcknowledged"/>
+        /// report, which <c>ReportLog.Signature()</c> already covers (it includes
+        /// <c>AboutDirective</c>); two runs that disagree on whether a directive was
+        /// acknowledged already disagree there. Folding <c>DirectiveResponses</c> in as well
+        /// would assert the same fact twice and move every archived baseline for it — see
+        /// <c>_acknowledgedDirectives</c>'s own note on why that set stays outside this method
+        /// for the identical reason.
         /// </summary>
         public string Signature()
         {
