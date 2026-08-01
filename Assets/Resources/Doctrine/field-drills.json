@@ -12,19 +12,27 @@
       "Steps": [
         {
           "Text": "One buddy team fires",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "The other bounds forward",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Bounding team takes cover and fires",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Alternate until the objective is reached",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         }
       ],
       "Diagram": {
@@ -106,19 +114,27 @@
       "Steps": [
         {
           "Text": "Return fire at once",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Take the nearest cover",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Call the direction and distance",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         },
         {
           "Text": "Await the squad leader's order",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -189,19 +205,27 @@
       "Steps": [
         {
           "Text": "Shout INCOMING",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         },
         {
           "Text": "Move out of the impact area at once",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Disperse while moving",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         },
         {
           "Text": "Report the shelling",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -257,19 +281,27 @@
       "Steps": [
         {
           "Text": "Suppress to buy the first bound",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Bound back by pairs",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Continue until out of contact",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Report and reorganise",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -351,23 +383,33 @@
       "Steps": [
         {
           "Text": "Fix the position with a base of fire",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Find and report a flank",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         },
         {
           "Text": "Manoeuvre the assault squads",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Assault through",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Consolidate and reorganise",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -453,23 +495,33 @@
       "Steps": [
         {
           "Text": "Establish a base of fire",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Suppress the position",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Manoeuvre the assault team",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Assault through",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Consolidate and reorganise",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -566,23 +618,33 @@
       "Steps": [
         {
           "Text": "Return fire immediately",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Take the nearest cover",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Report contact to higher",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         },
         {
           "Text": "Locate and suppress",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Assault or break contact",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -664,19 +726,27 @@
       "Steps": [
         {
           "Text": "Suppress to buy movement",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Bound back by team",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Continue until out of contact",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "AwayFromThreat"
         },
         {
           "Text": "Report and reorganise",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -758,19 +828,27 @@
       "Steps": [
         {
           "Text": "Return fire without waiting for an order",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Assault through the near side",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Clear and consolidate beyond it",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         },
         {
           "Text": "Treat casualties and report",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Inherent",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -837,19 +915,27 @@
       "Steps": [
         {
           "Text": "Suppress the aperture",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Move a team to the blind side",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Clear the position",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         },
         {
           "Text": "Consolidate beyond it",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -950,23 +1036,33 @@
       "Steps": [
         {
           "Text": "Isolate the building",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Suppress the entry point",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Enter at a corner, not the doorway centre",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         },
         {
           "Text": "Clear by room, marking as you go",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         },
         {
           "Text": "Consolidate and report cleared",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         }
       ],
       "Diagram": {
@@ -1048,19 +1144,27 @@
       "Steps": [
         {
           "Text": "Suppress the trench line",
-          "Kind": "Engage"
+          "Kind": "Engage",
+          "Nature": "Command",
+          "Binding": "AtThreat"
         },
         {
           "Text": "Gain a foothold",
-          "Kind": "MoveTo"
+          "Kind": "MoveTo",
+          "Nature": "Command",
+          "Binding": "TowardThreat"
         },
         {
           "Text": "Clear along the trench in both directions",
-          "Kind": "None"
+          "Kind": "None",
+          "Nature": "Unmodelled",
+          "Binding": "Here"
         },
         {
           "Text": "Consolidate and report",
-          "Kind": "Defend"
+          "Kind": "Defend",
+          "Nature": "Command",
+          "Binding": "Here"
         }
       ]
     }

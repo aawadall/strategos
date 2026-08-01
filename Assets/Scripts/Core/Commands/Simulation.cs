@@ -37,6 +37,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Strategos.Combat;
+using Strategos.Doctrine;
 using Strategos.Maps;
 using Strategos.Objectives;
 using Strategos.Reports;
@@ -318,6 +319,15 @@ namespace Strategos.Commands
                 return;
             }
 
+            // A drill unpacks into the orders its steps become. After the formation check, so
+            // a drill given to a battalion reaches its companies and each of them expands it —
+            // which is what "2 Squad, React to Contact" has to mean.
+            if (command.Kind == CommandKind.Drill)
+            {
+                ExpandDrill(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -372,6 +382,141 @@ namespace Strategos.Commands
                 derived.Seq = 0;
                 Issue(derived);
             }
+        }
+
+        // ─── Drills ───────────────────────────────────────────────────────────
+
+        /// <summary>How far a bounding step moves, in cells.</summary>
+        /// <remarks>
+        /// One figure rather than a distance per step, because a drill step says *which way*
+        /// and not how far — "bound forward" is a rush, not a march to a grid reference. When
+        /// steps want their own distances they can carry one; until then a single authored
+        /// number is honest about how much the model actually knows.
+        /// </remarks>
+        public const float DrillBoundCells = 12f;
+
+        /// <summary>
+        /// Unpacks a drill into orders bound to the unit's own situation.
+        /// </summary>
+        /// <remarks>
+        /// **A drill is parameterised and its steps are unbound** — that is what makes it
+        /// reusable rather than an order. The only thing available to bind against without a
+        /// tactical planner is the threat, and most of doctrine is directional relative to
+        /// contact anyway: you assault toward it, you break away from it, you hold where you
+        /// are. Ground chosen for its own qualities — a reverse slope, a treeline — needs
+        /// terrain reasoning and is not attempted.
+        ///
+        /// Steps that are not orders are **not silently dropped**. Inherent ones need nothing
+        /// issued because the simulation already does them; unmodelled ones are counted and
+        /// reported, so a player who calls a drill that is half unimplemented is told, rather
+        /// than watching a unit do part of it for no stated reason.
+        ///
+        /// Each derived order goes out through <see cref="Issue"/>, so the log records the
+        /// drill and everything it became.
+        /// </remarks>
+        private void ExpandDrill(in Command command)
+        {
+            var unit = UnitOf(command.TargetUnit);
+            if (unit == null) return;
+
+            var drill = TtpLibrary.Find(command.DrillCode);
+            if (drill == null)
+            {
+                Report(SituationReport.Status(ReportKind.OrderFailed, unit, Tick, command.Seq));
+                return;
+            }
+
+            var threat = NearestHostile(unit);
+            int issued = 0, unbindable = 0;
+
+            for (int i = 0; i < drill.Steps.Length; i++)
+            {
+                var step = drill.Steps[i];
+                if (!step.IsMechanised) continue;
+
+                if (!Bind(command, unit, step, threat, out var derived)) { unbindable++; continue; }
+
+                Issue(derived);
+                issued++;
+            }
+
+            // Told, not guessed at. A drill that put nothing in the queue looks exactly like a
+            // dropped click, and one that put half of itself there looks like a bug.
+            if (issued == 0 || unbindable > 0 || drill.UnmodelledSteps > 0)
+                Report(SituationReport.Status(
+                    issued == 0 ? ReportKind.OrderFailed : ReportKind.Halted,
+                    unit, Tick, command.Seq));
+        }
+
+        /// <summary>Turns one step into an order, or reports that it cannot be bound.</summary>
+        private bool Bind(in Command command, UnitInstance unit, in TtpStep step,
+            UnitInstance threat, out Command derived)
+        {
+            derived = default;
+            var actor = command.IssuedBy;
+
+            switch (step.Binding)
+            {
+                case StepBinding.Here:
+                    derived = Command.Defend(actor, unit.Id);
+                    return true;
+
+                case StepBinding.AtThreat:
+                    if (threat == null) return false;
+                    derived = Command.Engage(actor, unit.Id, threat.Id);
+                    return true;
+
+                case StepBinding.TowardThreat:
+                case StepBinding.AwayFromThreat:
+                {
+                    if (threat == null) return false;
+
+                    var away = unit.Cell - threat.Cell;
+                    if (away.sqrMagnitude < 0.0001f) return false;
+
+                    away.Normalize();
+                    if (step.Binding == StepBinding.TowardThreat) away = -away;
+
+                    derived = Command.MoveTo(actor, unit.Id,
+                        unit.Cell + away * DrillBoundCells);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The nearest hostile fighting unit, or null.
+        /// </summary>
+        /// <remarks>
+        /// Walked in scenario order with a strict comparison, so ties resolve to the earlier
+        /// unit and never to whichever the iteration happened to reach first. This feeds
+        /// command generation, so an unstable answer here would diverge a replay.
+        ///
+        /// Ground truth rather than what the unit has been told, which is a shortcut: once
+        /// belief layers land (#34) a drill should bind against the threat its commander
+        /// *knows about*, and a unit that binds against an enemy it cannot see is cheating.
+        /// </remarks>
+        private UnitInstance NearestHostile(UnitInstance unit)
+        {
+            var side = Scenario?.FindSide(unit.Side);
+            UnitInstance best = null;
+            float bestSq = float.MaxValue;
+
+            for (int i = 0; i < _units.Count; i++)
+            {
+                var other = _units[i];
+                if (other == null || other.IsDestroyed || other.Id == unit.Id) continue;
+                // Fully qualified: `Units` on this type is the fighting-unit list, not the namespace.
+                if (!Strategos.Units.Side.AreHostile(side, Scenario?.FindSide(other.Side)))
+                    continue;
+
+                float sq = (other.Cell - unit.Cell).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = other; }
+            }
+
+            return best;
         }
 
         /// <summary>

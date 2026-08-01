@@ -20,6 +20,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Commands;
+using Strategos.Doctrine;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
 using Strategos.Objectives;
@@ -335,6 +336,12 @@ namespace Strategos.UI.Views
             AddButton(controls, "ABORT PLAN", AbortSelected);
             AddButton(controls, "HOLD", HoldSelected);
 
+            // Calling a drill by code is what the whole doctrine library is for. A dropdown
+            // is the discovery path; #53's palette adds typing the code, which is the
+            // accelerator a practised player uses.
+            _drillDrop = AddDropdown(content, "DRILL", null);
+            AddButton(content, "EXECUTE DRILL", ExecuteDrillOnSelected);
+
             _roeDrop = AddDropdown(content, "RULES OF ENGAGEMENT", OnRoeChanged);
             _runToggle = AddToggle(content, "CLOCK RUNNING  (SPACE)", true,
                 () => _running = _runToggle.isOn);
@@ -360,6 +367,7 @@ namespace Strategos.UI.Views
 
         private RectTransform _orbatRoot;
         private TMP_Dropdown _roeDrop;
+        private TMP_Dropdown _drillDrop;
 
         /// <summary>Rail order matches <see cref="RulesOfEngagement"/>'s own values.</summary>
         private static readonly string[] RoeLabels =
@@ -397,6 +405,12 @@ namespace Strategos.UI.Views
             for (int i = 1; i < TimeScales.Length; i++) speeds[i] = $"x{TimeScales[i]:0}";
             SetDrop(_speedDrop, speeds, 0);
             SetDrop(_roeDrop, RoeLabels, (int)RulesOfEngagement.ReturnFire);
+
+            var drills = TtpLibrary.All;
+            var labels = new string[drills.Count];
+            for (int i = 0; i < drills.Count; i++)
+                labels[i] = $"{drills[i].Code}  ·  {drills[i].Name}";
+            SetDrop(_drillDrop, labels, 0);
             _suppress = false;
         }
 
@@ -1076,7 +1090,9 @@ namespace Strategos.UI.Views
         /// a hot-seat game is spelled.
         /// </remarks>
         private bool IsPlayerCommanded(UnitInstance unit) =>
-            !unit.IsDestroyed &&
+            !(_sim != null && _sim.Hierarchy.IsFormation(unit.Id)
+                ? _sim.Hierarchy.IsDestroyed(unit.Id)
+                : unit.IsDestroyed) &&
             (_scenario == null || !_scenario.PlayerSide.IsValid ||
              unit.Side == _scenario.PlayerSide);
 
@@ -1399,6 +1415,31 @@ namespace Strategos.UI.Views
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
             _sim.Issue(Command.Hold(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
+        /// <summary>
+        /// Calls the chosen drill on the selected unit or formation.
+        /// </summary>
+        /// <remarks>
+        /// The order goes out as a single `Drill` command and is unpacked by the simulation,
+        /// rather than the view expanding it and issuing the parts. That keeps the log honest
+        /// — it records that the commander called 2, and separately what 2 became — and it
+        /// means a drill addressed to a formation decomposes to its subordinates through the
+        /// same path a formation's other orders already take. A view that expanded drills
+        /// itself would have to reimplement both, and would be the only thing that knew.
+        /// </remarks>
+        private void ExecuteDrillOnSelected()
+        {
+            if (_sim == null || _selection.Count == 0 || _drillDrop == null) return;
+
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            var drills = TtpLibrary.All;
+            int i = Mathf.Clamp(_drillDrop.value, 0, drills.Count - 1);
+            if (drills.Count == 0) return;
+
+            _sim.Issue(Command.Drill(ActorId.ForSide(unit.Side), unit.Id, drills[i].Code));
         }
 
         private void Select(UnitId id)
@@ -1764,6 +1805,10 @@ namespace Strategos.UI.Views
                     _detailsTitle.text = "NONE";
                     _detailsBody.text = "Click a unit on the map.";
                 }
+                else if (_sim != null && _sim.Hierarchy.IsFormation(unit.Id))
+                {
+                    DescribeFormation(unit);
+                }
                 else
                 {
                     var side = _scenario.FindSide(unit.Side);
@@ -1802,6 +1847,47 @@ namespace Strategos.UI.Views
             RefreshPlan();
             LayOutMarkers();
             RefreshOrbatHighlight();
+        }
+
+        /// <summary>
+        /// A formation's details, rolled up from what it owns.
+        /// </summary>
+        /// <remarks>
+        /// **Never its own fields.** A formation's stored strength, readiness and position are
+        /// meaningless — it is an aggregate — and reading them would show a battalion at full
+        /// strength while its companies were destroyed. Everything here comes from
+        /// UnitHierarchy, which is the single answer.
+        ///
+        /// It has no plan of its own either: an order to a formation decomposes at delivery
+        /// and never sits in a queue, so what a formation is "doing" is what its subordinates
+        /// were told to do.
+        /// </remarks>
+        private void DescribeFormation(UnitInstance unit)
+        {
+            var h = _sim.Hierarchy;
+            var side = _scenario.FindSide(unit.Side);
+            var code = unit.ToSidcCode();
+            var subordinates = h.SubordinatesOf(unit.Id);
+
+            _detailsTitle.text = string.IsNullOrEmpty(unit.Designation)
+                ? unit.Id.ToString()
+                : unit.Designation.ToUpperInvariant();
+
+            var names = new System.Text.StringBuilder();
+            for (int i = 0; i < subordinates.Count; i++)
+            {
+                if (i > 0) names.Append(",  ");
+                names.Append(subordinates[i].Designation);
+            }
+
+            // Hyphens and middots only — the atlas renders an en dash as nothing.
+            _detailsBody.text =
+                $"{side?.Name ?? "?"}   ·   {DisplayNames.EchelonName(code.Echelon)}   ·   " +
+                $"FORMATION\n" +
+                $"STR {h.StrengthOf(unit.Id):0}%   ·   RDY {h.ReadinessOf(unit.Id):0}%   ·   " +
+                $"{subordinates.Count} SUBORDINATE(S)\n" +
+                $"{names}\n" +
+                "ORDERS DECOMPOSE TO SUBORDINATES" + DescribeCommandability(unit);
         }
 
         // ─── Order tracks ─────────────────────────────────────────────────────
@@ -1998,7 +2084,10 @@ namespace Strategos.UI.Views
             var rowImg = row.gameObject.AddComponent<Image>();
             rowImg.color = formation ? UiTheme.RowStripe : UiTheme.CardBg;
 
-            if (!formation)
+            // Selectable whether or not it is a formation. A formation cannot be clicked on
+            // the map — it has no marker, because its symbol would stand on top of its own
+            // subordinates — so the ORBAT is the only way to reach one, and reaching one is
+            // the point: an order to a battalion decomposes to its companies.
             {
                 // Selectable from the list as well as the map. Cheap, and the list is the
                 // only way to reach a unit that is currently cropped off the sheet.

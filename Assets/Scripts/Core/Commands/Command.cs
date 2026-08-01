@@ -78,6 +78,18 @@ namespace Strategos.Commands
         /// </remarks>
         Defend = 3,
 
+        /// <summary>
+        /// Carry out a drill by its code.
+        /// </summary>
+        /// <remarks>
+        /// **Expands rather than executes.** Like an order to a formation, a drill never
+        /// reaches an executor: it is unpacked at delivery into the orders its steps become,
+        /// each issued through the same path so the log records the drill *and* what it became
+        /// — which is what lets a replay reconstruct "the commander called 2" separately from
+        /// the three orders that answered it.
+        /// </remarks>
+        Drill = 4,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -127,6 +139,17 @@ namespace Strategos.Commands
         public int Index;
 
         /// <summary>
+        /// Which drill, for <see cref="CommandKind.Drill"/>. The code a commander transmits.
+        /// </summary>
+        /// <remarks>
+        /// The code rather than a resolved drill object, because the code is the thing that
+        /// travels: it is what goes over a radio, what a player types, and what survives in a
+        /// log that has to be readable a year later. Resolving it at delivery also means a
+        /// replay uses whatever the library says now, which is the same rule scenarios follow.
+        /// </remarks>
+        public string DrillCode;
+
+        /// <summary>
         /// The unit being acted *upon*, for <see cref="CommandKind.Engage"/>.
         ///
         /// Distinct from <see cref="TargetUnit"/>, which is the addressee — the one being
@@ -166,6 +189,13 @@ namespace Strategos.Commands
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Abort,
         };
 
+        /// <summary>Carry out a drill, by code. The addressee may be a formation.</summary>
+        public static Command Drill(ActorId by, UnitId unit, string code, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Drill, DrillCode = code,
+        };
+
         public static Command CancelFrom(ActorId by, UnitId unit, int index, int tick = 0) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit,
@@ -192,6 +222,7 @@ namespace Strategos.Commands
                 CommandKind.MoveTo => $"MoveTo({TargetCell.x:0.#},{TargetCell.y:0.#})",
                 CommandKind.Engage => $"Engage({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
+                CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),
             };
             return $"#{Seq} t{Tick} {IssuedBy}->{TargetUnit} {what}";
