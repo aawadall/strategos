@@ -68,7 +68,7 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Maps/Generation/` | The generation pipeline, one file per stage |
 | `Assets/Scripts/Core/Maps/Rendering2D/` | CPU topographic renderer |
 | `Assets/Scripts/Core/Maps/Rendering3D/` | Drape mesh + mipmapped drape texture |
-| `Assets/Scripts/Core/Units/` | Unit instances, capabilities, the catalogue, sides |
+| `Assets/Scripts/Core/Units/` | Unit instances, capabilities, catalogue, sides, ORBAT tree, fatigue |
 | `Assets/Scripts/Core/Scenarios/` | Scenario model, validation, Newtonsoft IO, samples |
 | `Assets/Scripts/Core/Messaging/` | `MessageBus<T>` — the delivery rules, once |
 | `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |

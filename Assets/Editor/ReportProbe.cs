@@ -72,8 +72,13 @@ namespace Strategos.Editor
             scenario.Map.EnableErosion = false;
             map = scenario.GenerateMap();
 
-            mover = scenario.Units[0];    // A/1-7 IN, mechanised, at (58,72), BLUFOR
-            target = scenario.Units[3];   // 3/2 MRR, motorised, OPFOR
+            // By designation, not by index. These were Units[0] and Units[3] until the ORBAT
+            // gained battalion formations above the fighting units and every index shifted by
+            // two — at which point this probe was moving a battalion and testing "detection"
+            // between two units on the same side, which produces no contacts and five
+            // failures that all point somewhere other than the cause.
+            mover = ByName(scenario, "A/1-7 IN");     // mechanised, at (58,72), BLUFOR
+            target = ByName(scenario, "3/2 MRR");     // motorised, OPFOR
 
             scenario.Units.Clear();
             scenario.Units.Add(mover);
@@ -82,6 +87,19 @@ namespace Strategos.Editor
             var sim = new Simulation(scenario, map);
             sim.AddExecutor(new MoveToExecutor());
             return sim;
+        }
+
+        /// <summary>
+        /// A unit by designation. Stable across ORBAT changes in a way an index is not.
+        /// </summary>
+        private static UnitInstance ByName(Scenario scenario, string designation)
+        {
+            foreach (var u in scenario.Units)
+                if (u.Designation == designation) return u;
+
+            throw new System.InvalidOperationException(
+                $"ReportProbe fixture wants '{designation}' and the sample scenario has no " +
+                "such unit — the ORBAT changed under the probe.");
         }
 
         /// <summary>Detection range in cells for a unit standing where it currently stands.</summary>

@@ -60,34 +60,45 @@ namespace Strategos.Scenarios
             s.Sides.Add(red);
             s.PlayerSide = blue.Id;
 
+            // Each side gets a battalion above its units, so there is something to command
+            // *through* rather than only around. A formation is a UnitInstance that owns
+            // subordinates — it does not fight, is not detected, and its strength, readiness
+            // and position roll up from what it owns.
+            Add(s, blue.Id, 7, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(60f, 66f), "TF 1-7 IN", "3 BDE",
+                UnitCatalogue.InfantryMech);
+            Add(s, red.Id, 8, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Regiment, new Vector2(182f, 180f), "2 MRR", "2 MRD",
+                UnitCatalogue.InfantryMotor);
+
             // South-west, advancing north-east.
             Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarMechanized,
                 Echelon.Company, new Vector2(58f, 72f), "A/1-7 IN", "1-7 IN",
-                UnitCatalogue.InfantryMech);
+                UnitCatalogue.InfantryMech, parent: 7);
             Add(s, blue.Id, 2, LandEntityCode.Armor, IconDecorator.VarStandard,
                 Echelon.Platoon, new Vector2(76f, 60f), "1/A/2-69 AR", "2-69 AR",
-                UnitCatalogue.Armor);
+                UnitCatalogue.Armor, parent: 7);
             // The scouts are green, and that is the interesting case rather than an
             // arbitrary one: a screen exists to report, so a slow reporter is the unit whose
             // training the commander feels first. Contacts reach the feed several ticks after
             // they were seen, carrying their own staleness.
             Add(s, blue.Id, 3, LandEntityCode.Reconnaissance, IconDecorator.VarMotorized,
                 Echelon.Platoon, new Vector2(88f, 92f), "SCT/1-7 IN", "1-7 IN",
-                UnitCatalogue.ReconMotor, training: 55f);
+                UnitCatalogue.ReconMotor, training: 55f, parent: 7);
 
             // North-east, advancing south-west.
             // One green formation on each side, so training is a texture of the scenario
             // rather than a handicap on one of them.
             Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarMotorized,
                 Echelon.Company, new Vector2(180f, 176f), "3/2 MRR", "2 MRR",
-                UnitCatalogue.InfantryMotor, training: 70f);
+                UnitCatalogue.InfantryMotor, training: 70f, parent: 8);
             Add(s, red.Id, 5, LandEntityCode.Armor, IconDecorator.VarStandard,
                 Echelon.Platoon, new Vector2(178f, 196f), "1/3/2 MRR", "2 MRR",
-                UnitCatalogue.Armor);
+                UnitCatalogue.Armor, parent: 8);
             // Company echelon: APP-6D's one-bar mark covers company, battery and troop.
             Add(s, red.Id, 6, LandEntityCode.Artillery, IconDecorator.VarStandard,
                 Echelon.Company, new Vector2(186f, 150f), "BTY/2 MRR", "2 MRR",
-                UnitCatalogue.Artillery, strength: 90);
+                UnitCatalogue.Artillery, strength: 90, parent: 8);
 
             // One objective, roughly equidistant, so the meeting engagement has somewhere to
             // meet. Neutral at the start: neither side is defending, which is what makes it a
@@ -143,7 +154,7 @@ namespace Strategos.Scenarios
         private static void Add(Scenario s, SideId side, int id, LandEntityCode entity,
             int variant, Echelon echelon, Vector2 cell, string designation,
             string higherFormation, string capabilityId, int strength = 100,
-            float training = 100f)
+            float training = 100f, int parent = 0)
         {
             var affiliation = s.FindSide(side)?.Affiliation ?? Affiliation.Friend;
 
@@ -157,6 +168,7 @@ namespace Strategos.Scenarios
                 designation, higherFormation, strength, capabilityId)
             {
                 Training = training,
+                ParentId = new UnitId(parent),
             };
             s.Units.Add(unit);
         }
