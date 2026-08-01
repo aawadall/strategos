@@ -211,6 +211,20 @@ Tick++
   Arriving is not taking — a side takes ground by having a living unit on it with no living
   enemy on it, so an objective must be *cleared*. Walking off does not hand it back, which is
   what makes holding worth doing.
+- **Control is a sampled-position check, not a swept-path one, and that is a bound an author
+  must respect.** `UpdateControl` reads each unit's live `.Cell` only on the tick `Evaluate`
+  runs, `EvaluationInterval` ticks apart — no movement trail, no swept-segment test — so a
+  unit could in principle cross an objective between samples and never be seen there. The
+  rule: **control sampling is sound only while an objective's diameter takes at least one
+  full evaluation interval to cross at the fastest catalogue road speed.** Today's numbers
+  hold it, but only by authored coincidence: the fastest catalogue unit, Recon, covers
+  `RoadSpeedMps = 20` at `MetresPerCell = 25` — 0.8 cells/tick, 8 cells over the 10-tick gap
+  — against the smallest shipped objective, THE CROSSROADS, at `RadiusCells: 10` (20 cells
+  across, 25 ticks to cross). 25 > 10, so a sample must land inside any transit.
+  `Scenario.ValidateVictory` rejects only `RadiusCells <= 0`; nothing enforces the bound
+  above, break-even is `RadiusCells = 4`, and an objective that size would be legal and
+  crossable unseen. The same interval also gates when the occupancy clock (`_occupiedSince`)
+  is refreshed, which is a live gap in its own right and not something this note resolves.
 - **`DestroyEnemy` measures against STARTING strength, captured once at construction.** Against
   a side's current total a force can never fall below a share of itself and the condition never
   fires.
