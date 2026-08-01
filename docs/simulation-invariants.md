@@ -1,9 +1,9 @@
 # Simulation invariants
 
-The fixed-step simulation: two topics, per-unit queues, combat,
+The fixed-step simulation: three topics, per-unit queues, combat,
 reflexes, objectives. **Read before touching anything under `Core/Commands`, `Core/Reports`,
-`Core/Combat`, `Core/Reactions`, `Core/Direction`, `Core/Objectives`, `Core/Movement` or
-`Core/Messaging`.** Breaking one of these does not throw — it makes a replay diverge some
+`Core/Combat`, `Core/Reactions`, `Core/Direction`, `Core/Directives`, `Core/Objectives`,
+`Core/Movement` or `Core/Messaging`.** Breaking one of these does not throw — it makes a replay diverge some
 number of steps later.
 
 [docs/command-architecture.md](command-architecture.md) carries the reasoning; this carries
@@ -13,8 +13,8 @@ the rules. [CLAUDE.md](../CLAUDE.md) is the index.
 
 ## Command and reporting invariants
 
-Two topics — orders down, reports up — over one `MessageBus<T>`. `docs/command-architecture.md`
-carries the reasoning; these are the things that break silently.
+Three topics — orders down, reports up, directives in from higher — over one `MessageBus<T>`.
+`docs/command-architecture.md` carries the reasoning; these are the things that break silently.
 
 `Simulation.Step` fixes the order, and it is part of the contract:
 
@@ -22,6 +22,7 @@ carries the reasoning; these are the things that break silently.
 Tick++
   └─ Bus.Deliver()          commands published before this step
      └─ Reports.Deliver()    reports published before this step
+        └─ Directives.Deliver()  directives published before this step
         └─ Director.Evaluate()    side-level intent, before reflexes
            └─ Reactions.Evaluate() reflexes, from the start-of-step picture
            └─ AdvanceUnit ×n      in scenario order, never dictionary order
@@ -80,6 +81,26 @@ Tick++
   propagation delay phases.md 5.2 wants, arriving from the structure rather than from a timer.
   Subordinate order is fixed at construction from the scenario's own list; dictionary order
   there would diverge a replay.
+- **A directive is not an order, and the word means exactly one thing.** `Core/Directives/`
+  holds a message from higher: it states intent and constraints and leaves the *how* to the
+  receiver. It is published on `Directives`, **never** on `Bus`, and never reaches
+  `OnCommandDelivered` — which is the whole point, because that method decomposes *any*
+  formation-addressed command before it inspects the kind, so a directive expressed as a
+  `Command` would become orders on arrival and leave the player nothing to decide. A
+  directive arriving must append nothing to `CommandLog` and leave every subordinate queue
+  empty. `DirectiveProbe` asserts exactly that, and has been seen to fail when it is broken.
+- **A directive's `Id` is authored; its `Seq` is stamped by the log.** Anything that must
+  reference a directive from scenario data — `VictoryCondition` does — references the `Id`.
+  A scenario cannot know a runtime sequence in advance, and referencing `Seq` would work only
+  by the accident that the constructor publishes the one directive first.
+- **Victory is sourced from the directive, not duplicated by it.** A `VictoryCondition`
+  records which directive produced it. There is still exactly one evaluator and one source of
+  truth: the directive is *where a condition came from*, not a second authority that could
+  drift from the condition it appears to predict.
+- **Acknowledge only — there is deliberately no refusal.** #73 allows a directive to be
+  refused; v1 does not implement it, because nothing yet reacts to a refusal and an
+  unreachable path is untested code pretending to be a feature. Add `DirectiveRefused` and
+  its handling together, or not at all.
 - **A destroyed unit becomes a wreck, and a wreck is not a contact.** It stays on the map on
   purpose — ground where a company was destroyed is information, and removing it deletes the
   only trace a fight happened there — but it stops being a *unit*: not commandable, not
