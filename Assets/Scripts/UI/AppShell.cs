@@ -85,7 +85,50 @@ namespace Strategos.UI
             // "the shell came up and selected a view" is otherwise unobservable from
             // outside — and a batch build that shipped stale assemblies looks identical to
             // one that shipped nothing at all.
-            Debug.Log($"[AppShell] {_views.Count} view(s), showing '{_views.Current?.Key}'");
+            Debug.Log($"[AppShell] {_views.Count} view(s), showing '{_views.Current?.Key}' " +
+                      $"at {Screen.width}x{Screen.height}, F11 toggles full screen");
+        }
+
+        // ─── Window ───────────────────────────────────────────────────────────
+
+        /// <summary>Windowed size to come back to, remembered before going full screen.</summary>
+        private Vector2Int _windowed;
+
+        /// <summary>
+        /// F11 toggles full screen, as it does in every application with a window.
+        /// </summary>
+        /// <remarks>
+        /// Lives here rather than in a view because it is a property of the *application*, and
+        /// a view that owned it would stop working the moment the player was on a different
+        /// tab. PlayView's Space is the counterpart — that one is a game control and belongs
+        /// to the game.
+        ///
+        /// Borderless (<see cref="FullScreenMode.FullScreenWindow"/>) rather than exclusive:
+        /// it alt-tabs cleanly, changes no display mode, and needs no resolution list. The
+        /// CanvasScaler is already ScaleWithScreenSize against a 1920x1080 reference, so the
+        /// UI simply scales — and `MapSheetCard` re-crops on resize rather than stretching, so
+        /// a different aspect ratio shows more or less ground rather than a squashed sheet.
+        ///
+        /// The windowed size is remembered rather than recomputed. Restoring to
+        /// `Screen.currentResolution` would come back full-screen-sized in a window, which
+        /// looks like the toggle failed.
+        /// </remarks>
+        private void Update()
+        {
+            if (!Input.GetKeyDown(KeyCode.F11)) return;
+
+            if (Screen.fullScreen)
+            {
+                var size = _windowed.x > 0 ? _windowed : new Vector2Int(1600, 900);
+                Screen.SetResolution(size.x, size.y, FullScreenMode.Windowed);
+            }
+            else
+            {
+                _windowed = new Vector2Int(Screen.width, Screen.height);
+                var display = Screen.currentResolution;
+                Screen.SetResolution(display.width, display.height,
+                    FullScreenMode.FullScreenWindow);
+            }
         }
 
         // ─── Chrome ───────────────────────────────────────────────────────────
