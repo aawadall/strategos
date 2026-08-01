@@ -49,18 +49,20 @@ carries seed and extent, which is exactly what it is for.
 and finding nothing is an absence — it cannot distinguish "the build was clean" from "the
 check was broken, pointed at the wrong file, or never ran." The build log ends with a
 summary line asserting the result positively: `Errors: 0 | Warnings: 0`. Assert on that
-line instead. A positive assertion can fail; an absence cannot. Use `Select-String` to find
-the line, since it is the gateway check before any other verification runs:
+line instead. A positive assertion can fail; an absence cannot. The check must fail in two
+ways: if the summary line does not exist (the build crashed or was truncated before finishing),
+and if the error count is nonzero. Use `Select-String` to find the line, since it is the
+gateway check before any other verification runs:
 
 ```powershell
-Select-String -Pattern "Errors: (\d+)" -Path .\Artifacts\build-log-Windows.txt | `
-  Where-Object { [int]$_.Matches[0].Groups[1].Value -ne 0 } | `
-  ForEach-Object { throw "Build failed: $_" }
+$m = Select-String -Pattern 'Errors: (\d+)' -Path .\Artifacts\build-log-Windows.txt
+if (-not $m) { throw 'No build summary line - the build did not finish.' }
+if ([int]$m[-1].Matches[0].Groups[1].Value -ne 0) { throw "Build failed: $($m[-1].Line)" }
 ```
 
-This check fails the script (and thus any test or deploy automation) if the error count is
-not zero. A script that checks an absence will always succeed, even when the build did not
-run.
+This check fails the script (and thus any test or deploy automation) if either the summary
+line is missing or the error count is not zero. A script that checks an absence will always
+succeed, even when the build did not run.
 
 Bake a grid of symbol permutations — **prefer this over clicking the GUI** when checking
 rendering changes:
