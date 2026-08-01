@@ -45,6 +45,23 @@ now calls `AssetDatabase.Refresh()` first and refuses to build while
 at, put something visible in the frame and confirm it: the map card's marginalia strip
 carries seed and extent, which is exactly what it is for.
 
+**Check the build's error count, not the absence of error messages.** Grepping for `error CS`
+and finding nothing is an absence — it cannot distinguish "the build was clean" from "the
+check was broken, pointed at the wrong file, or never ran." The build log ends with a
+summary line asserting the result positively: `Errors: 0 | Warnings: 0`. Assert on that
+line instead. A positive assertion can fail; an absence cannot. Use `Select-String` to find
+the line, since it is the gateway check before any other verification runs:
+
+```powershell
+Select-String -Pattern "Errors: (\d+)" -Path .\Artifacts\build-log-Windows.txt | `
+  Where-Object { [int]$_.Matches[0].Groups[1].Value -ne 0 } | `
+  ForEach-Object { throw "Build failed: $_" }
+```
+
+This check fails the script (and thus any test or deploy automation) if the error count is
+not zero. A script that checks an absence will always succeed, even when the build did not
+run.
+
 Bake a grid of symbol permutations — **prefer this over clicking the GUI** when checking
 rendering changes:
 
