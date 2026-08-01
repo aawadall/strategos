@@ -130,6 +130,27 @@ namespace Strategos.Reports
                         continue;
                     }
 
+                    // A WRECK IS NOT A CONTACT. Until wrecks existed this was never asked,
+                    // and the answer was silently wrong: a destroyed company went on being
+                    // reported as a live contact for the rest of the scenario, telling its
+                    // enemy's commander there was a going concern on ground that had been
+                    // cleared. A held contact on something that has just been destroyed is
+                    // *lost* — it has stopped being a threat, which is exactly what the
+                    // report says.
+                    if (subject.IsDestroyed)
+                    {
+                        if (held)
+                        {
+                            _seen[slot] = false;
+                            Send(SituationReport.ContactLost(observer.Id, subject, tick),
+                                observer, tick, publish);
+                        }
+                        continue;
+                    }
+
+                    // An observer that has been destroyed reports nothing further.
+                    if (observer.IsDestroyed) { _seen[slot] = false; continue; }
+
                     float distance = Vector2.Distance(observer.Cell, subject.Cell);
 
                     if (!held && distance <= rangeCells)

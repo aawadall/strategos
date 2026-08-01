@@ -75,6 +75,9 @@ namespace Strategos.Commands
         /// <summary>Everything ever reported. The counterpart to <see cref="Log"/>.</summary>
         public ReportLog ReportLog { get; } = new();
 
+        /// <summary>What this scenario cost, in the order it was paid.</summary>
+        public CasualtyLog Casualties { get; } = new();
+
         private readonly ContactTracker _contacts;
         private readonly System.Action<SituationReport> _publishReport;
 
@@ -512,7 +515,14 @@ namespace Strategos.Commands
 
                 // Crossings, reported once each. State changes, not state.
                 if (wasAlive && defender.IsDestroyed)
+                {
+                    // Stamped here because this is the only moment the information exists.
+                    // Afterwards the sole evidence is a strength of zero, which cannot say
+                    // when it happened or what did it.
+                    defender.DestroyedAtTick = Tick;
+                    Casualties.Add(new Casualty(defender.Id, defender.Side, attacker.Id, Tick));
                     Report(SituationReport.Status(ReportKind.Destroyed, defender, Tick));
+                }
 
                 if (hadAmmunition && attacker.Supply.Ammunition <= 0f)
                     Report(SituationReport.Status(ReportKind.Depleted, attacker, Tick,
@@ -593,6 +603,8 @@ namespace Strategos.Commands
         {
             var sb = new StringBuilder();
             sb.Append("t").Append(Tick).Append('|').Append(ReportLog.Signature()).Append('|');
+            Casualties.AppendSignature(sb);
+            sb.Append('|');
             Victory?.AppendSignature(sb);
             sb.Append('|');
 

@@ -550,7 +550,9 @@ namespace Strategos.UI.Views
         /// </remarks>
         private void RefreshMarkerSymbol(Marker marker)
         {
-            int band = marker.Unit.StrengthBand;
+            // Negative bands mark a wreck, so the crossing into destroyed always moves the
+            // guard even though StrengthBand is 0 on both sides of it.
+            int band = marker.Unit.IsDestroyed ? -2 : marker.Unit.StrengthBand;
             if (band == marker.BakedStrength) return;
             marker.BakedStrength = band;
 
@@ -561,8 +563,12 @@ namespace Strategos.UI.Views
             // the fight without disappearing. Fading is a presentation choice and touches no
             // symbology: the frame keeps its affiliation colour, which is the one thing on a
             // symbol that must never be repurposed.
+            // A wreck stays on the map — it is information, and ground where a company was
+            // destroyed is worth knowing about. The symbol now carries APP-6D's
+            // PresentDestroyed status of its own accord, so this only has to say "not a going
+            // concern"; the meaning is in the symbology rather than in an opacity.
             marker.Icon.color = sprite == null ? new Color(0, 0, 0, 0)
-                              : marker.Unit.IsDestroyed ? new Color(1f, 1f, 1f, 0.4f)
+                              : marker.Unit.IsDestroyed ? new Color(1f, 1f, 1f, 0.55f)
                               : Color.white;
         }
 
@@ -1058,8 +1064,9 @@ namespace Strategos.UI.Views
         /// a hot-seat game is spelled.
         /// </remarks>
         private bool IsPlayerCommanded(UnitInstance unit) =>
-            _scenario == null || !_scenario.PlayerSide.IsValid ||
-            unit.Side == _scenario.PlayerSide;
+            !unit.IsDestroyed &&
+            (_scenario == null || !_scenario.PlayerSide.IsValid ||
+             unit.Side == _scenario.PlayerSide);
 
         private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
             Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
@@ -1276,7 +1283,9 @@ namespace Strategos.UI.Views
         /// doing nothing reads as a broken control rather than as a rule.
         /// </summary>
         private string DescribeCommandability(UnitInstance unit) =>
-            IsPlayerCommanded(unit) ? string.Empty : "   ·   NOT UNDER YOUR COMMAND";
+            unit.IsDestroyed ? $"   ·   DESTROYED AT T+{unit.DestroyedAtTick:0000}"
+            : IsPlayerCommanded(unit) ? string.Empty
+            : "   ·   NOT UNDER YOUR COMMAND";
 
         /// <summary>
         /// An engage order, with the range to the target and whether it is inside the weapon's
@@ -1744,7 +1753,7 @@ namespace Strategos.UI.Views
         private int FightingUnitsOf(SideId side)
         {
             int n = 0;
-            foreach (var u in _sim.Units) if (u.Side == side) n++;
+            foreach (var u in _sim.Units) if (u.Side == side && !u.IsDestroyed) n++;
             return n;
         }
 
@@ -1813,7 +1822,10 @@ namespace Strategos.UI.Views
                 ? $"{DisplayNames.EchelonName(unit.ToSidcCode().Echelon)}   ·   " +
                   $"{h.SubordinatesOf(unit.Id).Count} SUBORDINATE(S)   ·   " +
                   $"STR {h.StrengthOf(unit.Id):0}%"
-                : $"{unit.Capabilities(catalogue).Name}   ·   STR {unit.StrengthPercent}%";
+                : unit.IsDestroyed
+                    ? $"{unit.Capabilities(catalogue).Name}   ·   " +
+                      $"DESTROYED T+{unit.DestroyedAtTick:0000}"
+                    : $"{unit.Capabilities(catalogue).Name}   ·   STR {unit.StrengthPercent}%";
 
             var detail = CreateTmp("D", row, detailText, 10, FontStyles.Normal,
                 withLayout: false);
