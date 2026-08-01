@@ -80,6 +80,21 @@ Tick++
   propagation delay phases.md 5.2 wants, arriving from the structure rather than from a timer.
   Subordinate order is fixed at construction from the scenario's own list; dictionary order
   there would diverge a replay.
+- **A destroyed unit becomes a wreck, and a wreck is not a contact.** It stays on the map on
+  purpose — ground where a company was destroyed is information, and removing it deletes the
+  only trace a fight happened there — but it stops being a *unit*: not commandable, not
+  detected, not counted among a side's troops. `ContactTracker` had never been asked this and
+  was silently wrong: a burnt-out company went on being reported as a live contact for the
+  rest of the scenario, so its enemy's commander believed there was a going concern on ground
+  that had been cleared. A held contact on something just destroyed reports **ContactLost** —
+  it has stopped being a threat, which is what the report means.
+- **A loss is recorded at the crossing, not derived after.** `Simulation` stamps
+  `DestroyedAtTick` and appends to `CasualtyLog` in the one moment the information exists;
+  afterwards the only evidence is a strength of zero, which cannot say when it happened or
+  what did it. The casualty log is **in the divergence signature**, because two runs ending
+  with the same strengths but different losses have diverged in everything a campaign carries
+  forward. The symbol uses APP-6D's own `PresentDestroyed` status, which `ConditionDecorator`
+  already drew.
 - **Both buses publish to the *next* step.** That is what bounds a report → reaction →
   order → report cascade, and it is the degenerate case of the propagation delay Phase 5.2
   wants. `Publish` never delivers inline even when called from outside a dispatch, or an

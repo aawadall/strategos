@@ -143,6 +143,24 @@ namespace Strategos.Units
         /// </summary>
         public bool IsDestroyed => Strength <= 0.0001f;
 
+        /// <summary>Sentinel for a unit that has not been destroyed.</summary>
+        public const int Alive = -1;
+
+        /// <summary>
+        /// Tick this unit was destroyed on, or <see cref="Alive"/>.
+        /// </summary>
+        /// <remarks>
+        /// A wreck is not removed from the scenario: a burnt-out company is a real feature of
+        /// the ground and it tells whoever finds it that a fight happened here. What it stops
+        /// being is a *unit* — it is not commandable, not a live contact, and not counted
+        /// among a side's troops.
+        ///
+        /// The tick is what makes it a wreck rather than merely a unit at zero strength: it is
+        /// when the loss happened, which a casualty return needs and which no other field
+        /// records. Stamped once, by the simulation, at the crossing.
+        /// </remarks>
+        public int DestroyedAtTick = Alive;
+
         /// <summary>
         /// Freshness, 0–100. Falls with movement, action and time without rest; caps what
         /// the unit can achieve regardless of its strength. A full-strength exhausted unit
@@ -262,6 +280,12 @@ namespace Strategos.Units
 
             code.Designation = Designation ?? string.Empty;
             code.HigherFormation = HigherFormation ?? string.Empty;
+
+            // APP-6D has a status for this and ConditionDecorator already draws it, so a
+            // wreck reads as destroyed in the symbology rather than by being faded out in one
+            // view. StrengthBand is already 0 here, so the cache key differs and a wreck gets
+            // its own bake rather than sharing a live unit's.
+            if (IsDestroyed) code.Status = UnitStatus.PresentDestroyed;
             // Banded, not raw: this string is part of the sprite cache key, so every distinct
             // value is another bake and another cached texture.
             code.StrengthLabel = StrengthBand.ToString();
