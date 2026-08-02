@@ -1514,7 +1514,19 @@ namespace Strategos.UI.Views
         /// </summary>
         private void AdvanceSimulation()
         {
-            if (_sim == null || !_running) return;
+            if (_sim == null) return;
+
+            if (!_running)
+            {
+                // Nothing to step, but an order the player issues while paused lands on
+                // Simulation.Bus immediately and sits there undelivered until the clock
+                // resumes — the command path is correct (#59) and this is the only place that
+                // says so. Without a refresh every paused frame, the clock line would only
+                // ever reflect the pending count as of the moment the pause toggle was hit,
+                // not as of the order just given.
+                RefreshClock();
+                return;
+            }
 
             _tickAccumulator += Time.deltaTime * _timeScale;
 
@@ -1549,6 +1561,18 @@ namespace Strategos.UI.Views
             RefreshClock();
         }
 
+        /// <summary>
+        /// Everything the clock line states, including — while paused — how many issued orders
+        /// have not yet reached their addressee.
+        /// </summary>
+        /// <remarks>
+        /// #59: pausing to study the ground and edit a plan is the obvious use of a pause
+        /// button, and every order given while paused is logged and published, then sits on
+        /// <see cref="Simulation.Bus"/> until the clock resumes — correct delivery timing, no
+        /// visible sign of it. <see cref="Messaging.MessageBus{T}.PendingCount"/> already states
+        /// exactly that (added for #74's snapshot), so this reads existing public state rather
+        /// than adding anything to Core.
+        /// </remarks>
         private void RefreshClock()
         {
             if (_clockLabel == null || _sim == null) return;
@@ -1560,8 +1584,13 @@ namespace Strategos.UI.Views
                 if (q != null && !q.IsEmpty) moving++;
             }
 
+            int pending = _sim.Bus.PendingCount;
+            string clockState = _running ? $"x{_timeScale:0}"
+                : pending > 0 ? $"PAUSED   ·   {pending} ORDER{(pending == 1 ? string.Empty : "S")} PENDING"
+                : "PAUSED";
+
             _clockLabel.text =
-                $"T+{_sim.Tick:0000}   ·   {(_running ? $"x{_timeScale:0}" : "PAUSED")}   ·   " +
+                $"T+{_sim.Tick:0000}   ·   {clockState}   ·   " +
                 $"{moving} UNDER ORDERS   ·   {_sim.Log.Count} ORDERS   ·   " +
                 $"{_sim.ReportLog.Count} REPORTS{DescribeObjectives()}";
 
@@ -1858,8 +1887,13 @@ namespace Strategos.UI.Views
                 unit = _scenario.FindUnit(_selection[0]);
 
             var plan = unit == null ? null : BelievedPlanOf(unit);
+            int pendingCount = unit == null ? 0 : PendingCommandCountFor(unit.Id);
 
-            string key = PlanKey(unit, plan);
+            // Folded into the row-rebuild guard (see PlanKey's own note) so a pending count that
+            // moves — the player issues a second order while still paused — rebuilds the list,
+            // even though the queue itself, and therefore PlanKey's own reading of it, has not
+            // moved at all.
+            string key = PlanKey(unit, plan) + "|P" + pendingCount;
             if (key == _planKey) return;
             _planKey = key;
 
@@ -1867,11 +1901,62 @@ namespace Strategos.UI.Views
                 Destroy(_planRoot.GetChild(i).gameObject);
 
             if (unit == null) { AddPlanNote("No unit selected."); return; }
-            if (plan == null || plan.Count == 0) { AddPlanNote("NO ORDERS"); return; }
 
-            bool commandable = IsPlayerCommanded(unit);
-            for (int i = 0; i < plan.Count; i++)
-                AddPlanRow(unit, i, plan[i], commandable);
+            if (plan == null || plan.Count == 0)
+                AddPlanNote("NO ORDERS");
+            else
+            {
+                bool commandable = IsPlayerCommanded(unit);
+                for (int i = 0; i < plan.Count; i++)
+                    AddPlanRow(unit, i, plan[i], commandable);
+            }
+
+            // #59: an order issued for this unit does not enter its queue until the bus
+            // delivers it next step, so nothing above this line changes the instant a paused
+            // player gives one. This is the plan card's half of that signal — the clock line
+            // carries the force-wide count.
+            if (pendingCount > 0) AddPlanPendingNote(pendingCount);
+        }
+
+        /// <summary>
+        /// Orders addressed to this unit that have been issued but not yet delivered — sitting
+        /// on <see cref="Simulation.Bus"/>, not yet applied to its queue.
+        /// </summary>
+        /// <remarks>
+        /// A read of <see cref="Messaging.MessageBus{T}.Pending"/>, which already exists for
+        /// #74's snapshot — not a shadow copy of anything (delivery rule 4). The same list
+        /// <see cref="Simulation.Step"/> hands to <c>OnCommandDelivered</c> next tick, so this
+        /// can never disagree with what actually lands.
+        /// </remarks>
+        private int PendingCommandCountFor(UnitId id)
+        {
+            if (_sim == null) return 0;
+            var pending = _sim.Bus.Pending;
+            int n = 0;
+            for (int i = 0; i < pending.Count; i++)
+                if (pending[i].TargetUnit == id) n++;
+            return n;
+        }
+
+        /// <summary>
+        /// One row saying orders are in flight for the selected unit but have not landed.
+        /// Styled apart from <see cref="AddPlanNote"/> (accent colour, an arrow) so it reads as
+        /// "about to happen" rather than as the unit's current state.
+        /// </summary>
+        private void AddPlanPendingNote(int count)
+        {
+            var row = CreateRect("PlanPending", _planRoot);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            row.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            var t = CreateTmp("T", row,
+                $"->  {count} ORDER{(count == 1 ? string.Empty : "S")} PENDING   ·   " +
+                "TAKES EFFECT NEXT TICK",
+                10, FontStyles.Italic, withLayout: false);
+            Stretch(t.rectTransform);
+            t.rectTransform.offsetMin = new Vector2(10, 0);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.color = Theme.Accent;
         }
 
         private void AddPlanNote(string text)
