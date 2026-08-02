@@ -1,7 +1,7 @@
 # #74 — save and load a run — handoff
 
-PR: (filled in after `gh pr create`, see bottom of this file / the PR itself)
-Branch: `feat/save-load`, 5 commits, pushed, not merged.
+PR: https://github.com/aawadall/strategos/pull/108 (open against `master`, not merged)
+Branch: `feat/save-load`, pushed to origin.
 
 ## The state audit (primary deliverable)
 
