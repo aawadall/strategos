@@ -10,21 +10,38 @@
 // the time anyone asks, the only surviving evidence is that the number is zero — which cannot
 // distinguish a unit lost in the first minute from one ground down over an hour, and cannot
 // name what killed it.
+//
+// #74 ADDENDUM: Casualty was a `readonly struct` with `readonly` fields until save/load needed
+// to round-trip it. `FieldsOnlyResolver` (docs/unity-gotchas.md) filters on `FieldInfo.IsInitOnly`
+// to drop computed *properties* — but a `readonly` *field* also reports `IsInitOnly == true`, so
+// the resolver was silently dropping every field on this type as well, for a reason the
+// existing note never anticipated. Every Casualty would have round-tripped as `{}` — not a
+// missing value, an empty object — and it would have been caught immediately by #74's own
+// round-trip probe, because CasualtyLog is inside Simulation.Signature(). Caught here instead,
+// by reading what the resolver actually filters on rather than trusting the constructor to have
+// covered it. See docs/unity-gotchas.md for the general rule this adds.
 
 using System.Collections.Generic;
 
 namespace Strategos.Units
 {
     /// <summary>One unit lost.</summary>
-    public readonly struct Casualty
+    /// <remarks>
+    /// **Fields, not <c>readonly</c> fields — see the file header's #74 addendum below the
+    /// struct.** Kept a value type and still constructed the same way throughout the codebase;
+    /// the only change is that a value can be written back into these fields, which is what
+    /// <c>FieldsOnlyResolver</c> (see <c>docs/unity-gotchas.md</c>) needs in order to see them
+    /// as serialisable members at all.
+    /// </remarks>
+    public struct Casualty
     {
-        public readonly UnitId Unit;
-        public readonly SideId Side;
+        public UnitId Unit;
+        public SideId Side;
 
         /// <summary>Who inflicted it, or <see cref="UnitId.None"/> when nothing claimed it.</summary>
-        public readonly UnitId By;
+        public UnitId By;
 
-        public readonly int Tick;
+        public int Tick;
 
         public Casualty(UnitId unit, SideId side, UnitId by, int tick)
         {
@@ -48,6 +65,17 @@ namespace Strategos.Units
         public int Count => _entries.Count;
 
         public void Add(in Casualty casualty) => _entries.Add(casualty);
+
+        /// <summary>
+        /// Replaces the log wholesale — restore-only. No sequence counter to recompute: unlike
+        /// the message logs, a <see cref="Casualty"/> carries no <c>Seq</c> of its own, only a
+        /// tick, so there is nothing here that a later <see cref="Add"/> could collide with.
+        /// </summary>
+        public void RestoreEntries(IEnumerable<Casualty> entries)
+        {
+            _entries.Clear();
+            if (entries != null) _entries.AddRange(entries);
+        }
 
         public int CountFor(SideId side)
         {

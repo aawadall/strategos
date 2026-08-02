@@ -931,5 +931,230 @@ namespace Strategos.Commands
 
             return sb.ToString();
         }
+
+        // ─── Save/load (#74) ─────────────────────────────────────────────────
+        //
+        // SNAPSHOT, NOT LOG REPLAY. #74 decided this: replay is exact only as long as executor
+        // and reaction behaviour is unchanged, and this project changes both often — training
+        // and fatigue each moved every divergence baseline in the week before #74 was written.
+        // A save that stops loading the moment gameplay is retuned is worth less than one that
+        // survives a patch.
+        //
+        // Signature() ANSWERS A DIFFERENT QUESTION THAN A SNAPSHOT NEEDS ANSWERED. It exists to
+        // catch divergence — did two runs of the SAME code end up in different states — and
+        // deliberately omits anything derivable or anything that cannot differ within one run.
+        // Both of those are exactly the state a snapshot is most likely to drop: derivable state
+        // still has to be put back, just without re-deriving it via replay, and "cannot differ
+        // within one run" says nothing about whether it survives being torn down and rebuilt.
+        // See docs/simulation-invariants.md's own note on Signature(), and the state audit in
+        // #74's PR description for the field-by-field reasoning this method is built from.
+
+        /// <summary>Captures everything needed to resume this run exactly, as data.</summary>
+        public Persistence.SimulationSnapshot Snapshot()
+        {
+            var snap = new Persistence.SimulationSnapshot
+            {
+                ScenarioJson = Scenarios.ScenarioIO.ToJson(Scenario),
+                Tick = Tick,
+            };
+
+            for (int i = 0; i < _units.Count; i++)
+            {
+                var u = _units[i];
+                snap.Units.Add(u.Clone());
+
+                var queue = QueueOf(u.Id);
+                var entries = new List<QueuedCommand>();
+                if (queue != null)
+                    for (int e = 0; e < queue.Entries.Count; e++) entries.Add(queue.Entries[e]);
+                snap.Queues[u.Id.Value] = entries;
+            }
+
+            snap.CommandLog.AddRange(Log.Entries);
+            snap.ReportLog.AddRange(ReportLog.Entries);
+            snap.DirectiveLog.AddRange(DirectiveLog.Entries);
+            snap.DirectiveResponses.AddRange(DirectiveResponses.Entries);
+            snap.Casualties.AddRange(Casualties.Entries);
+
+            snap.CommandBusPending.AddRange(Bus.Pending);
+            snap.ReportBusPending.AddRange(Reports.Pending);
+            snap.DirectiveBusPending.AddRange(Directives.Pending);
+
+            if (_contacts != null)
+            {
+                snap.ContactsSeen = _contacts.SnapshotSeen();
+                snap.ContactsPending = _contacts.SnapshotPending();
+            }
+
+            if (Victory != null)
+            {
+                snap.HasVictory = true;
+                snap.VictoryOwner = Victory.SnapshotOwner();
+                snap.VictoryHeldSince = Victory.SnapshotHeldSince();
+                snap.VictoryOccupiedSince = Victory.SnapshotOccupiedSince();
+                snap.VictoryStartingStrength = Victory.SnapshotStartingStrength();
+                snap.VictoryOutcome = Victory.Outcome;
+            }
+
+            if (Director != null) snap.DirectorLastOrdered = Director.SnapshotLastOrdered();
+
+            return snap;
+        }
+
+        /// <summary>
+        /// Rebuilds a Simulation from a snapshot.
+        /// </summary>
+        /// <remarks>
+        /// Bare on return, exactly as a freshly constructed Simulation is: the caller must
+        /// <see cref="AddExecutor"/> the same executors the saved run had, and call
+        /// <see cref="EnableReactions"/> / <see cref="EnableDirector"/> again — followed by
+        /// <see cref="RestoreReactionPicture"/> / <see cref="RestoreDirectorMemory"/> — if the
+        /// saved run had them. Executors and controllers are behaviour, not data; see
+        /// <see cref="Persistence.SimulationSnapshot"/>'s header.
+        /// </remarks>
+        public static Simulation Restore(Persistence.SimulationSnapshot snapshot,
+            UnitCatalogue catalogue = null)
+        {
+            if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
+
+            var scenario = Scenarios.ScenarioIO.FromJson(snapshot.ScenarioJson);
+            var map = scenario.GenerateMap();
+            var sim = new Simulation(scenario, map, catalogue);
+
+            sim.Tick = snapshot.Tick;
+
+            // Overwritten unit by unit, matched by Id rather than trusted by index — Hierarchy's
+            // leaf order matches Scenario.Units' order today, but matching by Id is what stays
+            // correct if that ever stops being true.
+            for (int i = 0; i < snapshot.Units.Count; i++)
+            {
+                var saved = snapshot.Units[i];
+                var live = sim.UnitOf(saved.Id);
+                if (live == null) continue;
+                CopyInto(live, saved);
+            }
+
+            for (int i = 0; i < sim._units.Count; i++)
+            {
+                var id = sim._units[i].Id;
+                var queue = sim.QueueOf(id);
+                if (queue == null) continue;
+
+                if (snapshot.Queues != null && snapshot.Queues.TryGetValue(id.Value, out var entries))
+                    queue.RestoreEntries(entries);
+                else
+                    queue.RestoreEntries(System.Array.Empty<QueuedCommand>());
+            }
+
+            sim.Log.RestoreEntries(snapshot.CommandLog);
+            sim.ReportLog.RestoreEntries(snapshot.ReportLog);
+            sim.DirectiveLog.RestoreEntries(snapshot.DirectiveLog);
+            sim.DirectiveResponses.RestoreEntries(snapshot.DirectiveResponses);
+            sim.Casualties.RestoreEntries(snapshot.Casualties);
+
+            sim.Bus.LoadPending(snapshot.CommandBusPending);
+            sim.Reports.LoadPending(snapshot.ReportBusPending);
+            sim.Directives.LoadPending(snapshot.DirectiveBusPending);
+
+            sim._contacts?.Restore(snapshot.ContactsSeen, snapshot.ContactsPending);
+
+            // _acknowledgedDirectives is deliberately outside Signature() and is derivable from
+            // DirectiveResponses, already restored above — see that field's own remarks and
+            // HasAcknowledged. Rebuilt directly here rather than by replaying through
+            // AcknowledgeDirective, which would re-append to a log already restored and
+            // re-publish a report ReportLog already holds.
+            sim._acknowledgedDirectives.Clear();
+            for (int i = 0; i < snapshot.DirectiveResponses.Count; i++)
+            {
+                var r = snapshot.DirectiveResponses[i];
+                if (r.Kind == Strategos.Directives.DirectiveResponseKind.Acknowledged)
+                    sim._acknowledgedDirectives.Add(r.DirectiveSeq);
+            }
+
+            // _openingReported is deliberately outside Signature() too, for the same shape of
+            // reason as _acknowledgedDirectives: it guards "has this Engage order already
+            // published its one Engaged report" against every further tick it keeps firing, and
+            // it is derivable from ReportLog — every ReportKind.Engaged entry's AboutCommand is
+            // the Command.Seq of the order that opened. Left unreconstructed, a restored
+            // Simulation would republish Engaged for the very next tick of any engagement still
+            // running across the snapshot boundary — the guard exists exactly to stop that, and
+            // an empty one after restore is the same defect #94 found in AcknowledgeDirective,
+            // one field over.
+            sim._openingReported.Clear();
+            for (int i = 0; i < snapshot.ReportLog.Count; i++)
+            {
+                var r = snapshot.ReportLog[i];
+                if (r.Kind == ReportKind.Engaged) sim._openingReported.Add(r.AboutCommand);
+            }
+
+            if (snapshot.HasVictory && sim.Victory != null)
+                sim.Victory.RestoreState(snapshot.VictoryOwner, snapshot.VictoryHeldSince,
+                    snapshot.VictoryOccupiedSince, snapshot.VictoryStartingStrength,
+                    snapshot.VictoryOutcome);
+
+            return sim;
+        }
+
+        /// <summary>
+        /// Rebuilds <see cref="Reactions"/>' picture from reports the original run had already
+        /// delivered by the snapshot's tick. Call after <see cref="EnableReactions"/>, and only
+        /// when the saved run had reactions enabled.
+        /// </summary>
+        /// <remarks>
+        /// Derived, not stored — see <see cref="Reactions.ReactionController.RebuildFrom"/>. The
+        /// filter against <see cref="Persistence.SimulationSnapshot.ReportBusPending"/> is what
+        /// stops a report the original had merely *published* this tick, and not yet delivered,
+        /// from reaching a restored unit's reflexes a step early.
+        /// </remarks>
+        public void RestoreReactionPicture(Persistence.SimulationSnapshot snapshot)
+        {
+            if (Reactions == null || snapshot == null) return;
+
+            var pendingSeqs = new HashSet<ulong>();
+            for (int i = 0; i < snapshot.ReportBusPending.Count; i++)
+                pendingSeqs.Add(snapshot.ReportBusPending[i].Seq);
+
+            var delivered = new List<SituationReport>();
+            for (int i = 0; i < snapshot.ReportLog.Count; i++)
+                if (!pendingSeqs.Contains(snapshot.ReportLog[i].Seq))
+                    delivered.Add(snapshot.ReportLog[i]);
+
+            Reactions.RebuildFrom(delivered);
+        }
+
+        /// <summary>
+        /// Restores <see cref="Director"/>'s retry memory. Call after <see cref="EnableDirector"/>,
+        /// and only when the saved run had a director enabled.
+        /// </summary>
+        public void RestoreDirectorMemory(Persistence.SimulationSnapshot snapshot)
+        {
+            if (Director == null || snapshot?.DirectorLastOrdered == null) return;
+            Director.RestoreLastOrdered(snapshot.DirectorLastOrdered);
+        }
+
+        /// <summary>
+        /// Every field <see cref="UnitInstance.Clone"/> copies, restored back onto a live unit.
+        /// Kept as its own method so it stays the one place that has to be updated in step with
+        /// <c>Clone</c> when the model grows a field — the same failure mode #74's audit exists
+        /// to catch, applied to the restore path rather than the save path.
+        /// </summary>
+        private static void CopyInto(UnitInstance live, UnitInstance saved)
+        {
+            live.Side = saved.Side;
+            live.ParentId = saved.ParentId;
+            live.Sidc = saved.Sidc;
+            live.Designation = saved.Designation;
+            live.HigherFormation = saved.HigherFormation;
+            live.CapabilityId = saved.CapabilityId;
+            live.Cell = saved.Cell;
+            live.Strength = saved.Strength;
+            live.DestroyedAtTick = saved.DestroyedAtTick;
+            live.Readiness = saved.Readiness;
+            live.Suppression = saved.Suppression;
+            live.Training = saved.Training;
+            live.Posture = saved.Posture;
+            live.Roe = saved.Roe;
+            live.Supply = saved.Supply;
+        }
     }
 }

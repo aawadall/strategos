@@ -206,6 +206,18 @@ namespace Strategos.Commands
         public void Clear() => _entries.Clear();
 
         /// <summary>
+        /// Replaces the live plan wholesale — restore-only. <see cref="QueuedCommand"/> already
+        /// carries everything <see cref="AppendSignature"/> reads (<c>Status</c>,
+        /// <c>TicksExecuting</c>, <c>TicksPending</c>), so a plain copy is enough: unlike the
+        /// logs, nothing here is derived at append time.
+        /// </summary>
+        public void RestoreEntries(IEnumerable<QueuedCommand> entries)
+        {
+            _entries.Clear();
+            if (entries != null) _entries.AddRange(entries);
+        }
+
+        /// <summary>
         /// Deterministic signature of the live plan, for the divergence test. Includes
         /// everything a replay must reproduce and nothing that merely describes it.
         /// </summary>

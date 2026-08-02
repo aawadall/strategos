@@ -29,6 +29,16 @@ serialised type.**
   and `Color`, and `FieldsOnlyResolver`, which serialises public non-readonly fields only.
   Without the resolver every computed property lands in the file, including
   `Scenario.IsValid`, which runs the whole validator on every save.
+- **A `readonly` field is dropped by `FieldsOnlyResolver` exactly like a computed property.**
+  The resolver filters on `FieldInfo.IsInitOnly`, which is true for both — a `readonly struct`
+  with `readonly` fields therefore serialises as `{}`, silently, for every instance. `Casualty`
+  shipped this way until #74 (save/load) needed to round-trip it: every field was `readonly`,
+  so nothing was ever a serialisable member, and the type had never been round-tripped before
+  because `CasualtyLog` only ever wrote forward through `ScenarioSamples`/probes, never through
+  `ScenarioIO`. Fixed by dropping `readonly` from the struct and its fields — `UnitId`/`SideId`
+  already document why their own backing field is `public int Value;` and not `readonly`, for
+  the identical reason. Treat "must persist through `FieldsOnlyResolver`" and "may be
+  `readonly`" as mutually exclusive for any type that reaches a save or scenario file.
 - **`com.unity.modules.screencapture` and `…imageconversion` are deliberately absent**, so
   `ScreenCapture.CaptureScreenshot` and `Texture2D.EncodeToPNG` do not exist. Screenshot
   from outside with `capture.ps1` rather than adding engine modules to every shipped build

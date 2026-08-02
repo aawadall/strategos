@@ -110,6 +110,27 @@ namespace Strategos.Directives
         }
 
         /// <summary>
+        /// Replaces the log wholesale with entries that already carry their own <see cref="DirectiveResponse.Seq"/>
+        /// — restore-only. Recomputes <c>_nextSeq</c> from the highest one found, the same reason
+        /// <see cref="Commands.CommandLog.RestoreEntries"/> does. #74: this is also what lets a
+        /// restored <see cref="Commands.Simulation"/> rebuild <c>_acknowledgedDirectives</c>
+        /// without re-publishing a <see cref="Reports.ReportKind.DirectiveAcknowledged"/> report
+        /// that the restored <c>ReportLog</c> already holds.
+        /// </summary>
+        public void RestoreEntries(IEnumerable<DirectiveResponse> entries)
+        {
+            _entries.Clear();
+            ulong maxSeq = 0;
+            if (entries != null)
+                foreach (var e in entries)
+                {
+                    _entries.Add(e);
+                    if (e.Seq > maxSeq) maxSeq = e.Seq;
+                }
+            _nextSeq = maxSeq + 1;
+        }
+
+        /// <summary>
         /// Human-readable dump, oldest first. Useful in a probe failure; not a serialisation
         /// format.
         /// </summary>

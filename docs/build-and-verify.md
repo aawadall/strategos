@@ -138,6 +138,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.DefendProbe.Run` | Defend never ends, digging in costs time and pays, Hold is not Abort |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
+| `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
 
 **Fourteen of the probes above run with `scenario.Map.EnableErosion = false`** —
 `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`, `DirectiveProbe`,
@@ -213,7 +214,14 @@ is below 100. **A guard that skips when the fixture is stale is a guard that can
 reordering and does not survive renaming: `Hold` becoming `Defend` made every shipped drill
 that referenced it fail to deserialise, and `DoctrineProbe` threw on load. That is the right
 behaviour — loud, with the file and line — but it means `Strategos > Write Sample Drills` has
-to run in the same change. The same will apply to saves once #74 lands.
+to run in the same change. **The same now applies to saves, #74 having landed**: a `CommandQueue`
+entry's `Command.Kind` and everything else `SimulationSnapshot` carries serialises the same way,
+through the same `FieldsOnlyResolver`/`StringEnumConverter` pair `ScenarioIO` uses (see
+`FileGameStore`) — renaming a kind a save references fails the same way a drill does. Unlike a
+drill, there is no `Strategos > Write Sample Saves` to re-run: a save is player state, not
+shipped content, so an incompatible rename is exactly what `SaveRecord.FormatVersion` exists to
+have refused already, loudly, at load — see `docs/simulation-invariants.md`'s note on what
+`Signature()` does and does not cover.
 
 **Never index into `Scenario.Units` by position.** `ReportProbe` took `Units[0]` and `Units[3]`
 as "the mover and an enemy"; adding battalion formations to the sample ORBAT shifted every

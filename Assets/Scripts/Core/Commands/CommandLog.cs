@@ -56,6 +56,24 @@ namespace Strategos.Commands
         }
 
         /// <summary>
+        /// Replaces the log wholesale with entries that already carry their own <see cref="Command.Seq"/>
+        /// — restore-only. Recomputes <c>_nextSeq</c> from the highest one found, or every command
+        /// issued after a load would restart numbering at 1 and could collide with a restored entry.
+        /// </summary>
+        public void RestoreEntries(IEnumerable<Command> entries)
+        {
+            _entries.Clear();
+            ulong maxSeq = 0;
+            if (entries != null)
+                foreach (var e in entries)
+                {
+                    _entries.Add(e);
+                    if (e.Seq > maxSeq) maxSeq = e.Seq;
+                }
+            _nextSeq = maxSeq + 1;
+        }
+
+        /// <summary>
         /// Human-readable dump, oldest first. Useful in a probe failure and in an
         /// after-action review; not a serialisation format.
         /// </summary>

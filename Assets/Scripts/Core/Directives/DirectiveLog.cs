@@ -64,6 +64,24 @@ namespace Strategos.Directives
         }
 
         /// <summary>
+        /// Replaces the log wholesale with entries that already carry their own <see cref="Directive.Seq"/>
+        /// — restore-only. Recomputes <c>_nextSeq</c> from the highest one found, the same reason
+        /// <see cref="Commands.CommandLog.RestoreEntries"/> does.
+        /// </summary>
+        public void RestoreEntries(IEnumerable<Directive> entries)
+        {
+            _entries.Clear();
+            ulong maxSeq = 0;
+            if (entries != null)
+                foreach (var e in entries)
+                {
+                    _entries.Add(e);
+                    if (e.Seq > maxSeq) maxSeq = e.Seq;
+                }
+            _nextSeq = maxSeq + 1;
+        }
+
+        /// <summary>
         /// Deterministic signature of everything published, for the divergence test — folded
         /// into Simulation.Signature() the same way ReportLog.Signature() is.
         ///

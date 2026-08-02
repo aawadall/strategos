@@ -63,6 +63,31 @@ namespace Strategos.Messaging
         /// <summary>Total messages delivered since construction. Diagnostic only.</summary>
         public int DeliveredCount { get; private set; }
 
+        /// <summary>
+        /// Messages published but not yet delivered, in publish order — the same order
+        /// <see cref="Deliver"/> would hand them to subscribers.
+        /// </summary>
+        /// <remarks>
+        /// #74 (save/load): a message published during the step a snapshot is taken sits here,
+        /// invisible to <c>Simulation.Signature()</c> and to every log — it was published, so
+        /// <c>CommandLog</c>/<c>ReportLog</c>/<c>DirectiveLog</c> already hold it, but it has not
+        /// reached <see cref="Deliver"/> yet, so no consumer has acted on it. A snapshot that
+        /// drops this loses exactly one step of in-flight orders/reports/directives on restore —
+        /// invisible at the moment of restore and visible only once <see cref="Deliver"/> should
+        /// have run and did not. Read-only: callers must not mutate the returned list.
+        /// </remarks>
+        public IReadOnlyList<T> Pending => _inbox;
+
+        /// <summary>
+        /// Replaces the pending inbox wholesale. Restore-only: for a live topic mid-dispatch,
+        /// or for accumulating publishes normally, use <see cref="Publish"/>.
+        /// </summary>
+        public void LoadPending(IEnumerable<T> messages)
+        {
+            _inbox.Clear();
+            if (messages != null) _inbox.AddRange(messages);
+        }
+
         public void Subscribe(string name, int order, Action<T> handler)
         {
             if (handler == null) return;

@@ -14,6 +14,7 @@
 // rather than a setting because changing it changes when a hold-duration is satisfied, which is
 // an outcome and not a preference.
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -395,6 +396,53 @@ namespace Strategos.Objectives
             sb.Append(']');
             if (Outcome.Decided)
                 sb.Append("win:").Append(Outcome.Winner.Value).Append(':').Append(Outcome.Tick);
+        }
+
+        // ─── Save/load (#74) ─────────────────────────────────────────────────
+        //
+        // _owner, _heldSince and _occupiedSince are already in AppendSignature, so a round-trip
+        // comparison alone would catch a dropped one of those. _startingStrength is not, and
+        // for a reason worth restating here: it is fixed once, at construction, from whichever
+        // unit list the constructor was handed. A restored Simulation's constructor runs again
+        // and would recompute it from the CURRENT (possibly already-damaged) strengths on the
+        // scenario passed in — not the true tick-zero baseline the original evaluator captured
+        // — silently changing what "reduced below 25%" means for the rest of the restored run
+        // without moving Signature() at the moment of restore at all. It only shows up later,
+        // in whether DestroyEnemy fires on the tick the original run would have, which is
+        // exactly why the probe's step-after-restore assertion exists rather than trusting the
+        // moment of restore alone.
+
+        /// <summary>A copy of who currently owns each objective, by authored list index.</summary>
+        public SideId[] SnapshotOwner() => (SideId[])_owner.Clone();
+
+        /// <summary>A copy of when each objective's current owner took it, by authored list index.</summary>
+        public int[] SnapshotHeldSince() => (int[])_heldSince.Clone();
+
+        /// <summary>A copy of when the current owner's continuous presence began, by authored list index.</summary>
+        public int[] SnapshotOccupiedSince() => (int[])_occupiedSince.Clone();
+
+        /// <summary>A copy of each side's starting strength, captured once at construction.</summary>
+        public Dictionary<int, float> SnapshotStartingStrength() => new(_startingStrength);
+
+        /// <summary>
+        /// Overwrites every field this evaluator owns — restore-only. Arrays are copied in by
+        /// value rather than swapped in by reference, so a caller mutating its own copy
+        /// afterwards cannot reach back into this evaluator.
+        /// </summary>
+        public void RestoreState(SideId[] owner, int[] heldSince, int[] occupiedSince,
+            IReadOnlyDictionary<int, float> startingStrength, ScenarioOutcome outcome)
+        {
+            if (owner != null && owner.Length == _owner.Length) Array.Copy(owner, _owner, _owner.Length);
+            if (heldSince != null && heldSince.Length == _heldSince.Length)
+                Array.Copy(heldSince, _heldSince, _heldSince.Length);
+            if (occupiedSince != null && occupiedSince.Length == _occupiedSince.Length)
+                Array.Copy(occupiedSince, _occupiedSince, _occupiedSince.Length);
+
+            _startingStrength.Clear();
+            if (startingStrength != null)
+                foreach (var kv in startingStrength) _startingStrength[kv.Key] = kv.Value;
+
+            Outcome = outcome;
         }
     }
 }

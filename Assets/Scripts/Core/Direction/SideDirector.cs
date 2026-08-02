@@ -147,5 +147,30 @@ namespace Strategos.Direction
 
             return best;
         }
+
+        // ─── Save/load (#74) ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// A copy of the last tick each unit was given an order on this side's own initiative.
+        /// </summary>
+        /// <remarks>
+        /// **Not derivable, unlike <see cref="Reactions.ReactionController"/>'s picture.** A
+        /// director-issued order and a player-issued one are both logged with the same
+        /// <see cref="Commands.ActorId.ForSide"/>, so <c>CommandLog</c> cannot tell them apart —
+        /// there is no way to reconstruct "which orders did the director itself issue" by
+        /// reading the log back. Without this a restored director has no memory of
+        /// <see cref="RetryInterval"/> and can reissue on the very next evaluation an order the
+        /// original run was still waiting out — the order-storm #13 introduced this field to
+        /// stop, reappearing after every load rather than never.
+        /// </remarks>
+        public Dictionary<int, int> SnapshotLastOrdered() => new(_lastOrdered);
+
+        /// <summary>Overwrites <see cref="_lastOrdered"/> wholesale — restore-only.</summary>
+        public void RestoreLastOrdered(IReadOnlyDictionary<int, int> lastOrdered)
+        {
+            _lastOrdered.Clear();
+            if (lastOrdered != null)
+                foreach (var kv in lastOrdered) _lastOrdered[kv.Key] = kv.Value;
+        }
     }
 }
