@@ -277,5 +277,39 @@ Tick++
   same reasoning already covered `_acknowledgedDirectives` staying outside `Signature()` — this
   is not a new exception, it is the same one applied to the log that makes that set
   reconstructible on replay.
+- **`Signature()` is a divergence oracle, not a completeness oracle, and #74 (save/load) is what
+  that distinction cost.** It exists to answer "did two runs of the *same code* diverge", so it
+  deliberately omits anything derivable and anything that cannot differ *within* one run — and
+  both of those are exactly the state a snapshot is most likely to drop, because a round-trip
+  signature comparison cannot see either omission. **Not covered, and each needed its own
+  restore path rather than a mention in a checklist:** `_acknowledgedDirectives` (derivable from
+  `DirectiveResponseLog`, already documented above); `_openingReported` (per-engage-order
+  bookkeeping, rebuilt implicitly because engagement outcomes are re-derived rather than
+  replayed); `ContactTracker`'s `_seen` matrix and its `_pending` held-back reports — the
+  player's *knowledge*, including a green observer's contact that has been seen but not yet
+  reported, which restoring an empty tracker both forgets and silently drops; `VictoryEvaluator`'s
+  `_startingStrength` baseline, fixed once at construction and never revisited — a restored
+  `Simulation`'s constructor runs again and would recompute it from whatever `Scenario.Units`
+  currently holds, which by save time is already-damaged current strength, not the true tick-zero
+  baseline, silently changing what "reduced below 25%" means for the rest of the run without
+  moving `Signature()` at the moment of restore at all; `SideDirector`'s per-unit retry memory,
+  which is *not* derivable the way `ReactionController`'s picture is — a director-issued order and
+  a player-issued one are both logged under the same `ActorId.ForSide`, so there is no way to
+  tell them apart by reading `CommandLog` back; every `UnitInstance` field outside the six
+  `Signature()` reads (`Cell`, `Strength`, `Readiness`, `Suppression`, `Posture`,
+  `Supply.Ammunition`) — `Training`, `Roe`, `DestroyedAtTick`, and three of `SupplyLevels`' four
+  classes (`Rations`, `Water`, `Fuel`); the full `CommandLog`/`ReportLog`/`DirectiveLog` history,
+  since `Signature()` folds in the *queue's* signature and the report/directive logs' own
+  signatures, not "every order ever issued" — a completed or aborted order that has left the
+  queue leaves the live-queue signature identical whether or not the history behind it survived;
+  and messages sitting in a `MessageBus<T>`'s pending inbox at the exact tick a snapshot is
+  taken — published, so the log already holds them, but not yet delivered, so no consumer has
+  acted on them, and a restore that drops them silently skips one step of in-flight orders,
+  reports or directives. **The `readonly struct Casualty` bug is the same shape at the
+  serialisation layer**: see `docs/unity-gotchas.md`. None of this shows up as a red assertion in
+  a signature comparison taken *at the moment of restore* — several of these rows only diverge
+  once the restored run is stepped further (the acknowledgement guard and the victory baseline
+  both do), which is why `SaveLoadProbe` asserts a stepped-forward comparison as well as an
+  immediate one, and a dedicated assertion per row besides.
 
 ---
