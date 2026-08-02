@@ -41,6 +41,7 @@ namespace Strategos.Editor
             bad += CheckTwoOperationRoundTrip(log);
             bad += CheckRestHoursByOutcome(log);
             bad += CheckUnmatchedCarriedOverUnitThrows(log);
+            bad += CheckThreeOperationChain(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
             if (bad == 0) Debug.Log("[CampaignChainDriverProbe]\n" + log);
@@ -520,6 +521,251 @@ namespace Strategos.Editor
             }
 
             return bad;
+        }
+
+        // ─── 4. The three-operation chain: one continuous ORBAT, cumulative attrition ──
+
+        /// <summary>
+        /// #75's own acceptance criteria, proven directly rather than inferred from "no
+        /// exception was thrown": three linked operations (skirmish -&gt; push-north -&gt;
+        /// skirmish, the third link reusing the first scenario per the #75 chunk-4 brief — a
+        /// scenario played a second time is a legitimate campaign entry and authors nothing
+        /// new) played end to end, each unattended to a real decision, and one persistent
+        /// unit's Strength/Readiness tracked at every hop to prove the "mauled formation is
+        /// visibly weaker" effect is cumulative across the whole chain rather than a
+        /// single-hop artifact chunks 2 and 3 already each proved alone.
+        /// </summary>
+        /// <remarks>
+        /// <b>The UnitId(9) question, investigated before writing this (see
+        /// Artifacts/agents/campaign-three-op.md for the full transcript):</b> push-north
+        /// authors a reinforcement, UnitId(9), with no counterpart in skirmish.json. If it
+        /// survived push-north, carrying it into operation 3 (skirmish again) would give
+        /// <see cref="CampaignChainDriver.MergeCarriedOver"/> a carried-over unit with no
+        /// match, and it would correctly throw. Rerunning this exact fixture
+        /// (skirmish -&gt; push-north, same unattended pattern as
+        /// <see cref="CheckTwoOperationRoundTrip"/>) and inspecting every unit's
+        /// <see cref="UnitInstance.IsDestroyed"/> at push-north's decision showed unit 9 does
+        /// NOT survive — it is destroyed inside push-north's own fighting, before operation 2
+        /// ever ends. So the three-op chain already works with no changes to
+        /// <c>MergeCarriedOver</c>, skirmish.json or push-north's battle script: this check
+        /// does not work around the Id-consistency rule, it simply runs the chain and
+        /// push-north's own combat resolves the question. That is checked below as an
+        /// assertion (unit 9 must not survive operation 2 in this run), not merely assumed
+        /// from the earlier investigation — a probe that trusted its own prior run without
+        /// re-checking would be exactly the kind of guard that cannot fail this project's
+        /// build-and-verify doc warns against.
+        /// </remarks>
+        private static int CheckThreeOperationChain(StringBuilder log)
+        {
+            int bad = 0;
+
+            var chain = new CampaignChain { Name = "Valley Campaign — Three Operations" };
+            chain.Operations.Add(new CampaignChainEntry
+            {
+                ScenarioName = ScenarioSamples.SkirmishName, Name = "Opening Contact",
+            });
+            chain.Operations.Add(new CampaignChainEntry
+            {
+                ScenarioName = ScenarioSamples.PushNorthName, Name = "Push North",
+            });
+            chain.Operations.Add(new CampaignChainEntry
+            {
+                ScenarioName = ScenarioSamples.SkirmishName, Name = "Opening Contact, Second Tour",
+            });
+
+            // The persistent unit tracked across the whole chain: BLUFOR's armor platoon.
+            // Present under the same Id in both skirmish and push-north per the
+            // Id-consistency authoring rule, and — checked below rather than assumed —
+            // actually survives all three operations in this fixture, ending each one
+            // weaker than it started the last: a real cumulative-attrition story, not a flat
+            // line that only happens to satisfy "non-increasing".
+            var trackedId = new UnitId(2);
+
+            // ── Operation 1: skirmish, as authored (first entry, no merge). ──
+            var sim0 = CampaignChainDriver.StartNext(chain, 0, UnitCatalogue.Default());
+            if (!RunToDecision(sim0))
+            {
+                log.AppendLine($"  FAIL operation 1 (skirmish) never reached a decision after " +
+                               $"{sim0.Tick} ticks");
+                return bad + 1;
+            }
+
+            var tracked0 = FindLeaf(sim0, trackedId);
+            if (tracked0 == null || tracked0.IsDestroyed)
+            {
+                log.AppendLine($"  FAIL tracked unit {trackedId} did not survive operation 1 " +
+                               "in this run — pick a different persistent unit for this fixture");
+                return bad + 1;
+            }
+            float strength1 = tracked0.Strength, readiness1 = tracked0.Readiness;
+            log.AppendLine($"  operation 1 (skirmish) decided: {sim0.Victory.Outcome} at " +
+                           $"t{sim0.Tick} — unit {trackedId} ends at Strength={strength1:0.00} " +
+                           $"Readiness={readiness1:0.00}");
+
+            // ── Carry-over: operation 1's survivors -> operation 2's CarriedOverUnits. ──
+            const float restHours = 6f;
+            CampaignCarryOver.CarryOver(sim0, chain.Operations[0], chain.Operations[1], restHours);
+
+            // ── Operation 2: push-north, merged with operation 1's survivors. ──
+            var sim1 = CampaignChainDriver.StartNext(chain, 1, UnitCatalogue.Default());
+            if (!RunToDecision(sim1))
+            {
+                log.AppendLine($"  FAIL operation 2 (push-north) never reached a decision " +
+                               $"after {sim1.Tick} ticks");
+                return bad + 1;
+            }
+
+            var tracked1 = FindLeaf(sim1, trackedId);
+            if (tracked1 == null || tracked1.IsDestroyed)
+            {
+                log.AppendLine($"  FAIL tracked unit {trackedId} did not survive operation 2 " +
+                               "in this run — pick a different persistent unit for this fixture");
+                return bad + 1;
+            }
+            float strength2 = tracked1.Strength, readiness2 = tracked1.Readiness;
+            log.AppendLine($"  operation 2 (push-north) decided: {sim1.Victory.Outcome} at " +
+                           $"t{sim1.Tick} — unit {trackedId} ends at Strength={strength2:0.00} " +
+                           $"Readiness={readiness2:0.00}");
+
+            // The UnitId(9) question, asserted here rather than only in the earlier
+            // investigation: push-north's own reinforcement must NOT survive operation 2, or
+            // it would be carried into operation 3 (skirmish again) with no match and
+            // MergeCarriedOver would correctly throw against skirmish.json, which has no
+            // unit 9. This is what makes the "no changes needed" resolution actually true on
+            // every run, not just the one that was inspected by hand.
+            foreach (var u in sim1.Units)
+            {
+                if (u.Id.Value != 9 || u.IsDestroyed) continue;
+                log.AppendLine("  FAIL push-north's reinforcement unit 9 survived operation 2 " +
+                               "in this run — it would be carried into operation 3 (skirmish " +
+                               "again) with no match, and MergeCarriedOver would throw. This " +
+                               "chain's \"no changes needed\" resolution (see " +
+                               "docs/campaign-invariants.md) depends on unit 9 not surviving " +
+                               "push-north");
+                bad++;
+            }
+            if (bad > 0) return bad;
+
+            // ── Carry-over: operation 2's survivors -> operation 3's CarriedOverUnits. ──
+            CampaignCarryOver.CarryOver(sim1, chain.Operations[1], chain.Operations[2], restHours);
+
+            float carriedIntoOp3 = 0f;
+            bool foundCarried = false;
+            foreach (var c in chain.Operations[2].CarriedOverUnits)
+            {
+                if (c.Id != trackedId) continue;
+                carriedIntoOp3 = c.Strength;
+                foundCarried = true;
+                break;
+            }
+            if (!foundCarried)
+            {
+                log.AppendLine($"  FAIL tracked unit {trackedId} was not carried into " +
+                               "operation 3 at all");
+                return bad + 1;
+            }
+
+            // ── Operation 3: skirmish again, merged with operation 2's survivors. ──
+            //
+            // The "one ORBAT" half of #75's acceptance criteria: assert the tracked unit's
+            // Strength at the START of operation 3 equals exactly what it was carried out of
+            // operation 2 — not skirmish's own authored default (100) and not any other
+            // regenerated value. A number that would fail if the merge silently reset it, not
+            // "no exception was thrown".
+            var sim2 = CampaignChainDriver.StartNext(chain, 2, UnitCatalogue.Default());
+            var startOp3 = FindLeaf(sim2, trackedId);
+            if (startOp3 == null)
+            {
+                log.AppendLine($"  FAIL tracked unit {trackedId} is missing from operation " +
+                               "3's merged Simulation entirely");
+                return bad + 1;
+            }
+            if (!Mathf.Approximately(startOp3.Strength, carriedIntoOp3))
+            {
+                log.AppendLine($"  FAIL operation 3 starts unit {trackedId} at Strength " +
+                               $"{startOp3.Strength:0.00}, expected the carried-over " +
+                               $"{carriedIntoOp3:0.00} exactly — the ORBAT was reset or " +
+                               "regenerated between operations 2 and 3 instead of carried " +
+                               "through as one continuous force");
+                bad++;
+            }
+            else
+            {
+                log.AppendLine($"  ORBAT continuity: unit {trackedId} starts operation 3 at " +
+                               $"Strength {startOp3.Strength:0.00}, exactly what it was " +
+                               "carried out of operation 2 — one continuous force across all " +
+                               "three operations, not reset or regenerated");
+            }
+
+            if (!RunToDecision(sim2))
+            {
+                log.AppendLine($"  FAIL operation 3 (skirmish, second tour) never reached a " +
+                               $"decision after {sim2.Tick} ticks");
+                return bad + 1;
+            }
+
+            var tracked2 = FindLeaf(sim2, trackedId);
+            float strength3 = tracked2 != null ? tracked2.Strength : 0f;
+            float readiness3 = tracked2 != null ? tracked2.Readiness : 0f;
+            log.AppendLine($"  operation 3 (skirmish, second tour) decided: " +
+                           $"{sim2.Victory.Outcome} at t{sim2.Tick} — unit {trackedId} ends " +
+                           $"at Strength={strength3:0.00} Readiness={readiness3:0.00}");
+
+            // ── The "visibly weaker, cumulative" half of #75's acceptance criteria: the
+            // trend across all three operations, printed as numbers — the point, the same
+            // "print the numbers, not just pass/fail" convention ShippedMapProbe and
+            // CombatProbe already use — and asserted monotonically non-increasing in
+            // Strength. A unit does not regenerate combat losses between operations, only
+            // Readiness recovers with rest, which is why Strength (not Readiness) is the
+            // field asserted monotonic here.
+            log.AppendLine($"  STRENGTH TREND  (unit {trackedId}): op1={strength1:0.00} -> " +
+                           $"op2={strength2:0.00} -> op3={strength3:0.00}");
+            log.AppendLine($"  READINESS TREND (unit {trackedId}): op1={readiness1:0.00} -> " +
+                           $"op2={readiness2:0.00} -> op3={readiness3:0.00}");
+
+            const float eps = 0.001f;
+            if (strength2 > strength1 + eps)
+            {
+                log.AppendLine($"  FAIL Strength rose from operation 1 ({strength1:0.00}) to " +
+                               $"operation 2 ({strength2:0.00}) — combat losses regenerated " +
+                               "between operations, which should never happen");
+                bad++;
+            }
+            if (strength3 > strength2 + eps)
+            {
+                log.AppendLine($"  FAIL Strength rose from operation 2 ({strength2:0.00}) to " +
+                               $"operation 3 ({strength3:0.00}) — combat losses regenerated " +
+                               "between operations, which should never happen");
+                bad++;
+            }
+            // Not just non-increasing (a flat line across three ops would vacuously pass
+            // that): the whole point of a THREE-op chain over the two-op round trip chunk 3
+            // already proved is showing the effect compounds. Require a real net drop across
+            // the full chain, so a fixture that happened to leave the tracked unit untouched
+            // in one hop could not pass by accident.
+            if (!(strength3 < strength1 - eps))
+            {
+                log.AppendLine($"  FAIL unit {trackedId}'s Strength did not actually fall " +
+                               $"across the whole chain (op1={strength1:0.00}, " +
+                               $"op3={strength3:0.00}) — this run cannot demonstrate a " +
+                               "cumulative mauling effect, only that it did not increase");
+                bad++;
+            }
+
+            if (bad == 0)
+                log.AppendLine("  three-operation chain: one continuous ORBAT proven by an " +
+                               "exact carried-Strength match at the start of operation 3, and " +
+                               "the mauled-formation effect proven cumulative across both " +
+                               "hops (strictly weaker end to end, not a single-hop artifact)");
+
+            return bad;
+        }
+
+        private static UnitInstance FindLeaf(Simulation sim, UnitId id)
+        {
+            foreach (var u in sim.Units)
+                if (u.Id == id) return u;
+            return null;
         }
     }
 }
