@@ -35,6 +35,7 @@ namespace Strategos.Editor
             bad += CheckControl(log);
             bad += CheckHoldDuration(log);
             bad += CheckVacatedGroundDoesNotHold(log);
+            bad += CheckLeaveAndReturnWithinWindow(log);
             bad += CheckDestroy(log);
             bad += CheckDrawOnTimeout(log);
             bad += CheckPrecedence(log);
@@ -328,6 +329,71 @@ namespace Strategos.Editor
             if (bad == 0)
                 log.AppendLine($"  vacated: touched, left for {hold * 2} ticks without " +
                                $"winning, ownership kept, clock restarted at {resumed}");
+            return bad;
+        }
+
+        /// <summary>
+        /// #91: a leave-and-return entirely inside one sampled window must still reset the
+        /// clock, not just a leave-and-return long enough to land on a sample.
+        /// </summary>
+        /// <remarks>
+        /// `CheckVacatedGroundDoesNotHold` leaves for `hold * 2` ticks — many evaluation
+        /// windows — so it never exercised the actual defect: `UpdateControl` used to run only
+        /// on the sampled tick (`tick % EvaluationInterval`), and `_occupiedSince` was set and
+        /// cleared nowhere else. A unit that steps off and back on **between two samples** was
+        /// therefore never observed absent, and the whole excursion counted as unbroken hold.
+        ///
+        /// This walks blue onto the objective long enough to be sampled and start the clock,
+        /// then off and back on again entirely within the next window (never landing on a
+        /// multiple of <see cref="VictoryEvaluator.EvaluationInterval"/> while off), then checks
+        /// the clock at the following sample reflects the second arrival rather than the first.
+        /// </remarks>
+        private static int CheckLeaveAndReturnWithinWindow(StringBuilder log)
+        {
+            int bad = 0;
+            var objective = Centre();
+            var sim = NewContest(out var blue, out _, objective, null);
+
+            // t=10, a sampled tick: blue has been sitting on the objective the whole time, so
+            // uncontested presence takes it and starts the clock.
+            blue.Cell = objective.Cell;
+            sim.Step(VictoryEvaluator.EvaluationInterval);
+
+            if (sim.Victory.OwnerOfIndex(0) != blue.Side)
+            { log.AppendLine("  FAIL fixture setup: blue never took the objective"); return bad + 1; }
+
+            // Off and back on entirely between two samples (t=12..14 off, back at t=15), never
+            // touching a multiple of EvaluationInterval while it is away. A sampled-only sweep
+            // cannot see this gap at all.
+            sim.Step(1);                                                    // t=11
+            blue.Cell = objective.Cell + new Vector2(objective.RadiusCells * 4f, 0f);
+            sim.Step(3);                                                    // t=12..14, off
+            blue.Cell = objective.Cell;
+            sim.Step(1);                                                    // t=15, back on
+            int returnedAt = sim.Tick;
+
+            // Advance to the next sample (t=20) without moving blue again.
+            int toNextSample = VictoryEvaluator.EvaluationInterval -
+                                (sim.Tick % VictoryEvaluator.EvaluationInterval);
+            sim.Step(toNextSample);
+
+            int held = sim.Victory.HeldTicksOfIndex(0, sim.Tick);
+            int sinceReturn = sim.Tick - returnedAt;
+
+            if (sim.Victory.OwnerOfIndex(0) != blue.Side)
+            { log.AppendLine("  FAIL ownership was lost by a leave-and-return"); bad++; }
+
+            if (held > sinceReturn + 2)
+            {
+                log.AppendLine($"  FAIL clock reads {held} ticks at t{sim.Tick} after returning " +
+                               $"at t{returnedAt} ({sinceReturn} ticks ago) — a leave-and-return " +
+                               "inside one evaluation window did not reset it");
+                bad++;
+            }
+
+            if (bad == 0)
+                log.AppendLine($"  leave-and-return: left t12-t14, returned t{returnedAt}, " +
+                               $"clock reads {held} at t{sim.Tick} (since return: {sinceReturn})");
             return bad;
         }
 
