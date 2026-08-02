@@ -55,6 +55,7 @@ namespace Strategos.Editor
             bad += CheckStepAfterRestore(log);
             bad += CheckAcknowledgementSurvives(log);
             bad += CheckContactMemorySurvives(log);
+            bad += CheckOpeningReportedSurvives(log);
             bad += CheckUnitFieldsOutsideSignature(log);
             bad += CheckCommandLogHistoryFull(log);
             bad += CheckInFlightBusMessagesSurvive(log);
@@ -387,6 +388,84 @@ namespace Strategos.Editor
         {
             int n = 0;
             foreach (var r in sim.ReportLog.Entries) if (r.Kind == ReportKind.Contact) n++;
+            return n;
+        }
+
+        /// <summary>
+        /// _openingReported (Simulation.cs:767) guards an Engage order against publishing a
+        /// second ReportKind.Engaged for the same command while it keeps firing tick after
+        /// tick. Found by re-reading Simulation.cs after the first version of this probe was
+        /// already green — not in the original nine-row list, and exactly the kind of gap "check
+        /// what exists; do not assume the list is complete" warns about: a restored simulation
+        /// with an ongoing engagement would have republished the opening-fire report on its very
+        /// next tick, and nothing about the moment of restore would have shown it.
+        /// </summary>
+        private static int CheckOpeningReportedSurvives(StringBuilder log)
+        {
+            int bad = 0;
+            var sim = NewSim(out _);
+            var attacker = sim.UnitOf(BluCompany);
+            var defender = sim.UnitOf(RedCompany);
+
+            // Close enough that the shot actually resolves as a hit rather than out-of-range —
+            // DidFire is what gates _openingReported.Add, so an out-of-range engagement would
+            // never exercise it.
+            attacker.Cell = defender.Cell + new Vector2(2f, 0f);
+
+            sim.Issue(Command.Engage(Blue, attacker.Id, defender.Id));
+            sim.Step();   // delivered
+            sim.Step();   // fires; opening reported once
+
+            int engagedBefore = CountEngagedReports(sim);
+            if (engagedBefore != 1)
+            {
+                log.AppendLine($"  FAIL sanity: expected exactly 1 Engaged report before " +
+                               $"snapshot, got {engagedBefore} — the fixture did not force the " +
+                               "case this check needs");
+                return bad + 1;
+            }
+
+            var snap = sim.Snapshot();
+            var restored = Simulation.Restore(snap);
+            restored.AddExecutor(new EngageExecutor());
+            sim.AddExecutor(new EngageExecutor());   // already added by NewSim, redundant is fine
+
+            // The engagement is still running on both sides — this is what exercises the guard.
+            sim.Step();
+            restored.Step();
+
+            int engagedAfterOriginal = CountEngagedReports(sim);
+            int engagedAfterRestored = CountEngagedReports(restored);
+
+            if (engagedAfterOriginal != engagedBefore)
+            {
+                log.AppendLine($"  FAIL sanity: the original run re-published Engaged on its own " +
+                               $"(now {engagedAfterOriginal}) — the fixture is not isolating the " +
+                               "restore path");
+                bad++;
+            }
+            if (engagedAfterRestored != engagedBefore)
+            {
+                log.AppendLine($"  FAIL restored simulation published {engagedAfterRestored} " +
+                               $"Engaged report(s) for the same still-running order, expected " +
+                               $"{engagedBefore} — _openingReported was not reconstructed");
+                bad++;
+            }
+            if (sim.Signature() != restored.Signature())
+            {
+                log.AppendLine("  FAIL Signature() diverged once the ongoing engagement fired again");
+                bad++;
+            }
+
+            log.AppendLine("  3i. opening-fire guard: an ongoing engagement across the restore " +
+                            $"boundary does not republish Engaged  {(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
+        private static int CountEngagedReports(Simulation sim)
+        {
+            int n = 0;
+            foreach (var r in sim.ReportLog.Entries) if (r.Kind == ReportKind.Engaged) n++;
             return n;
         }
 

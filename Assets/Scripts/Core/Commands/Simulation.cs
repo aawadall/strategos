@@ -1071,6 +1071,22 @@ namespace Strategos.Commands
                     sim._acknowledgedDirectives.Add(r.DirectiveSeq);
             }
 
+            // _openingReported is deliberately outside Signature() too, for the same shape of
+            // reason as _acknowledgedDirectives: it guards "has this Engage order already
+            // published its one Engaged report" against every further tick it keeps firing, and
+            // it is derivable from ReportLog — every ReportKind.Engaged entry's AboutCommand is
+            // the Command.Seq of the order that opened. Left unreconstructed, a restored
+            // Simulation would republish Engaged for the very next tick of any engagement still
+            // running across the snapshot boundary — the guard exists exactly to stop that, and
+            // an empty one after restore is the same defect #94 found in AcknowledgeDirective,
+            // one field over.
+            sim._openingReported.Clear();
+            for (int i = 0; i < snapshot.ReportLog.Count; i++)
+            {
+                var r = snapshot.ReportLog[i];
+                if (r.Kind == ReportKind.Engaged) sim._openingReported.Add(r.AboutCommand);
+            }
+
             if (snapshot.HasVictory && sim.Victory != null)
                 sim.Victory.RestoreState(snapshot.VictoryOwner, snapshot.VictoryHeldSince,
                     snapshot.VictoryOccupiedSince, snapshot.VictoryStartingStrength,

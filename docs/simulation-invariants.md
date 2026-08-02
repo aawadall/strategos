@@ -283,9 +283,13 @@ Tick++
   both of those are exactly the state a snapshot is most likely to drop, because a round-trip
   signature comparison cannot see either omission. **Not covered, and each needed its own
   restore path rather than a mention in a checklist:** `_acknowledgedDirectives` (derivable from
-  `DirectiveResponseLog`, already documented above); `_openingReported` (per-engage-order
-  bookkeeping, rebuilt implicitly because engagement outcomes are re-derived rather than
-  replayed); `ContactTracker`'s `_seen` matrix and its `_pending` held-back reports — the
+  `DirectiveResponseLog`, already documented above); `_openingReported` (derivable from
+  `ReportLog` — every `ReportKind.Engaged` entry's `AboutCommand` is the `Command.Seq` that
+  opened it — and found only on a second read of this file after the first version of #74's
+  probe was already green: left unreconstructed, a restored simulation republishes the
+  opening-fire report on the very next tick of any engagement still running across the snapshot
+  boundary, which "check what exists; do not assume the list is complete" is the standing
+  warning against); `ContactTracker`'s `_seen` matrix and its `_pending` held-back reports — the
   player's *knowledge*, including a green observer's contact that has been seen but not yet
   reported, which restoring an empty tracker both forgets and silently drops; `VictoryEvaluator`'s
   `_startingStrength` baseline, fixed once at construction and never revisited — a restored

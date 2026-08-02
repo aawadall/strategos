@@ -1,0 +1,339 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.0/staging' branch; Version is '6000.0.75f1 (26349cd2a5c8) revision 2503836'; Using compiler version '193933523'; Build Type 'Release'
+[Licensing::IpcConnector] Channel LicenseClient-aawad doesn't exist
+OS: 'Windows 11  (10.0.26200) Core' Language: 'en' Physical Memory: 31784 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-08-02T16:06:15Z
+[Licensing::Module] Successfully launched the LicensingClient (PId: 49340)
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Unity.exe
+-batchmode
+-quit
+-nographics
+-projectPath
+C:\Users\aawad\src\strategos
+-executeMethod
+Strategos.Editor.VictoryProbe.Run
+-logFile
+C:\Users\aawad\src\strategos\Artifacts\agents\branch2-VictoryProbe.log
+Successfully changed project path to: C:\Users\aawad\src\strategos
+C:/Users/aawad/src/strategos
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [39452]  Target information:
+
+Player connection [39452]  * "[IP] 192.168.50.155 [Port] 55504 [Flags] 2 [Guid] 221773569 [EditorId] 221773569 [Version] 1048832 [Id] WindowsEditor(7,awadallah-main) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [39452]  * "[IP] 172.19.96.1 [Port] 55504 [Flags] 2 [Guid] 221773569 [EditorId] 221773569 [Version] 1048832 [Id] WindowsEditor(7,awadallah-main) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [39452] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [39452] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-aawad" at "2026-08-02T16:06:15.7641727Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 49340, path: "C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.17.4+4293ba1
+  Session Id:              26c47f8b34f54022bb79a492beadcb6a
+  Correlation Id:          3b4e8d8698d1336ee96fa504080cc5ed
+  External correlation Id: 8795344758399715178
+  Machine Id:              oACLoFayWBwerjnpChSE3sLGVM8=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-aawad" (connect: 0.24s, validation: 0.04s, handshake: 0.04s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-aawad-notifications" at "2026-08-02T16:06:15.8399599Z"
+[Licensing::Module] Connected to LicensingClient (PId: 49340, launch time: 0.00, total connection time: 0.32s)
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Package Manager] Connected to IPC stream "Upm-32792" after 0.2 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 3574417752902-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+Library Redirect Path: Library/
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.34s
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 0.09 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.0.75f1 (26349cd2a5c8)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/aawad/src/strategos/Assets
+Forcing GfxDevice: Null
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+NullGfxDevice:
+    Version:  NULL 1.0 [1.0]
+    Renderer: Null Device
+    Vendor:   Unity Technologies
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56792
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.0.75f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.003218 seconds.
+- Loaded All Assemblies, in  0.247 seconds
+Native extension for WindowsStandalone target not found
+Package Manager log level set to [2]
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.201 seconds
+Domain Reload Profiling: 446ms
+	BeginReloadAssembly (84ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (25ms)
+	RebuildNativeTypeToScriptingClass (8ms)
+	initialDomainReloadingComplete (33ms)
+	LoadAllAssembliesAndSetupDomain (96ms)
+		LoadAssemblies (80ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (94ms)
+			TypeCache.Refresh (92ms)
+				TypeCache.ScanAssembly (83ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (0ms)
+	FinalizeReload (201ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (178ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (16ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (34ms)
+			ProcessInitializeOnLoadAttributes (92ms)
+			ProcessInitializeOnLoadMethodAttributes (34ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 43 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.inputsystem@1.9.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.inputsystem@4c821b62f24c)
+    com.unity.terrain-tools@5.1.2 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.terrain-tools@d4bcf51a280e)
+    com.unity.addressables@2.2.2 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.addressables@4f7e840f4cce)
+    com.unity.nuget.newtonsoft-json@3.2.1 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0)
+    com.unity.ide.rider@3.0.31 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.ide.rider@7921be93db40)
+    com.unity.ide.visualstudio@2.0.22 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.ide.visualstudio@8140e851d83e)
+    com.unity.profiling.core@1.0.3 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.profiling.core@8a49f7027d06)
+    com.unity.scriptablebuildpipeline@2.6.1 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.scriptablebuildpipeline@36e3b5898ee2)
+    com.unity.searcher@4.9.3 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.searcher@1e17ce91558d)
+    com.unity.burst@1.8.29 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.burst@6bb9aca3ef38)
+    com.unity.mathematics@1.3.2 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.mathematics@8017b507cc74)
+    com.unity.collections@2.6.5 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.collections@12999e356c23)
+    com.unity.nuget.mono-cecil@1.11.6 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.test-framework.performance@3.4.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.test-framework.performance@aa81a99c4a75)
+  Built-in packages:
+    com.unity.render-pipelines.universal@17.0.4 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.render-pipelines.universal@726b3b36c932)
+    com.unity.ugui@2.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.ugui@7537063fea2b)
+    com.unity.textmeshpro@5.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.textmeshpro@53f43edfd2e0)
+    com.unity.test-framework@1.6.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.test-framework@082c24152fd4)
+    com.unity.modules.ai@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.audio@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.physics@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.terrain@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.unityanalytics@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.video@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.wind@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.imageconversion@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.jsonserialize@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.imgui@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.hierarchycore@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.ext.nunit@2.0.5 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.ext.nunit@031a54704bff)
+    com.unity.modules.assetbundle@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.render-pipelines.core@17.0.4 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.render-pipelines.core@67b156c4f21a)
+    com.unity.shadergraph@17.0.4 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.shadergraph@bff931d63a7a)
+    com.unity.render-pipelines.universal-config@17.0.3 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.render-pipelines.universal-config@dd206bf35d04)
+    com.unity.rendering.light-transport@1.0.1 (location: C:\Users\aawad\src\strategos\Library\PackageCache\com.unity.rendering.light-transport@9bd588f963c0)
+[Package Manager] com.unity.textmeshpro is deprecated: This package is no longer supported. TextMeshPro functionalities are now included in the com.unity.ugui package. To continue using them, consider adding it to your project dependencies.
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.01 seconds
+Starting: C:\Program Files\Unity\Hub\Editor\6000.0.75f1\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: C:/Users/aawad/src/strategos
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 0s283ms
+[536/675    0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+*** Tundra build success (0.26 seconds), 1 items updated, 675 evaluated
+AssetDatabase: script compilation time: 0.607014s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.546 seconds
+Refreshing native plugins compatible for Editor in 0.38 ms, found 0 plugins.
+Native extension for WindowsStandalone target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.945 seconds
+Domain Reload Profiling: 2487ms
+	BeginReloadAssembly (239ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (9ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (136ms)
+	RebuildCommonClasses (23ms)
+	RebuildNativeTypeToScriptingClass (8ms)
+	initialDomainReloadingComplete (19ms)
+	LoadAllAssembliesAndSetupDomain (254ms)
+		LoadAssemblies (212ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (105ms)
+			TypeCache.Refresh (74ms)
+				TypeCache.ScanAssembly (67ms)
+			BuildScriptInfoCaches (23ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (1945ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (1834ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (9ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (91ms)
+			ProcessInitializeOnLoadAttributes (1634ms)
+			ProcessInitializeOnLoadMethodAttributes (90ms)
+			AfterProcessingInitializeOnLoad (6ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (11ms)
+Shader Hidden/ProbeVolume/VoxelizeScene is not supported: GPU does not support conservative rasterization
+Asset Pipeline Refresh (id=5152e32a7587cd84a864cf7d9c8859a1): Total: 3.540 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=2229 ms
+		Asset DB Callback time: managed=111 ms, native=15 ms
+		Scripting: domain reloads=1, domain reload time=546 ms, compile time=608 ms, other=29 ms
+		Project Asset Count: scripts=957, non-scripts=1821
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.001ms
+	InvokePackagesCallback: 17.154ms
+	ApplyChangesToAssetFolders: 0.543ms
+	Scan: 111.962ms
+	OnSourceAssetsModified: 0.002ms
+	CategorizeAssetsWithTransientArtifact: 22.323ms
+	ProcessAssetsWithTransientArtifactChanges: 37.845ms
+	CategorizeAssets: 25.772ms
+	ImportOutOfDateAssets: 1949.789ms (1340.098ms without children)
+		CompileScripts: 608.246ms
+		ReloadNativeAssets: 0.001ms
+		UnloadImportedAssets: 0.820ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.310ms
+		InitializingProgressBar: 0.000ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.000ms
+		OnDemandSchedulerStart: 0.314ms
+	PostProcessAllAssets: 111.026ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.003ms
+	UnloadStreamsBegin: 0.232ms
+	PersistCurrentRevisions: 0.065ms
+	UnloadStreamsEnd: 0.001ms
+	GenerateScriptTypeHashes: 1.813ms
+	Untracked: 1262.879ms
+
+Application.AssetDatabase Initial Refresh End
+Scanning for USB devices : 12.976ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-strategos
+Unloading 266 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 4505 unused Assets / (11.2 MB). Loaded Objects now: 5076.
+Memory consumption went from 203.2 MB to 192.0 MB.
+Total: 11.083500 ms (FindLiveObjects: 0.590100 ms CreateObjectMapping: 0.158000 ms MarkObjects: 5.094200 ms  DeleteObjects: 5.236400 ms)
+
+[VictoryProbe]
+  round trip: 1 objective(s), 4 condition(s), limit t3600
+  sample: 1 objective(s), 4 condition(s), both sides can win
+  control: neutral -> taken uncontested -> frozen while contested -> transferred when cleared -> sticky when vacated
+  hold: S1 wins at t210 (HoldObjectives) — held long enough
+  vacated: touched, left for 400 ticks without winning, ownership kept, clock restarted at 0
+  destroy: S1 wins at t30 (DestroyEnemy) — enemy broken
+  timeout: draw at t100 — Time limit reached at t100 with no side victorious.
+  precedence: S1 wins at t10 (HoldObjectives) — ground
+  validation catches condition naming a missing objective   -> "Victory condition 'S1 wins: hold 1 objective(s)' names objective 99, which does not exist."
+  validation catches condition with no objectives           -> "Victory condition 'S1 wins: hold 0 objective(s)' names no objectives, so it can never come true."
+  validation catches duplicate objective id                 -> "Duplicate objective id 1."
+  validation catches objective off the map                  -> "Objective 7 'Objective' is off the map."
+PROBE PASSED
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Strategos.Editor.VictoryProbe:Run () (at Assets/Editor/VictoryProbe.cs:44)
+
+(Filename: Assets/Editor/VictoryProbe.cs Line: 44)
+
+Batchmode quit successfully invoked - shutting down!
+[Physics::Module] Cleanup current backned.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-aawad-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-aawad channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+Exiting batchmode successfully now!
+Exiting without the bug reporter. Application will terminate with return code 0
