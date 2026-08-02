@@ -244,28 +244,42 @@ Tick++
   Arriving is not taking — a side takes ground by having a living unit on it with no living
   enemy on it, so an objective must be *cleared*. Walking off does not hand it back, which is
   what makes holding worth doing.
-- **Control is a sampled-position check, not a swept-path one, and that is a bound an author
-  must respect.** `UpdateControl` reads each unit's live `.Cell` only on the tick `Evaluate`
+- **Ownership is a sampled-position check, not a swept-path one, and that is a bound an author
+  must respect.** `UpdateOwnership` reads each unit's live `.Cell` only on the tick `Evaluate`
   runs, `EvaluationInterval` ticks apart — no movement trail, no swept-segment test — so a
-  unit could in principle cross an objective between samples and never be seen there. The
-  rule: **control sampling is sound only while an objective's diameter takes at least one
-  full evaluation interval to cross at the fastest catalogue road speed.** Today's numbers
-  hold it, but only by authored coincidence: the fastest catalogue unit, Recon, covers
-  `RoadSpeedMps = 20` at `MetresPerCell = 25` — 0.8 cells/tick, 8 cells over the 10-tick gap
-  — against the smallest shipped objective, OBJECTIVE ANVIL, at `RadiusCells: 10` (20 cells
-  across, 25 ticks to cross). 25 > 10, so a sample must land inside any transit.
-  `Scenario.ValidateVictory` rejects only `RadiusCells <= 0`; nothing enforces the bound
-  above — break-even is `RadiusCells = 4`, still sound, and anything smaller is legal and
-  crossable unseen. The same interval also gates when the occupancy clock (`_occupiedSince`)
-  is refreshed, which is a live gap in its own right and not something this note resolves.
+  unit could in principle cross an objective between samples and never be seen there for the
+  purpose of *taking* it. The rule: **ownership sampling is sound only while an objective's
+  diameter takes at least one full evaluation interval to cross at the fastest catalogue road
+  speed.** Today's numbers hold it, but only by authored coincidence: the fastest catalogue
+  unit, Recon, covers `RoadSpeedMps = 20` at `MetresPerCell = 25` — 0.8 cells/tick, 8 cells
+  over the 10-tick gap — against the smallest shipped objective, OBJECTIVE ANVIL, at
+  `RadiusCells: 10` (20 cells across, 25 ticks to cross). 25 > 10, so a sample must land
+  inside any transit. `Scenario.ValidateVictory` rejects only `RadiusCells <= 0`; nothing
+  enforces the bound above — break-even is `RadiusCells = 4`, still sound, and anything
+  smaller is legal and crossable unseen.
+- **The occupancy clock is not on that sampled cadence, and #91 is why it no longer can be.**
+  `_occupiedSince` — what a `HoldObjectives` condition's clock actually reads — used to be set
+  and cleared only inside the same sampled sweep as ownership, so a unit that stepped off an
+  objective and back on **between two samples** was never observed absent and the whole
+  excursion counted as unbroken hold, silently, at up to `EvaluationInterval` granularity.
+  `UpdateOccupancy` now runs every tick, above `Evaluate`'s sampling gate, and only reads
+  `_owner` — it never mutates it — so running it more often than ownership changes costs an
+  extra `O(objectives x units)` sweep per tick and moves nothing about *when* ownership itself
+  transfers. `VictoryProbe.CheckLeaveAndReturnWithinWindow` is what proved this red before it
+  was fixed: a leave-and-return timed to land entirely inside one sampled window, asserting
+  the clock reflects the second arrival rather than the first.
 - **`DestroyEnemy` measures against STARTING strength, captured once at construction.** Against
   a side's current total a force can never fall below a share of itself and the condition never
   fires.
 - **Victory precedence is a `Priority` field, ties broken by authored list order.** Two
   conditions can come true on the same evaluation, and "whichever the loop reached first" makes
   the winner a function of list order. Evaluation tests every condition, not the first match.
-- **Evaluation runs every `EvaluationInterval` ticks, and that constant is not a setting** —
-  changing it changes when a hold duration is satisfied, which is an outcome, not a preference.
+- **Condition-testing and the victory decision run every `EvaluationInterval` ticks, and that
+  constant is not a setting** — changing it changes when a satisfied hold duration is *seen*,
+  which is an outcome, not a preference. This no longer covers the occupancy clock itself
+  (`_occupiedSince`, see above) — only when `Evaluate` next checks whether a condition has been
+  satisfied for long enough, which can now lag the clock reaching `HoldTicks` by at most
+  `EvaluationInterval` ticks rather than silently missing a broken hold altogether.
 - **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
   queue state *and* the report log — a run that lands units correctly but reports
   differently has diverged in what its commander knows, which is exactly what an AI will

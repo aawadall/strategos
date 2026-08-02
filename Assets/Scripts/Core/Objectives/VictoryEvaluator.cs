@@ -9,10 +9,14 @@
 // higher formation, so "the objectives currently in force for this side" has to be able to
 // change mid-scenario. A constructor argument survives that; a static reach-in does not.
 //
-// EVALUATED ON A CADENCE, NOT EVERY TICK. Control is an O(objectives x units) sweep and nothing
-// it decides can change inside a few seconds of simulated time. The interval is a constant
-// rather than a setting because changing it changes when a hold-duration is satisfied, which is
-// an outcome and not a preference.
+// OWNERSHIP IS EVALUATED ON A CADENCE; OCCUPANCY IS NOT (#91). Ownership is an
+// O(objectives x units) sweep and nothing it decides can change inside a few seconds of
+// simulated time, so it and the victory decision run every EvaluationInterval ticks. The
+// interval is a constant rather than a setting because changing it changes when a
+// hold-duration is satisfied, which is an outcome and not a preference. Occupancy — whether
+// the owner is standing there *right now* — has to run every tick regardless: it is what a
+// hold condition's clock reads, and sampling it let a unit step off an objective and back on
+// between two samples without the clock ever seeing the gap.
 
 using System;
 using System.Collections.Generic;
@@ -156,6 +160,34 @@ namespace Strategos.Objectives
         }
 
         /// <summary>
+        /// Refreshes the occupancy clock: whether the current owner has a living unit inside
+        /// each objective, right now.
+        /// </summary>
+        /// <remarks>
+        /// **Runs every tick, unlike ownership.** #91: this used to live inside
+        /// <see cref="UpdateOwnership"/>, which only ran on the sampled tick
+        /// (<see cref="EvaluationInterval"/> apart), so a unit that stepped off an objective
+        /// and back on between two samples was never observed absent — the clock read straight
+        /// through the gap. Occupation only *reads* <see cref="_owner"/>, never writes it, so
+        /// sampling it more often than ownership changes costs nothing but an
+        /// O(objectives x units) sweep and does not touch when ownership itself moves.
+        /// </remarks>
+        private void UpdateOccupancy(IReadOnlyList<UnitInstance> units, int tick)
+        {
+            for (int i = 0; i < _objectives.Count; i++)
+            {
+                var objective = _objectives[i];
+
+                // Occupation is about the *owner* being present. Contested counts as occupied
+                // for whoever owns it: a defender fighting for its own ground has not
+                // abandoned it.
+                bool ownerInside = OwnerIsInside(objective, _owner[i], units);
+                if (!ownerInside) _occupiedSince[i] = NotOccupied;
+                else if (_occupiedSince[i] == NotOccupied) _occupiedSince[i] = tick;
+            }
+        }
+
+        /// <summary>
         /// Recomputes who holds each objective.
         /// </summary>
         /// <remarks>
@@ -166,8 +198,12 @@ namespace Strategos.Objectives
         ///
         /// Ownership is also sticky: walking out does not hand it back. Ground stays taken
         /// until somebody else takes it, which is what makes holding worth doing.
+        ///
+        /// **Stays on the sampled cadence** — nothing this decides can change inside a few
+        /// seconds of simulated time, unlike occupancy (<see cref="UpdateOccupancy"/>, which
+        /// runs every tick for exactly the reason explained there).
         /// </remarks>
-        private void UpdateControl(IReadOnlyList<UnitInstance> units, int tick)
+        private void UpdateOwnership(IReadOnlyList<UnitInstance> units, int tick)
         {
             for (int i = 0; i < _objectives.Count; i++)
             {
@@ -187,13 +223,6 @@ namespace Strategos.Objectives
                     if (!present.IsValid) present = unit.Side;
                     else if (present != unit.Side) { contested = true; break; }
                 }
-
-                // Occupation is about the *owner* being present, and is judged every tick
-                // whatever ownership does. Contested counts as occupied for whoever owns it:
-                // a defender fighting for its own ground has not abandoned it.
-                bool ownerInside = OwnerIsInside(objective, _owner[i], units);
-                if (!ownerInside) _occupiedSince[i] = NotOccupied;
-                else if (_occupiedSince[i] == NotOccupied) _occupiedSince[i] = tick;
 
                 if (contested || !present.IsValid) continue;
 
@@ -241,12 +270,21 @@ namespace Strategos.Objectives
         /// <summary>
         /// Advances control and tests every condition. Returns true once decided.
         /// </summary>
+        /// <remarks>
+        /// #91: occupancy runs every tick, above the sampling gate — condition-testing and the
+        /// victory decision stay on the sampled cadence below it. Splitting the two was the
+        /// fix: nothing a hold condition reads may skip a tick of absence, but nothing else
+        /// here needs to run more often than <see cref="EvaluationInterval"/>.
+        /// </remarks>
         public bool Evaluate(IReadOnlyList<UnitInstance> units, int tick)
         {
             if (Outcome.Decided) return true;
+
+            UpdateOccupancy(units, tick);
+
             if (tick % EvaluationInterval != 0) return false;
 
-            UpdateControl(units, tick);
+            UpdateOwnership(units, tick);
 
             // All conditions are tested, not the first that matches, because precedence is
             // decided by Priority rather than by position in the loop.
