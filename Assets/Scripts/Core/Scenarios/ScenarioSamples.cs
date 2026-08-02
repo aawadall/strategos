@@ -181,6 +181,118 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Name of the push-north follow-on operation under Resources/Scenarios.</summary>
+        public const string PushNorthName = "push-north";
+
+        /// <summary>
+        /// A small follow-on operation for #75 chunk 3's campaign-merge probe: a second
+        /// meeting engagement, deliberately reusing <see cref="Skirmish"/>'s six leaf unit ids
+        /// (1-3 BLUFOR, 4-6 OPFOR) at this operation's own placements — the Id-consistency
+        /// authoring rule <c>docs/campaign-invariants.md</c> states for a
+        /// <c>CampaignChain</c>'s constituent scenarios. Whichever of those six survive
+        /// <c>Skirmish</c> find a match here; the ones that do not are simply this operation's
+        /// own authored reinforcements, same as unit 9 below, which has no counterpart in
+        /// <c>Skirmish</c> at all.
+        ///
+        /// Small (64x64) and erosion-off, unlike the shipped <see cref="Skirmish"/>: this
+        /// scenario exists to be played unattended to a decision quickly and repeatably by
+        /// <c>CampaignChainDriverProbe</c>, not to be a second piece of real campaign content —
+        /// flagged here and in the probe's own header for whoever adds real campaign scenarios
+        /// next, since <c>ShippedMapProbe</c> validates it exactly as if it were one.
+        /// </summary>
+        public static Scenario PushNorth()
+        {
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend);
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile);
+
+            var s = new Scenario
+            {
+                Name = "Push North",
+                Description =
+                    "The follow-on operation after the valley is secured: both sides commit " +
+                    "what is left of their forces to a second meeting engagement over the " +
+                    "next piece of open ground.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "North Ridge",
+                    Seed = 20260801,
+                    Width = 64,
+                    Height = 64,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Plains,
+                    EnableErosion = false,
+                    EnableCulture = false,
+                },
+            };
+
+            s.Sides.Add(blue);
+            s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
+
+            // BLUFOR, west side. Same ids and capabilities as Skirmish's leaves 1-3, new
+            // Cell and no ParentId (this operation's own ORBAT, deliberately flat rather than
+            // reusing Skirmish's formation ids 7/8 — the merge must keep this, not the
+            // carried-over parent).
+            Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarMechanized,
+                Echelon.Company, new Vector2(16f, 28f), "A/1-7 IN", "1-7 IN",
+                UnitCatalogue.InfantryMech);
+            Add(s, blue.Id, 2, LandEntityCode.Armor, IconDecorator.VarStandard,
+                Echelon.Platoon, new Vector2(16f, 32f), "1/A/2-69 AR", "2-69 AR",
+                UnitCatalogue.Armor);
+            Add(s, blue.Id, 3, LandEntityCode.Reconnaissance, IconDecorator.VarMotorized,
+                Echelon.Platoon, new Vector2(16f, 36f), "SCT/1-7 IN", "1-7 IN",
+                UnitCatalogue.ReconMotor);
+
+            // OPFOR, east side. Same ids and capabilities as Skirmish's leaves 4-6.
+            Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarMotorized,
+                Echelon.Company, new Vector2(48f, 28f), "3/2 MRR", "2 MRR",
+                UnitCatalogue.InfantryMotor);
+            Add(s, red.Id, 5, LandEntityCode.Armor, IconDecorator.VarStandard,
+                Echelon.Platoon, new Vector2(48f, 32f), "1/3/2 MRR", "2 MRR",
+                UnitCatalogue.Armor);
+            Add(s, red.Id, 6, LandEntityCode.Artillery, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(48f, 36f), "BTY/2 MRR", "2 MRR",
+                UnitCatalogue.Artillery, strength: 90);
+
+            // Reinforcement: id 9 has no counterpart in Skirmish at all, so it proves the
+            // "no match keeps its own authored state entirely" half of the merge rule.
+            Add(s, blue.Id, 9, LandEntityCode.Infantry, IconDecorator.VarMechanized,
+                Echelon.Platoon, new Vector2(20f, 44f), "1/B/1-7 IN", "1-7 IN",
+                UnitCatalogue.InfantryMech);
+
+            // One objective so SideDirector has somewhere to send an idle unit — see
+            // Direction/SideDirector.cs: with none, NearestUnheld always returns null and an
+            // unattended run never moves. Dead centre of the small map, well clear of either
+            // start line.
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "OBJECTIVE RIDGE",
+                Cell = new Vector2(32f, 32f),
+                RadiusCells = 8f,
+                InitialOwner = SideId.None,
+            });
+
+            // Destroy-enemy only, no hold requirement — this fixture only needs to decide
+            // quickly and repeatably, not model a real operation's win conditions.
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = blue.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "OPFOR was rendered combat ineffective.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = red.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "BLUFOR was rendered combat ineffective.",
+            });
+
+            s.TimeLimitTicks = 1800;
+
+            return s;
+        }
+
         private static void Add(Scenario s, SideId side, int id, LandEntityCode entity,
             int variant, Echelon echelon, Vector2 cell, string designation,
             string higherFormation, string capabilityId, int strength = 100,
