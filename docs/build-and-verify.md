@@ -140,12 +140,14 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
 | `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
+| `Strategos.Editor.CampaignCarryOverProbe.Run` | `CampaignCarryOver.CarryOver` — wreck exclusion (red-then-green), exact readiness-recovery arithmetic unclamped and at the clamp, outcome mapping for Won/Lost/Drew, both undecided-simulation caller-error paths — #75 chunk 2, carry-over logic only |
 
-**Fourteen of the probes above run with `scenario.Map.EnableErosion = false`** —
-`CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`, `DirectiveProbe`,
-`DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`, `ReactionProbe`,
-`ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because erosion is the
-dominant generation cost and none of them are *reasoning about terrain*: they need a unit to
+**Fifteen of the probes above run with `scenario.Map.EnableErosion = false`** —
+`CampaignCarryOverProbe`, `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`,
+`DirectiveProbe`, `DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`,
+`ReactionProbe`, `ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because
+erosion is the dominant generation cost and none of them are *reasoning about terrain*: they
+need a unit to
 stand on, not a faithful landscape. That used to be a silent gap rather than a deliberate
 trade-off: `skirmish.json` ships `EnableErosion: true`, erosion runs before hydrology (see
 CLAUDE.md's pipeline diagram), so disabling it changes where water pools and what gets
@@ -200,7 +202,7 @@ Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scen
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
 `Write Sample Scenarios`, `Write Sample Drills`, `Write Sample Config`, `Probe Training`,
-`Probe Fatigue`, `Probe Campaign Chain`,
+`Probe Fatigue`, `Probe Campaign Chain`, `Probe Campaign Carry Over`,
 `Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**
