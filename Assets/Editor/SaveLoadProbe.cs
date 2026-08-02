@@ -294,69 +294,92 @@ namespace Strategos.Editor
             int bad = 0;
             var sim = NewSim(out _);
 
+            // Every other unit stays at full training, so the scout is the only observer that
+            // ever holds a report back — otherwise RedCompany's own 70%-trained observation of
+            // the scout would add a second, unrelated held report and this check would no
+            // longer be measuring one thing.
+            foreach (var id in new[] { BluCompany, BluArmor, RedCompany, RedArmor, RedArty })
+                sim.UnitOf(id).Training = 100f;
+
             // Maximum hesitation, deterministically: a held report is guaranteed rather than
-            // timed against training's usual curve.
+            // timed against training's usual curve. Placed close to all three OPFOR leaves on
+            // purpose — Recon's detection range covers more than one of them from here, so this
+            // exercises several simultaneously held reports, not only one.
             var scout = sim.UnitOf(BluScout);
             scout.Training = 0f;
-            var hostile = sim.UnitOf(RedCompany);
-            scout.Cell = hostile.Cell + new Vector2(2f, 0f);   // well inside detection range
+            scout.Cell = sim.UnitOf(RedCompany).Cell + new Vector2(2f, 0f);
 
-            sim.Step();   // tick1: Sweep sees the contact, hesitation holds the report back
+            sim.Step();   // tick1: Sweep sees the contact(s), hesitation holds every report back
 
             var preSnap = sim.Snapshot();
-            if (preSnap.ContactsPending.Count != 1)
+            int expected = preSnap.ContactsPending.Count;
+            if (expected == 0)
             {
-                log.AppendLine($"  FAIL sanity: expected 1 held contact report before snapshot, " +
-                               $"got {preSnap.ContactsPending.Count} — the fixture did not force " +
-                               "the case this check needs");
+                log.AppendLine("  FAIL sanity: expected at least 1 held contact report before " +
+                               "snapshot, got 0 — the fixture did not force the case this check needs");
                 return bad + 1;
             }
-            if (preSnap.ReportLog.Count != 0)
-            {
-                log.AppendLine($"  FAIL sanity: {preSnap.ReportLog.Count} report(s) already " +
-                               "published — the held contact should not have reached the log yet");
-                bad++;
-            }
+            // Fully-trained OPFOR units detecting the scout back publish immediately (zero
+            // hesitation) — legitimate traffic, not part of what this check measures. Only the
+            // scout's own observations are held, which preSnap.ContactsPending already isolates.
+            int immediateBefore = 0;
+            foreach (var r in preSnap.ReportLog) if (r.Kind == ReportKind.Contact) immediateBefore++;
 
             var restored = Simulation.Restore(preSnap);
             var postSnap = restored.Snapshot();
 
-            if (postSnap.ContactsPending.Count != 1)
+            if (postSnap.ContactsPending.Count != expected)
             {
                 log.AppendLine($"  FAIL restored tracker holds {postSnap.ContactsPending.Count} " +
-                               "pending contact(s), expected 1 — the observer's held report was lost");
+                               $"pending contact(s), expected {expected} — a held report was lost");
                 bad++;
             }
-            else if (postSnap.ContactsPending[0].Due != preSnap.ContactsPending[0].Due ||
-                     postSnap.ContactsPending[0].Report.Subject != preSnap.ContactsPending[0].Report.Subject)
+            else
             {
-                log.AppendLine("  FAIL restored held contact does not match the original " +
-                               $"(due {postSnap.ContactsPending[0].Due} vs {preSnap.ContactsPending[0].Due})");
-                bad++;
+                for (int i = 0; i < expected; i++)
+                {
+                    if (postSnap.ContactsPending[i].Due != preSnap.ContactsPending[i].Due ||
+                        postSnap.ContactsPending[i].Report.Subject != preSnap.ContactsPending[i].Report.Subject)
+                    {
+                        log.AppendLine($"  FAIL restored held contact [{i}] does not match the " +
+                                       $"original (due {postSnap.ContactsPending[i].Due} vs " +
+                                       $"{preSnap.ContactsPending[i].Due})");
+                        bad++;
+                    }
+                }
             }
 
-            // The behavioural proof: step both to the tick the report becomes due and confirm
-            // both actually deliver it, at the same tick, to the same log position.
-            int due = preSnap.ContactsPending[0].Due;
-            while (sim.Tick < due) sim.Step();
-            while (restored.Tick < due) restored.Step();
+            // The behavioural proof, run regardless of the direct comparison above: step both to
+            // the tick every held report was originally due and confirm both actually deliver
+            // all of them, at the same ticks — using preSnap's own due times, since a restored
+            // tracker that lost its memory must not be allowed to hide behind a shorter loop.
+            int maxDue = 0;
+            for (int i = 0; i < expected; i++)
+                if (preSnap.ContactsPending[i].Due > maxDue) maxDue = preSnap.ContactsPending[i].Due;
+
+            while (sim.Tick < maxDue) sim.Step();
+            while (restored.Tick < maxDue) restored.Step();
 
             int simContacts = CountContactReports(sim);
             int restoredContacts = CountContactReports(restored);
-            if (simContacts != 1 || restoredContacts != 1)
+            int expectedTotal = immediateBefore + expected;
+            if (simContacts != expectedTotal || restoredContacts != expectedTotal)
             {
-                log.AppendLine($"  FAIL Contact reports delivered by tick {due}: original " +
-                               $"{simContacts}, restored {restoredContacts}, expected 1 each");
+                log.AppendLine($"  FAIL Contact reports delivered by tick {maxDue}: original " +
+                               $"{simContacts}, restored {restoredContacts}, expected " +
+                               $"{expectedTotal} ({immediateBefore} immediate + {expected} held) each");
                 bad++;
             }
             if (sim.Signature() != restored.Signature())
             {
-                log.AppendLine("  FAIL Signature() diverged once the held contact came due");
+                log.AppendLine("  FAIL Signature() diverged once the held contact(s) came due");
                 bad++;
             }
 
-            log.AppendLine($"  3b. contact memory: a hesitation-held report survives restore and " +
-                            $"is still delivered at tick {due}  {(bad == 0 ? "ok" : "FAILED")}");
+            log.AppendLine($"  3b. contact memory: {expected} hesitation-held report(s) " +
+                            $"expected to survive restore and be delivered by tick {maxDue}  " +
+                            $"{(bad == 0 ? "ok" : "FAILED")}");
+
             return bad;
         }
 

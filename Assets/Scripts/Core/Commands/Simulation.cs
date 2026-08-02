@@ -1067,7 +1067,7 @@ namespace Strategos.Commands
             for (int i = 0; i < snapshot.DirectiveResponses.Count; i++)
             {
                 var r = snapshot.DirectiveResponses[i];
-                if (r.Kind == Directives.DirectiveResponseKind.Acknowledged)
+                if (r.Kind == Strategos.Directives.DirectiveResponseKind.Acknowledged)
                     sim._acknowledgedDirectives.Add(r.DirectiveSeq);
             }
 
