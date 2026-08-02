@@ -139,6 +139,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
+| `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
 
 **Fourteen of the probes above run with `scenario.Map.EnableErosion = false`** —
 `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`, `DirectiveProbe`,
@@ -199,7 +200,7 @@ Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scen
 `Recreate Demo Scene`, `Bake Symbol Contact Sheet`, `Bake Map Contact Sheet`,
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
 `Write Sample Scenarios`, `Write Sample Drills`, `Write Sample Config`, `Probe Training`,
-`Probe Fatigue`,
+`Probe Fatigue`, `Probe Campaign Chain`,
 `Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**
