@@ -15,6 +15,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Strategos.Commands;
+using Strategos.Direction;
 using Strategos.Objectives;
 using Strategos.Reactions;
 using Strategos.Scenarios;
@@ -35,6 +36,7 @@ namespace Strategos.Editor
             bad += CheckOnlyDirectedSidesAreOrdered(log);
             bad += CheckSpentUnitsAreNotSentBack(log);
             bad += CheckDeterminism(log);
+            bad += CheckStubPolicyNeedsNoSimulation(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
             if (bad == 0) Debug.Log("[DirectorProbe]\n" + log);
@@ -266,6 +268,114 @@ namespace Strategos.Editor
             orders = sim.Director.OrdersIssued;
             tick = sim.Tick;
             return sim.Signature();
+        }
+
+        // ─── #100: the seam itself ───────────────────────────────────────────
+
+        /// <summary>
+        /// #100's own stated failure mode: "if the resulting interface still requires a
+        /// concrete Simulation reference to do anything useful, nothing has been gained."
+        /// This is the direct disproof — <see cref="NoSimulationStubPolicy"/> below holds no
+        /// <c>Simulation</c> field, constructor argument, or reference of any kind, and is
+        /// plugged into a live <c>Simulation</c> via <see cref="Simulation.SetPolicy"/> in
+        /// place of <see cref="Direction.SideDirector"/>, exactly as a probe would swap in a
+        /// scripted stand-in.
+        /// </summary>
+        private static int CheckStubPolicyNeedsNoSimulation(StringBuilder log)
+        {
+            int bad = 0;
+
+            var scenario = ScenarioSamples.Skirmish();
+            scenario.Map.EnableErosion = false;
+            var map = scenario.GenerateMap();
+
+            var sim = new Simulation(scenario, map);
+            sim.AddExecutor(new MoveToExecutor());
+            sim.AddExecutor(new EngageExecutor());
+
+            var side = scenario.Sides[0].Id;
+            var stub = new NoSimulationStubPolicy(side);
+
+            // In place of EnableDirector: no SideDirector is ever constructed for this side.
+            sim.SetPolicy(stub);
+
+            if (sim.Director != null)
+            {
+                log.AppendLine("  FAIL sim.Director is non-null with a stub policy plugged in " +
+                               "-- SideDirector must not be the one deciding here");
+                bad++;
+            }
+
+            if (!ReferenceEquals(sim.Policy, stub))
+            {
+                log.AppendLine("  FAIL sim.Policy does not reference the stub that was set");
+                bad++;
+            }
+
+            // Run long enough for at least one evaluation interval, so the stub gets a real
+            // chance to decide -- not just to compile and sit unused.
+            sim.Step(Direction.SideDirector.EvaluationInterval + 1);
+
+            if (stub.Decisions == 0)
+            {
+                log.AppendLine("  FAIL the stub was never asked to decide -- Simulation.Step " +
+                               "must call Decide on whatever Policy holds, not only on SideDirector");
+                bad++;
+            }
+
+            bool stubOrderInLog = false;
+            foreach (var command in sim.Log.Entries)
+                if (command.Kind == CommandKind.Defend) stubOrderInLog = true;
+
+            if (!stubOrderInLog)
+            {
+                log.AppendLine("  FAIL the stub's Decide() returned commands but none reached " +
+                               "the command log -- Simulation is not issuing what a policy hands back");
+                bad++;
+            }
+
+            if (bad == 0)
+                log.AppendLine($"  policy seam: a stub holding no Simulation reference decided " +
+                               $"{stub.Decisions} time(s) and its order(s) reached the log, " +
+                               "plugged in place of SideDirector via SetPolicy");
+
+            return bad;
+        }
+
+        /// <summary>
+        /// #100's proof, not a real opponent: holds a <see cref="SideId"/> and nothing else --
+        /// no <c>Simulation</c> field, no constructor argument shaped like one. Everything it
+        /// needs to decide arrives through <see cref="SideKnowledge"/>. Deliberately dumb
+        /// (hold the first idle directed unit it finds) because the point is the seam, not the
+        /// policy.
+        /// </summary>
+        private sealed class NoSimulationStubPolicy : ISidePolicy
+        {
+            private readonly SideId _side;
+
+            public int Decisions { get; private set; }
+
+            public NoSimulationStubPolicy(SideId side) => _side = side;
+
+            public bool Directs(SideId side) => side == _side;
+
+            public IReadOnlyList<Command> Decide(SideKnowledge knowledge)
+            {
+                var units = knowledge.Units;
+                for (int i = 0; i < units.Count; i++)
+                {
+                    var unit = units[i];
+                    if (unit == null || unit.IsDestroyed || unit.Side != _side) continue;
+
+                    var queue = knowledge.QueueOf(unit.Id);
+                    if (queue != null && !queue.IsEmpty) continue;
+
+                    Decisions++;
+                    return new List<Command> { Command.Hold(ActorId.ForSide(_side), unit.Id) };
+                }
+
+                return System.Array.Empty<Command>();
+            }
         }
     }
 }
