@@ -76,10 +76,25 @@ namespace Strategos.Commands
             // Acknowledge is the only kind that exists — #73 ships no DirectiveRefused, so
             // there is nothing else a DirectiveResponseKind can be today. Add the branch when
             // that lands, not before; see DirectiveResponseLog.cs.
-            if (response.Kind != DirectiveResponseKind.Acknowledged) return;
+            //
+            // THE DEFAULT THROWS, AND THAT IS THE POINT. Silently ignoring a kind this method
+            // does not know would drop it from every replay and diverge the signature with no
+            // signal — a switch that cannot fail, inside the one file whose whole job is
+            // catching divergence. The day DirectiveResponseKind grows, whoever grows it finds
+            // out here, loudly, instead of in a replay that quietly stopped reproducing runs.
+            switch (response.Kind)
+            {
+                case DirectiveResponseKind.Acknowledged:
+                    var directive = target.DirectiveLog.FindBySeq(response.DirectiveSeq);
+                    if (directive.HasValue) target.AcknowledgeDirective(directive.Value);
+                    return;
 
-            var directive = target.DirectiveLog.FindBySeq(response.DirectiveSeq);
-            if (directive.HasValue) target.AcknowledgeDirective(directive.Value);
+                default:
+                    throw new System.NotSupportedException(
+                        $"Replayer cannot replay DirectiveResponseKind.{response.Kind} " +
+                        $"(directive seq {response.DirectiveSeq}, tick {response.Tick}). " +
+                        "A response kind was added without teaching replay to reproduce it.");
+            }
         }
 
         /// <summary>
