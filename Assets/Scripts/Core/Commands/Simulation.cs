@@ -142,11 +142,34 @@ namespace Strategos.Commands
         /// reflexes that read *reports*, and objective-seeking reads the objective list. One
         /// class doing both would blur a boundary that took an issue to draw.
         /// </summary>
-        public Direction.SideDirector Director { get; private set; }
+        /// <remarks>
+        /// #100: backed by <see cref="_policy"/>, typed as <see cref="Direction.ISidePolicy"/> so
+        /// any implementation can occupy the role. This accessor stays typed as the concrete
+        /// <see cref="Direction.SideDirector"/> — an <c>as</c> cast, null when a different policy
+        /// is plugged in via <see cref="SetPolicy"/> — because every existing caller
+        /// (<c>DirectorProbe</c>, <c>SaveLoadProbe</c>, ...) reads <c>OrdersIssued</c> and the
+        /// save/load memory off the default implementation specifically, not off the interface.
+        /// </remarks>
+        public Direction.SideDirector Director => _policy as Direction.SideDirector;
+
+        /// <summary>The active side policy, whichever implementation it is. See <see cref="Director"/>.</summary>
+        public Direction.ISidePolicy Policy => _policy;
+
+        private Direction.ISidePolicy _policy;
 
         /// <summary>Turns on side-level intent for the given sides. Call once, before stepping.</summary>
-        public Direction.SideDirector EnableDirector(System.Collections.Generic.IEnumerable<SideId> sides) =>
-            Director ??= new Direction.SideDirector(this, sides);
+        public Direction.SideDirector EnableDirector(System.Collections.Generic.IEnumerable<SideId> sides)
+        {
+            _policy ??= new Direction.SideDirector(sides);
+            return Director;
+        }
+
+        /// <summary>
+        /// #100: the general seam. Plugs any <see cref="Direction.ISidePolicy"/> in as the side
+        /// policy for <see cref="Step"/> to evaluate, in place of <see cref="EnableDirector"/>'s
+        /// default <see cref="Direction.SideDirector"/>. Overwrites whatever was there.
+        /// </summary>
+        public void SetPolicy(Direction.ISidePolicy policy) => _policy = policy;
 
         public int Tick { get; private set; }
 
@@ -411,7 +434,17 @@ namespace Strategos.Commands
             // Intent before reflexes: a side decides where it is going, then units react to
             // what they meet on the way. The reverse would let a reflex be overwritten by an
             // order issued in the same step.
-            Director?.Evaluate();
+            //
+            // #100: the policy hands back commands rather than issuing them itself, so this is
+            // where Simulation does the issuing on its behalf — same call, same order, same
+            // tick as when Evaluate() used to call _sim.Issue directly.
+            if (_policy != null)
+            {
+                var knowledge = new Direction.SideKnowledge(Tick, IsOver, _units, Victory, QueueOf);
+                var decided = _policy.Decide(knowledge);
+                if (decided != null)
+                    for (int i = 0; i < decided.Count; i++) Issue(decided[i]);
+            }
             Reactions?.Evaluate();
 
             _context.Engagements.Clear();

@@ -17,7 +17,14 @@
 // IT ISSUES ORDINARY COMMANDS. Everything goes through Simulation.Issue, exactly as a player's
 // clicks do — logged, replayable, visible in the order feed, indistinguishable in form. Not a
 // private path into the units. That is the whole reason #9 made orders data rather than method
-// calls, and it means a replay reproduces an unattended game as faithfully as a played one.
+// calls, and it means a replay reproduces an unattended game as faithfully as a played one. Since
+// #100 it does that at one remove: Decide *returns* the commands it wants issued rather than
+// calling Issue itself, which is what lets it hold no Simulation reference at all — Simulation
+// gathers a SideKnowledge and does the issuing.
+//
+// #100: the first, default implementation of ISidePolicy. Everything below used to read
+// Simulation directly (_sim.Tick, _sim.IsOver, _sim.Units, _sim.QueueOf, _sim.Victory); it reads
+// the same facts off SideKnowledge now, and holds no Simulation reference as a result.
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,7 +35,7 @@ using Strategos.Units;
 
 namespace Strategos.Direction
 {
-    public sealed class SideDirector
+    public sealed class SideDirector : ISidePolicy
     {
         /// <summary>
         /// Ticks between re-evaluations.
@@ -56,7 +63,6 @@ namespace Strategos.Direction
         /// </remarks>
         public const int RetryInterval = 300;
 
-        private readonly Simulation _sim;
         private readonly List<SideId> _sides = new();
 
         // Last tick each unit was given an order. Lookup only, never iterated.
@@ -65,9 +71,8 @@ namespace Strategos.Direction
         /// <summary>Orders issued on the directed sides' own initiative. Diagnostic.</summary>
         public int OrdersIssued { get; private set; }
 
-        public SideDirector(Simulation simulation, IEnumerable<SideId> sides)
+        public SideDirector(IEnumerable<SideId> sides)
         {
-            _sim = simulation;
             if (sides != null) _sides.AddRange(sides);
         }
 
@@ -77,44 +82,56 @@ namespace Strategos.Direction
             return false;
         }
 
-        public void Evaluate()
+        public IReadOnlyList<Command> Decide(SideKnowledge knowledge)
         {
-            if (_sim?.Victory == null || _sides.Count == 0) return;
-            if (_sim.Tick % EvaluationInterval != 0) return;
-            if (_sim.IsOver) return;
+            if (knowledge.Victory == null || _sides.Count == 0) return System.Array.Empty<Command>();
+            if (knowledge.Tick % EvaluationInterval != 0) return System.Array.Empty<Command>();
+            if (knowledge.IsOver) return System.Array.Empty<Command>();
+
+            List<Command> orders = null;
 
             // Scenario order, by index. Never a dictionary, and never a shuffled list.
-            var units = _sim.Units;
-            for (int i = 0; i < units.Count; i++) Direct(units[i]);
+            var units = knowledge.Units;
+            for (int i = 0; i < units.Count; i++)
+            {
+                var order = Direct(units[i], knowledge);
+                if (order.HasValue)
+                {
+                    orders ??= new List<Command>();
+                    orders.Add(order.Value);
+                }
+            }
+
+            return (IReadOnlyList<Command>)orders ?? System.Array.Empty<Command>();
         }
 
-        private void Direct(UnitInstance unit)
+        private Command? Direct(UnitInstance unit, SideKnowledge knowledge)
         {
-            if (unit == null || unit.IsDestroyed) return;
-            if (!Directs(unit.Side)) return;
+            if (unit == null || unit.IsDestroyed) return null;
+            if (!Directs(unit.Side)) return null;
 
             // Already busy. A unit with a plan is left alone — including one withdrawing under
             // #13's break-contact rule, which owns the queue until it finishes.
-            var queue = _sim.QueueOf(unit.Id);
-            if (queue != null && !queue.IsEmpty) return;
+            var queue = knowledge.QueueOf(unit.Id);
+            if (queue != null && !queue.IsEmpty) return null;
 
             // Spent units are not sent back. Without this, a unit that has just broken contact
             // finishes withdrawing, is found idle, and is ordered straight back into the fight
             // it fled — which reads as an opponent with no memory rather than as a decision.
-            if (unit.Strength < ReactionController.BreakStrengthPercent) return;
+            if (unit.Strength < ReactionController.BreakStrengthPercent) return null;
 
             // Recently tasked. Either it is on its way, or the last attempt failed and
             // repeating it immediately will fail the same way.
             if (_lastOrdered.TryGetValue(unit.Id.Value, out int last) &&
-                _sim.Tick - last < RetryInterval)
-                return;
+                knowledge.Tick - last < RetryInterval)
+                return null;
 
-            var objective = NearestUnheld(unit);
-            if (objective == null) return;
+            var objective = NearestUnheld(unit, knowledge.Victory);
+            if (objective == null) return null;
 
-            _sim.Issue(Command.MoveTo(ActorId.ForSide(unit.Side), unit.Id, objective.Cell));
-            _lastOrdered[unit.Id.Value] = _sim.Tick;
+            _lastOrdered[unit.Id.Value] = knowledge.Tick;
             OrdersIssued++;
+            return Command.MoveTo(ActorId.ForSide(unit.Side), unit.Id, objective.Cell);
         }
 
         /// <summary>
@@ -127,9 +144,8 @@ namespace Strategos.Direction
         /// Which side currently *holds* one is closer to intelligence, and when the perceived
         /// world layer arrives this should read a belief instead.
         /// </remarks>
-        private Objective NearestUnheld(UnitInstance unit)
+        private Objective NearestUnheld(UnitInstance unit, VictoryEvaluator victory)
         {
-            var victory = _sim.Victory;
             Objective best = null;
             float bestDistance = float.MaxValue;
 
