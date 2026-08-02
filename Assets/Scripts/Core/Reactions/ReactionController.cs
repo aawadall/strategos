@@ -375,6 +375,30 @@ namespace Strategos.Reactions
             return best;
         }
 
+        // ─── Save/load (#74) ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Rebuilds every unit's picture from reports already delivered, in delivery order.
+        /// </summary>
+        /// <remarks>
+        /// **Derivable, not serialised.** <see cref="_pictures"/> is built by <see cref="OnReport"/>
+        /// alone, so replaying the same reports through the same method reproduces it exactly —
+        /// there is no separate fact here a save has to carry, only a computation a save can
+        /// repeat. The caller must pass only reports the *original* simulation had actually
+        /// delivered by the tick the snapshot was taken — not the full <c>ReportLog</c>, which
+        /// also holds whatever was published on the snapshot's own tick and is still sitting in
+        /// <c>Reports.Pending</c>, undelivered. Feeding those in early would hand a restored
+        /// unit's reflexes a contact one tick before the original ever had it — the same
+        /// off-by-one-step a snapshot taken mid-cascade always risks, restated here because
+        /// this is the one place it would change what a unit *does* rather than merely what it
+        /// remembers.
+        /// </remarks>
+        public void RebuildFrom(IEnumerable<SituationReport> deliveredReports)
+        {
+            if (deliveredReports == null) return;
+            foreach (var r in deliveredReports) OnReport(r);
+        }
+
         // ─── Inspection ───────────────────────────────────────────────────────
 
         /// <summary>Hostiles this unit currently believes are present. For the UI and probes.</summary>

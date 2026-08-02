@@ -224,5 +224,54 @@ namespace Strategos.Reports
             Array.Clear(_seen, 0, _seen.Length);
             _pending.Clear();
         }
+
+        // ─── Save/load (#74) ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// One held-back report and the tick it becomes due — the serialisable shape of
+        /// <see cref="_pending"/>'s tuple, named for a save file rather than left anonymous.
+        /// </summary>
+        public struct PendingContact
+        {
+            public int Due;
+            public SituationReport Report;
+        }
+
+        /// <summary>
+        /// A copy of who has seen whom, indexed exactly as <see cref="_seen"/> is (observer
+        /// index * <c>_n</c> + subject index, in <see cref="_units"/>'s order).
+        /// </summary>
+        /// <remarks>
+        /// **This is the player's knowledge, and it is not derivable from anywhere else once
+        /// hesitation delay exists.** It could in principle be replayed back from
+        /// <c>ReportLog</c>'s Contact/ContactLost edges — the *held* half cannot: a report a
+        /// green observer has not yet got round to sending (<see cref="_pending"/>) has not
+        /// reached <c>ReportLog</c> at all, so restoring only from the log would silently drop
+        /// exactly the reports a slow unit was mid-way through delaying. Snapshotting both
+        /// fields directly avoids relying on that derivation.
+        /// </remarks>
+        public bool[] SnapshotSeen() => (bool[])_seen.Clone();
+
+        /// <summary>A copy of every report observed and not yet sent. See <see cref="SnapshotSeen"/>.</summary>
+        public List<PendingContact> SnapshotPending()
+        {
+            var copy = new List<PendingContact>(_pending.Count);
+            for (int i = 0; i < _pending.Count; i++)
+                copy.Add(new PendingContact { Due = _pending[i].Due, Report = _pending[i].Report });
+            return copy;
+        }
+
+        /// <summary>
+        /// Restores both fields wholesale — restore-only, and only valid against a tracker built
+        /// over the same unit count and order the snapshot was taken from (<see cref="Commands.Simulation.Restore"/>
+        /// guarantees this: the fresh simulation's unit list comes from the same scenario).
+        /// </summary>
+        public void Restore(bool[] seen, IEnumerable<PendingContact> pending)
+        {
+            if (seen != null && seen.Length == _seen.Length) Array.Copy(seen, _seen, _seen.Length);
+            _pending.Clear();
+            if (pending != null)
+                foreach (var p in pending) _pending.Add((p.Due, p.Report));
+        }
     }
 }

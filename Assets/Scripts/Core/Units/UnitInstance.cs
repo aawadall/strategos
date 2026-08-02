@@ -322,5 +322,38 @@ namespace Strategos.Units
         public override string ToString() =>
             $"{Id} {(string.IsNullOrEmpty(Designation) ? Sidc : Designation)} " +
             $"@ ({Cell.x:0.##}, {Cell.y:0.##}) {StrengthPercent}%";
+
+        /// <summary>
+        /// A field-by-field copy, independent of this instance.
+        /// </summary>
+        /// <remarks>
+        /// #74 (save/load): a snapshot must not hold live references into a running
+        /// <see cref="Commands.Simulation"/> — <see cref="Commands.Simulation.Units"/> and
+        /// <see cref="Scenarios.Scenario.Units"/> are the *same objects* (see
+        /// <see cref="Units.UnitHierarchy"/>'s header), so a snapshot built from a shallow copy
+        /// of the unit list would keep mutating underneath whoever was holding the "saved"
+        /// state. Every field is copied explicitly rather than reflected, on purpose: a field
+        /// this project has grown and forgotten to add here is exactly the failure #74's audit
+        /// exists to catch, and reflection would hide that a new field needs a line added.
+        /// </remarks>
+        public UnitInstance Clone() => new()
+        {
+            Id = Id,
+            Side = Side,
+            ParentId = ParentId,
+            Sidc = Sidc,
+            Designation = Designation,
+            HigherFormation = HigherFormation,
+            CapabilityId = CapabilityId,
+            Cell = Cell,
+            Strength = Strength,
+            DestroyedAtTick = DestroyedAtTick,
+            Readiness = Readiness,
+            Suppression = Suppression,
+            Training = Training,
+            Posture = Posture,
+            Roe = Roe,
+            Supply = Supply,
+        };
     }
 }
