@@ -101,6 +101,18 @@ Tick++
   refused; v1 does not implement it, because nothing yet reacts to a refusal and an
   unreachable path is untested code pretending to be a feature. Add `DirectiveRefused` and
   its handling together, or not at all.
+- **A player's answer to a directive must never be replay-invisible.** #94: `AcknowledgeDirective`
+  used to touch no log at all — a report went out, but nothing a replay reads recorded that the
+  call had happened, so a replayed run never acknowledged anything the original did and the two
+  `Signature()`s diverged the moment anyone pressed the button. It does **not** get a
+  `CommandKind.Acknowledge` and does **not** go through `Bus` — that would put a directive's
+  *response* on the *command* topic, cutting against the separation `OnCommandDelivered`'s own
+  note holds (a directive must never reach that method). The fix is a second log,
+  `DirectiveResponseLog`, alongside `CommandLog`: replay is a single definition
+  (`Commands.Replayer`) that reads both, and it must call `AcknowledgeDirective` itself rather
+  than re-publish the `DirectiveAcknowledged` report directly — only that method holds the
+  idempotence guard over `_acknowledgedDirectives`, and re-publishing the report around it would
+  leave a replayed run's guard empty even though its `ReportLog` matched.
 - **A destroyed unit becomes a wreck, and a wreck is not a contact.** It stays on the map on
   purpose — ground where a company was destroyed is information, and removing it deletes the
   only trace a fight happened there — but it stops being a *unit*: not commandable, not
@@ -258,5 +270,12 @@ Tick++
   queue state *and* the report log — a run that lands units correctly but reports
   differently has diverged in what its commander knows, which is exactly what an AI will
   act on.
+- **Not everything that must replay correctly belongs in `Signature()`.** `DirectiveResponseLog`
+  (#94) is deliberately absent: an acknowledgement already produces a `DirectiveAcknowledged`
+  report, which `ReportLog.Signature()` already covers, so folding the response log in as well
+  would assert the same fact twice and move every archived baseline for no new coverage. The
+  same reasoning already covered `_acknowledgedDirectives` staying outside `Signature()` — this
+  is not a new exception, it is the same one applied to the log that makes that set
+  reconstructible on replay.
 
 ---

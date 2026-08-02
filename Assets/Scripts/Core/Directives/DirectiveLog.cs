@@ -39,6 +39,24 @@ namespace Strategos.Directives
             return directive;
         }
 
+        /// <summary>
+        /// The directive with this <see cref="Directive.Seq"/>, or null.
+        ///
+        /// Linear — a scenario carries a handful of directives, not thousands — and it is the
+        /// one query <see cref="Commands.Replayer"/> needs: a replayed run's own
+        /// <c>DirectiveLog</c> is populated deterministically at construction from the same
+        /// scenario, so the same <c>Seq</c> names the same directive in both the recorded run
+        /// and its replay, and this is how <c>Replayer</c> turns a logged
+        /// <c>DirectiveResponse.DirectiveSeq</c> back into the <see cref="Directive"/>
+        /// <c>Simulation.AcknowledgeDirective</c> needs.
+        /// </summary>
+        public Directive? FindBySeq(ulong seq)
+        {
+            for (int i = 0; i < _entries.Count; i++)
+                if (_entries[i].Seq == seq) return _entries[i];
+            return null;
+        }
+
         public void Clear()
         {
             _entries.Clear();

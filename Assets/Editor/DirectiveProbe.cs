@@ -8,10 +8,16 @@
 // #73 stated as a negative: "must not decompose automatically into unit orders, or the player
 // has nothing to do." A directive that silently became orders is indistinguishable from a bug
 // until someone notices the player was never asked. This project's recurring defect is a check
-// that passes while being unable to fail, so this one and CheckDeterminism were both observed
+// that passes while being unable to fail, so this one and the scripted-repeatability check
+// (CheckScriptedRunsAreRepeatable, named CheckDeterminism at the time) were both observed
 // FAILING against a deliberately broken build before being trusted — see
-// Artifacts/agents/directives-core.md for the red/green transcript; that verification is not
-// repeated here because a probe cannot assert its own history.
+// Artifacts/agents/directives-core.md for that red/green transcript; not repeated here because
+// a probe cannot assert its own history.
+//
+// #94 found CheckDeterminism's name misleading rather than its assertion wrong: it compares two
+// LIVE scripted runs and never replays from a log, so it was structurally blind to a directive
+// response that never entered any log at all — the exact defect #94 describes. Renamed to say
+// what it actually covers; CheckReplayReproducesAcknowledgement below is the one that replays.
 //
 // Menu:  Strategos > Probe Directives
 // Batch: -executeMethod Strategos.Editor.DirectiveProbe.Run
@@ -43,7 +49,8 @@ namespace Strategos.Editor
             bad += CheckNoAutoDecomposition(log);
             bad += CheckAddressingResolves(log);
             bad += CheckResponseIsLoggedNotDestructive(log);
-            bad += CheckDeterminism(log);
+            bad += CheckScriptedRunsAreRepeatable(log);
+            bad += CheckReplayReproducesAcknowledgement(log);
             bad += CheckUnattendedPlayIsUnaffected(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
@@ -366,12 +373,25 @@ namespace Strategos.Editor
         // ─── Determinism / replay ─────────────────────────────────────────────
 
         /// <summary>
-        /// Two identical runs — same scenario, same scripted acknowledgement at the same tick —
-        /// must produce byte-identical Simulation.Signature(). See the file header: this check
-        /// was deliberately observed FAILING (two runs acknowledging at different ticks) before
+        /// Two identical LIVE runs — same scenario, same scripted acknowledgement at the same
+        /// tick, <see cref="Simulation.AcknowledgeDirective"/> called directly in both — must
+        /// produce byte-identical <c>Signature()</c>. See the file header: this check was
+        /// deliberately observed FAILING (two runs acknowledging at different ticks) before
         /// being trusted.
         /// </summary>
-        private static int CheckDeterminism(StringBuilder log)
+        /// <remarks>
+        /// **NAME CORRECTED, SCOPE UNCHANGED (#94).** This was called <c>CheckDeterminism</c>,
+        /// which promised more than it delivered: it compares two *fresh, live* runs that each
+        /// call <c>AcknowledgeDirective</c> directly at the same hardcoded tick, so of course
+        /// they match — nothing here ever replays from a log. #94 found it structurally unable
+        /// to see the exact bug it existed to guard against: a live acknowledgement is
+        /// reproduced by another live acknowledgement, trivially, whether or not a *replay*
+        /// (fed only from the logs, calling nothing live) reproduces it too. It still tests a
+        /// real thing — ambient nondeterminism in `AcknowledgeDirective` itself, e.g. a stray
+        /// `HashSet` enumeration or a wall-clock read — so it stays, renamed. The check that
+        /// actually exercises replay is <see cref="CheckReplayReproducesAcknowledgement"/> below.
+        /// </remarks>
+        private static int CheckScriptedRunsAreRepeatable(StringBuilder log)
         {
             int bad = 0;
             const int ackTick = 5;
@@ -414,6 +434,101 @@ namespace Strategos.Editor
             directiveCount = sim.DirectiveLog.Count;
             reportCount = sim.ReportLog.Count;
             return sim.Signature();
+        }
+
+        // ─── Replay (#94) ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// #94's own check, built exactly as the issue specifies: run with a directive,
+        /// acknowledge live partway through, take <c>Signature()</c>. Fresh simulation, replay
+        /// from the logs alone via <see cref="Replayer"/> — nothing live — for the same number
+        /// of steps, take <c>Signature()</c>. Compare.
+        /// </summary>
+        /// <remarks>
+        /// **This is the check <see cref="CheckScriptedRunsAreRepeatable"/> cannot be** — that
+        /// one compares two live runs and was structurally blind to #94; this one drives the
+        /// second run through <see cref="Replayer.Run"/>, the same mechanism
+        /// <c>CommandProbe.CheckReplayDivergence</c> uses, so it is the actual replay path and
+        /// not a second live call in disguise. It was confirmed FAILING against today's code
+        /// before <c>Replayer</c> and <c>DirectiveResponseLog</c> existed — see
+        /// Artifacts/agents/replay-second-log.md and
+        /// Artifacts/agents/red-directive-replay-transcript.log for the transcript: a
+        /// CommandLog-only replay (today's only replay shape, copied inline for that run) left
+        /// the replayed <c>ReportLog</c> one entry short — the <c>DirectiveAcknowledged</c>
+        /// report the live run produced — and the two <c>Signature()</c>s diverged exactly as
+        /// the issue predicted.
+        ///
+        /// Also proves the other half of #94's acceptance: <c>Simulation._acknowledgedDirectives</c>
+        /// is deliberately outside <c>Signature()</c> (see that field's own remarks), so a
+        /// passing signature comparison alone would not show it was rebuilt. Checked directly
+        /// via <see cref="Simulation.HasAcknowledged"/>, one known directive at a time —
+        /// membership only, per that method's own rule.
+        /// </remarks>
+        private static int CheckReplayReproducesAcknowledgement(StringBuilder log)
+        {
+            int bad = 0;
+            const int steps = 30;
+            const int ackTick = 5;
+
+            var recorded = NewWithDirective(out _);
+            recorded.AddExecutor(new MoveToExecutor());
+            bool acknowledged = false;
+
+            for (int t = 1; t <= steps; t++)
+            {
+                if (t == 3)
+                    recorded.Issue(Command.MoveTo(new ActorId(1), recorded.Units[0].Id, new Vector2(60f, 70f)));
+                recorded.Step();
+                if (!acknowledged && recorded.Tick == ackTick)
+                {
+                    recorded.AcknowledgeDirective(recorded.DirectiveLog[0]);
+                    acknowledged = true;
+                }
+            }
+
+            string original = recorded.Signature();
+
+            var replayed = NewWithDirective(out _);
+            replayed.AddExecutor(new MoveToExecutor());
+            Replayer.Run(recorded, replayed, steps);
+
+            string replayedSig = replayed.Signature();
+
+            if (original != replayedSig)
+            {
+                log.AppendLine("  FAIL replay diverged: acknowledging a directive live is not " +
+                               "reproduced by a replay driven from the logs alone");
+                log.AppendLine($"    recorded: {original}");
+                log.AppendLine($"    replayed: {replayedSig}");
+                bad++;
+            }
+            else
+            {
+                log.AppendLine($"  replay reproduces acknowledgement: {steps}-step run with a " +
+                               $"live acknowledgement at t{ackTick}, replayed from the logs " +
+                               $"alone via Replayer.Run, IDENTICAL Signature()");
+            }
+
+            // _acknowledgedDirectives is outside Signature() on purpose (see that field's
+            // remarks) -- so a passing signature comparison above does not by itself prove the
+            // replay rebuilt it. Check directly, one known directive at a time.
+            foreach (var d in recorded.DirectiveLog.Entries)
+            {
+                bool wasAcked = recorded.HasAcknowledged(d.Seq);
+                bool replayAcked = replayed.HasAcknowledged(d.Seq);
+                if (wasAcked != replayAcked)
+                {
+                    log.AppendLine($"  FAIL directive #{d.Seq}: recorded HasAcknowledged=" +
+                                   $"{wasAcked}, replayed HasAcknowledged={replayAcked}");
+                    bad++;
+                }
+            }
+
+            if (bad == 0)
+                log.AppendLine("  _acknowledgedDirectives: replay rebuilt it identically to the " +
+                                "original, via AcknowledgeDirective's own idempotence guard");
+
+            return bad;
         }
 
         // ─── Regression: unattended play is unaffected ───────────────────────
