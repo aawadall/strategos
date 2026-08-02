@@ -3,11 +3,12 @@
 `Core/Campaigns/` — a chain of linked scenarios sharing one persistent ORBAT. **Read before
 touching anything under `Core/Campaigns`.** [CLAUDE.md](../CLAUDE.md) is the index.
 
-This page covers #75 chunks 1, 2 and 3: the data shape and its JSON I/O, the carry-over logic
-that turns a finished `Simulation` into the next entry's starting state, and the merge that turns
-that carried-over state into the next entry's actual starting `Scenario`/`Simulation`. A
-multi-operation (three-operation) probe and any wiring into PLAY/UI are still not here — see
-"What is deliberately not here yet" below. Neither `CampaignCarryOver.CarryOver` nor
+This page covers #75 chunks 1 through 4: the data shape and its JSON I/O, the carry-over logic
+that turns a finished `Simulation` into the next entry's starting state, the merge that turns
+that carried-over state into the next entry's actual starting `Scenario`/`Simulation`, and the
+three-operation acceptance probe proving #75's own criteria end to end. `CampaignChain.Validate()`
+and any wiring into PLAY/UI are still not here — see "What is deliberately not here yet" below.
+Neither `CampaignCarryOver.CarryOver` nor
 `CampaignChainDriver` runs inside a `Simulation` tick or is part of `Simulation.Signature()`, so
 neither has anything to add to [docs/simulation-invariants.md](simulation-invariants.md)'s
 replay-divergence rules. Extend this page, not that one, as later `Core/Campaigns` chunks add
@@ -169,12 +170,52 @@ ORBAT (empty for the first entry in a chain, someone else's survivors for any ot
 that operation produced at the end. See `Artifacts/agents/campaign-merge-out.md` for this being
 flagged back rather than silently "fixed" without a trace.
 
+## The three-operation acceptance probe (#75 chunk 4)
+
+`CampaignChainDriverProbe.CheckThreeOperationChain` — #75's own two acceptance bullets, proven
+directly rather than inferred from "no exception was thrown". Chain: `skirmish -> push-north ->
+skirmish`, the third link reusing the first scenario — a scenario played a second time is a
+legitimate campaign entry and authors nothing new, so this chunk did not add a third fixture.
+All three operations are played unattended to a real decision (chunk 3's `RunToDecision`
+pattern, reused verbatim). One persistent unit — BLUFOR's armor platoon, id 2, present under
+the same `UnitId` in both scenarios per the Id-consistency rule above — is tracked across all
+three:
+
+- **One continuous ORBAT**: the tracked unit's `Strength` at the *start* of operation 3 is
+  asserted to equal exactly what `CarryOver` wrote out of operation 2 (`Mathf.Approximately`,
+  not "no exception") — not skirmish's own authored default (100) and not a regenerated value.
+- **The "visibly weaker" effect is cumulative, not a single-hop artifact**: `Strength` is
+  printed at the end of every operation and asserted monotonically non-increasing across all
+  three, *and* asserted to have actually fallen net across the whole chain — a fixture where the
+  tracked unit sat untouched in one hop would fail this even though it would still pass a bare
+  non-increasing check. One real run: `98.23 -> 69.82 -> 34.28`.
+
+### The `UnitId(9)` question, resolved
+
+Push-north (chunk 3) authors a reinforcement, `UnitId(9)`, with no counterpart in
+`skirmish.json`. Chaining `skirmish -> push-north -> skirmish` risks exactly the failure mode
+the Id-consistency rule predicts: if unit 9 survived push-north, it would be carried into
+operation 3 with no match, and `MergeCarriedOver` would correctly throw against
+`skirmish.json`.
+
+**Investigated rather than assumed** (see `Artifacts/agents/campaign-three-op.md` for the full
+transcript): a throwaway probe ran the exact skirmish -> push-north fixture and printed every
+leaf unit's `IsDestroyed` at push-north's decision. Unit 9 does not survive — it is destroyed
+inside push-north's own fighting, before operation 2 ever ends. **No changes were made to
+`MergeCarriedOver`, `skirmish.json`, `ScenarioSamples`, or push-north's battle script.**
+`CheckThreeOperationChain` asserts this on every run (not just the one that was inspected by
+hand): it fails loudly, naming the risk, if unit 9 ever survives operation 2 in a future run of
+this fixture — determinism should keep it dead, but a probe that trusted its own prior
+observation without re-checking would be exactly the kind of guard that cannot fail this
+project's build-and-verify doc warns against.
+
+This resolves the question for *this* fixture only. A real three-scenario campaign (distinct
+content in all three slots) still needs its author to check reinforcement survival the same
+way, per the Id-consistency rule above — this chunk did not change that rule or weaken
+`MergeCarriedOver`'s throw.
+
 ## What is deliberately not here yet
 
-- **The three-operation acceptance probe** — #75 itself asks for three linked operations played
-  end to end with one ORBAT, a formation mauled in operation one visibly weaker in operation two.
-  `CampaignChainDriverProbe` (#75 chunk 3) proves a real **two**-operation round trip; extending
-  it to three (or building a dedicated acceptance probe) is the next chunk's job.
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
@@ -187,4 +228,5 @@ flagged back rather than silently "fixed" without a trace.
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`
-for chunk 3's, and what the next chunk should build on top of this.
+for chunk 3's, `Artifacts/agents/campaign-three-op-out.md` for chunk 4's (this one), and what the
+next chunk should build on top of this.
