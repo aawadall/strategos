@@ -234,6 +234,21 @@ Tick++
 - **`SideDirector.RetryInterval` is the guard against that order storm,** not politeness. Any
   unreachable destination reproduces it otherwise, and the command log is what a replay and an
   after-action review both read.
+- **Side-level decision-making sits behind `ISidePolicy`, and `SideDirector` is the default
+  implementation, not the only possible one (#100).** `Decide(SideKnowledge)` is pull-based on
+  purpose: a policy returns the commands it wants issued and `Simulation.Step` issues each one
+  itself, exactly where `Director?.Evaluate()` used to call `_sim.Issue` inline — same tick,
+  same order, same `Signature()`. A policy that instead took `Simulation` as an argument would
+  satisfy the compiler while keeping the exact coupling the seam exists to remove, which is why
+  `SideKnowledge` — `Tick`, `IsOver`, `Units`, `Victory`, and a `QueueOf` lookup, the same five
+  facts `SideDirector` always read off `Simulation` — is the only thing `Decide` is handed.
+  **Not an observation encoding**: `Units`/`Victory` stay ground truth, same as before this
+  refactor; #101, if it lands, defines the belief-correct shape separately. `Simulation.Director`
+  stays typed as the concrete `SideDirector` (an `as` cast over the policy field) because
+  existing callers read `OrdersIssued` and the save/load retry memory off it specifically;
+  `Simulation.SetPolicy` is the general seam, and `DirectorProbe`'s
+  `NoSimulationStubPolicy` — a `SideId` field and nothing else — is plugged in through it as the
+  direct disproof of the issue's own stated failure mode.
 - **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
   standing where it was, to be destroyed a few seconds later.
 - **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data
