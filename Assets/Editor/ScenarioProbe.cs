@@ -28,10 +28,19 @@ namespace Strategos.Editor
         public static void WriteSamples()
         {
             Directory.CreateDirectory(ResourceDir);
-            var path = Path.Combine(ResourceDir, ScenarioSamples.SkirmishName + ".json");
-            ScenarioIO.SaveToFile(ScenarioSamples.Skirmish(), path);
+
+            var skirmishPath = Path.Combine(ResourceDir, ScenarioSamples.SkirmishName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.Skirmish(), skirmishPath);
+            Debug.Log($"[ScenarioProbe] wrote {skirmishPath}");
+
+            // #75 chunk 3: the campaign-merge probe's second operation. See
+            // ScenarioSamples.PushNorth's own header — a probe fixture, not real campaign
+            // content, but shipped the same way so ScenarioIO.Load resolves it for real.
+            var pushNorthPath = Path.Combine(ResourceDir, ScenarioSamples.PushNorthName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.PushNorth(), pushNorthPath);
+            Debug.Log($"[ScenarioProbe] wrote {pushNorthPath}");
+
             AssetDatabase.Refresh();
-            Debug.Log($"[ScenarioProbe] wrote {path}");
         }
 
         [MenuItem("Strategos/Probe Scenario")]
