@@ -1,0 +1,56 @@
+# =============================================================================
+# Strategos — GitHub Pages (site/ only)
+#
+# Deploys the static landing page under site/ to GitHub Pages via the Actions
+# deployment source (not a gh-pages branch, not "deploy from branch: /docs" —
+# docs/ is this project's internal developer documentation, not the public
+# site, and the two must not collide).
+#
+# Triggers only on push to master that touches site/**, so an unrelated Unity
+# code change does not run a page-deploy job for no reason.
+#
+# One-time manual step this workflow does NOT do: GitHub Pages must be
+# enabled in Settings → Pages → Source: GitHub Actions before this job's
+# deploy step can succeed. See #83.
+# =============================================================================
+
+name: Deploy Pages
+
+on:
+  push:
+    branches: [master]
+    paths: ["site/**"]
+  workflow_dispatch:   # Allows manual trigger from the GitHub Actions UI
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; let an in-flight run finish rather than
+# cancelling it mid-upload.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload site/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "site"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
