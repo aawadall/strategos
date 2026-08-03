@@ -353,11 +353,13 @@ namespace Strategos.UI.Views
             var hint = CreateTmp("Hint", content,
                 "Left-click selects.  Right-click orders a move, or fire if it lands on an enemy." +
                 "\nHold Shift to queue behind the current plan." +
-                "\nCANCEL drops that order and every one queued behind it.",
+                "\nCANCEL drops that order and every one queued behind it." +
+                "\nPalette arms MOVE / ENGAGE (click-to-issue is a follow-up); SELECT clears.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
-            hint.GetComponent<LayoutElement>().preferredHeight = 42;
+            hint.GetComponent<LayoutElement>().preferredHeight = 56;
 
+            BuildVerbPalette(content);
             BuildPlanCard(content);
 
             // Side by side, because they are the same kind of decision taken about the same
@@ -398,6 +400,87 @@ namespace Strategos.UI.Views
         private RectTransform _orbatRoot;
         private TMP_Dropdown _roeDrop;
         private TMP_Dropdown _drillDrop;
+
+        /// <summary>Armed palette verb, or <see cref="PaletteVerb.None"/> for select-only (#127).</summary>
+        private PaletteVerb _armedVerb = PaletteVerb.None;
+
+        private Button _selectVerbButton;
+        private readonly List<(PaletteVerb Id, Button Button)> _verbButtons = new();
+        private TMP_Text _armedLabel;
+
+        /// <summary>
+        /// Table-driven arming chrome. Iterates <see cref="CommandPalette.Verbs"/> — adding a
+        /// verb is a table row, not a new branch here. Does not change right-click (#127).
+        /// </summary>
+        private void BuildVerbPalette(Transform parent)
+        {
+            AddSection(parent, "COMMAND");
+
+            var row = AddButtonRow(parent);
+            _selectVerbButton = AddButton(row, "SELECT", () => ArmVerb(PaletteVerb.None));
+
+            _verbButtons.Clear();
+            for (int i = 0; i < CommandPalette.Verbs.Length; i++)
+            {
+                var def = CommandPalette.Verbs[i];
+                var id = def.Id;
+                var btn = AddButton(row, def.Label, () => ArmVerb(id));
+                _verbButtons.Add((id, btn));
+            }
+
+            _armedLabel = CreateTmp("Armed", parent, "", 11, FontStyles.Bold);
+            _armedLabel.color = Theme.Ink;
+            _armedLabel.GetComponent<LayoutElement>().preferredHeight = 22;
+
+            RefreshVerbChrome();
+        }
+
+        /// <summary>Arms a palette verb (or clears to select-only). Chrome only until #128.</summary>
+        private void ArmVerb(PaletteVerb verb)
+        {
+            if (_armedVerb == verb) return;
+            _armedVerb = verb;
+            RefreshVerbChrome();
+        }
+
+        private void RefreshVerbChrome()
+        {
+            if (_selectVerbButton != null)
+                PaintVerbButton(_selectVerbButton, _armedVerb == PaletteVerb.None);
+
+            for (int i = 0; i < _verbButtons.Count; i++)
+            {
+                var (id, btn) = _verbButtons[i];
+                PaintVerbButton(btn, id == _armedVerb);
+            }
+
+            if (_armedLabel == null) return;
+
+            if (_armedVerb == PaletteVerb.None ||
+                !CommandPalette.TryGet(_armedVerb, out var def))
+            {
+                _armedLabel.text = "ARMED  ·  SELECT  (right-click still orders)";
+                return;
+            }
+
+            _armedLabel.text = $"ARMED  ·  {def.Label}" +
+                (string.IsNullOrEmpty(def.ShortcutLabel)
+                    ? string.Empty
+                    : $"  ({def.ShortcutLabel})") +
+                "  ·  right-click still orders";
+        }
+
+        private static void PaintVerbButton(Button btn, bool armed)
+        {
+            if (btn == null) return;
+            var face = armed ? Theme.Accent : Theme.SectionBg;
+            btn.colors = AccentButtonColors(face);
+            if (btn.targetGraphic != null)
+                btn.targetGraphic.color = Color.white;
+            var label = btn.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+                label.color = armed ? Theme.AccentText : Theme.Ink;
+        }
 
         /// <summary>Rail order matches <see cref="RulesOfEngagement"/>'s own values.</summary>
         private static readonly string[] RoeLabels =
