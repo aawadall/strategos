@@ -393,6 +393,7 @@ namespace Strategos.UI.Views
             AddButton(controls, "ATTACK", AttackSelected);
             AddButton(controls, "RECON", ReconSelected);
             AddButton(controls, "EXPLOIT", ExploitSelected);
+            AddButton(controls, "PURSUE", PursueSelected);
 
             // Calling a drill by code is what the whole doctrine library is for. A dropdown
             // is the discovery path; #53's palette adds typing the code, which is the
@@ -2361,6 +2362,14 @@ namespace Strategos.UI.Views
             _sim.Issue(Command.Exploit(ActorId.ForSide(unit.Side), unit.Id));
         }
 
+        private void PursueSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Pursue(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
         /// <summary>
         /// Calls the chosen drill on the selected unit or formation.
         /// </summary>
@@ -2447,6 +2456,7 @@ namespace Strategos.UI.Views
             CommandKind.Attack => "ATTACKING",
             CommandKind.Recon => "RECONNING",
             CommandKind.Exploit => "EXPLOITING",
+            CommandKind.Pursue => "PURSUING",
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 

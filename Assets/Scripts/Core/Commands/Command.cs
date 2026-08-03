@@ -131,6 +131,11 @@ namespace Strategos.Commands
         /// </summary>
         Exploit = 12,
 
+        /// <summary>
+        /// Chase a withdrawing enemy — MoveTo onto them + Engage (#153 / #85).
+        /// </summary>
+        Pursue = 13,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -325,6 +330,16 @@ namespace Strategos.Commands
             Kind = CommandKind.Exploit, AgainstUnit = against,
         };
 
+        /// <summary>
+        /// Chase the enemy to contact. Empty <paramref name="against"/> → nearest hostile.
+        /// </summary>
+        public static Command Pursue(ActorId by, UnitId unit, UnitId against = default,
+            int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Pursue, AgainstUnit = against,
+        };
+
         public override string ToString()
         {
             string what = Kind switch
@@ -335,6 +350,7 @@ namespace Strategos.Commands
                 CommandKind.Attack => $"Attack({AgainstUnit})",
                 CommandKind.Recon => $"Recon({AgainstUnit})",
                 CommandKind.Exploit => $"Exploit({AgainstUnit})",
+                CommandKind.Pursue => $"Pursue({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),

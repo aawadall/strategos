@@ -35,7 +35,7 @@ Explicit command controls (#32) are done. Next player-facing gap is **campaign i
 | Issue | Title |
 |---|---|
 | [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player — children #138–#140 **shipped** |
-| [#85](https://github.com/aawadall/strategos/issues/85) | Epic: remaining mission types — #152 Exploit shipped; #153 Pursue open |
+| [#85](https://github.com/aawadall/strategos/issues/85) | Epic: remaining mission types — **children complete** (#150–#153 + earlier slices) |
 | [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (policy seam #100 closed) |
 
 Close behind that: remaining mission types (#85), and the AI environment epic (#99)
@@ -45,7 +45,7 @@ Close behind that: remaining mission types (#85), and the AI environment epic (#
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
 - **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
-- **C2 / C3 depth** — #36, #47, #62, #85 (parent; #153 open), #65
+- **C2 / C3 depth** — #36, #47, #62, #85 (mission types shipped), #65
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99–#106
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)

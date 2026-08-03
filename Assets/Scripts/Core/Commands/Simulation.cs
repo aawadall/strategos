@@ -538,6 +538,12 @@ namespace Strategos.Commands
                 return;
             }
 
+            if (command.Kind == CommandKind.Pursue)
+            {
+                ExpandPursue(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -893,6 +899,42 @@ namespace Strategos.Commands
             destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
             destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
             Issue(Command.MoveTo(actor, unit.Id, destination));
+            Issue(Command.Engage(actor, unit.Id, threat.Id));
+        }
+
+        /// <summary>
+        /// How close Pursue marches before Engaging — onto the contact, not Attack's standoff.
+        /// </summary>
+        public const float PursueStandoffCells = 2f;
+
+        /// <summary>
+        /// Unpacks Pursue into MoveTo (tight standoff) + Engage — chase to contact (#153).
+        /// </summary>
+        private void ExpandPursue(in Command command)
+        {
+            var unit = UnitOf(command.TargetUnit);
+            if (unit == null) return;
+
+            UnitInstance threat = null;
+            if (command.AgainstUnit.IsValid)
+                threat = UnitOf(command.AgainstUnit);
+            if (threat == null || threat.IsDestroyed)
+                threat = NearestHostile(unit);
+            if (threat == null) return;
+
+            var actor = command.IssuedBy;
+            float dist = Vector2.Distance(unit.Cell, threat.Cell);
+            if (dist > PursueStandoffCells)
+            {
+                Vector2 toward = threat.Cell - unit.Cell;
+                toward.Normalize();
+                var map = Map;
+                Vector2 destination = threat.Cell - toward * PursueStandoffCells;
+                destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
+                destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
+                Issue(Command.MoveTo(actor, unit.Id, destination));
+            }
+
             Issue(Command.Engage(actor, unit.Id, threat.Id));
         }
 
