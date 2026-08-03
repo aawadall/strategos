@@ -511,6 +511,15 @@ namespace Strategos.Commands
                 return;
             }
 
+            // Withdraw unpacks into Abort + MoveTo away from the threat — the same shape as
+            // the break-contact reflex, so one path answers both the player order and the
+            // autonomous pullback (#85).
+            if (command.Kind == CommandKind.Withdraw)
+            {
+                ExpandWithdraw(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -716,6 +725,49 @@ namespace Strategos.Commands
         }
 
         /// <summary>
+        /// Unpacks Withdraw into Abort + MoveTo away from the named (or nearest) hostile.
+        /// </summary>
+        /// <remarks>
+        /// Same geometry as the old break-contact reflex. Threat position uses ground truth
+        /// via <see cref="NearestHostile"/> when <see cref="Command.AgainstUnit"/> is empty —
+        /// the #34 belief-layer shortcut drills already document. Distance is
+        /// <see cref="Reactions.ReactionController.WithdrawCells"/>.
+        /// </remarks>
+        private void ExpandWithdraw(in Command command)
+        {
+            var unit = UnitOf(command.TargetUnit);
+            if (unit == null) return;
+
+            var actor = command.IssuedBy;
+            Issue(Command.Abort(actor, unit.Id));
+
+            UnitInstance threat = null;
+            if (command.AgainstUnit.IsValid)
+                threat = UnitOf(command.AgainstUnit);
+            if (threat == null || threat.IsDestroyed)
+                threat = NearestHostile(unit);
+
+            // Prefer the caller's believed position (LastSeen from a reaction); else live cell.
+            Vector2 threatPos = command.TargetCell;
+            if (threatPos.sqrMagnitude < 0.0001f)
+            {
+                if (threat == null) return;
+                threatPos = threat.Cell;
+            }
+
+            Vector2 away = unit.Cell - threatPos;
+            if (away.sqrMagnitude < 0.0001f) return;
+
+            var map = Map;
+            Vector2 destination = unit.Cell +
+                away.normalized * Strategos.Reactions.ReactionController.WithdrawCells;
+            destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
+            destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
+
+            Issue(Command.MoveTo(actor, unit.Id, destination));
+        }
+
+        /// <summary>
         /// A unit that stops because of an abort should not be left in march order.
         ///
         /// This is the second open decision on #9, resolved conservatively: halted rather than
@@ -768,9 +820,15 @@ namespace Strategos.Commands
 
             if (outcome == CommandOutcome.Running) return;
 
+            var finished = entry.Command;
             queue.Finish();
-            Report(SituationReport.Status(OutcomeKind(entry.Command.Kind, outcome), unit, Tick,
-                entry.Command.Seq));
+            Report(SituationReport.Status(OutcomeKind(finished.Kind, outcome), unit, Tick,
+                finished.Seq));
+
+            // Delay Completes when pressed — convert into an ordered Withdraw so giving ground
+            // is visible in the command log rather than a silent queue clear (#85).
+            if (outcome == CommandOutcome.Completed && finished.Kind == CommandKind.Delay)
+                Issue(Command.Withdraw(finished.IssuedBy, unit.Id));
         }
 
         /// <summary>

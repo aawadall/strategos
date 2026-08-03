@@ -147,8 +147,14 @@ Tick++
   `PostureFactor` 0.5 like DugIn, detection ×1.15 (lighter watch than Screen).
 - **`Cover` is the heaviest security hold.** Digs in to `Posture.Covering` (fire 0.5, no
   detection stretch). While any Cover remains on the queue, `ReactionController` will not
-  break contact — including when a return-fire Engage sits above it. Remaining under #85:
-  Delay, Attack, Withdraw, Reconnaissance, Exploit, Pursue.
+  break contact — including when a return-fire Engage sits above it.
+- **`Withdraw` expands at delivery** into Abort + MoveTo away from a threat
+  (`ReactionController.WithdrawCells`). `AgainstUnit` / `TargetCell` name the threat and its
+  believed position (LastSeen); empty falls back to `NearestHostile` (#34 shortcut). The
+  break-contact reflex now Issues Withdraw rather than Abort+MoveTo directly — one path.
+- **`Delay` holds Halted until the break-contact threshold**, then Completes and Simulation
+  Issues Withdraw — trade ground for time. Cover suppresses leaving; Delay wants it.
+  Remaining under #85: Attack, Reconnaissance, Exploit, Pursue.
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to
