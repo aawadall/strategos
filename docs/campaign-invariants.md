@@ -244,8 +244,10 @@ Probe: `Strategos > Probe Campaign Chain Validate` /
   CAMPAIGN section starts `valley-campaign` via `CampaignChainIO.Load` + `Validate` +
   `CampaignChainDriver.StartNext`; `ShowOutcome` enables CONTINUE, which
   `CampaignCarryOver.CarryOver`s into the next op. `AppSession` holds `ActiveChain` /
-  `ActiveOperationIndex`. Mid-campaign save is still
-  [#140](https://github.com/aawadall/strategos/issues/140).
+  `ActiveOperationIndex`.
+- **Mid-campaign save (#140)** — `SaveRecord` carries `CampaignName`, `OperationIndex`, and
+  `CampaignChainJson` (the live mutated chain, not a fresh Resources load). PLAY SAVE/LOAD
+  quicksave restores session + `Simulation.Restore` with reaction/director picture rebuild.
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`

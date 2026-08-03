@@ -210,10 +210,10 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### 6.3 Campaign Mode
 - [x] Linked scenario chain with persistent ORBAT and casualty carry-over (#75 — data + probes)
-- [ ] Campaign in PLAY — parent #114
+- [x] Campaign in PLAY — parent #114
   - [x] `CampaignChain.Validate()` (#138)
   - [x] Start and advance a campaign in the player (#139)
-  - [ ] Mid-campaign save/resume (#140)
+  - [x] Mid-campaign save/resume (#140)
 - [ ] Strategic map layer: campaign moves between operations
 - [ ] Operational-level resupply and reinforcement between scenarios
 - [ ] Dynamic campaign generator (procedural)

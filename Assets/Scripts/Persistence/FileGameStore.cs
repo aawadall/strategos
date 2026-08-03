@@ -98,6 +98,8 @@ namespace Strategos.Persistence.Files
                     ScenarioName = record.ScenarioName,
                     Tick = record.Tick,
                     SavedAtUtc = record.SavedAtUtc,
+                    CampaignName = record.CampaignName ?? string.Empty,
+                    OperationIndex = record.OperationIndex,
                 });
             }
 

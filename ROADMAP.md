@@ -25,7 +25,7 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 | Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
 | Phase 4 — Movement & combat | **Core path done.** A\* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning (#35). |
 | Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder + drill execution with readiness-aware picker (#97), `ISidePolicy` seam. Still missing: remaining mission types (#85), spatial comms (#47), intel fusion, doctrine authoring (#65). |
-| Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over probes land (#75). Still missing: PLAY wiring (#114 / #138–#140), scenario editor, feature-placed objectives (#51), historical packs. |
+| Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over + PLAY start/advance/save (#75, #114 / #138–#140). Still missing: scenario editor, feature-placed objectives (#51), historical packs, full arc (#78). |
 | Phases 7–10 | **Mostly unbuilt.** Windows builds + GitHub Pages site (OG/CTA in; GIF still #120). Audio and release-engineering issues filed. |
 
 ### Near-term focus — "First playable game"
@@ -34,10 +34,9 @@ Explicit command controls (#32) are done. Next player-facing gap is **campaign i
 
 | Issue | Title |
 |---|---|
-| [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player |
-| [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` — shipped |
-| [#139](https://github.com/aawadall/strategos/issues/139) | Start and advance a campaign in PLAY — shipped |
-| [#140](https://github.com/aawadall/strategos/issues/140) | Mid-campaign save/resume |
+| [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player — children #138–#140 shipped |
+| [#85](https://github.com/aawadall/strategos/issues/85) | Remaining mission types |
+| [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (policy seam #100 closed) |
 
 Close behind that: remaining mission types (#85), and the AI environment epic (#99)
 (policy seam #100 closed). Later command polish: config-loaded verb table (#130).
@@ -45,11 +44,11 @@ Close behind that: remaining mission types (#85), and the AI environment epic (#
 ### Outstanding themes (open issues, grouped)
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
-- **Campaign & progression** — #78, #114 (#138–#140), #76, #109
+- **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85, #65
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99–#106
-- **Persistence beyond run saves** — #66; mid-campaign save is #140
+- **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)

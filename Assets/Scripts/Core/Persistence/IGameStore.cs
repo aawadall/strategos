@@ -34,6 +34,15 @@ namespace Strategos.Persistence
 
         /// <summary>ISO-8601, UTC. A string rather than <c>DateTime</c> — see SaveRecord's own note.</summary>
         public string SavedAtUtc;
+
+        /// <summary>
+        /// Campaign display name when this save is mid-chain (#140), or empty for a
+        /// single-scenario run.
+        /// </summary>
+        public string CampaignName;
+
+        /// <summary>Active operation index, or -1 when not a campaign save.</summary>
+        public int OperationIndex;
     }
 
     /// <summary>A save, in full — the structured columns plus the document they describe.</summary>
@@ -42,16 +51,18 @@ namespace Strategos.Persistence
         public string SaveId;
 
         /// <summary>
-        /// The save format's own version — distinct from <see cref="SimulationSnapshot.FormatVersion"/>
-        /// and from <see cref="Scenarios.Scenario.FormatVersion"/>, because a save record's shape
-        /// (what wraps the snapshot), the snapshot's own shape, and a scenario's shape are three
-        /// things that change on three different schedules. Bumped by hand; an
-        /// <see cref="IGameStore"/> implementation must refuse to load a record whose version it
-        /// does not recognise rather than deserialise it and hope, the same rule
-        /// <see cref="Scenarios.Scenario.FormatVersion"/> states for scenarios.
+        /// The save format's own version — distinct from <see cref="SimulationSnapshot"/>'s
+        /// shape and from <see cref="Scenarios.Scenario.FormatVersion"/>, because a save
+        /// record's wrapper, the snapshot, and a scenario change on three different schedules.
+        /// Bumped by hand; an <see cref="IGameStore"/> implementation must refuse to load a
+        /// record whose version it does not recognise rather than deserialise it and hope.
         /// </summary>
         public int FormatVersion = CurrentFormatVersion;
 
+        /// <summary>
+        /// Remains 1: campaign fields (#140) are additive optional columns. Missing them means
+        /// single-scenario — same as an empty <see cref="CampaignChainJson"/>.
+        /// </summary>
         public const int CurrentFormatVersion = 1;
 
         public string ScenarioName;
@@ -68,6 +79,26 @@ namespace Strategos.Persistence
         public string SavedAtUtc;
 
         public SimulationSnapshot Snapshot;
+
+        /// <summary>
+        /// Campaign display name when saving mid-chain (#140), or empty / null for
+        /// single-scenario PLAY.
+        /// </summary>
+        public string CampaignName = string.Empty;
+
+        /// <summary>
+        /// Index into the saved chain's operations, or -1 when <see cref="CampaignChainJson"/>
+        /// is absent.
+        /// </summary>
+        public int OperationIndex = -1;
+
+        /// <summary>
+        /// Live <see cref="Campaigns.CampaignChain"/> JSON via
+        /// <see cref="Campaigns.CampaignChainIO.ToJson"/> — Outcomes and CarriedOverUnits
+        /// included. Null / empty means this is not a campaign save; do not reload authored
+        /// Resources JSON in its place or carry-over state is lost.
+        /// </summary>
+        public string CampaignChainJson;
     }
 
     /// <summary>

@@ -15,6 +15,7 @@
 // composites in the same pixel space, and MapLabelPlacer.Reserve exists so a unit symbol can
 // be protected from being labelled over — the 2D seam was cut for exactly this.
 
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -27,6 +28,8 @@ using Strategos.Maps;
 using Strategos.Movement;
 using Strategos.NatoSymbols;
 using Strategos.Objectives;
+using Strategos.Persistence;
+using Strategos.Persistence.Files;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -627,10 +630,16 @@ namespace Strategos.UI.Views
 
         private TMP_Text _campaignLabel;
         private Button _continueCampaignButton;
+        private IGameStore _store;
+
+        private const string QuickSaveId = "quicksave";
+
+        private IGameStore Store =>
+            _store ??= new FileGameStore(FileGameStore.DefaultDirectory);
 
         /// <summary>
-        /// CAMPAIGN rail (#139): start the shipped valley chain, or continue after an
-        /// operation decides. Not a new top-level tab — PLAY already owns the sim.
+        /// CAMPAIGN rail (#139 / #140): start the shipped valley chain, continue after an
+        /// operation decides, or quicksave / load mid-run. Not a new top-level tab.
         /// </summary>
         private void BuildCampaignCard(Transform parent)
         {
@@ -648,6 +657,10 @@ namespace Strategos.UI.Views
 
             var row2 = AddButtonRow(parent);
             AddButton(row2, "SKIRMISH ONLY", () => LoadScenario(ScenarioSamples.SkirmishName));
+
+            var row3 = AddButtonRow(parent);
+            AddButton(row3, "SAVE", QuickSave);
+            AddButton(row3, "LOAD", QuickLoad);
         }
 
         private void LoadScenario(string name)
@@ -747,10 +760,15 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Wires a ready <see cref="Simulation"/> into PLAY — shared by single-scenario load
-        /// and campaign <see cref="CampaignChainDriver.StartNext"/>.
+        /// Wires a ready <see cref="Simulation"/> into PLAY — shared by single-scenario load,
+        /// campaign <see cref="CampaignChainDriver.StartNext"/>, and #140 restore.
         /// </summary>
-        private void BindSimulation(Simulation sim, List<string> problems = null)
+        /// <param name="restoreFrom">
+        /// When non-null, reactions and director memory are rebuilt from this snapshot after
+        /// the controllers are enabled — required for a correct mid-run load.
+        /// </param>
+        private void BindSimulation(Simulation sim, List<string> problems = null,
+            SimulationSnapshot restoreFrom = null)
         {
             problems ??= new List<string>();
 
@@ -771,6 +789,7 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new EngageExecutor());
             _sim.AddExecutor(new DefendExecutor());
             _sim.EnableReactions();
+            if (restoreFrom != null) _sim.RestoreReactionPicture(restoreFrom);
 
             if (_scenario.PlayerSide.IsValid)
             {
@@ -778,6 +797,7 @@ namespace Strategos.UI.Views
                 foreach (var side in _scenario.Sides)
                     if (side.Id != _scenario.PlayerSide) opposing.Add(side.Id);
                 _sim.EnableDirector(opposing);
+                if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
             }
             _tickAccumulator = 0f;
             _running = true;
@@ -808,6 +828,90 @@ namespace Strategos.UI.Views
             RefreshCampaignChrome();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
+        }
+
+        /// <summary>Quicksave the live run — campaign chain blob included when active (#140).</summary>
+        private void QuickSave()
+        {
+            if (_sim == null || _scenario == null)
+            {
+                _statusLabel.text = "NOTHING TO SAVE";
+                return;
+            }
+
+            var record = new SaveRecord
+            {
+                SaveId = QuickSaveId,
+                ScenarioName = _scenario.Name,
+                Tick = _sim.Tick,
+                SavedAtUtc = DateTime.UtcNow.ToString("o"),
+                Snapshot = _sim.Snapshot(),
+                OperationIndex = -1,
+            };
+
+            if (_session != null && _session.HasActiveCampaign)
+            {
+                record.CampaignName = _session.ActiveChain.Name;
+                record.OperationIndex = _session.ActiveOperationIndex;
+                record.CampaignChainJson = CampaignChainIO.ToJson(_session.ActiveChain);
+            }
+
+            try
+            {
+                Store.Save(record);
+                _statusLabel.text = _session != null && _session.HasActiveCampaign
+                    ? $"SAVED  ·  {record.CampaignName}  OP {record.OperationIndex + 1}  T+{record.Tick}"
+                    : $"SAVED  ·  {_scenario.Name.ToUpperInvariant()}  T+{record.Tick}";
+                Debug.Log($"[PlayView] saved '{QuickSaveId}' at tick {_sim.Tick}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[PlayView] save failed: {ex.Message}");
+                _statusLabel.text = "SAVE FAILED";
+            }
+        }
+
+        /// <summary>Load the quicksave — restores campaign context when the record carries it.</summary>
+        private void QuickLoad()
+        {
+            SaveRecord record;
+            try { record = Store.Load(QuickSaveId); }
+            catch (SaveVersionMismatchException ex)
+            {
+                Debug.LogError($"[PlayView] {ex.Message}");
+                _statusLabel.text = "SAVE VERSION MISMATCH";
+                return;
+            }
+
+            if (record?.Snapshot == null)
+            {
+                _statusLabel.text = "NO QUICKSAVE";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(record.CampaignChainJson))
+            {
+                var chain = CampaignChainIO.FromJson(record.CampaignChainJson);
+                if (chain == null || record.OperationIndex < 0 ||
+                    record.OperationIndex >= chain.Operations.Count)
+                {
+                    _statusLabel.text = "CAMPAIGN SAVE CORRUPT";
+                    return;
+                }
+
+                _session?.BeginCampaign(chain, record.OperationIndex);
+            }
+            else
+            {
+                _session?.ClearCampaign();
+            }
+
+            var sim = Simulation.Restore(record.Snapshot, UnitCatalogue.Default());
+            BindSimulation(sim, restoreFrom: record.Snapshot);
+            _statusLabel.text = _session != null && _session.HasActiveCampaign
+                ? $"LOADED  ·  {_session.ActiveChain.Name}  OP {_session.ActiveOperationIndex + 1}  T+{sim.Tick}"
+                : $"LOADED  ·  {_scenario.Name.ToUpperInvariant()}  T+{sim.Tick}";
+            Debug.Log($"[PlayView] loaded '{QuickSaveId}' at tick {sim.Tick}");
         }
 
         private string HeaderForCurrent()

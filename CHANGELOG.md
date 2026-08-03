@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Mid-campaign SAVE/LOAD: `SaveRecord` carries live chain JSON + operation index; PLAY
+  quicksave restores session and sim (#140 / #114).
 - PLAY campaign rail: START VALLEY / CONTINUE / SKIRMISH ONLY — shipped `valley-campaign`
   chain, `AppSession` campaign context, carry-over between ops (#139 / #114).
 - `CampaignChain.Validate()` — scenario resolution, carried-over id checks, Id-consistency
