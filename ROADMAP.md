@@ -43,7 +43,7 @@ environment epic (#99) which already has a policy seam (#100 closed).
 
 ### Outstanding themes (open issues, grouped)
 
-- **Command UX / play** — #32, #53 (#129 left; #127–#128 shipped), #54; later: config-loaded verb table (#130)
+- **Command UX / play** — #32, #53 (children #127–#129 shipped — close #53 when merged), #54; later: config-loaded verb table (#130)
 - **Campaign & progression** — #78, #114, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85, #65
 - **World & movement depth** — #33, #34, #35, #51

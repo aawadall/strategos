@@ -1,11 +1,13 @@
 // CommandPaletteProbe.cs
-// The armable-verb table (#127): MoveTo and Engage are present, None is not a row, and
-// adding a verb is a table entry — this probe fails if chrome would have to hard-code labels.
+// The armable-verb table (#127 / #129): MoveTo and Engage are present, None is not a row,
+// every verb has a shortcut that does not steal Space, and clear is Escape — so chrome and
+// Update can stay table-driven.
 //
 // Menu:  Strategos > Probe Command Palette
 // Batch: -executeMethod Strategos.Editor.CommandPaletteProbe.Run
 
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -37,7 +39,21 @@ namespace Strategos.Editor
                 return false;
             }
 
+            if (CommandPalette.ClearShortcut == KeyCode.None)
+            {
+                log.AppendLine("  palette: FAILED, ClearShortcut must be set (Esc)");
+                return false;
+            }
+
+            if (CommandPalette.ClearShortcut == KeyCode.Space)
+            {
+                log.AppendLine("  palette: FAILED, ClearShortcut must not steal Space (clock)");
+                return false;
+            }
+
             bool sawMove = false, sawEngage = false;
+            var seenKeys = new HashSet<KeyCode> { CommandPalette.ClearShortcut };
+
             for (int i = 0; i < verbs.Length; i++)
             {
                 var v = verbs[i];
@@ -51,6 +67,30 @@ namespace Strategos.Editor
                 if (string.IsNullOrEmpty(v.Label))
                 {
                     log.AppendLine($"  palette: FAILED, verb {v.Id} has no label for chrome");
+                    return false;
+                }
+
+                if (v.Shortcut == KeyCode.None || string.IsNullOrEmpty(v.ShortcutLabel))
+                {
+                    log.AppendLine($"  palette: FAILED, verb {v.Id} needs a Shortcut (#129)");
+                    return false;
+                }
+
+                if (v.Shortcut == KeyCode.Space)
+                {
+                    log.AppendLine($"  palette: FAILED, verb {v.Id} steals Space (clock)");
+                    return false;
+                }
+
+                if (v.Shortcut == CommandPalette.ClearShortcut)
+                {
+                    log.AppendLine($"  palette: FAILED, verb {v.Id} collides with ClearShortcut");
+                    return false;
+                }
+
+                if (!seenKeys.Add(v.Shortcut))
+                {
+                    log.AppendLine($"  palette: FAILED, duplicate Shortcut {v.Shortcut}");
                     return false;
                 }
 
@@ -74,10 +114,7 @@ namespace Strategos.Editor
                     }
                 }
 
-                log.AppendLine($"    {v.Id,-8} '{v.Label}' → {v.Kind}" +
-                               (string.IsNullOrEmpty(v.ShortcutLabel)
-                                   ? string.Empty
-                                   : $"  [{v.ShortcutLabel}]"));
+                log.AppendLine($"    {v.Id,-8} '{v.Label}' → {v.Kind}  [{v.ShortcutLabel}]");
             }
 
             if (!sawMove || !sawEngage)
@@ -93,7 +130,8 @@ namespace Strategos.Editor
                 return false;
             }
 
-            log.AppendLine($"  palette: {verbs.Length} verb(s), MoveTo + Engage present  ok");
+            log.AppendLine(
+                $"  palette: {verbs.Length} verb(s), shortcuts ok, clear={CommandPalette.ClearShortcut}");
             return true;
         }
     }

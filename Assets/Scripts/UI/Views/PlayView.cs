@@ -195,11 +195,16 @@ namespace Strategos.UI.Views
         private void Update()
         {
             // Space pauses, as it does in every game of this shape. Safe here because this
-            // view has no text input to steal it from.
+            // view has no text input to steal it from. Palette shortcuts never bind Space
+            // (probe-enforced); they are read from the verb table, not hard-wired (#129).
             if (Input.GetKeyDown(KeyCode.Space) && _runToggle != null)
             {
                 _runToggle.isOn = !_runToggle.isOn;   // fires the toggle's own handler
                 RefreshClock();
+            }
+            else if (CommandPalette.TryReadArmingKey(out var arm))
+            {
+                ArmVerb(arm);
             }
 
             AdvanceSimulation();
@@ -355,7 +360,7 @@ namespace Strategos.UI.Views
                 "\nRight-click still orders a move, or fire if it lands on an enemy." +
                 "\nHold Shift to queue behind the current plan." +
                 "\nCANCEL drops that order and every one queued behind it." +
-                "\nPalette: SELECT clears; MOVE / ENGAGE arm a confirming left-click.",
+                "\nPalette: M / E arm MOVE / ENGAGE; Esc (or SELECT) clears.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
             hint.GetComponent<LayoutElement>().preferredHeight = 56;

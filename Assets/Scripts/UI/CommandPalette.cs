@@ -1,10 +1,10 @@
 // CommandPalette.cs
 // In-code table of armable PLAY verbs (#127 / #53).
 //
-// Adding a verb is a row here — not a new branch in PlayView.OnMapClicked. PlayView
-// dispatches armed left-clicks from PaletteVerbDef.Kind (#128); #129 will read Shortcut.
-// Loading this table from config is a future enhancement (#130) and must not block the
-// in-code table.
+// Adding a verb is a row here — not a new branch in PlayView.OnMapClicked or Update.
+// PlayView dispatches armed left-clicks from PaletteVerbDef.Kind (#128) and arms from
+// Shortcut / ClearShortcut (#129). Loading this table from config is a future
+// enhancement (#130) and must not block the in-code table.
 //
 // Right-click shortcuts stay a separate path (#53): this table does not redefine them.
 
@@ -45,6 +45,12 @@ namespace Strategos.UI
     public static class CommandPalette
     {
         /// <summary>
+        /// Clears arming back to select-only. Not a verb row — kept next to the table so
+        /// PLAY does not invent its own Escape binding (#129). Must not be Space (clock).
+        /// </summary>
+        public const KeyCode ClearShortcut = KeyCode.Escape;
+
+        /// <summary>
         /// Armable verbs in rail order. <see cref="PaletteVerb.None"/> is not a row — it is
         /// the clear/select state the chrome exposes separately.
         /// </summary>
@@ -65,6 +71,35 @@ namespace Strategos.UI
                 }
             }
             def = default;
+            return false;
+        }
+
+        /// <summary>
+        /// If a palette key was pressed this frame, returns the verb to arm (or
+        /// <see cref="PaletteVerb.None"/> for clear). Reads <see cref="Verbs"/> and
+        /// <see cref="ClearShortcut"/> — do not hard-code M/E/Esc in the view (#129).
+        /// </summary>
+        public static bool TryReadArmingKey(out PaletteVerb verb)
+        {
+            if (Input.GetKeyDown(ClearShortcut))
+            {
+                verb = PaletteVerb.None;
+                return true;
+            }
+
+            var verbs = Verbs;
+            for (int i = 0; i < verbs.Length; i++)
+            {
+                var key = verbs[i].Shortcut;
+                if (key == KeyCode.None) continue;
+                if (Input.GetKeyDown(key))
+                {
+                    verb = verbs[i].Id;
+                    return true;
+                }
+            }
+
+            verb = PaletteVerb.None;
             return false;
         }
     }
