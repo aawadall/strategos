@@ -44,6 +44,11 @@ namespace Strategos.Units
         /// detection stretch between Screen and Cover (#85).
         /// </summary>
         Guarding = 4,
+        /// <summary>
+        /// Heaviest security hold — digs in like Defend, no detection stretch, and will not
+        /// break contact on its own while covering (#85).
+        /// </summary>
+        Covering = 5,
     }
 
     /// <summary>

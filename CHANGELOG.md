@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Cover mission order: dig-in with no detection stretch; suppresses break-contact while
+  Cover is on the queue; PLAY COVER button; `CoverProbe` (#85 slice).
 - Guard mission order: dig-in like Defend plus detection ×1.15 once prepared; PLAY GUARD
   button; `GuardProbe` (#85 slice).
 - Screen mission order: never-ending hold that sets `Posture.Screening` (detection ×1.35,

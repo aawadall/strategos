@@ -310,9 +310,25 @@ namespace Strategos.Reactions
         public const float WithdrawCells = 40f;
 
         /// <summary>Own state only. No message has to arrive for a unit to know it is spent.</summary>
-        private static bool ShouldBreakContact(UnitInstance unit) =>
-            unit.Strength < BreakStrengthPercent ||
-            unit.Supply.Ammunition < BreakAmmunitionPercent;
+        private bool ShouldBreakContact(UnitInstance unit)
+        {
+            // A Cover order means accept the engagement for the main body. Check the whole
+            // queue, not only the head: a return-fire Engage preempts onto the front and must
+            // not unlock the break-contact reflex while Cover is still underneath.
+            if (HasCoverOrder(unit)) return false;
+
+            return unit.Strength < BreakStrengthPercent ||
+                   unit.Supply.Ammunition < BreakAmmunitionPercent;
+        }
+
+        private bool HasCoverOrder(UnitInstance unit)
+        {
+            var queue = _sim.QueueOf(unit.Id);
+            if (queue == null || queue.IsEmpty) return false;
+            for (int i = 0; i < queue.Count; i++)
+                if (queue[i].Command.Kind == CommandKind.Cover) return true;
+            return false;
+        }
 
         /// <summary>The unit this one is already engaging under its current plan, or None.</summary>
         private UnitId CurrentTarget(UnitInstance unit)

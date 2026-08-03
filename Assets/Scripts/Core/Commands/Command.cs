@@ -101,6 +101,11 @@ namespace Strategos.Commands
         /// </summary>
         Guard = 6,
 
+        /// <summary>
+        /// Cover the main body — dig in and accept the fight. Heaviest security hold (#85).
+        /// </summary>
+        Cover = 7,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -236,6 +241,12 @@ namespace Strategos.Commands
         public static Command Guard(ActorId by, UnitId unit, int tick = 0) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Guard,
+        };
+
+        /// <summary>Cover — dig in and accept engagement for the main body.</summary>
+        public static Command Cover(ActorId by, UnitId unit, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Cover,
         };
 
         public override string ToString()

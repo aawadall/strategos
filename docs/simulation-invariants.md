@@ -144,8 +144,11 @@ Tick++
   path: a Screen that dug in would be Defend with a longer radio.
 - **`Guard` sits between Screen and Cover on the security ladder.** Same dig-in clock as
   Defend (`DefendExecutor.DigInTicks`); once prepared, posture is `Posture.Guarding` —
-  `PostureFactor` 0.5 like DugIn, detection ×1.15 (lighter watch than Screen). Remaining
-  under #85: Cover, Delay, Attack, Withdraw, Reconnaissance, Exploit, Pursue.
+  `PostureFactor` 0.5 like DugIn, detection ×1.15 (lighter watch than Screen).
+- **`Cover` is the heaviest security hold.** Digs in to `Posture.Covering` (fire 0.5, no
+  detection stretch). While any Cover remains on the queue, `ReactionController` will not
+  break contact — including when a return-fire Engage sits above it. Remaining under #85:
+  Delay, Attack, Withdraw, Reconnaissance, Exploit, Pursue.
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to
