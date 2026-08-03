@@ -38,8 +38,9 @@
 
 <div class="status-strip">
   <div class="wrap">
-    <strong>Status: pre-production — playable sandbox.</strong> Phases 0–3 built; Phase 4–5 core path
-    ships; Phase 6 campaign data started. Next: First playable game command UX. Unity 6 (6000.0.75f1).
+    <strong>Status: pre-production — playable sandbox.</strong> Phases 0–3 built; Phase 4–5 core
+    path ships (including command-rank insignia and readiness-aware drills). Phase 6 campaign data
+    started. Next: First playable game command UX. Unity 6 (6000.0.75f1).
   </div>
 </div>
 
@@ -102,6 +103,11 @@
         <li><strong>The ORBAT is a tree</strong> — a formation is a unit that owns subordinates,
           its state rolls up from them, and an order addressed to it decomposes one echelon per
           step.</li>
+        <li><strong>Command rank is a shoulder board</strong> — the shell shows insignia derived
+          from the echelon the player commands (US / Soviet ladders), not a free-floating rank
+          setting.</li>
+        <li><strong>Drills are readiness-aware</strong> — the PLAY picker annotates each drill
+          T/P/U for the selected unit, matching the DRILLS binder.</li>
         <li><strong>Units tire and units are green</strong> — training costs time before an order
           is acted on, fatigue costs capability and recovers with rest.</li>
         <li><strong>A destroyed unit becomes a wreck</strong> that is neither commandable nor a
@@ -111,6 +117,22 @@
           marching, and withdraw when they are being destroyed. A green unit hesitates before
           acting on an order and is slower to report what it sees, so its commander works from an
           older picture.</li>
+      </ul>
+    </section>
+
+    <section id="recent">
+      <h2>Recent changes</h2>
+      <p>
+        Highlights since the sandbox milestone. Full notes live in
+        <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>.
+      </p>
+      <ul class="plain">
+        <li><strong>2026-08-03</strong> — Command-rank shoulder insignia; drill dropdown T/P/U;
+          Pages OG meta and GitHub CTA; cancel/pause command fixes.</li>
+        <li><strong>2026-08-02</strong> — Save/load a run; campaign chain carry-over (data);
+          directives from higher; AI policy seam.</li>
+        <li><strong>2026-08-01</strong> — Drill execution; Hold dig-in; formation tree; fatigue;
+          wrecks; shipped-map objective fix.</li>
       </ul>
     </section>
 
@@ -249,8 +271,11 @@
       </div>
       <p>
         See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>
-        and <a href="https://github.com/aawadall/strategos/blob/master/docs/phases.md">docs/phases.md</a>
-        in the repository for the full task breakdown.
+        (backlog and phase status),
+        <a href="https://github.com/aawadall/strategos/blob/master/docs/phases.md">docs/phases.md</a>
+        (checkboxes), and
+        <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>
+        (what landed recently).
       </p>
     </section>
 

@@ -172,7 +172,8 @@ Reference material, unchanged:
 | [docs/command-architecture.md](docs/command-architecture.md) | Why orders and reports are messages. The reasoning behind the topics |
 | [docs/nato-symbol-generator.md](docs/nato-symbol-generator.md) | APP-6D reference detail — SIDC tables, frame shapes, layer model |
 | [docs/phases.md](docs/phases.md) | The phase breakdown |
-| [ROADMAP.md](ROADMAP.md) | Echelon as the difficulty curve, and the long arc |
+| [ROADMAP.md](ROADMAP.md) | Echelon as the difficulty curve, backlog, and the long arc |
+| [CHANGELOG.md](CHANGELOG.md) | What landed recently |
 
 **If you change behaviour covered by one of these pages, update it in the same change.** A note
 that is wrong is worse than no note, because it is trusted.
