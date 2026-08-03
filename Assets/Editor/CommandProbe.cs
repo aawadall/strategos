@@ -16,6 +16,7 @@ using UnityEditor;
 using UnityEngine;
 using Strategos.Commands;
 using Strategos.Maps;
+using Strategos.Reports;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -59,6 +60,8 @@ namespace Strategos.Editor
             bad += CheckQueueSequencing(log);
             bad += CheckAbort(log);
             bad += CheckCancelFrom(log);
+            bad += CheckCancelFromPosture(log);
+            bad += CheckCancelFromStaleIndex(log);
             bad += CheckLogIsAppendOnly(log);
             bad += CheckRealMovement(log);
             bad += CheckPathfinding(log);
@@ -307,6 +310,176 @@ namespace Strategos.Editor
 
             log.AppendLine($"  cancel-from: a FRAGO at finer grain keeps the head  " +
                            $"{(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
+        // ─── #56: CancelFrom must reset posture exactly when Abort would ──────
+
+        /// <summary>
+        /// #56: cancelling the entry actually under way must halt and reset posture, exactly
+        /// like Abort — a unit cancelled out of a running MoveTo otherwise stays flagged
+        /// <see cref="Posture.Moving"/> for ever, taking EngagementResolver's 1.25x posture
+        /// factor while standing still. Cancelling only a not-yet-started (still Pending)
+        /// entry must touch neither posture nor the report log: nothing was actually
+        /// happening, so nothing stopped.
+        /// </summary>
+        private static int CheckCancelFromPosture(StringBuilder log)
+        {
+            int bad = 0;
+
+            // Part 1: cancel the entry actually executing.
+            {
+                var sim = NewSim();
+                var id = FirstUnit(sim);
+                var unit = sim.UnitOf(id);
+
+                sim.Issue(Command.MoveTo(Blue, id, new Vector2(60f, 70f)));
+
+                // One step, not two: FirstUnit is a fully-trained company (Training = 100,
+                // UnitInstance.HesitationTicks = 0), so delivery and the start of execution
+                // land on the very same tick — a second "settle in" step here was redundant,
+                // and worse, it is the exact tick this scenario's own detection sweep first
+                // produces Contact reports (verified independently of this fix: identical
+                // three Contact entries appear on tick 3 whether CancelFrom is buggy or fixed)
+                // and the exact tick StubMoveExecutor.TicksToComplete (3) naturally finishes
+                // whatever is executing. Either landmine pollutes the assertions below with
+                // activity that has nothing to do with the cancel under test.
+                sim.Step();
+
+                if (unit.Posture != Posture.Moving)
+                {
+                    log.AppendLine("  FAIL setup: unit not Moving before the cancel under test");
+                    bad++;
+                }
+
+                int reportsBefore = sim.ReportLog.Count;
+                sim.Issue(Command.CancelFrom(Blue, id, 0));
+                sim.Step();
+
+                if (unit.Posture == Posture.Moving)
+                {
+                    log.AppendLine("  FAIL cancelling a running MoveTo left Posture.Moving set " +
+                                   "— 1.25x incoming fire for a unit that is actually standing still");
+                    bad++;
+                }
+                if (sim.ReportLog.Count != reportsBefore + 1 ||
+                    sim.ReportLog[sim.ReportLog.Count - 1].Kind != ReportKind.Halted)
+                {
+                    log.AppendLine("  FAIL cancelling a running MoveTo raised no Halted report");
+                    bad++;
+                }
+            }
+
+            // Part 2: cancel only a still-pending tail entry — must touch neither.
+            {
+                var sim = NewSim();
+                var id = FirstUnit(sim);
+                var unit = sim.UnitOf(id);
+
+                sim.Issue(Command.MoveTo(Blue, id, new Vector2(60f, 70f)));   // becomes head
+                sim.Issue(Command.MoveTo(Blue, id, new Vector2(62f, 74f)));   // stays pending
+
+                sim.Step();   // one step — see Part 1's comment on why not two
+
+                if (unit.Posture != Posture.Moving)
+                {
+                    log.AppendLine("  FAIL setup: unit not Moving before the pending-only cancel");
+                    bad++;
+                }
+
+                int reportsBefore = sim.ReportLog.Count;
+                sim.Issue(Command.CancelFrom(Blue, id, 1));   // the still-pending tail only
+                sim.Step();
+
+                if (unit.Posture != Posture.Moving)
+                {
+                    log.AppendLine("  FAIL cancelling a pending, not-yet-started entry touched " +
+                                   $"posture (now {unit.Posture})");
+                    bad++;
+                }
+                if (sim.ReportLog.Count != reportsBefore)
+                {
+                    log.AppendLine("  FAIL cancelling a pending, not-yet-started entry raised a report");
+                    bad++;
+                }
+                if (sim.QueueOf(id).Count != 1)
+                {
+                    log.AppendLine($"  FAIL pending-only cancel left {sim.QueueOf(id).Count} " +
+                                   "entries, expected 1 (the still-running head)");
+                    bad++;
+                }
+            }
+
+            log.AppendLine("  #56 cancel-from posture: running head halts and resets, pending " +
+                           $"tail touches neither  {(bad == 0 ? "ok" : "FAILED")}");
+            return bad;
+        }
+
+        // ─── #57: CancelFrom addresses a stale index ───────────────────────────
+
+        /// <summary>
+        /// #57: an entry addressed by queue position goes stale the moment an earlier order
+        /// completes — <see cref="CommandQueue.Finish"/> shifts everything behind it down by
+        /// one. A CancelFrom whose position was captured against a four-leg plan and delivered
+        /// only after the first leg has already finished must still land on the entry the
+        /// caller meant, never on whatever now happens to sit at that row.
+        /// </summary>
+        private static int CheckCancelFromStaleIndex(StringBuilder log)
+        {
+            int bad = 0;
+            var sim = NewSim();
+            var id = FirstUnit(sim);
+
+            var a = sim.Issue(Command.MoveTo(Blue, id, new Vector2(60f, 70f)));
+            var b = sim.Issue(Command.MoveTo(Blue, id, new Vector2(62f, 74f)));
+            var c = sim.Issue(Command.MoveTo(Blue, id, new Vector2(66f, 78f)));
+            var d = sim.Issue(Command.MoveTo(Blue, id, new Vector2(70f, 82f)));
+
+            // Position captured now, while the plan is still [A,B,C,D]: cancel from C onward,
+            // keeping A and B. A is at position 0, B at 1, C at 2, D at 3.
+            const int capturedPosition = 2;
+
+            sim.Step();   // queued [A,B,C,D]; A begins executing
+            sim.Step();   // A still executing
+            sim.Step();   // A completes and is removed: [B,C,D]
+
+            bool aStillQueued = false;
+            foreach (var e in sim.QueueOf(id).Entries) if (e.Command.Seq == a.Seq) aStillQueued = true;
+            if (sim.QueueOf(id).Count != 3 || aStillQueued)
+            {
+                log.AppendLine($"  FAIL setup: expected A to have completed and left the " +
+                               $"queue by now, queue holds {sim.QueueOf(id).Count}, A still " +
+                               $"queued: {aStillQueued}");
+                return bad + 1;
+            }
+
+            // The stale, position-addressed cancel a player's earlier click produced,
+            // delivered only now — one leg late, after A finished and shifted B, C and D down.
+            sim.Issue(Command.CancelFrom(Blue, id, capturedPosition));
+            sim.Step();
+
+            var entries = sim.QueueOf(id).Entries;
+            bool bSurvived = entries.Count >= 1 && entries[0].Command.Seq == b.Seq;
+            bool cGone = true, dGone = true;
+            foreach (var e in entries)
+            {
+                if (e.Command.Seq == c.Seq) cGone = false;
+                if (e.Command.Seq == d.Seq) dGone = false;
+            }
+
+            if (!bSurvived || !cGone || !dGone)
+            {
+                log.AppendLine($"  FAIL stale-position cancel: meant to keep B and cancel C " +
+                               $"and D, queue now holds {entries.Count} entr" +
+                               $"{(entries.Count == 1 ? "y" : "ies")} — B survived: {bSurvived}, " +
+                               $"C gone: {cGone}, D gone: {dGone}");
+                bad++;
+            }
+
+            log.AppendLine("  #57 cancel-from stale index: " +
+                           (bad == 0 ? "targets the entry the caller meant across the shift"
+                                     : "FAILED, targeted the wrong entry") +
+                           $"  {(bad == 0 ? "ok" : "FAILED")}");
             return bad;
         }
 

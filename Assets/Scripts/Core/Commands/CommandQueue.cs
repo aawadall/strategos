@@ -43,12 +43,30 @@ namespace Strategos.Commands
         /// </remarks>
         public int TicksPending;
 
+        /// <summary>
+        /// A stable, per-queue enqueue-order number — never reused and never shifted by
+        /// <see cref="CommandQueue.Finish"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is what <see cref="CommandQueue.CancelFrom"/> addresses (#57). A live-list
+        /// position goes stale the instant an earlier entry completes and everything behind it
+        /// shifts down; a UI that reads "row 2" and issues a command one tick before delivery
+        /// can have that row mean something else by the time it lands. The ordinal a command
+        /// was given when it joined the queue never changes underneath it, so "cancel from
+        /// ordinal 2 onward" still finds the entry the caller meant even after entries ahead of
+        /// it have finished and been removed.
+        /// </remarks>
+        public int Ordinal;
+
         public override string ToString() => $"{Command} [{Status}]";
     }
 
     public sealed class CommandQueue
     {
         private readonly List<QueuedCommand> _entries = new();
+
+        /// <summary>The ordinal the next enqueued entry will be given. See <see cref="QueuedCommand.Ordinal"/>.</summary>
+        private int _nextOrdinal;
 
         public int Count => _entries.Count;
         public bool IsEmpty => _entries.Count == 0;
@@ -76,6 +94,7 @@ namespace Strategos.Commands
                 Command = command,
                 Status = CommandStatus.Pending,
                 TicksExecuting = 0,
+                Ordinal = _nextOrdinal++,
             });
         }
 
@@ -115,6 +134,7 @@ namespace Strategos.Commands
                 Command = command,
                 Status = CommandStatus.Pending,
                 TicksExecuting = 0,
+                Ordinal = _nextOrdinal++,
             });
         }
 
@@ -193,13 +213,43 @@ namespace Strategos.Commands
             return cancelled;
         }
 
-        /// <summary>Cancels everything from <paramref name="index"/> onward. A FRAGO at finer grain.</summary>
-        public int CancelFrom(int index)
+        /// <summary>Cancels everything from <paramref name="ordinal"/> onward. A FRAGO at finer grain.</summary>
+        public int CancelFrom(int ordinal) => CancelFrom(ordinal, out _);
+
+        /// <summary>
+        /// Cancels everything from <paramref name="ordinal"/> onward, and reports through
+        /// <paramref name="executingCancelled"/> whether the entry actually under way (always
+        /// index 0 when present) was among the ones removed.
+        /// </summary>
+        /// <remarks>
+        /// <paramref name="ordinal"/> addresses a <see cref="QueuedCommand.Ordinal"/>, not a
+        /// live-list position (#57) — see that field's remarks for why. The first live entry
+        /// whose ordinal is at or past the one given, and everything after it, goes; entries
+        /// ahead of it (lower ordinal, already finished or still meant to survive) are
+        /// untouched. Because ordinals only ever increase with enqueue order, that first match
+        /// is always where the cut belongs even after entries ahead of it have completed and
+        /// been removed.
+        ///
+        /// The out parameter exists so a caller — <c>Simulation.OnCommandDelivered</c> for #56
+        /// — can tell whether to reset posture without re-deriving the queue's own cancellation
+        /// logic: cancelling the entry actually executing must halt and reset posture exactly
+        /// like Abort, but cancelling only still-pending entries must touch neither.
+        /// </remarks>
+        public int CancelFrom(int ordinal, out bool executingCancelled)
         {
-            index = Mathf.Max(0, index);
-            if (index >= _entries.Count) return 0;
-            int cancelled = _entries.Count - index;
-            _entries.RemoveRange(index, cancelled);
+            executingCancelled = false;
+
+            int start = -1;
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_entries[i].Ordinal >= ordinal) { start = i; break; }
+            }
+            if (start < 0) return 0;
+
+            executingCancelled = start == 0 && _entries[0].Status == CommandStatus.Executing;
+
+            int cancelled = _entries.Count - start;
+            _entries.RemoveRange(start, cancelled);
             return cancelled;
         }
 
@@ -215,6 +265,15 @@ namespace Strategos.Commands
         {
             _entries.Clear();
             if (entries != null) _entries.AddRange(entries);
+
+            // Ordinals restore with the entries that carry them (QueuedCommand.Ordinal is a
+            // plain field, so a wholesale copy round-trips it same as Status or TicksExecuting).
+            // The counter that hands out the *next* one does not live on any entry, so it has
+            // to be resynced here or a freshly enqueued order after a load could collide with
+            // an ordinal a restored entry already holds.
+            _nextOrdinal = 0;
+            foreach (var e in _entries)
+                if (e.Ordinal >= _nextOrdinal) _nextOrdinal = e.Ordinal + 1;
         }
 
         /// <summary>
