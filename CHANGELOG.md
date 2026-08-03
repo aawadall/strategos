@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- PLAY command palette: table-driven MOVE / ENGAGE arming chrome (#127); armed left-click
+  issues that verb via the command bus while right-click stays the engage-or-march shortcut
+  (#128 / #53). Keyboard arming still open (#129).
 - Shoulder-board insignia for the echelon the player commands — procedural marks from
   `Side.RankLadder` (US / Soviet JSON), shown in the AppShell top bar (#38).
 - PLAY drill dropdown annotates each entry with the selected unit's T/P/U readiness and

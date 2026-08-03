@@ -358,7 +358,8 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] Keyboard shortcut remapping
 - [ ] Controller support (console stretch goal)
 - [ ] Comprehensive settings: graphics, audio, gameplay, accessibility
-- [ ] Explicit command palette / armed verbs / waypoints (#32, #53, #54)
+- [ ] Explicit command palette / waypoints (#32, #53, #54) — verb table + arming chrome
+  and armed click-to-issue shipped (#127, #128); keyboard arming (#129) and waypoints open
 - [ ] Site motion capture / GIF for the landing page (#120 remainder)
 - [ ] In-game / web field-manual reference (#124)
 
