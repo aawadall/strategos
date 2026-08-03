@@ -240,11 +240,12 @@ Probe: `Strategos > Probe Campaign Chain Validate` /
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
-- **Wiring into PLAY/UI** — nothing under `Assets/Scripts/UI` reads or calls any of this yet.
-  `CampaignChainDriver.StartNext` is a standalone function. Parent
-  [#114](https://github.com/aawadall/strategos/issues/114): start+advance is
-  [#139](https://github.com/aawadall/strategos/issues/139); mid-campaign save is
-  [#140](https://github.com/aawadall/strategos/issues/140). `Validate` (#138) is above.
+- **Wiring into PLAY/UI** — [#139](https://github.com/aawadall/strategos/issues/139): PLAY rail
+  CAMPAIGN section starts `valley-campaign` via `CampaignChainIO.Load` + `Validate` +
+  `CampaignChainDriver.StartNext`; `ShowOutcome` enables CONTINUE, which
+  `CampaignCarryOver.CarryOver`s into the next op. `AppSession` holds `ActiveChain` /
+  `ActiveOperationIndex`. Mid-campaign save is still
+  [#140](https://github.com/aawadall/strategos/issues/140).
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`

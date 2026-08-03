@@ -34,9 +34,10 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
   around a stale committed scene and would blank any other scene. Two installers means two
   stacked canvases and two EventSystems.
 - **Only `AppSession` holds shared state** — map settings, the current `MapData`, a
-  generation counter and the one cached symbol factory. It holds no textures on purpose,
-  so disposal stays with whichever view allocated them. Views compare
-  `AppSession.Generation` in `OnShown` and re-render only if it moved.
+  generation counter, the one cached symbol factory, the live `Simulation` reference, and
+  (when PLAY is in a multi-op session) `ActiveChain` / `ActiveOperationIndex` (#139). It
+  holds no textures on purpose, so disposal stays with whichever view allocated them. Views
+  compare `AppSession.Generation` in `OnShown` and re-render only if it moved.
 - **Sprites from `AppSession.Symbols` must never be `Destroy`ed** — they are shared cache
   entries, and only `ClearCache()` may free them. The builder bakes its preview *uncached*
   via `NatoSymbolComposer` + `NatoSymbolBaker` precisely so it can dispose it; if it is

@@ -1,0 +1,22 @@
+{
+  "FormatVersion": 1,
+  "Name": "Valley Campaign",
+  "Description": "Three linked operations with one persistent ORBAT — skirmish, push-north, skirmish again. Matches the #75 three-op probe fixture.",
+  "Operations": [
+    {
+      "ScenarioName": "skirmish",
+      "Name": "Opening Contact",
+      "Outcome": "Unplayed"
+    },
+    {
+      "ScenarioName": "push-north",
+      "Name": "Push North",
+      "Outcome": "Unplayed"
+    },
+    {
+      "ScenarioName": "skirmish",
+      "Name": "Opening Contact, Second Tour",
+      "Outcome": "Unplayed"
+    }
+  ]
+}
