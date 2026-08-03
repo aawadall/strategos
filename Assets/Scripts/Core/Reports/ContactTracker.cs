@@ -109,6 +109,7 @@ namespace Strategos.Reports
                 // inner loop: it is a property of the observer, not of the pair.
                 var caps = observer.Capabilities(catalogue);
                 float rangeCells = caps.DetectionRangeAt(observer.Landcover(map)) / metresPerCell;
+                rangeCells *= UnitCapabilities.DetectionPostureFactor(observer.Posture);
                 float lossCells = rangeCells * LossHysteresis;
 
                 for (int j = 0; j < _n; j++)

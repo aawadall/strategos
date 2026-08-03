@@ -34,6 +34,11 @@ namespace Strategos.Units
         Moving = 1,
         /// <summary>Prepared position. Slower to leave, harder to hurt.</summary>
         DugIn = 2,
+        /// <summary>
+        /// Holding to observe and report, not to fortify. Same exposure as Halted;
+        /// detection reaches further (see <see cref="UnitCapabilities.DetectionPostureFactor"/>).
+        /// </summary>
+        Screening = 3,
     }
 
     /// <summary>
@@ -250,6 +255,18 @@ namespace Strategos.Units
             if (observerCover == LandcoverClass.Forest) range *= DetectionInForestFactor;
             return range;
         }
+
+        /// <summary>
+        /// How posture stretches detection. Screening exists to see; everything else is 1.
+        /// </summary>
+        /// <remarks>
+        /// Kept next to <see cref="DetectionRangeAt"/> so the single "can this unit see"
+        /// path stays one place when terrain LOS lands. The factor is modest on purpose —
+        /// enough that a screen at the edge of contact is useful, not enough to erase fog
+        /// on the skirmish map (see known-gaps).
+        /// </remarks>
+        public static float DetectionPostureFactor(Posture posture) =>
+            posture == Posture.Screening ? 1.35f : 1f;
 
         public override string ToString() =>
             $"{Id} '{Name}' {CrossCountrySpeedMps:0.#}/{RoadSpeedMps:0.#} m/s, " +

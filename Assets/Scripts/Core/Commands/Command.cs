@@ -90,6 +90,12 @@ namespace Strategos.Commands
         /// </remarks>
         Drill = 4,
 
+        /// <summary>
+        /// Hold this ground to observe and report. A state like Defend, but it does not dig in
+        /// — the payoff is detection reach, not incoming-fire reduction.
+        /// </summary>
+        Screen = 5,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -213,6 +219,12 @@ namespace Strategos.Commands
         public static Command Defend(ActorId by, UnitId unit, int tick = 0) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Defend,
+        };
+
+        /// <summary>Hold where you stand to observe — Screen, not Defend.</summary>
+        public static Command Screen(ActorId by, UnitId unit, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Screen,
         };
 
         public override string ToString()
