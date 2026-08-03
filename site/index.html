@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategos — a tactical command simulation, in pre-production</title>
+<meta name="description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div>
+      <h1>STRATEGOS</h1>
+      <p class="tagline">A tactical command simulation built on topographic maps, NATO APP-6D
+        symbology, and multi-echelon command — from a fireteam to a theatre command.</p>
+    </div>
+    <nav>
+      <a href="https://github.com/aawadall/strategos">Source on GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="status-strip">
+  <div class="wrap">
+    <strong>Status: pre-production.</strong> Phases 0–3 built, Phase 4 (movement &amp; combat) in progress.
+    Unity 6 (6000.0.75f1).
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <section id="vision">
+      <h2>What this is</h2>
+      <p class="lede">
+        Strategos is a tactical command simulation game built around topographic maps, NATO
+        APP-6D symbology, multi-echelon command, and adaptive AI. The player can grow from
+        commanding a fireteam to controlling a theater-level combatant command.
+      </p>
+      <p>
+        This page is a status report, not a pitch. The project is mid-build: some systems are
+        finished, one is actively in progress, and most of the roadmap hasn't started. That's
+        stated plainly below, section by section.
+      </p>
+    </section>
+
+    <section id="screenshot-play">
+      <figure>
+        <img src="images/play-meeting-engagement.jpg"
+             alt="The PLAY view mid-scenario: a topographic map with blue and red NATO APP-6D unit symbols, a live movement plan drawn between them, a directive panel, and a scrolling contact log in the order-of-battle rail on the right.">
+        <figcaption>
+          <span class="cap-label">PLAY, "Meeting Engagement," T+0058.</span>
+          Two sides on generated terrain around <em>Objective Anvil</em>. The right-hand rail
+          carries the side's directive, the selected unit's orders, the active drill and rules of
+          engagement, and a live situation log — three units already under orders, three contact
+          reports logged. Captured from a local build against this repository's current
+          <code>master</code>.
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="built">
+      <h2>What's actually built</h2>
+      <p>
+        Phase 2 (the symbol system) is complete; Phase 1's map system is largely built. The map
+        has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape (a
+        heightfield mesh textured with the 2D sheet). The app is a tab shell over five views:
+        <strong>PLAY</strong> (a loaded scenario you can command), <strong>EXPLORE</strong> (a
+        symbol-library browser and a pannable, zoomable map inspector),
+        <strong>SCENARIO</strong> (map settings with a 2D or 3D preview),
+        <strong>DRILLS</strong> (the TTP binder, read-only) and <strong>BUILDER</strong> (the
+        digit-by-digit symbol composer).
+      </p>
+      <p>
+        The sandbox is playable and units can fight. A scenario loads two sides onto generated
+        terrain; units have capabilities and state; a fixed-step simulation carries orders down
+        a command topic into per-unit queues, moves units by terrain-cost A*, resolves direct
+        fire between them, and carries reports back up a situation topic. Select, order, engage,
+        queue, abort and time compression all work; the live plan is listed order by order and
+        can be cut at any entry; and the whole run is deterministic and replayable from the
+        command log.
+      </p>
+      <ul class="plain">
+        <li><strong>Hold is a real order</strong> — a unit told to hold digs in over two minutes
+          and takes half the incoming fire once it has.</li>
+        <li><strong>The ORBAT is a tree</strong> — a formation is a unit that owns subordinates,
+          its state rolls up from them, and an order addressed to it decomposes one echelon per
+          step.</li>
+        <li><strong>Units tire and units are green</strong> — training costs time before an order
+          is acted on, fatigue costs capability and recovers with rest.</li>
+        <li><strong>A destroyed unit becomes a wreck</strong> that is neither commandable nor a
+          contact, and the loss is recorded.</li>
+        <li>The map pans and zooms, bounded by the echelon the player commands.</li>
+        <li>Units also fight on their own initiative under rules of engagement, answer fire while
+          marching, and withdraw when they are being destroyed. A green unit hesitates before
+          acting on an order and is slower to report what it sees, so its commander works from an
+          older picture.</li>
+      </ul>
+    </section>
+
+    <section id="screenshot-explore">
+      <figure>
+        <img src="images/explore-symbol-library.png"
+             alt="The EXPLORE view's symbol library: a grid of NATO APP-6D unit symbols by unit type and echelon, from a single dot for a fireteam through crossed bars for corps, with a catalogue filter panel on the right.">
+        <figcaption>
+          <span class="cap-label">EXPLORE, symbol library — 182 combinations.</span>
+          Every unit type against every echelon, generated by the same composer that draws
+          symbols on the map: frame, fill, icon, echelon mark and modifiers, each a decorator
+          layer over a data-only symbol description, baked to a sprite only at the end.
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="echelon">
+      <h2>Command scales with echelon — that's the actual hook</h2>
+      <p>
+        The echelon the player commands is not just a matter of scale. It determines how much of
+        the command problem exists at all: at fireteam level there's no C2 problem, you
+        <em>are</em> the unit and orders are instant; by battalion, subordinates are out of
+        sight and reports mediate what you know; at corps and above you work from reports already
+        stale and issue intent rather than instructions. That's the intended progression, and it's
+        why later phases (communications degradation, order delay, intelligence fusion) are
+        planned as one code path parameterised by echelon rather than features bolted on later.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <caption>Echelon Progression — from ROADMAP.md</caption>
+          <thead>
+            <tr><th>Symbol</th><th>Echelon</th><th>Typical strength</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>○</td><td>Fireteam / Crew</td><td>2–4</td></tr>
+            <tr><td>•</td><td>Squad</td><td>9–13</td></tr>
+            <tr><td>••</td><td>Section</td><td>8–13</td></tr>
+            <tr><td>•••</td><td>Platoon / Detachment</td><td>30–50</td></tr>
+            <tr><td>I</td><td>Company / Battery / Troop</td><td>80–250</td></tr>
+            <tr><td>II</td><td>Battalion / Squadron</td><td>300–1,000</td></tr>
+            <tr><td>III</td><td>Regiment / Group</td><td>1,000–3,000</td></tr>
+            <tr><td>X</td><td>Brigade / Combat Team</td><td>3,000–5,000</td></tr>
+            <tr><td>XX</td><td>Division</td><td>10,000–20,000</td></tr>
+            <tr><td>XXX</td><td>Corps</td><td>20,000–80,000</td></tr>
+            <tr><td>XXXX</td><td>Army</td><td>100,000+</td></tr>
+            <tr><td>XXXXX</td><td>Army Group / Front</td><td>multiple Armies</td></tr>
+            <tr><td>XXXXXX</td><td>Theater / Combatant Command</td><td>multiple Army Groups</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="gaps">
+      <h2>What isn't there yet</h2>
+      <p>
+        There is still no <em>world</em> in the 3D sense: the drape is a preview rendered into a
+        UI card, not a playable space, and there is no game camera. Units still pass through each
+        other — there is no collision, no zone of control and no facing. A destroyed unit stays on
+        the map doing nothing; removal, casualty tracking and reconstitution are a later part of
+        Phase 4. Reflexes are not intelligence — nothing plans or manoeuvres yet.
+      </p>
+      <p class="note">
+        Everything past Phase 4 on the roadmap — command &amp; control at echelon, AI, online
+        play — is unbuilt.
+      </p>
+    </section>
+
+    <section id="roadmap">
+      <h2>Roadmap</h2>
+      <div class="table-scroll">
+        <table>
+          <caption>Phase Overview — from ROADMAP.md, status as of this page</caption>
+          <thead>
+            <tr><th>Phase</th><th>Focus</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0 — Foundation &amp; Project Setup</td>
+              <td>Buildable Unity 6 project, repository structure, CI, base scenes, test framework.</td>
+              <td class="status-done">Done</td>
+            </tr>
+            <tr>
+              <td>1 — Topographic Map System</td>
+              <td>Zoomable heightmap terrain, contour overlays, terrain classification, LOS, fog of war, weather, grid systems.</td>
+              <td class="status-partial">Largely built</td>
+            </tr>
+            <tr>
+              <td>2 — NATO APP-6D Symbol Library</td>
+              <td>Composable military symbol system: frames, affiliation, unit types, echelon indicators, modifiers, map rendering.</td>
+              <td class="status-done">Complete</td>
+            </tr>
+            <tr>
+              <td>3 — Unit &amp; Echelon System</td>
+              <td>Hierarchical unit model, ORBAT system, commander assignment, equipment data, doctrine profiles, runtime unit state.</td>
+              <td class="status-done">Built</td>
+            </tr>
+            <tr>
+              <td>4 — Movement &amp; Combat Engine</td>
+              <td>Terrain-aware movement, pathfinding, combat resolution, suppression, indirect fire, logistics, attrition, recovery.</td>
+              <td class="status-progress">In progress</td>
+            </tr>
+            <tr>
+              <td>5 — Command &amp; Control (C2) System</td>
+              <td>Orders, mission types, command delays, communication degradation, intelligence, reconnaissance, deception, doctrine templates.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+            <tr>
+              <td>6 — Scenario &amp; Campaign System</td>
+              <td>Scenario editor, historical scenario support, objective system, victory conditions, triggers, linked campaigns.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+            <tr>
+              <td>7 — Game Modes</td>
+              <td>Solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, replay playback.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+            <tr>
+              <td>8 — AI System</td>
+              <td>Rule-based AI, reinforcement learning, transfer learning from historical battles/replays, genetic strategy evolution, AI personalities, model sharing.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+            <tr>
+              <td>9 — Online Services &amp; Community</td>
+              <td>Accounts, matchmaking, leaderboards, scenario workshop, replay library, AI model hub, notifications, mod support.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+            <tr>
+              <td>10 — Polish, Accessibility &amp; Release</td>
+              <td>Audio, UI/UX, tutorials, accessibility, performance optimization, platform builds, legal review, 1.0 launch assets.</td>
+              <td class="status-none">Not started</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>
+        and <a href="https://github.com/aawadall/strategos/blob/master/docs/phases.md">docs/phases.md</a>
+        in the repository for the full task breakdown.
+      </p>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/aawadall/strategos">github.com/aawadall/strategos</a> —
+      Unity 6 (6000.0.75f1) / URP. Source is public and readable today; there is no build or
+      playable demo distributed from this page yet.
+    </p>
+    <p class="license">
+      Licensed under the Strategos License (MIT terms with a non-military-use restriction) —
+      see <a href="https://github.com/aawadall/strategos/blob/master/LICENSE">LICENSE</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
