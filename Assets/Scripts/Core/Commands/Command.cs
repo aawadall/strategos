@@ -116,6 +116,11 @@ namespace Strategos.Commands
         /// </summary>
         Delay = 9,
 
+        /// <summary>
+        /// Close with and destroy. Expands at delivery into MoveTo + Engage (#85).
+        /// </summary>
+        Attack = 10,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -279,6 +284,17 @@ namespace Strategos.Commands
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Delay,
         };
 
+        /// <summary>
+        /// Close with and destroy. <paramref name="against"/> may be None — delivery picks
+        /// the nearest hostile (#34 shortcut).
+        /// </summary>
+        public static Command Attack(ActorId by, UnitId unit, UnitId against = default,
+            int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Attack, AgainstUnit = against,
+        };
+
         public override string ToString()
         {
             string what = Kind switch
@@ -286,6 +302,7 @@ namespace Strategos.Commands
                 CommandKind.MoveTo => $"MoveTo({TargetCell.x:0.#},{TargetCell.y:0.#})",
                 CommandKind.Engage => $"Engage({AgainstUnit})",
                 CommandKind.Withdraw => $"Withdraw({AgainstUnit})",
+                CommandKind.Attack => $"Attack({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),
