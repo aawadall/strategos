@@ -14,7 +14,7 @@ flowchart LR
 |---|---|
 | [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` — shipped |
 | [#139](https://github.com/aawadall/strategos/issues/139) | Start and advance in PLAY — shipped |
-| [#140](https://github.com/aawadall/strategos/issues/140) | Extend save shape for chain + entry; follows #139 |
+| [#140](https://github.com/aawadall/strategos/issues/140) | Mid-campaign save/resume — shipped |
 
 Do not split #139 (start vs advance share one session). Peel Validate and save so #139 is a shippable vertical slice without persistence redesign.
 

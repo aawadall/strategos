@@ -205,6 +205,7 @@ Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scen
 `Write Sample Scenarios`, `Write Sample Drills`, `Write Sample Config`, `Probe Training`,
 `Probe Fatigue`, `Probe Campaign Chain`, `Probe Campaign Carry Over`,
 `Probe Campaign Chain Driver`, `Probe Campaign Chain Validate`,
+`Probe Campaign Save Load`, `Probe Save Load`,
 `Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**
