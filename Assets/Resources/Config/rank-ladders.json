@@ -1,0 +1,43 @@
+{
+  "Name": "Command rank ladders",
+  "Ladders": [
+    {
+      "Id": "us-army",
+      "Name": "US Army",
+      "Steps": [
+        { "Echelon": "Team", "Title": "Sergeant", "Mark": "Chevrons", "Count": 3 },
+        { "Echelon": "Squad", "Title": "Staff Sergeant", "Mark": "Chevrons", "Count": 3 },
+        { "Echelon": "Section", "Title": "Staff Sergeant", "Mark": "Chevrons", "Count": 3 },
+        { "Echelon": "Platoon", "Title": "First Lieutenant", "Mark": "Bars", "Count": 1 },
+        { "Echelon": "Company", "Title": "Captain", "Mark": "Bars", "Count": 2 },
+        { "Echelon": "Battalion", "Title": "Lieutenant Colonel", "Mark": "Leaf", "Count": 1 },
+        { "Echelon": "Regiment", "Title": "Colonel", "Mark": "Star", "Count": 1 },
+        { "Echelon": "Brigade", "Title": "Colonel", "Mark": "Star", "Count": 1 },
+        { "Echelon": "Division", "Title": "Major General", "Mark": "Star", "Count": 2 },
+        { "Echelon": "Corps", "Title": "Lieutenant General", "Mark": "Star", "Count": 3 },
+        { "Echelon": "Army", "Title": "General", "Mark": "Star", "Count": 4 },
+        { "Echelon": "ArmyGroup", "Title": "General", "Mark": "Star", "Count": 4 },
+        { "Echelon": "Theater", "Title": "General", "Mark": "Star", "Count": 4 }
+      ]
+    },
+    {
+      "Id": "soviet",
+      "Name": "Soviet / Russian",
+      "Steps": [
+        { "Echelon": "Team", "Title": "Sergeant", "Mark": "Chevrons", "Count": 2 },
+        { "Echelon": "Squad", "Title": "Senior Sergeant", "Mark": "Chevrons", "Count": 3 },
+        { "Echelon": "Section", "Title": "Senior Sergeant", "Mark": "Chevrons", "Count": 3 },
+        { "Echelon": "Platoon", "Title": "Lieutenant", "Mark": "Pip", "Count": 1 },
+        { "Echelon": "Company", "Title": "Captain", "Mark": "Pip", "Count": 4 },
+        { "Echelon": "Battalion", "Title": "Lieutenant Colonel", "Mark": "Star", "Count": 2 },
+        { "Echelon": "Regiment", "Title": "Colonel", "Mark": "Star", "Count": 3 },
+        { "Echelon": "Brigade", "Title": "Colonel", "Mark": "Star", "Count": 3 },
+        { "Echelon": "Division", "Title": "Major General", "Mark": "Star", "Count": 1 },
+        { "Echelon": "Corps", "Title": "Lieutenant General", "Mark": "Star", "Count": 2 },
+        { "Echelon": "Army", "Title": "Colonel General", "Mark": "Star", "Count": 3 },
+        { "Echelon": "ArmyGroup", "Title": "Army General", "Mark": "Star", "Count": 4 },
+        { "Echelon": "Theater", "Title": "Marshal", "Mark": "Star", "Count": 4 }
+      ]
+    }
+  ]
+}

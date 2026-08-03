@@ -13,6 +13,7 @@
 using System;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
+using Strategos.Units;
 using UnityEngine;
 
 namespace Strategos.UI
@@ -90,6 +91,41 @@ namespace Strategos.UI
         /// nothing else may mutate it — reading unit state is the only use intended here.
         /// </remarks>
         public Commands.Simulation Simulation { get; set; }
+
+        /// <summary>
+        /// The echelon the player currently commands, or <see cref="Echelon.None"/> when
+        /// there is no player side / no loaded scenario.
+        /// </summary>
+        /// <remarks>
+        /// Published by PLAY from the top of the player's ORBAT — the same source the zoom
+        /// band uses — so rank insignia (#38) and zoom cannot disagree about what the player
+        /// commands. Not a place to *set* rank independently.
+        /// </remarks>
+        public Echelon PlayerCommandEchelon { get; private set; } = Echelon.None;
+
+        /// <summary>The side the player is commanding, or null.</summary>
+        public Side PlayerSide { get; private set; }
+
+        /// <summary>Raised when <see cref="PlayerCommandEchelon"/> or <see cref="PlayerSide"/> changes.</summary>
+        public event Action CommandContextChanged;
+
+        /// <summary>Updates the shell's idea of who the player is commanding.</summary>
+        public void SetCommandContext(Side side, Echelon echelon)
+        {
+            if (PlayerSide == side && PlayerCommandEchelon == echelon) return;
+            PlayerSide = side;
+            PlayerCommandEchelon = echelon;
+            CommandContextChanged?.Invoke();
+        }
+
+        /// <summary>Clears command context — hot-seat, or PLAY unloaded.</summary>
+        public void ClearCommandContext()
+        {
+            if (PlayerSide == null && PlayerCommandEchelon == Echelon.None) return;
+            PlayerSide = null;
+            PlayerCommandEchelon = Echelon.None;
+            CommandContextChanged?.Invoke();
+        }
 
         /// <summary>
         /// One cached symbol factory for the whole app.

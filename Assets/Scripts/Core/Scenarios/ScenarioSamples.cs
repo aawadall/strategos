@@ -30,8 +30,14 @@ namespace Strategos.Scenarios
         /// </summary>
         public static Scenario Skirmish()
         {
-            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend);
-            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile);
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
 
             var s = new Scenario
             {
@@ -202,8 +208,14 @@ namespace Strategos.Scenarios
         /// </summary>
         public static Scenario PushNorth()
         {
-            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend);
-            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile);
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
 
             var s = new Scenario
             {

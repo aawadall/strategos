@@ -127,6 +127,8 @@ namespace Strategos.Editor
                 if (sa.Id != sb.Id || sa.Name != sb.Name || sa.Affiliation != sb.Affiliation)
                 { log.AppendLine($"  FAIL {what}: side {i}"); bad++; }
                 if (sa.Colour != sb.Colour) { log.AppendLine($"  FAIL {what}: side {i} colour"); bad++; }
+                if (sa.RankLadder != sb.RankLadder)
+                { log.AppendLine($"  FAIL {what}: side {i} rank ladder"); bad++; }
             }
 
             if (a.Units.Count != b.Units.Count) { log.AppendLine($"  FAIL {what}: unit count"); bad++; }

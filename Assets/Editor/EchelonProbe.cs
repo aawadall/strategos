@@ -27,6 +27,7 @@ namespace Strategos.Editor
     public static class EchelonProbe
     {
         private const string ConfigPath = "Assets/Resources/Config/echelon-spans.json";
+        private const string RankLadderPath = "Assets/Resources/Config/rank-ladders.json";
 
         [MenuItem("Strategos/Write Sample Config")]
         public static void WriteSamples()
@@ -34,10 +35,16 @@ namespace Strategos.Editor
             var table = EchelonSpanDefaults.Table();
             Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath));
             EchelonSpanIO.SaveToFile(table, ConfigPath);
-            AssetDatabase.Refresh();
             EchelonSpanIO.Reload();
 
-            Debug.Log($"[EchelonProbe] wrote {table.Spans.Length} band(s) -> {ConfigPath}");
+            var ladders = RankLadderDefaults.Pack();
+            RankLadderIO.SaveToFile(ladders, RankLadderPath);
+            RankLadderIO.Reload();
+
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[EchelonProbe] wrote {table.Spans.Length} band(s) -> {ConfigPath}; " +
+                      $"{ladders.Ladders.Length} rank ladder(s) -> {RankLadderPath}");
         }
 
         [MenuItem("Strategos/Probe Echelon Spans")]
@@ -51,6 +58,7 @@ namespace Strategos.Editor
             ok &= BandsAreContiguous(log);
             ok &= RoundTrips(log);
             ok &= ClampingToASmallMapStaysUsable(log);
+            ok &= RankLaddersResolve(log);
 
             Debug.Log(log.ToString());
             Debug.Log(ok ? "[EchelonProbe] PROBE PASSED" : "[EchelonProbe] PROBE FAILED");
@@ -216,6 +224,53 @@ namespace Strategos.Editor
             log.AppendLine($"  clamping: battalion on a {sheet:0} m sheet gets " +
                            $"{battalion.MinMetres:0}-{battalion.MaxMetres:0} m, " +
                            $"{battalion.MaxMetres / battalion.MinMetres:0.0}x of zoom  ok");
+            return true;
+        }
+
+        /// <summary>
+        /// Rank ladders resolve echelon → mark, and US vs Soviet disagree on geometry (#38).
+        /// </summary>
+        private static bool RankLaddersResolve(StringBuilder log)
+        {
+            var pack = RankLadderIO.Current;
+            if (pack.Ladders == null || pack.Ladders.Length < 2)
+            {
+                log.AppendLine("  rank ladders: FAILED, need at least two national ladders");
+                return false;
+            }
+
+            var us = RankLadderIO.Resolve(RankLadderDefaults.UsArmy);
+            var soviet = RankLadderIO.Resolve(RankLadderDefaults.Soviet);
+            var usBn = us.For(Echelon.Battalion);
+            var soBn = soviet.For(Echelon.Battalion);
+
+            if (usBn.Mark == soBn.Mark && usBn.Count == soBn.Count)
+            {
+                log.AppendLine($"  rank ladders: FAILED, US and Soviet battalion marks " +
+                               $"identical ({usBn.Mark}×{usBn.Count}) — national ladders " +
+                               "must differ or Side.RankLadder is a dead field");
+                return false;
+            }
+
+            // Battalion player on the shipped skirmish → LTC leaf (US). A switch that
+            // returned Captain bars for everything would still look like "an insignia".
+            if (usBn.Mark != RankMark.Leaf || usBn.Count != 1)
+            {
+                log.AppendLine($"  rank ladders: FAILED, US battalion expected Leaf×1, " +
+                               $"got {usBn.Mark}×{usBn.Count}");
+                return false;
+            }
+
+            var sprite = Strategos.UI.RankInsignia.For(usBn);
+            if (sprite == null || sprite.texture == null)
+            {
+                log.AppendLine("  rank ladders: FAILED, RankInsignia.For returned nothing");
+                return false;
+            }
+
+            log.AppendLine($"  rank ladders: US bn '{usBn.Title}' {usBn.Mark}×{usBn.Count}, " +
+                           $"Soviet bn '{soBn.Title}' {soBn.Mark}×{soBn.Count}, " +
+                           $"sprite {sprite.texture.width}x{sprite.texture.height}  ok");
             return true;
         }
     }

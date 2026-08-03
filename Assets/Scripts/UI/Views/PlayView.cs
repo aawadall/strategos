@@ -570,6 +570,7 @@ namespace Strategos.UI.Views
             BuildMarkers();
             BuildOrbat();
             ClearSelection();
+            PublishCommandContext();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
         }
@@ -1511,7 +1512,12 @@ namespace Strategos.UI.Views
         /// With no player side declared the game is hot-seat and nobody's echelon is
         /// privileged, so the highest on the map wins.
         /// </remarks>
-        private EchelonSpan CommandSpan()
+        private EchelonSpan CommandSpan() =>
+            EchelonSpanIO.Current.For(CommandEchelon())
+                .ClampedTo(_map == null ? 0f : _map.Header.WidthMetres);
+
+        /// <summary>Highest echelon on the player's ORBAT (or on the map, in hot-seat).</summary>
+        private NatoSymbols.Echelon CommandEchelon()
         {
             var echelon = NatoSymbols.Echelon.None;
 
@@ -1525,8 +1531,22 @@ namespace Strategos.UI.Views
                     if ((int)e > (int)echelon) echelon = e;
                 }
 
-            return EchelonSpanIO.Current.For(echelon)
-                .ClampedTo(_map == null ? 0f : _map.Header.WidthMetres);
+            return echelon;
+        }
+
+        /// <summary>Publishes who the player commands so the shell can show rank insignia.</summary>
+        private void PublishCommandContext()
+        {
+            if (_session == null) return;
+
+            if (_scenario == null || !_scenario.PlayerSide.IsValid)
+            {
+                _session.ClearCommandContext();
+                return;
+            }
+
+            var side = _scenario.FindSide(_scenario.PlayerSide);
+            _session.SetCommandContext(side, CommandEchelon());
         }
 
         /// <summary>Cell under the pointer. The inverse of the transform that draws markers.</summary>

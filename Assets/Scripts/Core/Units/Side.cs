@@ -33,6 +33,16 @@ namespace Strategos.Units
         /// </summary>
         public Color Colour = Color.white;
 
+        /// <summary>
+        /// Which national rank ladder this side uses for shoulder insignia (#38).
+        /// </summary>
+        /// <remarks>
+        /// An id into <see cref="RankLadderIO"/>, not a free-text rank — the rank on screen is
+        /// derived from the echelon the player commands, looked up on this ladder. Default is
+        /// the US Army table so older scenarios keep a mark without authoring a new field.
+        /// </remarks>
+        public string RankLadder = RankLadderDefaults.UsArmy;
+
         public Side() { }
 
         public Side(SideId id, string name, Affiliation affiliation)
