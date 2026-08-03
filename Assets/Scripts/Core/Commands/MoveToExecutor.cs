@@ -80,7 +80,7 @@ namespace Strategos.Commands
             }
 
             var caps = unit.Capabilities(context.Catalogue);
-            var grid = GridFor(map, caps);
+            var grid = GridForCached(map, caps);
 
             var route = RouteFor(unit, target, grid);
             if (route == null)
@@ -157,6 +157,44 @@ namespace Strategos.Commands
 
         // ─── Routing ──────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Pathfinder cells from <paramref name="from"/> to <paramref name="to"/> — the same
+        /// Find → Simplify → Smooth chain the executor walks. Used by PLAY to preview pending
+        /// and draft legs (#54) so the arrow cannot disagree with the march.
+        /// </summary>
+        /// <returns>Cell list excluding the start cell, or null if unreachable.</returns>
+        public static List<Vector2Int> PlanCells(MovementGrid grid, Vector2Int from, Vector2Int to)
+        {
+            if (grid == null) return null;
+
+            from = new Vector2Int(
+                Mathf.Clamp(from.x, 0, grid.Width - 1),
+                Mathf.Clamp(from.y, 0, grid.Height - 1));
+            to = new Vector2Int(
+                Mathf.Clamp(to.x, 0, grid.Width - 1),
+                Mathf.Clamp(to.y, 0, grid.Height - 1));
+
+            var found = PathFinder.Find(grid, from, to);
+            if (!found.Found || found.Cells == null || found.Cells.Count == 0) return null;
+
+            PathFinder.Simplify(found.Cells);
+            PathFinder.Smooth(grid, found.Cells);
+
+            // The unit is already standing on the first cell; keeping it would make the first
+            // leg a step backwards to the cell centre.
+            if (found.Cells.Count > 1) found.Cells.RemoveAt(0);
+            return found.Cells;
+        }
+
+        /// <summary>
+        /// Builds (or reuses) a movement grid for preview — same as the executor's cache key.
+        /// </summary>
+        public static MovementGrid GridFor(MapData map, UnitCapabilities caps)
+        {
+            if (map == null || caps == null) return null;
+            return MovementGrid.Build(map, caps);
+        }
+
         private Route RouteFor(UnitInstance unit, Vector2 target, MovementGrid grid)
         {
             if (_routes.TryGetValue(unit.Id.Value, out var existing) &&
@@ -171,22 +209,15 @@ namespace Strategos.Commands
                 Mathf.Clamp(Mathf.RoundToInt(target.x), 0, grid.Width - 1),
                 Mathf.Clamp(Mathf.RoundToInt(target.y), 0, grid.Height - 1));
 
-            var found = PathFinder.Find(grid, from, to);
-            if (!found.Found) { _routes.Remove(unit.Id.Value); return null; }
+            var cells = PlanCells(grid, from, to);
+            if (cells == null) { _routes.Remove(unit.Id.Value); return null; }
 
-            PathFinder.Simplify(found.Cells);
-            PathFinder.Smooth(grid, found.Cells);
-
-            // The unit is already standing on the first cell; keeping it would make the first
-            // leg a step backwards to the cell centre.
-            if (found.Cells.Count > 1) found.Cells.RemoveAt(0);
-
-            var route = new Route { Target = target, Cells = found.Cells, Index = 0 };
+            var route = new Route { Target = target, Cells = cells, Index = 0 };
             _routes[unit.Id.Value] = route;
             return route;
         }
 
-        private MovementGrid GridFor(MapData map, UnitCapabilities caps)
+        private MovementGrid GridForCached(MapData map, UnitCapabilities caps)
         {
             if (_grids.TryGetValue(caps.Id, out var grid) && grid.Map == map) return grid;
             grid = MovementGrid.Build(map, caps);

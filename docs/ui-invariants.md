@@ -129,16 +129,21 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   battalion with 1.1x of zoom on the shipped 6.4 km sheet — the feature was dead in the only
   scenario that ships, and the probe passed because a collapsed range is still a range.
   `ClampedTo` preserves the band's *ratio*; `EchelonProbe` now fails under 2x.
-- **PLAY's command palette arms verbs from a table, not from click-handler branches (#127 / #128 / #129).**
+- **PLAY's command palette arms verbs from a table, not from click-handler branches (#127–#129 / #54).**
   `CommandPalette.Verbs` is the row list the rail iterates; `PaletteVerb.None` is select-only
-  and is not a table row. An armed left-click issues via `PaletteVerbDef.Kind` (MoveTo /
-  Engage) through the same `Command` / bus helpers as the right-click shortcut; a miss
-  (Engage on empty ground, no selection) issues nothing and leaves the verb armed.
-  Keyboard arming reads `Shortcut` / `ClearShortcut` via `TryReadArmingKey` — do not
-  hard-code M/E/Esc in `PlayView.Update`. Space stays the clock; the probe fails if a verb
+  and is not a table row. MOVE / ENGAGE armed left-clicks issue via `PaletteVerbDef.Kind`
+  through the same `Command` / bus helpers as the right-click shortcut; a miss (Engage on
+  empty ground, no selection) issues nothing and leaves the verb armed. WAYPOINTS is a
+  separate `PaletteVerb.Id` (same `CommandKind.MoveTo`) that opens a **draft session**: click
+  places a point, drag moves a handle, click a handle removes it; Enter / CONFIRM ROUTE
+  commits as N ordinary queued `MoveTo`s (Shift appends; otherwise Abort once then queue).
+  Esc / SELECT clears the draft without issuing. Pending and draft legs draw through
+  `MoveToExecutor.PlanCells` (same Find → Simplify → Smooth as the executor), not straight
+  lines. Keyboard arming reads `Shortcut` / `ClearShortcut` via `TryReadArmingKey` — do not
+  hard-code M/E/W/Esc in `PlayView.Update`. Space stays the clock; the probe fails if a verb
   steals it. Right-click remains its own engage-or-march path and must not be redefined by
-  the table (#53). Shift-queue matches both click paths. Config-loading the table is #130
-  and must not block the in-code table.
+  the table (#53). Plan-card CANCEL uses `QueuedCommand.Ordinal` for CancelFrom (#57).
+  Config-loading the table is #130 and must not block the in-code table.
 - **A drag must not also select.** Unity delivers `OnPointerClick` on release whether or not
   the pointer moved, so panning would select whatever the cursor stopped over.
   `PlayView.ClickSlop` is the threshold; right-click ordering resets it so a stale drag cannot

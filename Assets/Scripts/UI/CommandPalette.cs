@@ -2,8 +2,8 @@
 // In-code table of armable PLAY verbs (#127 / #53).
 //
 // Adding a verb is a row here — not a new branch in PlayView.OnMapClicked or Update.
-// PlayView dispatches armed left-clicks from PaletteVerbDef.Kind (#128) and arms from
-// Shortcut / ClearShortcut (#129). Loading this table from config is a future
+// PlayView dispatches armed left-clicks from PaletteVerb.Id / Kind (#128, #54) and arms
+// from Shortcut / ClearShortcut (#129). Loading this table from config is a future
 // enhancement (#130) and must not block the in-code table.
 //
 // Right-click shortcuts stay a separate path (#53): this table does not redefine them.
@@ -19,6 +19,7 @@ namespace Strategos.UI
         None = 0,
         MoveTo = 1,
         Engage = 2,
+        Waypoints = 3,
     }
 
     /// <summary>One armable verb — chrome, shortcuts, and Kind for the confirming click.</summary>
@@ -58,6 +59,7 @@ namespace Strategos.UI
         {
             new(PaletteVerb.MoveTo, "MOVE", CommandKind.MoveTo, KeyCode.M, "M"),
             new(PaletteVerb.Engage, "ENGAGE", CommandKind.Engage, KeyCode.E, "E"),
+            new(PaletteVerb.Waypoints, "WAYPOINTS", CommandKind.MoveTo, KeyCode.W, "W"),
         };
 
         public static bool TryGet(PaletteVerb id, out PaletteVerbDef def)
@@ -77,7 +79,7 @@ namespace Strategos.UI
         /// <summary>
         /// If a palette key was pressed this frame, returns the verb to arm (or
         /// <see cref="PaletteVerb.None"/> for clear). Reads <see cref="Verbs"/> and
-        /// <see cref="ClearShortcut"/> — do not hard-code M/E/Esc in the view (#129).
+        /// <see cref="ClearShortcut"/> — do not hard-code M/E/W/Esc in the view (#129).
         /// </summary>
         public static bool TryReadArmingKey(out PaletteVerb verb)
         {

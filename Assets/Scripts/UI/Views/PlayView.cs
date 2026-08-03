@@ -23,6 +23,7 @@ using Strategos.Commands;
 using Strategos.Directives;
 using Strategos.Doctrine;
 using Strategos.Maps;
+using Strategos.Movement;
 using Strategos.NatoSymbols;
 using Strategos.Objectives;
 using Strategos.Scenarios;
@@ -206,6 +207,10 @@ namespace Strategos.UI.Views
             {
                 ArmVerb(arm);
             }
+            else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                CommitWaypoints();
+            }
 
             AdvanceSimulation();
             _card?.PollResize();
@@ -360,10 +365,11 @@ namespace Strategos.UI.Views
                 "\nRight-click still orders a move, or fire if it lands on an enemy." +
                 "\nHold Shift to queue behind the current plan." +
                 "\nCANCEL drops that order and every one queued behind it." +
-                "\nPalette: M / E arm MOVE / ENGAGE; Esc (or SELECT) clears.",
+                "\nPalette: M / E / W arm MOVE / ENGAGE / WAYPOINTS; Esc clears." +
+                "\nWAYPOINTS: click places, drag moves, click handle removes; Enter commits.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
-            hint.GetComponent<LayoutElement>().preferredHeight = 56;
+            hint.GetComponent<LayoutElement>().preferredHeight = 72;
 
             BuildVerbPalette(content);
             BuildPlanCard(content);
@@ -411,8 +417,15 @@ namespace Strategos.UI.Views
         private PaletteVerb _armedVerb = PaletteVerb.None;
 
         private Button _selectVerbButton;
+        private Button _confirmWaypointsButton;
         private readonly List<(PaletteVerb Id, Button Button)> _verbButtons = new();
         private TMP_Text _armedLabel;
+
+        /// <summary>Draft cells for an armed WAYPOINTS session (#54). Issued only on commit.</summary>
+        private readonly List<Vector2> _waypointDraft = new();
+        private int _dragHandle = -1;
+        private MovementGrid _previewGrid;
+        private string _previewCapsId;
 
         /// <summary>
         /// Table-driven arming chrome. Iterates <see cref="CommandPalette.Verbs"/> — adding a
@@ -422,12 +435,15 @@ namespace Strategos.UI.Views
         {
             AddSection(parent, "COMMAND");
 
-            var row = AddButtonRow(parent);
-            _selectVerbButton = AddButton(row, "SELECT", () => ArmVerb(PaletteVerb.None));
+            // Two rows so WAYPOINTS fits without crushing MOVE / ENGAGE labels.
+            var row1 = AddButtonRow(parent);
+            _selectVerbButton = AddButton(row1, "SELECT", () => ArmVerb(PaletteVerb.None));
 
             _verbButtons.Clear();
+            RectTransform row = row1;
             for (int i = 0; i < CommandPalette.Verbs.Length; i++)
             {
+                if (i == 2) row = AddButtonRow(parent);
                 var def = CommandPalette.Verbs[i];
                 var id = def.Id;
                 var btn = AddButton(row, def.Label, () => ArmVerb(id));
@@ -438,13 +454,17 @@ namespace Strategos.UI.Views
             _armedLabel.color = Theme.Ink;
             _armedLabel.GetComponent<LayoutElement>().preferredHeight = 22;
 
+            var confirmRow = AddButtonRow(parent);
+            _confirmWaypointsButton = AddButton(confirmRow, "CONFIRM ROUTE", CommitWaypoints);
+
             RefreshVerbChrome();
         }
 
-        /// <summary>Arms a palette verb (or clears to select-only).</summary>
+        /// <summary>Arms a palette verb (or clears to select-only). Clears any open draft.</summary>
         private void ArmVerb(PaletteVerb verb)
         {
             if (_armedVerb == verb) return;
+            ClearWaypointDraft();
             _armedVerb = verb;
             RefreshVerbChrome();
         }
@@ -460,12 +480,26 @@ namespace Strategos.UI.Views
                 PaintVerbButton(btn, id == _armedVerb);
             }
 
+            if (_confirmWaypointsButton != null)
+            {
+                bool drafting = _armedVerb == PaletteVerb.Waypoints && _waypointDraft.Count > 0;
+                _confirmWaypointsButton.interactable = drafting;
+                PaintVerbButton(_confirmWaypointsButton, drafting);
+            }
+
             if (_armedLabel == null) return;
 
             if (_armedVerb == PaletteVerb.None ||
                 !CommandPalette.TryGet(_armedVerb, out var def))
             {
                 _armedLabel.text = "ARMED  ·  SELECT  ·  left-click picks a unit";
+                return;
+            }
+
+            if (def.Id == PaletteVerb.Waypoints)
+            {
+                _armedLabel.text = $"ARMED  ·  {def.Label}  ({def.ShortcutLabel})" +
+                    $"  ·  {_waypointDraft.Count} point(s)  ·  Enter commits";
                 return;
             }
 
@@ -1393,17 +1427,19 @@ namespace Strategos.UI.Views
             if (e.button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
             {
                 _dragDistance = 0f;
+                _dragHandle = -1;
                 OrderByRightClick(e);
                 return;
             }
 
             // A pan ends in a click Unity delivers anyway, so a drag that moved would
             // otherwise select whatever the cursor happened to stop over.
-            if (_dragDistance > ClickSlop) { _dragDistance = 0f; return; }
+            if (_dragDistance > ClickSlop) { _dragDistance = 0f; _dragHandle = -1; return; }
             _dragDistance = 0f;
+            _dragHandle = -1;
 
-            // Armed confirming click (#128): dispatch from the table row, not a new if-ladder
-            // per verb. Unarmed left-click keeps selecting.
+            // Armed confirming click (#128 / #54): dispatch from the table row. Unarmed
+            // left-click keeps selecting.
             if (_armedVerb != PaletteVerb.None)
             {
                 IssueArmedVerb(e);
@@ -1444,12 +1480,12 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Left-click with a verb armed: issue that verb from the palette table (#128).
+        /// Left-click with a verb armed: issue or draft from the palette table (#128 / #54).
         /// </summary>
         /// <remarks>
-        /// Dispatches on <see cref="PaletteVerbDef.Kind"/> so a new table row does not need a
-        /// new branch in <see cref="OnMapClicked"/>. A miss (Engage on empty ground, no
-        /// selection) issues nothing and leaves the verb armed.
+        /// Dispatches on <see cref="PaletteVerbDef.Id"/> first so WAYPOINTS (same
+        /// <see cref="CommandKind.MoveTo"/> as MOVE) does not fire an immediate march.
+        /// A miss (Engage on empty ground, no selection) issues nothing and leaves the verb armed.
         /// </remarks>
         private void IssueArmedVerb(UnityEngine.EventSystems.PointerEventData e)
         {
@@ -1458,6 +1494,12 @@ namespace Strategos.UI.Views
 
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            if (def.Id == PaletteVerb.Waypoints)
+            {
+                EditWaypointDraft(e);
+                return;
+            }
 
             bool queue = WantsQueue();
 
@@ -1477,9 +1519,54 @@ namespace Strategos.UI.Views
                 }
 
                 default:
-                    // Future table rows (#33) land here — until then, unknown kinds no-op.
                     return;
             }
+        }
+
+        /// <summary>
+        /// WAYPOINTS draft edit (#54): click a handle to remove it, otherwise append a cell.
+        /// </summary>
+        private void EditWaypointDraft(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (HitWaypointHandle(e, out int handle))
+            {
+                _waypointDraft.RemoveAt(handle);
+                RefreshVerbChrome();
+                return;
+            }
+
+            if (!CellAt(e, out var cell)) return;
+            _waypointDraft.Add(cell);
+            RefreshVerbChrome();
+        }
+
+        /// <summary>
+        /// Commits the draft as ordinary queued <see cref="CommandKind.MoveTo"/> entries.
+        /// Shift appends; without Shift the plan is replaced (Abort once, then N MoveTos).
+        /// </summary>
+        private void CommitWaypoints()
+        {
+            if (_armedVerb != PaletteVerb.Waypoints) return;
+            if (_sim == null || _selection.Count == 0 || _waypointDraft.Count == 0) return;
+
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            bool append = WantsQueue();
+            for (int i = 0; i < _waypointDraft.Count; i++)
+            {
+                bool queue = append || i > 0;
+                IssueMoveTo(unit, _waypointDraft[i], queue);
+            }
+
+            ClearWaypointDraft();
+            RefreshVerbChrome();
+        }
+
+        private void ClearWaypointDraft()
+        {
+            _waypointDraft.Clear();
+            _dragHandle = -1;
         }
 
         private static bool WantsQueue() =>
@@ -1536,7 +1623,8 @@ namespace Strategos.UI.Views
         private float _dragDistance;
 
         /// <summary>
-        /// Drag pans. Left button, because every map pans with a left drag and right has to
+        /// Drag pans, or moves a waypoint handle when WAYPOINTS is armed (#54).
+        /// Left button, because every map pans with a left drag and right has to
         /// stay free for orders, which is the gesture that must not be ambiguous.
         /// </summary>
         private void OnMapDragged(UnityEngine.EventSystems.PointerEventData e)
@@ -1545,6 +1633,19 @@ namespace Strategos.UI.Views
             if (_card == null) return;
 
             _dragDistance += e.delta.magnitude;
+
+            if (_armedVerb == PaletteVerb.Waypoints)
+            {
+                if (_dragHandle < 0 && HitWaypointHandle(e, out int handle))
+                    _dragHandle = handle;
+
+                if (_dragHandle >= 0 && _dragHandle < _waypointDraft.Count &&
+                    CellAt(e, out var cell))
+                {
+                    _waypointDraft[_dragHandle] = cell;
+                    return;
+                }
+            }
 
             Rect card = _card.Rect.rect;
             if (card.width < 1f || card.height < 1f) return;
@@ -1557,6 +1658,27 @@ namespace Strategos.UI.Views
 
             _card.Image.uvRect = ClampWindow(uv);
             LayOutMarkers();
+        }
+
+        /// <summary>Nearest draft handle under the pointer, in sheet-local pixels.</summary>
+        private bool HitWaypointHandle(UnityEngine.EventSystems.PointerEventData e, out int index)
+        {
+            index = -1;
+            if (_waypointDraft.Count == 0 || _card == null) return false;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _card.Rect, e.position, e.pressEventCamera, out var click))
+                return false;
+
+            float radius = 14f;
+            float bestSq = radius * radius;
+            for (int i = 0; i < _waypointDraft.Count; i++)
+            {
+                if (!_card.CellToLocal(_waypointDraft[i], out var local)) continue;
+                float d = (click - local).sqrMagnitude;
+                if (d < bestSq) { bestSq = d; index = i; }
+            }
+
+            return index >= 0;
         }
 
         /// <summary>
@@ -1913,15 +2035,19 @@ namespace Strategos.UI.Views
 
         private void Select(UnitId id)
         {
+            ClearWaypointDraft();
             _selection.Clear();
             if (id.IsValid) _selection.Add(id);
             RefreshSelection();
+            RefreshVerbChrome();
         }
 
         private void ClearSelection()
         {
+            ClearWaypointDraft();
             _selection.Clear();
             RefreshSelection();
+            RefreshVerbChrome();
         }
 
         private bool IsSelected(UnitId id) => _selection.Contains(id);
@@ -2245,32 +2371,34 @@ namespace Strategos.UI.Views
         /// </summary>
         /// <remarks>
         /// CANCEL FROM is what the queue offers and what the button therefore means: entries
-        /// before <paramref name="index"/> are untouched and everything from it onward goes.
+        /// before the chosen row are untouched and everything from it onward goes.
         /// There is no cancel-one-in-the-middle, because a plan is a sequence and removing a leg
         /// from the middle of a route silently rewrites the two legs either side of it.
         ///
-        /// **Index 0 goes out as an Abort, not as CancelFrom(0).** The two do the same thing to
+        /// **Row 0 goes out as an Abort, not as CancelFrom.** The two do the same thing to
         /// the queue, but <c>Simulation.OnCommandDelivered</c> follows an Abort with a halt
         /// report and <c>ApplyAbortPosture</c> and follows a CancelFrom with neither — so
         /// cancelling a running move through CancelFrom leaves the unit standing still while
         /// still flagged <c>Posture.Moving</c>, which is a silent 1.25x to every round fired at
-        /// it (<c>EngagementResolver.PostureFactor</c>). Issue #56 tracks fixing that in Core;
-        /// until it lands, the button that cancels the whole plan sends the command that also
-        /// stops the unit.
+        /// it (<c>EngagementResolver.PostureFactor</c>).
         ///
-        /// The index is resolved when the command is *delivered*, one step later, so a head that
-        /// completes in between shifts every row up by one — see #57.
+        /// Later rows address <see cref="QueuedCommand.Ordinal"/>, not the live list index —
+        /// Core CancelFrom is ordinal-keyed (#57), and multi-leg waypoint plans make a live
+        /// index wrong as soon as an earlier entry completes between click and delivery.
         /// </remarks>
-        private void CancelPlanFrom(UnitId id, int index)
+        private void CancelPlanFrom(UnitId id, int liveIndex)
         {
             if (_sim == null) return;
             var unit = _scenario?.FindUnit(id);
             if (unit == null || !IsPlayerCommanded(unit)) return;
 
+            var plan = BelievedPlanOf(unit);
+            if (plan == null || liveIndex < 0 || liveIndex >= plan.Count) return;
+
             var actor = ActorId.ForSide(unit.Side);
-            _sim.Issue(index <= 0
+            _sim.Issue(liveIndex <= 0
                 ? Command.Abort(actor, unit.Id)
-                : Command.CancelFrom(actor, unit.Id, index));
+                : Command.CancelFrom(actor, unit.Id, plan[liveIndex].Ordinal));
 
             RefreshSelection();
         }
@@ -2473,21 +2601,25 @@ namespace Strategos.UI.Views
                         bool executing = entry.Status == CommandStatus.Executing;
                         var tint = Tint(colour, executing);
 
-                        // Draw the route the unit is actually walking, not a straight line to
-                        // the destination. Without this the arrow shows intent while the unit
-                        // goes somewhere else -- it appeared to cross a lake the pathfinder had
-                        // carefully routed around, which is worse than drawing nothing.
+                        // Draw the route the unit will walk, not a straight line. Executing
+                        // legs use the live IRouteProvider cache; pending legs recompute via
+                        // the same PlanCells chain (#54).
                         var route = executing ? _sim.RouteOf(m.Unit.Id) : null;
+                        if (route == null || route.Count == 0)
+                            route = PreviewRoute(m.Unit, from, to);
+
                         if (route != null && route.Count > 0)
                         {
                             Vector2 leg = from;
                             for (int r = 0; r < route.Count; r++)
                             {
                                 var next = new Vector2(route[r].x, route[r].y);
-                                _orders.AddLeg(_card, leg, next, tint, dashed: false);
+                                _orders.AddLeg(_card, leg, next, tint, dashed: !executing);
                                 leg = next;
                             }
-                            from = leg;
+                            if (Vector2.Distance(leg, to) > 0.05f)
+                                _orders.AddLeg(_card, leg, to, tint, dashed: !executing);
+                            from = to;
                         }
                         else
                         {
@@ -2504,9 +2636,83 @@ namespace Strategos.UI.Views
                         _orders.AddArrowhead(_card, from == last ? m.Unit.Cell : from, last,
                             Tint(colour, true));
                 }
+
+                LayOutWaypointDraft();
             }
 
             _orders.End();
+        }
+
+        /// <summary>Dashed pathfinder preview + handles for the open WAYPOINTS draft (#54).</summary>
+        private void LayOutWaypointDraft()
+        {
+            if (_armedVerb != PaletteVerb.Waypoints || _waypointDraft.Count == 0) return;
+            if (_selection.Count == 0 || _scenario == null) return;
+
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            var side = _scenario.FindSide(unit.Side);
+            var colour = Tint(side?.Colour ?? Theme.Accent, false);
+
+            Vector2 from = unit.Cell;
+            Vector2 last = from;
+            for (int i = 0; i < _waypointDraft.Count; i++)
+            {
+                Vector2 to = _waypointDraft[i];
+                var route = PreviewRoute(unit, from, to);
+                if (route != null && route.Count > 0)
+                {
+                    Vector2 leg = from;
+                    for (int r = 0; r < route.Count; r++)
+                    {
+                        var next = new Vector2(route[r].x, route[r].y);
+                        _orders.AddLeg(_card, leg, next, colour, dashed: true);
+                        leg = next;
+                    }
+                    if (Vector2.Distance(leg, to) > 0.05f)
+                        _orders.AddLeg(_card, leg, to, colour, dashed: true);
+                }
+                else
+                {
+                    _orders.AddLeg(_card, from, to, colour, dashed: true);
+                }
+
+                _orders.AddHandle(_card, to, Theme.Accent);
+                from = to;
+                last = to;
+            }
+
+            if (last != unit.Cell)
+                _orders.AddArrowhead(_card, unit.Cell, last, Theme.Accent);
+        }
+
+        /// <summary>
+        /// Same Find → Simplify → Smooth cells the executor will walk, for pending / draft
+        /// preview. Null when unreachable.
+        /// </summary>
+        private IReadOnlyList<Vector2Int> PreviewRoute(UnitInstance unit, Vector2 from, Vector2 to)
+        {
+            var grid = PreviewGridFor(unit);
+            if (grid == null) return null;
+
+            var a = new Vector2Int(Mathf.RoundToInt(from.x), Mathf.RoundToInt(from.y));
+            var b = new Vector2Int(Mathf.RoundToInt(to.x), Mathf.RoundToInt(to.y));
+            return MoveToExecutor.PlanCells(grid, a, b);
+        }
+
+        private MovementGrid PreviewGridFor(UnitInstance unit)
+        {
+            if (_map == null || unit == null) return null;
+            var caps = unit.Capabilities(UnitCatalogue.Default());
+            if (caps == null) return null;
+
+            if (_previewGrid != null && _previewCapsId == caps.Id && _previewGrid.Map == _map)
+                return _previewGrid;
+
+            _previewGrid = MoveToExecutor.GridFor(_map, caps);
+            _previewCapsId = caps.Id;
+            return _previewGrid;
         }
 
         /// <summary>

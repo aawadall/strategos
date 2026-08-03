@@ -30,20 +30,20 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 
 ### Near-term focus — "First playable game"
 
-Milestone open work (the player-facing command UX that turns the sandbox into a game):
+Explicit command controls (#32) are done: live plan (#52), palette (#53 / #127–#129),
+waypoints (#54). Next player-facing gaps:
 
 | Issue | Title |
 |---|---|
-| [#32](https://github.com/aawadall/strategos/issues/32) | Epic: explicit command controls |
-| [#53](https://github.com/aawadall/strategos/issues/53) | Command palette with armed verbs |
-| [#54](https://github.com/aawadall/strategos/issues/54) | Waypoints — plot a march as a series of points |
+| [#114](https://github.com/aawadall/strategos/issues/114) | Campaign PLAY entry |
+| [#85](https://github.com/aawadall/strategos/issues/85) | Remaining mission types |
+| [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (policy seam #100 closed) |
 
-Close behind that: campaign PLAY entry (#114), remaining mission types (#85), and the AI
-environment epic (#99) which already has a policy seam (#100 closed).
+Later command polish: config-loaded verb table (#130).
 
 ### Outstanding themes (open issues, grouped)
 
-- **Command UX / play** — #32, #53 (children #127–#129 shipped — close #53 when merged), #54; later: config-loaded verb table (#130)
+- **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
 - **Campaign & progression** — #78, #114, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85, #65
 - **World & movement depth** — #33, #34, #35, #51
