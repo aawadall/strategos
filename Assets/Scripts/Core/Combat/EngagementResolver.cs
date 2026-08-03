@@ -330,6 +330,7 @@ namespace Strategos.Combat
         {
             Posture.DugIn => 0.5f,
             Posture.Guarding => 0.5f,
+            Posture.Covering => 0.5f,
             Posture.Moving => 1.25f,
             _ => 1f,   // Halted / Screening
         };
