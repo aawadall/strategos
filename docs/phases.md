@@ -159,7 +159,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
   - [x] Attack — #150 / #149
   - [x] Reconnaissance — #151
   - [x] Exploit — #152
-  - [ ] Pursue — #153
+  - [x] Pursue — #153
 - [ ] Graphic control measures: axes of advance, battle positions, phase lines, checkpoints, boundaries, engagement areas, kill zones
 - [x] Order propagation delay via formation decomposition (one echelon per step)
 - [ ] Order propagation delay by distance / terrain / comms modality (#47)

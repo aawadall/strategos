@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Pursue mission order: tight standoff MoveTo + Engage; PLAY PURSUE; `PursueProbe`
+  (#153 / #85). Closes the #85 mission-type children.
 - Exploit mission order: MoveTo past threat + Engage; PLAY EXPLOIT; `ExploitProbe` (#152 / #85).
 - Recon mission order: MoveTo standoff + Screen; PLAY RECON; `ReconProbe` (#151 / #85).
 - Attack mission order: expands to MoveTo (standoff) + Engage; PLAY ATTACK; `AttackProbe`
