@@ -524,7 +524,20 @@ namespace Strategos.Commands
                     break;
 
                 case CommandKind.CancelFrom:
-                    queue.CancelFrom(command.Index);
+                    // #56: cancelling the entry actually under way must halt and reset posture
+                    // exactly like Abort — otherwise the unit stays flagged Posture.Moving for
+                    // ever, taking EngagementResolver's 1.25x posture factor while standing
+                    // still. Cancelling only a still-pending tail must touch neither, so the
+                    // queue itself is asked which case this was rather than assumed from
+                    // whether anything at all was cancelled.
+                    {
+                        int cancelled = queue.CancelFrom(command.Index, out bool executingCancelled);
+                        if (executingCancelled)
+                        {
+                            ReportHalt(command, cancelled);
+                            ApplyAbortPosture(command.TargetUnit);
+                        }
+                    }
                     break;
 
                 default:

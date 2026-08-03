@@ -334,8 +334,17 @@ namespace Strategos.Editor
                 var unit = sim.UnitOf(id);
 
                 sim.Issue(Command.MoveTo(Blue, id, new Vector2(60f, 70f)));
-                sim.Step();   // queued
-                sim.Step();   // executing — StubMoveExecutor has already set Posture.Moving
+
+                // One step, not two: FirstUnit is a fully-trained company (Training = 100,
+                // UnitInstance.HesitationTicks = 0), so delivery and the start of execution
+                // land on the very same tick — a second "settle in" step here was redundant,
+                // and worse, it is the exact tick this scenario's own detection sweep first
+                // produces Contact reports (verified independently of this fix: identical
+                // three Contact entries appear on tick 3 whether CancelFrom is buggy or fixed)
+                // and the exact tick StubMoveExecutor.TicksToComplete (3) naturally finishes
+                // whatever is executing. Either landmine pollutes the assertions below with
+                // activity that has nothing to do with the cancel under test.
+                sim.Step();
 
                 if (unit.Posture != Posture.Moving)
                 {
@@ -370,8 +379,7 @@ namespace Strategos.Editor
                 sim.Issue(Command.MoveTo(Blue, id, new Vector2(60f, 70f)));   // becomes head
                 sim.Issue(Command.MoveTo(Blue, id, new Vector2(62f, 74f)));   // stays pending
 
-                sim.Step();   // queued
-                sim.Step();   // head executing, Posture.Moving
+                sim.Step();   // one step — see Part 1's comment on why not two
 
                 if (unit.Posture != Posture.Moving)
                 {

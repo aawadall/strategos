@@ -330,5 +330,33 @@ Tick++
   once the restored run is stepped further (the acknowledgement guard and the victory baseline
   both do), which is why `SaveLoadProbe` asserts a stepped-forward comparison as well as an
   immediate one, and a dedicated assertion per row besides.
+- **`CancelFrom` addresses a `QueuedCommand.Ordinal`, not a live-list position, and resets
+  posture exactly when `Abort` would (#56/#57).** A position goes stale the instant an earlier
+  entry completes: `CommandQueue.Finish` shifts everything behind it down one, so a `CancelFrom`
+  captured against row 2 of a four-leg plan and delivered a tick later — after the head has
+  finished — lands on row 1 instead, silently. `Ordinal` is a per-queue counter `Enqueue` and
+  `InsertFront` hand out once and never reuse or shift; `CancelFrom(ordinal)` cancels the first
+  live entry whose ordinal is at or past the one given, and everything after it, which is the
+  entry the caller meant regardless of what has completed and left the queue since. Cancelling
+  the entry actually executing must halt and reset posture the same way `Abort` does — otherwise
+  a unit cancelled out of a running `MoveTo` stays flagged `Posture.Moving` for ever, taking
+  `EngagementResolver`'s 1.25x posture factor while standing still — but cancelling only a
+  still-pending tail must touch neither posture nor the report log, since nothing was actually
+  under way. `CommandQueue.CancelFrom` reports which case it was through an `out bool
+  executingCancelled` rather than making `Simulation.OnCommandDelivered` re-derive it from
+  whether anything at all was cancelled, which is the trap: a pending-tail cancel also returns a
+  nonzero cancelled count.
+- **`CommandProbe`'s rescued #56 fixture had an off-by-one — a redundant setup `sim.Step()`
+  the fix itself could not satisfy.** `FirstUnit` in `CommandProbe.NewSim()` is a fully-trained
+  company (`Training = 100`, so `HesitationTicks = 0`), which means delivery and the start of
+  execution land on the same tick — a second "settle in" step before checking `Posture.Moving`
+  was already redundant. Worse, that redundant step pushed the cancel-delivery tick to exactly
+  tick 3, which collided with two things unrelated to either bug: `StubMoveExecutor`'s own
+  `TicksToComplete = 3` naturally finishing whatever was executing that same tick (masking a
+  correct pending-tail cancel behind a real, unrelated completion), and the Skirmish scenario's
+  own first detection sweep, which produces three `Contact` reports on tick 3 regardless of what
+  `CancelFrom` does. Both were confirmed independent of the fix by running the fixture against
+  broken and correct `CancelFrom` implementations alike and observing identical pollution either
+  way. One step, not two, avoids both.
 
 ---
