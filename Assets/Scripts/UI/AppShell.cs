@@ -17,7 +17,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Strategos.Demo;
+using Strategos.NatoSymbols;
 using Strategos.UI.Views;
+using Strategos.Units;
 
 namespace Strategos.UI
 {
@@ -35,6 +37,8 @@ namespace Strategos.UI
 
         private ViewHost _views;
         private AppSession _session;
+        private RectTransform _insignia;
+        private Image _insigniaImage;
 
         /// <summary>Shared map / symbol state. Views read and write this, not each other.</summary>
         public AppSession Session => _session;
@@ -164,11 +168,31 @@ namespace Strategos.UI
 
             var brand = UiFactory.CreateTmp("Brand", bar, "STRATEGOS", 15,
                 FontStyles.Bold, withLayout: false);
-            UiFactory.Stretch(brand.rectTransform);
-            brand.rectTransform.offsetMin = new Vector2(18, 0);
+            brand.rectTransform.anchorMin = new Vector2(0, 0);
+            brand.rectTransform.anchorMax = new Vector2(0, 1);
+            brand.rectTransform.pivot = new Vector2(0, 0.5f);
+            brand.rectTransform.sizeDelta = new Vector2(140, 0);
+            brand.rectTransform.anchoredPosition = new Vector2(18, 0);
             brand.alignment = TextAlignmentOptions.MidlineLeft;
             brand.color = UiTheme.AccentText;
             brand.characterSpacing = 8f;
+
+            // Shoulder board for the echelon the player commands (#38). Hidden until PLAY
+            // publishes a command context. Derived from ORBAT + Side.RankLadder — never a
+            // free-floating rank setting.
+            _insignia = UiFactory.CreateRect("RankInsignia", bar);
+            _insignia.anchorMin = new Vector2(0, 0.5f);
+            _insignia.anchorMax = new Vector2(0, 0.5f);
+            _insignia.pivot = new Vector2(0, 0.5f);
+            _insignia.sizeDelta = new Vector2(RankInsignia.Width * 0.7f, RankInsignia.Height * 0.7f);
+            _insignia.anchoredPosition = new Vector2(158, 0);
+            _insigniaImage = _insignia.gameObject.AddComponent<Image>();
+            _insigniaImage.preserveAspect = true;
+            _insigniaImage.raycastTarget = false;
+            _insignia.gameObject.SetActive(false);
+
+            _session.CommandContextChanged += RefreshInsignia;
+            RefreshInsignia();
 
             // Tab strip, right-aligned. childForceExpandWidth stays off: the tabs are
             // fixed width and must not absorb the bar's surplus.
@@ -194,6 +218,29 @@ namespace Strategos.UI
             contentHost.offsetMax = new Vector2(0, -TopBarHeight);
 
             tabStrip = strip;
+        }
+
+        /// <summary>
+        /// Shoulder board for the player's command echelon — epaulette, not a text label (#38).
+        /// </summary>
+        private void RefreshInsignia()
+        {
+            if (_insignia == null || _insigniaImage == null || _session == null) return;
+
+            var side = _session.PlayerSide;
+            var echelon = _session.PlayerCommandEchelon;
+            if (side == null || echelon == Echelon.None)
+            {
+                _insignia.gameObject.SetActive(false);
+                return;
+            }
+
+            var ladder = RankLadderIO.Resolve(side.RankLadder);
+            var step = ladder.For(echelon);
+            _insigniaImage.sprite = RankInsignia.For(step);
+            _insigniaImage.color = Color.white;
+            _insignia.gameObject.name = $"RankInsignia_{step.Title}";
+            _insignia.gameObject.SetActive(true);
         }
 
         // ─── Command line ─────────────────────────────────────────────────────

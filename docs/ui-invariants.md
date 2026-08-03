@@ -113,6 +113,11 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   The drill dropdown has the same shape (`_drillOptionsKey`): each entry is annotated with the
   selected unit's T/P/U from `TtpReadiness.Assess`, and rebuilding every tick would close the
   list under the pointer — so the key is unit identity plus rounded effectiveness, not "always".
+- **The player's rank on the top bar is a shoulder board, not a text label (#38).** It is
+  derived from the highest echelon on the player's ORBAT and looked up on `Side.RankLadder` —
+  never a free-floating rank field. Marks are procedural (`RankInsignia`), same reason as the
+  dropdown arrow: the SDF atlas has no stars or chevrons. Prefab PNGs in Resources were
+  considered and rejected for store cost — one insignia is on screen at a time.
 - **PLAY's zoom is bounded by the echelon the player commands, and that is a mechanic.**
   `EchelonSpans` gives each echelon a contiguous band of ground widths; PLAY clamps the
   card's `uvRect` to it. A squad leader may not widen to a theatre picture and a corps
