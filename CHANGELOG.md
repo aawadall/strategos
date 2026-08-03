@@ -13,6 +13,7 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Recon mission order: MoveTo standoff + Screen; PLAY RECON; `ReconProbe` (#151 / #85).
 - Attack mission order: expands to MoveTo (standoff) + Engage; PLAY ATTACK; `AttackProbe`
   (#85 slice).
 - Withdraw + Delay mission orders: Withdraw expands to Abort+MoveTo; Delay holds until the

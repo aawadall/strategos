@@ -391,6 +391,7 @@ namespace Strategos.UI.Views
             AddButton(controls, "WITHDRAW", WithdrawSelected);
             AddButton(controls, "DELAY", DelaySelected);
             AddButton(controls, "ATTACK", AttackSelected);
+            AddButton(controls, "RECON", ReconSelected);
 
             // Calling a drill by code is what the whole doctrine library is for. A dropdown
             // is the discovery path; #53's palette adds typing the code, which is the
@@ -2343,6 +2344,14 @@ namespace Strategos.UI.Views
             _sim.Issue(Command.Attack(ActorId.ForSide(unit.Side), unit.Id));
         }
 
+        private void ReconSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Recon(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
         /// <summary>
         /// Calls the chosen drill on the selected unit or formation.
         /// </summary>
@@ -2427,6 +2436,7 @@ namespace Strategos.UI.Views
             CommandKind.Delay => "DELAYING",
             CommandKind.Withdraw => "WITHDRAWING",
             CommandKind.Attack => "ATTACKING",
+            CommandKind.Recon => "RECONNING",
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 

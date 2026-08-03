@@ -526,6 +526,12 @@ namespace Strategos.Commands
                 return;
             }
 
+            if (command.Kind == CommandKind.Recon)
+            {
+                ExpandRecon(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -813,6 +819,42 @@ namespace Strategos.Commands
             }
 
             Issue(Command.Engage(actor, unit.Id, threat.Id));
+        }
+
+        /// <summary>
+        /// How far Recon stands off to observe, in cells — farther than Attack's close.
+        /// </summary>
+        public const float ReconStandoffCells = 24f;
+
+        /// <summary>
+        /// Unpacks Recon into MoveTo (standoff) + Screen — move to see, then hold watch (#151).
+        /// </summary>
+        private void ExpandRecon(in Command command)
+        {
+            var unit = UnitOf(command.TargetUnit);
+            if (unit == null) return;
+
+            UnitInstance threat = null;
+            if (command.AgainstUnit.IsValid)
+                threat = UnitOf(command.AgainstUnit);
+            if (threat == null || threat.IsDestroyed)
+                threat = NearestHostile(unit);
+            if (threat == null) return;
+
+            var actor = command.IssuedBy;
+            float dist = Vector2.Distance(unit.Cell, threat.Cell);
+            if (dist > ReconStandoffCells)
+            {
+                Vector2 toward = threat.Cell - unit.Cell;
+                toward.Normalize();
+                var map = Map;
+                Vector2 destination = threat.Cell - toward * ReconStandoffCells;
+                destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
+                destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
+                Issue(Command.MoveTo(actor, unit.Id, destination));
+            }
+
+            Issue(Command.Screen(actor, unit.Id));
         }
 
         /// <summary>
