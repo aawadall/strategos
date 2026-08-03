@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Campaigns;
 using Strategos.Commands;
 using Strategos.Directives;
 using Strategos.Doctrine;
@@ -356,6 +357,8 @@ namespace Strategos.UI.Views
             // whole command is under rather than a property of whichever unit is picked.
             BuildDirectiveCard(content);
 
+            BuildCampaignCard(content);
+
             AddSection(content, "SELECTED UNIT");
             BuildDetailsCard(content);
 
@@ -618,41 +621,150 @@ namespace Strategos.UI.Views
 
         // ─── Scenario ─────────────────────────────────────────────────────────
 
+        /// <summary>Shipped valley chain rest between ops — Lost gets less (#75 pattern).</summary>
+        private const float CampaignRestHoursWon = 6f;
+        private const float CampaignRestHoursLost = 2f;
+
+        private TMP_Text _campaignLabel;
+        private Button _continueCampaignButton;
+
+        /// <summary>
+        /// CAMPAIGN rail (#139): start the shipped valley chain, or continue after an
+        /// operation decides. Not a new top-level tab — PLAY already owns the sim.
+        /// </summary>
+        private void BuildCampaignCard(Transform parent)
+        {
+            AddSection(parent, "CAMPAIGN");
+
+            _campaignLabel = CreateTmp("CampaignStatus", parent,
+                "Single scenario  ·  START loads the valley chain", 11, FontStyles.Normal);
+            _campaignLabel.color = Theme.InkMuted;
+            _campaignLabel.GetComponent<LayoutElement>().preferredHeight = 36;
+
+            var row = AddButtonRow(parent);
+            AddButton(row, "START VALLEY", StartValleyCampaign);
+            _continueCampaignButton = AddButton(row, "CONTINUE", AdvanceCampaign);
+            _continueCampaignButton.interactable = false;
+
+            var row2 = AddButtonRow(parent);
+            AddButton(row2, "SKIRMISH ONLY", () => LoadScenario(ScenarioSamples.SkirmishName));
+        }
+
         private void LoadScenario(string name)
         {
-            _scenario = ScenarioIO.Load(name);
-            if (_scenario == null)
+            _session?.ClearCampaign();
+            RefreshCampaignChrome();
+
+            var scenario = ScenarioIO.Load(name);
+            if (scenario == null)
             {
                 Debug.LogError($"[PlayView] no scenario '{name}' in Resources/{ScenarioIO.ResourceFolder}");
                 _statusLabel.text = $"SCENARIO '{name.ToUpperInvariant()}' NOT FOUND";
                 return;
             }
 
-            _map = _scenario.GenerateMap();
+            var map = scenario.GenerateMap();
+            var problems = scenario.Validate(UnitCatalogue.Default(), map);
+            foreach (var p in problems) Debug.LogWarning($"[PlayView] {scenario.Name}: {p}");
 
-            // With the map in hand, validation can also check that each unit is standing
-            // somewhere its own capabilities allow — a unit in a lake draws perfectly well.
-            var problems = _scenario.Validate(UnitCatalogue.Default(), _map);
-            foreach (var p in problems) Debug.LogWarning($"[PlayView] {_scenario.Name}: {p}");
+            BindSimulation(new Simulation(scenario, map, UnitCatalogue.Default()), problems);
+        }
 
-            _headerLabel.text = _scenario.Name.ToUpperInvariant();
+        /// <summary>Starts the shipped three-op valley campaign (#139).</summary>
+        private void StartValleyCampaign()
+        {
+            var chain = CampaignChainIO.Load(CampaignSamples.ValleyName);
+            if (chain == null)
+            {
+                Debug.LogError(
+                    $"[PlayView] no campaign '{CampaignSamples.ValleyName}' in " +
+                    $"Resources/{CampaignChainIO.ResourceFolder}");
+                _statusLabel.text = "CAMPAIGN NOT FOUND";
+                return;
+            }
 
-            _sim = new Simulation(_scenario, _map, UnitCatalogue.Default());
+            var problems = chain.Validate(UnitCatalogue.Default());
+            if (problems.Count > 0)
+            {
+                foreach (var p in problems) Debug.LogWarning($"[PlayView] campaign: {p}");
+                _statusLabel.text = $"CAMPAIGN INVALID  ·  {problems.Count} PROBLEM(S)";
+                return;
+            }
 
-            // After the simulation exists, because the unit count it reports is the count of
-            // things that *fight* — formations are not troops and must not be totalled with
-            // them. Reading it before construction is a null dereference, and a null here
-            // truncates the whole layout in silence: a coloured window and nothing else.
-            // Hyphens and middots only; the atlas has no en dash and renders it as nothing.
+            _session?.BeginCampaign(chain, 0);
+            var sim = CampaignChainDriver.StartNext(chain, 0, UnitCatalogue.Default());
+            BindSimulation(sim);
+            RefreshCampaignChrome();
+            Debug.Log($"[PlayView] campaign '{chain.Name}' operation 0 started");
+        }
+
+        /// <summary>
+        /// After an operation decides: carry over into the next entry and bind that sim.
+        /// </summary>
+        private void AdvanceCampaign()
+        {
+            if (_session == null || !_session.HasNextOperation || _sim == null) return;
+            if (_sim.Victory == null || !_sim.Victory.Outcome.Decided)
+            {
+                _statusLabel.text = "OPERATION NOT DECIDED";
+                return;
+            }
+
+            var chain = _session.ActiveChain;
+            int i = _session.ActiveOperationIndex;
+            var finished = chain.Operations[i];
+            var next = chain.Operations[i + 1];
+            float rest = RestHoursFor(_sim);
+
+            try
+            {
+                CampaignCarryOver.CarryOver(_sim, finished, next, rest);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[PlayView] carry-over failed: {ex.Message}");
+                _statusLabel.text = "CARRY-OVER FAILED";
+                return;
+            }
+
+            _session.AdvanceCampaignOperation();
+            var sim = CampaignChainDriver.StartNext(chain, _session.ActiveOperationIndex,
+                UnitCatalogue.Default());
+            BindSimulation(sim);
+            RefreshCampaignChrome();
+
+            Debug.Log(
+                $"[PlayView] campaign advanced to operation {_session.ActiveOperationIndex} " +
+                $"('{next.Name}') after {rest}h rest");
+        }
+
+        private static float RestHoursFor(Simulation sim)
+        {
+            var outcome = sim.Victory.Outcome;
+            if (outcome.IsDraw) return CampaignRestHoursWon;
+            if (outcome.Winner == sim.Scenario.PlayerSide) return CampaignRestHoursWon;
+            return CampaignRestHoursLost;
+        }
+
+        /// <summary>
+        /// Wires a ready <see cref="Simulation"/> into PLAY — shared by single-scenario load
+        /// and campaign <see cref="CampaignChainDriver.StartNext"/>.
+        /// </summary>
+        private void BindSimulation(Simulation sim, List<string> problems = null)
+        {
+            problems ??= new List<string>();
+
+            _sim = sim;
+            _scenario = sim.Scenario;
+            _map = sim.Map;
+
+            _headerLabel.text = HeaderForCurrent();
+
             _statusLabel.text =
                 $"{_scenario.Sides.Count} SIDES   ·   {_sim.Units.Count} UNITS   ·   " +
                 $"{_map.Header.WidthMetres / 1000f:0.#} × {_map.Header.HeightMetres / 1000f:0.#} KM" +
                 (problems.Count > 0 ? $"   ·   {problems.Count} VALIDATION WARNING(S)" : string.Empty);
 
-
-            // Published so other views can read live unit state — the drill binder rates units
-            // against drills and must see the force as it actually is. Read-only for everyone
-            // else: this view builds it, steps it, and is the only thing permitted to mutate it.
             if (_session != null) _session.Simulation = _sim;
 
             _sim.AddExecutor(new MoveToExecutor());
@@ -660,9 +772,6 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new DefendExecutor());
             _sim.EnableReactions();
 
-            // Everything the player does not command gets its own intent, so the scenario is a
-            // contest rather than a diorama. With no player side declared, nothing is directed
-            // and both sides remain fully playable — a hot-seat game.
             if (_scenario.PlayerSide.IsValid)
             {
                 var opposing = new List<SideId>();
@@ -671,18 +780,20 @@ namespace Strategos.UI.Views
                 _sim.EnableDirector(opposing);
             }
             _tickAccumulator = 0f;
+            _running = true;
+            if (_runToggle != null)
+            {
+                _suppress = true;
+                _runToggle.isOn = true;
+                _suppress = false;
+            }
 
-            // Order 100 puts the feed behind the unit layer, which subscribes at 0 and is the
-            // only subscriber allowed to mutate anything.
             _outcomeShown = false;
             if (_clockLabel != null) _clockLabel.color = Theme.InkMuted;
             _feed.Clear();
             _sim.Reports.Subscribe("ui-feed", 100, OnReport);
             RefreshFeed();
 
-            // Standing state, reset per scenario load like the feed above it. Subscribed, not
-            // read from Scenario.Directive — a fresh directive (or none) arrives through the
-            // bus on the scenario's first step, same one-tick delay as every other message.
             _directive = null;
             _directiveAcknowledged = false;
             _directiveAcknowledgedTick = 0;
@@ -694,8 +805,51 @@ namespace Strategos.UI.Views
             BuildOrbat();
             ClearSelection();
             PublishCommandContext();
+            RefreshCampaignChrome();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
+        }
+
+        private string HeaderForCurrent()
+        {
+            if (_session != null && _session.HasActiveCampaign)
+            {
+                var chain = _session.ActiveChain;
+                var op = chain.Operations[_session.ActiveOperationIndex];
+                return $"{chain.Name.ToUpperInvariant()}  ·  OP {_session.ActiveOperationIndex + 1}/" +
+                       $"{chain.Operations.Count}  ·  {op.Name.ToUpperInvariant()}";
+            }
+
+            return _scenario != null ? _scenario.Name.ToUpperInvariant() : "SCENARIO";
+        }
+
+        private void RefreshCampaignChrome()
+        {
+            if (_campaignLabel == null) return;
+
+            if (_session == null || !_session.HasActiveCampaign)
+            {
+                _campaignLabel.text = "Single scenario  ·  START loads the valley chain";
+                if (_continueCampaignButton != null)
+                    _continueCampaignButton.interactable = false;
+                return;
+            }
+
+            var chain = _session.ActiveChain;
+            int i = _session.ActiveOperationIndex;
+            var op = chain.Operations[i];
+            bool canContinue = _outcomeShown && _session.HasNextOperation;
+
+            _campaignLabel.text =
+                $"{chain.Name}  ·  op {i + 1}/{chain.Operations.Count}  ·  {op.Name}" +
+                (canContinue
+                    ? "\nOperation decided  ·  CONTINUE carries the ORBAT forward"
+                    : _outcomeShown && !_session.HasNextOperation
+                        ? "\nCampaign complete"
+                        : "\nFight to a decision, then CONTINUE");
+
+            if (_continueCampaignButton != null)
+                _continueCampaignButton.interactable = canContinue;
         }
 
         private void RefreshSheet()
@@ -1311,11 +1465,21 @@ namespace Strategos.UI.Views
                 : (_scenario.FindSide(outcome.Winner)?.Name ?? outcome.Winner.ToString())
                   .ToUpperInvariant() + " WINS";
 
-            _clockLabel.text = $"T+{outcome.Tick:0000}   ·   {winner}   ·   {outcome.Summary}";
+            string campaignNote = string.Empty;
+            if (_session != null && _session.HasActiveCampaign)
+            {
+                campaignNote = _session.HasNextOperation
+                    ? "   ·   CONTINUE FOR NEXT OPERATION"
+                    : "   ·   CAMPAIGN COMPLETE";
+            }
+
+            _clockLabel.text =
+                $"T+{outcome.Tick:0000}   ·   {winner}   ·   {outcome.Summary}{campaignNote}";
             _clockLabel.color = Theme.Alert;
 
             if (_runToggle != null) _runToggle.isOn = false;
 
+            RefreshCampaignChrome();
             Debug.Log($"[PlayView] scenario decided: {outcome}");
         }
 

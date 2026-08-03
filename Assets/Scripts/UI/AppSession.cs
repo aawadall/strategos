@@ -11,6 +11,7 @@
 // problem.
 
 using System;
+using Strategos.Campaigns;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
 using Strategos.Units;
@@ -91,6 +92,54 @@ namespace Strategos.UI
         /// nothing else may mutate it — reading unit state is the only use intended here.
         /// </remarks>
         public Commands.Simulation Simulation { get; set; }
+
+        /// <summary>
+        /// Active campaign chain while PLAY is running a multi-op session (#139), or null for
+        /// ordinary single-scenario play. The same instance CarryOver mutates between ops.
+        /// </summary>
+        public CampaignChain ActiveChain { get; private set; }
+
+        /// <summary>Index into <see cref="ActiveChain"/>.Operations, or -1 when no campaign.</summary>
+        public int ActiveOperationIndex { get; private set; } = -1;
+
+        public bool HasActiveCampaign => ActiveChain != null && ActiveOperationIndex >= 0;
+
+        public bool HasNextOperation =>
+            HasActiveCampaign &&
+            ActiveOperationIndex + 1 < ActiveChain.Operations.Count;
+
+        /// <summary>Raised when campaign context starts, advances, or clears.</summary>
+        public event Action CampaignContextChanged;
+
+        /// <summary>Begins (or resumes) a campaign at <paramref name="entryIndex"/>.</summary>
+        public void BeginCampaign(CampaignChain chain, int entryIndex = 0)
+        {
+            if (chain == null) throw new ArgumentNullException(nameof(chain));
+            if (entryIndex < 0 || entryIndex >= chain.Operations.Count)
+                throw new ArgumentOutOfRangeException(nameof(entryIndex));
+
+            ActiveChain = chain;
+            ActiveOperationIndex = entryIndex;
+            CampaignContextChanged?.Invoke();
+        }
+
+        /// <summary>Advances the active index after a successful carry-over into the next op.</summary>
+        public void AdvanceCampaignOperation()
+        {
+            if (!HasNextOperation)
+                throw new InvalidOperationException("No next campaign operation to advance to.");
+            ActiveOperationIndex++;
+            CampaignContextChanged?.Invoke();
+        }
+
+        /// <summary>Leaves campaign mode — single-scenario PLAY again.</summary>
+        public void ClearCampaign()
+        {
+            if (ActiveChain == null && ActiveOperationIndex < 0) return;
+            ActiveChain = null;
+            ActiveOperationIndex = -1;
+            CampaignContextChanged?.Invoke();
+        }
 
         /// <summary>
         /// The echelon the player currently commands, or <see cref="Echelon.None"/> when
