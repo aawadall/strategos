@@ -121,6 +121,11 @@ namespace Strategos.Commands
         /// </summary>
         Attack = 10,
 
+        /// <summary>
+        /// Move to observe — expands to MoveTo (standoff) + Screen (#151 / #85).
+        /// </summary>
+        Recon = 11,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -295,6 +300,16 @@ namespace Strategos.Commands
             Kind = CommandKind.Attack, AgainstUnit = against,
         };
 
+        /// <summary>
+        /// Move to a standoff and screen. Empty <paramref name="against"/> → nearest hostile.
+        /// </summary>
+        public static Command Recon(ActorId by, UnitId unit, UnitId against = default,
+            int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Recon, AgainstUnit = against,
+        };
+
         public override string ToString()
         {
             string what = Kind switch
@@ -303,6 +318,7 @@ namespace Strategos.Commands
                 CommandKind.Engage => $"Engage({AgainstUnit})",
                 CommandKind.Withdraw => $"Withdraw({AgainstUnit})",
                 CommandKind.Attack => $"Attack({AgainstUnit})",
+                CommandKind.Recon => $"Recon({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),
