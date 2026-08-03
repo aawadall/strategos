@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Guard mission order: dig-in like Defend plus detection ×1.15 once prepared; PLAY GUARD
+  button; `GuardProbe` (#85 slice).
 - Screen mission order: never-ending hold that sets `Posture.Screening` (detection ×1.35,
   no dig-in); PLAY SCREEN button; `ScreenProbe` (#85 first slice).
 - Mid-campaign SAVE/LOAD: `SaveRecord` carries live chain JSON + operation index; PLAY

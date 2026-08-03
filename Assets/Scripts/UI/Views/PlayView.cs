@@ -386,6 +386,7 @@ namespace Strategos.UI.Views
             AddButton(controls, "ABORT PLAN", AbortSelected);
             AddButton(controls, "HOLD", HoldSelected);
             AddButton(controls, "SCREEN", ScreenSelected);
+            AddButton(controls, "GUARD", GuardSelected);
 
             // Calling a drill by code is what the whole doctrine library is for. A dropdown
             // is the discovery path; #53's palette adds typing the code, which is the
@@ -790,6 +791,7 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new EngageExecutor());
             _sim.AddExecutor(new DefendExecutor());
             _sim.AddExecutor(new ScreenExecutor());
+            _sim.AddExecutor(new GuardExecutor());
             _sim.EnableReactions();
             if (restoreFrom != null) _sim.RestoreReactionPicture(restoreFrom);
 
@@ -2290,6 +2292,17 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
+        /// Guard where you stand — dig in and keep a modest watch (#85).
+        /// </summary>
+        private void GuardSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Guard(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
+        /// <summary>
         /// Calls the chosen drill on the selected unit or formation.
         /// </summary>
         /// <remarks>
@@ -2368,6 +2381,7 @@ namespace Strategos.UI.Views
             CommandKind.Engage => DescribeEngagement(unit, command.AgainstUnit),
             CommandKind.Defend => DescribeDefence(unit),
             CommandKind.Screen => DescribeScreen(unit),
+            CommandKind.Guard => DescribeGuard(unit),
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 
@@ -2722,6 +2736,18 @@ namespace Strategos.UI.Views
             unit.Posture == Posture.Screening
                 ? "SCREENING   ·   OBSERVING"
                 : "SCREENING";
+
+        private string DescribeGuard(UnitInstance unit)
+        {
+            var q = _sim?.QueueOf(unit.Id);
+            if (q == null || q.IsEmpty) return "GUARDING";
+
+            if (unit.Posture == Posture.Guarding) return "GUARDING   ·   DUG IN";
+
+            int percent = Mathf.Clamp(
+                q[0].TicksExecuting * 100 / DefendExecutor.DigInTicks, 0, 99);
+            return _detailsLine ? $"GUARDING   ·   PREPARING {percent}%" : "GUARDING   ·   PREPARING";
+        }
 
         private void RefreshSelection()
         {
