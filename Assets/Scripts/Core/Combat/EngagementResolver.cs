@@ -329,8 +329,9 @@ namespace Strategos.Combat
         public static float PostureFactor(Posture posture) => posture switch
         {
             Posture.DugIn => 0.5f,
+            Posture.Guarding => 0.5f,
             Posture.Moving => 1.25f,
-            _ => 1f,   // Halted
+            _ => 1f,   // Halted / Screening
         };
 
         /// <summary>Height advantage, capped both ways so a mountain is not a win condition.</summary>

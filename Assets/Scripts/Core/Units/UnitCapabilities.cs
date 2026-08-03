@@ -39,6 +39,11 @@ namespace Strategos.Units
         /// detection reaches further (see <see cref="UnitCapabilities.DetectionPostureFactor"/>).
         /// </summary>
         Screening = 3,
+        /// <summary>
+        /// Holding a line and prepared to fight — digs in like Defend, with a modest
+        /// detection stretch between Screen and Cover (#85).
+        /// </summary>
+        Guarding = 4,
     }
 
     /// <summary>
@@ -257,16 +262,21 @@ namespace Strategos.Units
         }
 
         /// <summary>
-        /// How posture stretches detection. Screening exists to see; everything else is 1.
+        /// How posture stretches detection. Screening stretches most; Guarding less;
+        /// everything else is 1.
         /// </summary>
         /// <remarks>
         /// Kept next to <see cref="DetectionRangeAt"/> so the single "can this unit see"
-        /// path stays one place when terrain LOS lands. The factor is modest on purpose —
-        /// enough that a screen at the edge of contact is useful, not enough to erase fog
-        /// on the skirmish map (see known-gaps).
+        /// path stays one place when terrain LOS lands. Factors are modest on purpose —
+        /// enough that a screen or guard at the edge of contact is useful, not enough to
+        /// erase fog on the skirmish map (see known-gaps).
         /// </remarks>
-        public static float DetectionPostureFactor(Posture posture) =>
-            posture == Posture.Screening ? 1.35f : 1f;
+        public static float DetectionPostureFactor(Posture posture) => posture switch
+        {
+            Posture.Screening => 1.35f,
+            Posture.Guarding => 1.15f,
+            _ => 1f,
+        };
 
         public override string ToString() =>
             $"{Id} '{Name}' {CrossCountrySpeedMps:0.#}/{RoadSpeedMps:0.#} m/s, " +

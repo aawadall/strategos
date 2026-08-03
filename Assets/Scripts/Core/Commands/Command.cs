@@ -96,6 +96,11 @@ namespace Strategos.Commands
         /// </summary>
         Screen = 5,
 
+        /// <summary>
+        /// Hold a line — dig in, and keep a modest watch. Heavier than Screen, lighter than Cover.
+        /// </summary>
+        Guard = 6,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -225,6 +230,12 @@ namespace Strategos.Commands
         public static Command Screen(ActorId by, UnitId unit, int tick = 0) => new()
         {
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Screen,
+        };
+
+        /// <summary>Hold a line — dig in and keep watch.</summary>
+        public static Command Guard(ActorId by, UnitId unit, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Guard,
         };
 
         public override string ToString()

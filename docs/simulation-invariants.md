@@ -141,8 +141,11 @@ Tick++
   queue shape as Defend, but posture is `Posture.Screening` — combat exposure matches Halted
   (`PostureFactor` 1.0), and `ContactTracker` multiplies detection by
   `UnitCapabilities.DetectionPostureFactor` (1.35). Digging in is deliberately not on the
-  path: a Screen that dug in would be Defend with a longer radio. Remaining mission types
-  under #85 (Guard, Cover, Delay, Attack, Withdraw, …) are still open.
+  path: a Screen that dug in would be Defend with a longer radio.
+- **`Guard` sits between Screen and Cover on the security ladder.** Same dig-in clock as
+  Defend (`DefendExecutor.DigInTicks`); once prepared, posture is `Posture.Guarding` —
+  `PostureFactor` 0.5 like DugIn, detection ×1.15 (lighter watch than Screen). Remaining
+  under #85: Cover, Delay, Attack, Withdraw, Reconnaissance, Exploit, Pursue.
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to
