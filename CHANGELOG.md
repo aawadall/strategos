@@ -15,6 +15,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ### Added
 - PLAY WAYPOINTS palette verb: draft multi-leg marches with pathfinder preview, commit as
   ordinary queued MoveTos; pending legs also draw via `PlanCells` (#54 / #32).
+- Campaign PLAY entry broken out: parent #114 → Validate (#138), start+advance (#139),
+  mid-campaign save (#140).
 - PLAY command palette: table-driven MOVE / ENGAGE arming chrome (#127); armed left-click
   issues that verb via the command bus while right-click stays the engage-or-march shortcut
   (#128 / #53); M / E / Esc arm and clear from the verb table (#129).

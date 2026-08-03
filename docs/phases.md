@@ -210,14 +210,16 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### 6.3 Campaign Mode
 - [x] Linked scenario chain with persistent ORBAT and casualty carry-over (#75 — data + probes)
-- [ ] PLAY / UI wiring to start and advance a campaign (#114)
-- [ ] `CampaignChain.Validate()`
+- [ ] Campaign in PLAY — parent #114
+  - [ ] `CampaignChain.Validate()` (#138)
+  - [ ] Start and advance a campaign in the player (#139)
+  - [ ] Mid-campaign save/resume (#140)
 - [ ] Strategic map layer: campaign moves between operations
 - [ ] Operational-level resupply and reinforcement between scenarios
 - [ ] Dynamic campaign generator (procedural)
 - [ ] Full campaign arc: drills, directives, positions, execution, rank (#78)
 
-**Milestone M6:** Editor ships, at least five built-in scenarios playable, campaign chain of three linked operations works in PLAY. Data-side three-op probe exists; PLAY entry does not.
+**Milestone M6:** Editor ships, at least five built-in scenarios playable, campaign chain of three linked operations works in PLAY. Data-side three-op probe exists; PLAY entry is #114 / #138–#140.
 
 ---
 
