@@ -9,8 +9,8 @@ that carried-over state into the next entry's actual starting `Scenario`/`Simula
 three-operation acceptance probe proving #75's own criteria end to end. PLAY wiring is tracked
 under parent [#114](https://github.com/aawadall/strategos/issues/114) — see
 [campaign-play-plan.md](campaign-play-plan.md) for the child sequence (#138–#140).
-`CampaignChain.Validate()` and any wiring into PLAY/UI are still not here — see "What is
-deliberately not here yet" below. Neither `CampaignCarryOver.CarryOver` nor
+`CampaignChain.Validate()` (#138) is the load-time check; PLAY/UI wiring is still open — see
+"What is deliberately not here yet" below. Neither `CampaignCarryOver.CarryOver` nor
 `CampaignChainDriver` runs inside a `Simulation` tick or is part of `Simulation.Signature()`, so
 neither has anything to add to [docs/simulation-invariants.md](simulation-invariants.md)'s
 replay-divergence rules. Extend this page, not that one, as later `Core/Campaigns` chunks add
@@ -216,20 +216,35 @@ content in all three slots) still needs its author to check reinforcement surviv
 way, per the Id-consistency rule above — this chunk did not change that rule or weaken
 `MergeCarriedOver`'s throw.
 
+## Validation (#138)
+
+`CampaignChain.Validate(UnitCatalogue catalogue = null, Func<string, Scenario> load = null)`
+returns every problem in one pass (empty means the chain may start), matching
+`Scenario.Validate`'s shape:
+
+- Campaign name and a non-empty operations list.
+- Each entry's `ScenarioName` resolves via `ScenarioIO.Load` (or an injected `load`).
+- Each loaded scenario's own `Scenario.Validate(catalogue)` problems are prefixed with the
+  operation label.
+- Non-empty `CarriedOverUnits` on an entry must every `Id` exist in that entry's scenario —
+  otherwise `MergeCarriedOver` would throw at play time.
+- Consecutive operations: any `UnitId` present in both scenarios must keep the same `Side`
+  and `CapabilityId` (Id-consistency authoring rule above). Units that exist in only one
+  operation are allowed (reinforcements / expected losses) — survival is not predicted here.
+
+Probe: `Strategos > Probe Campaign Chain Validate` /
+`-executeMethod Strategos.Editor.CampaignChainValidateProbe.Run`.
+
 ## What is deliberately not here yet
 
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
-- **Validation** — no `CampaignChain.Validate()` yet. Tracked as [#138](https://github.com/aawadall/strategos/issues/138)
-  (child of [#114](https://github.com/aawadall/strategos/issues/114)). Skipped in #75 rather than
-  done half-way: a scenario-name reference can only be checked meaningfully against a
-  catalogue/map the way `Scenario.Validate` does.
 - **Wiring into PLAY/UI** — nothing under `Assets/Scripts/UI` reads or calls any of this yet.
   `CampaignChainDriver.StartNext` is a standalone function. Parent
   [#114](https://github.com/aawadall/strategos/issues/114): start+advance is
   [#139](https://github.com/aawadall/strategos/issues/139); mid-campaign save is
-  [#140](https://github.com/aawadall/strategos/issues/140).
+  [#140](https://github.com/aawadall/strategos/issues/140). `Validate` (#138) is above.
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`

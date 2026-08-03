@@ -12,7 +12,7 @@ flowchart LR
 
 | Child | Role |
 |---|---|
-| [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` — Core, load-time errors |
+| [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` — shipped |
 | [#139](https://github.com/aawadall/strategos/issues/139) | Session + `StartNext` + `ShowOutcome` → carry-over → next op |
 | [#140](https://github.com/aawadall/strategos/issues/140) | Extend save shape for chain + entry; follows #139 |
 

@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- `CampaignChain.Validate()` — scenario resolution, carried-over id checks, Id-consistency
+  across consecutive operations; probe coverage (#138 / #114).
 - PLAY WAYPOINTS palette verb: draft multi-leg marches with pathfinder preview, commit as
   ordinary queued MoveTos; pending legs also draw via `PlanCells` (#54 / #32).
 - Campaign PLAY entry broken out: parent #114 → Validate (#138), start+advance (#139),
