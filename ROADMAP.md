@@ -1,14 +1,62 @@
 # Strategos — Development Roadmap
 
-> **Engine:** Unity 6 (6000.x LTS) | **Status:** Pre-production
+> **Engine:** Unity 6 (`6000.0.75f1` / URP) | **Status:** Pre-production — playable sandbox
 
-This roadmap describes the high-level development path for Strategos. Detailed implementation tasks for each phase are maintained in [docs/phases.md](docs/phases.md).
+This roadmap describes the high-level development path for Strategos. Detailed implementation
+tasks for each phase are maintained in [docs/phases.md](docs/phases.md). Open work is tracked
+as GitHub issues; known defects that are deliberate or deferred live in
+[docs/known-gaps.md](docs/known-gaps.md).
+
+---
+
+## Where we are (2026-08-03)
+
+The **Playable scenario sandbox** milestone is complete (9/9). Two forces load onto generated
+terrain, take orders, move by terrain-cost A\*, fight under ROE, dig in, tire, report contacts,
+and resolve victory — all deterministically, save/loadable, and replayable from the command log.
+
+| Area | State |
+|---|---|
+| Phase 0 — Foundation | **Done** for a local buildable project. CI is scaffolded but Unity license secrets are unset (green CI ≠ coverage). No EditMode test assembly yet. Steamworks not started. |
+| Phase 1 — Map | **Largely built.** Procedural generation + 2D topographic sheet + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, alternate render modes, basin-breaching for lake-heavy maps. |
+| Phase 2 — Symbols | **Complete** for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (`FRAME ONLY`), animated states. |
+| Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides. Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
+| Phase 4 — Movement & combat | **Core path done.** A\* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning (#35). |
+| Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder (read) + drill execution, `ISidePolicy` seam. Still missing: remaining mission types (#85), spatial comms (#47), intel fusion, doctrine authoring (#65). |
+| Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over probes land (#75). Still missing: PLAY wiring (#114), scenario editor, feature-placed objectives (#51), historical packs. |
+| Phases 7–10 | **Unbuilt**, except early design issues filed (audio, AI env epic #99, release engineering #83). |
+
+### Near-term focus — "First playable game"
+
+Milestone open work (the player-facing command UX that turns the sandbox into a game):
+
+| Issue | Title |
+|---|---|
+| [#32](https://github.com/aawadall/strategos/issues/32) | Epic: explicit command controls |
+| [#53](https://github.com/aawadall/strategos/issues/53) | Command palette with armed verbs |
+| [#54](https://github.com/aawadall/strategos/issues/54) | Waypoints — plot a march as a series of points |
+
+Close behind that: campaign PLAY entry (#114), remaining mission types (#85), and the AI
+environment epic (#99) which already has a policy seam (#100 closed).
+
+### Outstanding themes (open issues, grouped)
+
+- **Command UX / play** — #32, #53, #54, #97, #38
+- **Campaign & progression** — #78, #114, #76, #109
+- **C2 / C3 depth** — #36, #47, #62, #85, #65
+- **World & movement depth** — #33, #34, #35, #51
+- **AI as environment** — #99–#106
+- **Persistence beyond run saves** — #66
+- **Audio (Phase 10 early)** — #40–#46
+- **Release / site** — #83, #120
 
 ---
 
 ## Vision
 
-Strategos is a tactical command simulation game built around topographic maps, NATO APP-6D symbology, multi-echelon command, and adaptive AI. The player can grow from commanding a fireteam to controlling a theater-level combatant command.
+Strategos is a tactical command simulation game built around topographic maps, NATO APP-6D
+symbology, multi-echelon command, and adaptive AI. The player can grow from commanding a
+fireteam to controlling a theater-level combatant command.
 
 The game supports:
 
@@ -41,8 +89,6 @@ The game supports:
 > Squad and section are near-synonyms and vary by army, but APP-6D and the code treat
 > them as distinct echelons, so they are listed separately here. The marks above match
 > `AmplifierDecorator.DrawEchelon` — company is **one** bar, battalion two, regiment three.
-> An earlier version of this table had them shifted by one; see the echelon note in
-> [CLAUDE.md](CLAUDE.md) before "correcting" it back.
 
 ### Echelon is the difficulty curve
 
@@ -67,47 +113,64 @@ noise; unlocked as the player climbs, they are the learning curve.
 The design consequence: these effects should be **parameterised by echelon, not toggled**.
 Order delay is a function of echelon, distance and terrain that returns approximately zero
 at squad level and grows from there — one code path from tutorial to theatre, with the
-degenerate case serving as the tutorial. See
-[docs/command-architecture.md](docs/command-architecture.md).
+degenerate case serving as the tutorial. Formation-addressed orders already decompose one
+echelon per step (the structural form of that delay). See
+[docs/command-architecture.md](docs/command-architecture.md). Rank-gated progression is
+tracked as #76 / #78 / #109.
 
 ---
 
 ## Phase Overview
 
-### Phase 0 — Foundation & Project Setup
-Establish a buildable Unity 6 project, repository structure, CI, base scenes, and test framework.
+### Phase 0 — Foundation & Project Setup — **done (local)**
+Buildable Unity 6 / URP project, repository structure, tab-shell UI, probe-based verification,
+GitHub Actions scaffolding. Remaining: real Unity CI secrets, EditMode tests, Steamworks.
 
-### Phase 1 — Topographic Map System
-Implement zoomable heightmap terrain, contour overlays, terrain classification, LOS, fog of war, weather, and grid systems.
+### Phase 1 — Topographic Map System — **largely built**
+Procedural heightfield pipeline, landcover, hydrology, settlements/roads, 2D topographic
+rasterizer, pannable/zoomable viewport, 3D drape preview, grid overlay. Remaining: LOS, fog of
+war, weather, day/night, alternate map modes, lake-basin breaching.
 
-### Phase 2 — NATO APP-6D Symbol Library
-Build the composable military symbol system, including APP-6D frames, affiliation, unit types, echelon indicators, modifiers, and map rendering.
+### Phase 2 — NATO APP-6D Symbol Library — **complete (land)**
+Composable decorator pipeline, baker, library browser, BUILDER digit composer, map placement.
+Remaining: LOD, non-land symbol sets, missing land entity icons, animated states.
 
-### Phase 3 — Unit & Echelon System
-Create the hierarchical unit model, ORBAT system, commander assignment, equipment data, doctrine profiles, and runtime unit state.
+### Phase 3 — Unit & Echelon System — **built**
+`UnitInstance` / capabilities / sides, ORBAT tree with roll-up, fatigue and training, scenario
+serialisation. Remaining: commander entities, OPCON/TACON, national doctrine profiles.
 
-### Phase 4 — Movement & Combat Engine
-Implement terrain-aware movement, pathfinding, combat resolution, suppression, indirect fire, logistics, attrition, and recovery.
+### Phase 4 — Movement & Combat Engine — **core done; depth open**
+Terrain-cost A\*, direct-fire engagement, suppression, Hold/Defend dig-in, wrecks and casualty
+log, save/load of a run. Remaining: indirect fire, logistics, reconstitution, formation
+movement, collision/ZoC, dynamic replan (#35), special actions / world objects (#33/#34).
 
-### Phase 5 — Command & Control (C2) System
-Model orders, mission types, command delays, communication degradation, intelligence, reconnaissance, deception, and doctrine templates.
+### Phase 5 — Command & Control (C2) System — **foundations in**
+Orders down / reports up / directives in, per-unit queues, live plan + cancel, ROE reflexes,
+TTP pack IO + drill execution, `SideDirector` behind `ISidePolicy`. Remaining: Screen/Guard/
+Delay/Attack/Withdraw (#85), graphic control measures, spatial multi-modal comms (#47), intel
+fusion, doctrine authoring (#65).
 
-### Phase 6 — Scenario & Campaign System
-Build the scenario editor, historical scenario support, objective system, victory conditions, triggers, and linked campaigns.
+### Phase 6 — Scenario & Campaign System — **partial**
+Scenario model + validation, objectives and victory, shipped samples, campaign chain + ORBAT
+carry-over (probed, not yet in PLAY). Remaining: campaign UI (#114), scenario editor,
+feature-placed objectives (#51), historical packs, full campaign arc (#78).
 
 ### Phase 7 — Game Modes
-Deliver solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, and replay playback.
+Solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, and replay playback. Unbuilt;
+command log already records the stream replay and multiplayer will ship.
 
 ### Phase 8 — AI System
-Develop rule-based AI, reinforcement learning, transfer learning from historical battles/replays, genetic strategy evolution, AI personalities, and model sharing.
+Rule-based → RL → transfer → GA. Unbuilt as intelligence; reflexes and `ISidePolicy` are the
+seams. Epic #99 and issues #101–#106 define the environment API path.
 
 ### Phase 9 — Online Services & Community
-Add accounts, matchmaking, leaderboards, scenario workshop, replay library, AI model hub, notifications, and mod support.
+Accounts, matchmaking, workshop, leaderboards, mod support. Unbuilt.
 
 ### Phase 10 — Polish, Accessibility & Release
-Complete audio, UI/UX, tutorials, accessibility, performance optimization, platform builds, legal review, and 1.0 launch assets.
+Audio (#40–#46 filed early), UI/UX, tutorials, performance, platform builds, Steam assets,
+1.0 launch. Mostly unbuilt; Windows player builds and a GitHub Pages site exist.
 
-See [docs/phases.md](docs/phases.md) for the full task breakdown and milestones.
+See [docs/phases.md](docs/phases.md) for the full task breakdown and checkboxes.
 See [docs/command-architecture.md](docs/command-architecture.md) for the command/situation topic design that Phases 3–5 build on.
 See [docs/steam.md](docs/steam.md) for the Steam publishing guide, Early Access strategy, and Steamworks integration details.
 
@@ -115,21 +178,22 @@ See [docs/steam.md](docs/steam.md) for the Steam publishing guide, Early Access 
 
 ## Versioning Strategy
 
-| Release | Focus |
-|---|---|
-| 0.1 Alpha | Phases 0–3: Map + Symbols + Units |
-| 0.3 Alpha | Phases 4–5: Movement + Combat + C2 |
-| 0.5 Beta | Phases 6–7: Scenarios + All Game Modes |
-| 0.8 Beta | Phase 8: Full AI pipeline |
-| 0.9 RC | Phase 9: Online services |
-| 1.0 | Phase 10: Polish + Release |
+| Release | Focus | Progress |
+|---|---|---|
+| 0.1 Alpha | Phases 0–3: Map + Symbols + Units | **Reached** — sandbox loads and draws a fightable ORBAT |
+| 0.3 Alpha | Phases 4–5: Movement + Combat + C2 | **In progress** — core path ships; mission-type and C3 depth remain |
+| 0.5 Beta | Phases 6–7: Scenarios + All Game Modes | Campaign data started; modes and editor not started |
+| 0.8 Beta | Phase 8: Full AI pipeline | Policy seam only |
+| 0.9 RC | Phase 9: Online services | Not started |
+| 1.0 | Phase 10: Polish + Release | Site + Windows builds only |
 
 ---
 
 ## Post-1.0 Direction
 
-Post-release development may expand into naval, air, space, and cyber dimensions; coalition multiplayer; large-scale AI tournaments; VR spectator tools; and a public modding SDK.
+Post-release development may expand into naval, air, space, and cyber dimensions; coalition
+multiplayer; large-scale AI tournaments; VR spectator tools; and a public modding SDK.
 
 ---
 
-*Last updated: 2026-07-29 | Co-Authored-By: Oz <oz-agent@warp.dev>*
+*Last updated: 2026-08-03*

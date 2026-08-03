@@ -64,9 +64,10 @@ is slower to report what it sees, so its commander works from an older picture.
 
 There is still no *world* in the 3D sense: the drape is a preview rendered into a UI card,
 not a playable space, and there is no game camera. Units still pass through each other —
-there is no collision, no zone of control and no facing. A destroyed unit stays on the map
-doing nothing — removal, casualty tracking and reconstitution are Phase 4.4. Everything past
-that in `ROADMAP.md` — C2 at echelon, AI, networking — is unbuilt. Reflexes are not
+there is no collision, no zone of control and no facing. Reconstitution after loss is still
+open (Phase 4.4). C2 foundations ship — buses, queues, directives, drills, `ISidePolicy` —
+but echelon-scale comms, intel fusion and remaining mission types do not. Everything past
+that in `ROADMAP.md` — online modes, trained AI, services — is unbuilt. Reflexes are not
 intelligence: nothing plans or manoeuvres, which is Phase 8.
 
 | Path | Contents |

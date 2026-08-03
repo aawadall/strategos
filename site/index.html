@@ -24,8 +24,8 @@
 
 <div class="status-strip">
   <div class="wrap">
-    <strong>Status: pre-production.</strong> Phases 0–3 built, Phase 4 (movement &amp; combat) in progress.
-    Unity 6 (6000.0.75f1).
+    <strong>Status: pre-production — playable sandbox.</strong> Phases 0–3 built; Phase 4–5 core path
+    ships; Phase 6 campaign data started. Next: First playable game command UX. Unity 6 (6000.0.75f1).
   </div>
 </div>
 
@@ -154,13 +154,15 @@
       <p>
         There is still no <em>world</em> in the 3D sense: the drape is a preview rendered into a
         UI card, not a playable space, and there is no game camera. Units still pass through each
-        other — there is no collision, no zone of control and no facing. A destroyed unit stays on
-        the map doing nothing; removal, casualty tracking and reconstitution are a later part of
-        Phase 4. Reflexes are not intelligence — nothing plans or manoeuvres yet.
+        other — there is no collision, no zone of control and no facing. A destroyed unit becomes a
+        wreck (not commandable, not a contact) and the loss is logged; reconstitution between
+        operations is still open. Reflexes and a side-policy seam are not intelligence — nothing
+        plans or manoeuvres yet. Campaign chains carry an ORBAT in data but cannot yet be started
+        from PLAY. Indirect fire, logistics, terrain LOS and online play remain unbuilt.
       </p>
       <p class="note">
-        Everything past Phase 4 on the roadmap — command &amp; control at echelon, AI, online
-        play — is unbuilt.
+        Near-term focus is the <em>First playable game</em> milestone: explicit command controls,
+        a command palette, and waypoints. See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>.
       </p>
     </section>
 
@@ -196,17 +198,17 @@
             <tr>
               <td>4 — Movement &amp; Combat Engine</td>
               <td>Terrain-aware movement, pathfinding, combat resolution, suppression, indirect fire, logistics, attrition, recovery.</td>
-              <td class="status-progress">In progress</td>
+              <td class="status-partial">Core done; depth open</td>
             </tr>
             <tr>
               <td>5 — Command &amp; Control (C2) System</td>
               <td>Orders, mission types, command delays, communication degradation, intelligence, reconnaissance, deception, doctrine templates.</td>
-              <td class="status-none">Not started</td>
+              <td class="status-partial">Foundations in</td>
             </tr>
             <tr>
               <td>6 — Scenario &amp; Campaign System</td>
               <td>Scenario editor, historical scenario support, objective system, victory conditions, triggers, linked campaigns.</td>
-              <td class="status-none">Not started</td>
+              <td class="status-partial">Partial — data ships</td>
             </tr>
             <tr>
               <td>7 — Game Modes</td>
@@ -216,7 +218,7 @@
             <tr>
               <td>8 — AI System</td>
               <td>Rule-based AI, reinforcement learning, transfer learning from historical battles/replays, genetic strategy evolution, AI personalities, model sharing.</td>
-              <td class="status-none">Not started</td>
+              <td class="status-none">Seam only</td>
             </tr>
             <tr>
               <td>9 — Online Services &amp; Community</td>
