@@ -388,6 +388,8 @@ namespace Strategos.UI.Views
             AddButton(controls, "SCREEN", ScreenSelected);
             AddButton(controls, "GUARD", GuardSelected);
             AddButton(controls, "COVER", CoverSelected);
+            AddButton(controls, "WITHDRAW", WithdrawSelected);
+            AddButton(controls, "DELAY", DelaySelected);
 
             // Calling a drill by code is what the whole doctrine library is for. A dropdown
             // is the discovery path; #53's palette adds typing the code, which is the
@@ -794,6 +796,7 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new ScreenExecutor());
             _sim.AddExecutor(new GuardExecutor());
             _sim.AddExecutor(new CoverExecutor());
+            _sim.AddExecutor(new DelayExecutor());
             _sim.EnableReactions();
             if (restoreFrom != null) _sim.RestoreReactionPicture(restoreFrom);
 
@@ -2315,6 +2318,22 @@ namespace Strategos.UI.Views
             _sim.Issue(Command.Cover(ActorId.ForSide(unit.Side), unit.Id));
         }
 
+        private void WithdrawSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Withdraw(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
+        private void DelaySelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Delay(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
         /// <summary>
         /// Calls the chosen drill on the selected unit or formation.
         /// </summary>
@@ -2396,6 +2415,8 @@ namespace Strategos.UI.Views
             CommandKind.Screen => DescribeScreen(unit),
             CommandKind.Guard => DescribeGuard(unit),
             CommandKind.Cover => DescribeCover(unit),
+            CommandKind.Delay => "DELAYING",
+            CommandKind.Withdraw => "WITHDRAWING",
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 

@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Withdraw + Delay mission orders: Withdraw expands to Abort+MoveTo; Delay holds until the
+  break threshold then Issues Withdraw; PLAY buttons; probes (#85 slice).
 - Cover mission order: dig-in with no detection stretch; suppresses break-contact while
   Cover is on the queue; PLAY COVER button; `CoverProbe` (#85 slice).
 - Guard mission order: dig-in like Defend plus detection ×1.15 once prepared; PLAY GUARD

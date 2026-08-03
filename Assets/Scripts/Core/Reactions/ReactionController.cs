@@ -280,23 +280,13 @@ namespace Strategos.Reactions
         /// </remarks>
         private void BreakContact(UnitInstance unit, Picture picture, UnitId threat)
         {
-            var actor = ActorId.ForSide(unit.Side);
-            _sim.Issue(Command.Abort(actor, unit.Id));
-            OrdersIssued++;
-
+            Vector2 lastSeen = default;
             int i = picture.IndexOf(threat);
-            if (i < 0) return;   // nothing to run from that this unit knows about
+            if (i >= 0) lastSeen = picture.LastSeen[i];
 
-            Vector2 away = unit.Cell - picture.LastSeen[i];
-            if (away.sqrMagnitude < 0.0001f) return;   // standing on it; no direction to pick
-
-            var map = _sim.Map;
-            Vector2 destination = unit.Cell + away.normalized * WithdrawCells;
-
-            destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
-            destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
-
-            _sim.Issue(Command.MoveTo(actor, unit.Id, destination));
+            // One path with the player-facing Withdraw order — expands to Abort + MoveTo,
+            // using LastSeen so a stale contact still pulls the unit the right way.
+            _sim.Issue(Command.Withdraw(ActorId.ForSide(unit.Side), unit.Id, threat, lastSeen));
             OrdersIssued++;
         }
 

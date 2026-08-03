@@ -106,6 +106,16 @@ namespace Strategos.Commands
         /// </summary>
         Cover = 7,
 
+        /// <summary>
+        /// Pull back from a threat. Expands at delivery into Abort + MoveTo away (#85).
+        /// </summary>
+        Withdraw = 8,
+
+        /// <summary>
+        /// Hold until pressed, then withdraw — trade ground for time (#85).
+        /// </summary>
+        Delay = 9,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -249,12 +259,33 @@ namespace Strategos.Commands
             Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Cover,
         };
 
+        /// <summary>
+        /// Withdraw away from a threat. <paramref name="fromThreat"/> may be None — delivery
+        /// then picks the nearest hostile (same #34 shortcut drills use).
+        /// <paramref name="fromCell"/> is where the threat was believed to be (LastSeen); zero
+        /// means derive from the live unit when known.
+        /// </summary>
+        public static Command Withdraw(ActorId by, UnitId unit, UnitId fromThreat = default,
+            Vector2 fromCell = default, int tick = 0, bool preempt = false) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Withdraw, AgainstUnit = fromThreat, TargetCell = fromCell,
+            Preempt = preempt,
+        };
+
+        /// <summary>Hold until pressed, then withdraw.</summary>
+        public static Command Delay(ActorId by, UnitId unit, int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit, Kind = CommandKind.Delay,
+        };
+
         public override string ToString()
         {
             string what = Kind switch
             {
                 CommandKind.MoveTo => $"MoveTo({TargetCell.x:0.#},{TargetCell.y:0.#})",
                 CommandKind.Engage => $"Engage({AgainstUnit})",
+                CommandKind.Withdraw => $"Withdraw({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),
