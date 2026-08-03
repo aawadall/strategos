@@ -204,7 +204,8 @@ Editor menu: `Strategos → Build/…`, `NATO Symbol Generator`, `Open Demo Scen
 `Probe Map Mesh`, `Probe Scenario`, `Probe Commands`, `Probe Reports`,
 `Write Sample Scenarios`, `Write Sample Drills`, `Write Sample Config`, `Probe Training`,
 `Probe Fatigue`, `Probe Campaign Chain`, `Probe Campaign Carry Over`,
-`Probe Campaign Chain Driver`, `Import TMP Essential Resources`.
+`Probe Campaign Chain Driver`, `Probe Campaign Chain Validate`,
+`Import TMP Essential Resources`.
 
 **A new field on a serialised type does nothing until the samples are rewritten.**
 `Assets/Resources/Scenarios/*.json` is what the game loads, not `ScenarioSamples`, so a field

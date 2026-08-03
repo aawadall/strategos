@@ -35,7 +35,7 @@ Explicit command controls (#32) are done. Next player-facing gap is **campaign i
 | Issue | Title |
 |---|---|
 | [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player |
-| [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` |
+| [#138](https://github.com/aawadall/strategos/issues/138) | `CampaignChain.Validate()` — shipped |
 | [#139](https://github.com/aawadall/strategos/issues/139) | Start and advance a campaign in PLAY |
 | [#140](https://github.com/aawadall/strategos/issues/140) | Mid-campaign save/resume |
 
