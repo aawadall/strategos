@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Screen mission order: never-ending hold that sets `Posture.Screening` (detection ×1.35,
+  no dig-in); PLAY SCREEN button; `ScreenProbe` (#85 first slice).
 - Mid-campaign SAVE/LOAD: `SaveRecord` carries live chain JSON + operation index; PLAY
   quicksave restores session and sim (#140 / #114).
 - PLAY campaign rail: START VALLEY / CONTINUE / SKIRMISH ONLY — shipped `valley-campaign`

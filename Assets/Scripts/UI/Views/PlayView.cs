@@ -385,6 +385,7 @@ namespace Strategos.UI.Views
             var controls = AddButtonRow(content);
             AddButton(controls, "ABORT PLAN", AbortSelected);
             AddButton(controls, "HOLD", HoldSelected);
+            AddButton(controls, "SCREEN", ScreenSelected);
 
             // Calling a drill by code is what the whole doctrine library is for. A dropdown
             // is the discovery path; #53's palette adds typing the code, which is the
@@ -788,6 +789,7 @@ namespace Strategos.UI.Views
             _sim.AddExecutor(new MoveToExecutor());
             _sim.AddExecutor(new EngageExecutor());
             _sim.AddExecutor(new DefendExecutor());
+            _sim.AddExecutor(new ScreenExecutor());
             _sim.EnableReactions();
             if (restoreFrom != null) _sim.RestoreReactionPicture(restoreFrom);
 
@@ -2277,6 +2279,17 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
+        /// Screen where you stand — observe further, without digging in (#85).
+        /// </summary>
+        private void ScreenSelected()
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+            _sim.Issue(Command.Screen(ActorId.ForSide(unit.Side), unit.Id));
+        }
+
+        /// <summary>
         /// Calls the chosen drill on the selected unit or formation.
         /// </summary>
         /// <remarks>
@@ -2354,6 +2367,7 @@ namespace Strategos.UI.Views
             CommandKind.MoveTo => $"MOVE TO {command.TargetCell.x:0},{command.TargetCell.y:0}",
             CommandKind.Engage => DescribeEngagement(unit, command.AgainstUnit),
             CommandKind.Defend => DescribeDefence(unit),
+            CommandKind.Screen => DescribeScreen(unit),
             _ => command.Kind.ToString().ToUpperInvariant(),
         };
 
@@ -2703,6 +2717,11 @@ namespace Strategos.UI.Views
                 q[0].TicksExecuting * 100 / DefendExecutor.DigInTicks, 0, 99);
             return _detailsLine ? $"HOLDING   ·   PREPARING {percent}%" : "HOLDING   ·   PREPARING";
         }
+
+        private static string DescribeScreen(UnitInstance unit) =>
+            unit.Posture == Posture.Screening
+                ? "SCREENING   ·   OBSERVING"
+                : "SCREENING";
 
         private void RefreshSelection()
         {

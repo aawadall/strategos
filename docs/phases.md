@@ -151,7 +151,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### 5.1 Orders System
 - [x] Core orders: MoveTo, Engage, Defend/Hold, Abort, CancelFrom (FRAGO-style plan cut)
-- [ ] Mission type orders: Attack, Delay, Withdraw, Screen, Cover, Guard, Reconnaissance, Exploit, Pursue *(Defend/Occupy ship; remainder is #85)*
+- [ ] Mission type orders: Attack, Delay, Withdraw, Cover, Guard, Reconnaissance, Exploit, Pursue *(Defend + Screen ship; remainder is #85)*
+  - [x] Screen — hold to observe (`Posture.Screening`, detection ×1.35, no dig-in) (#85 slice)
 - [ ] Graphic control measures: axes of advance, battle positions, phase lines, checkpoints, boundaries, engagement areas, kill zones
 - [x] Order propagation delay via formation decomposition (one echelon per step)
 - [ ] Order propagation delay by distance / terrain / comms modality (#47)

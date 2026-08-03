@@ -137,6 +137,12 @@ Tick++
   reflex sends the unit to `Halted` while it returns fire and the posture has to come back.
   **`Hold` moved from the control range into the world range** to make this possible, which is
   what stopped it being a byte-for-byte copy of `Abort`.
+- **`Screen` is the other never-ending hold, and it buys reach rather than protection.** Same
+  queue shape as Defend, but posture is `Posture.Screening` — combat exposure matches Halted
+  (`PostureFactor` 1.0), and `ContactTracker` multiplies detection by
+  `UnitCapabilities.DetectionPostureFactor` (1.35). Digging in is deliberately not on the
+  path: a Screen that dug in would be Defend with a longer radio. Remaining mission types
+  under #85 (Guard, Cover, Delay, Attack, Withdraw, …) are still open.
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to
