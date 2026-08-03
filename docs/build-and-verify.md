@@ -141,6 +141,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CoverProbe.Run` | Cover digs in, no watch bonus, does not break contact while covering |
 | `Strategos.Editor.WithdrawProbe.Run` | Withdraw expands; unit pulls away from the threat |
 | `Strategos.Editor.DelayProbe.Run` | Delay holds until pressed, then converts to Withdraw |
+| `Strategos.Editor.AttackProbe.Run` | Attack closes when far, Engage-only when already close |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
@@ -150,7 +151,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 
 **Fifteen of the probes above run with `scenario.Map.EnableErosion = false`** —
 `CampaignCarryOverProbe`, `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`,
-`ScreenProbe`, `GuardProbe`, `CoverProbe`, `WithdrawProbe`, `DelayProbe`,
+`ScreenProbe`, `GuardProbe`, `CoverProbe`, `WithdrawProbe`, `DelayProbe`, `AttackProbe`,
 `DirectiveProbe`, `DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`,
 `ReactionProbe`, `ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because
 erosion is the dominant generation cost and none of them are *reasoning about terrain*: they

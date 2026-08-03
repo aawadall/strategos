@@ -156,7 +156,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
   - [x] Guard — #146
   - [x] Cover — #147
   - [x] Withdraw / Delay — #148
-  - [ ] Attack — #150 (PR #149)
+  - [x] Attack — #150 / #149
   - [ ] Reconnaissance — #151
   - [ ] Exploit — #152
   - [ ] Pursue — #153

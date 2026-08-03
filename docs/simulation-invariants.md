@@ -154,7 +154,9 @@ Tick++
   break-contact reflex now Issues Withdraw rather than Abort+MoveTo directly — one path.
 - **`Delay` holds Halted until the break-contact threshold**, then Completes and Simulation
   Issues Withdraw — trade ground for time. Cover suppresses leaving; Delay wants it.
-  Remaining under #85: Attack, Reconnaissance, Exploit, Pursue.
+- **`Attack` expands at delivery** into MoveTo (to `AttackStandoffCells` of the threat) +
+  Engage. Already inside standoff → Engage only. Empty `AgainstUnit` → `NearestHostile`.
+  Remaining under #85: Reconnaissance, Exploit, Pursue.
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to
