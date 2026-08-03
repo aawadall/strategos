@@ -532,6 +532,12 @@ namespace Strategos.Commands
                 return;
             }
 
+            if (command.Kind == CommandKind.Exploit)
+            {
+                ExpandExploit(command);
+                return;
+            }
+
             var queue = QueueOf(command.TargetUnit);
             if (queue == null) return;   // addressed to a group or an unknown unit
 
@@ -855,6 +861,39 @@ namespace Strategos.Commands
             }
 
             Issue(Command.Screen(actor, unit.Id));
+        }
+
+        /// <summary>
+        /// How far past the threat an Exploit drives, in cells.
+        /// </summary>
+        public const float ExploitDepthCells = 16f;
+
+        /// <summary>
+        /// Unpacks Exploit into MoveTo *through* the threat + Engage — follow-through (#152).
+        /// </summary>
+        private void ExpandExploit(in Command command)
+        {
+            var unit = UnitOf(command.TargetUnit);
+            if (unit == null) return;
+
+            UnitInstance threat = null;
+            if (command.AgainstUnit.IsValid)
+                threat = UnitOf(command.AgainstUnit);
+            if (threat == null || threat.IsDestroyed)
+                threat = NearestHostile(unit);
+            if (threat == null) return;
+
+            var actor = command.IssuedBy;
+            Vector2 toward = threat.Cell - unit.Cell;
+            if (toward.sqrMagnitude < 0.0001f) toward = Vector2.right;
+            else toward.Normalize();
+
+            var map = Map;
+            Vector2 destination = threat.Cell + toward * ExploitDepthCells;
+            destination.x = Mathf.Clamp(destination.x, 0f, map.Width - 1f);
+            destination.y = Mathf.Clamp(destination.y, 0f, map.Height - 1f);
+            Issue(Command.MoveTo(actor, unit.Id, destination));
+            Issue(Command.Engage(actor, unit.Id, threat.Id));
         }
 
         /// <summary>
