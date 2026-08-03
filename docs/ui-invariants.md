@@ -110,6 +110,9 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   between press and release, so roughly one click in ten does nothing. `PlayView._planKey` is
   the fix: a string of everything a row draws, compared before rebuilding. It deliberately
   omits `QueuedCommand.TicksExecuting`, which changes every tick and appears nowhere on a row.
+  The drill dropdown has the same shape (`_drillOptionsKey`): each entry is annotated with the
+  selected unit's T/P/U from `TtpReadiness.Assess`, and rebuilding every tick would close the
+  list under the pointer — so the key is unit identity plus rounded effectiveness, not "always".
 - **PLAY's zoom is bounded by the echelon the player commands, and that is a mechanic.**
   `EchelonSpans` gives each echelon a contiguous band of ground widths; PLAY clamps the
   card's `uvRect` to it. A squad leader may not widen to a theatre picture and a corps

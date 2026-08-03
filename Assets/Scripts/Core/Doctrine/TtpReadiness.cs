@@ -113,6 +113,22 @@ namespace Strategos.Doctrine
         }
 
         /// <summary>
+        /// One dropdown / picker line: drill identity, then the T/P/U rating when a unit is known.
+        /// </summary>
+        /// <remarks>
+        /// PLAY annotates rather than filters — hiding Untrained entries teaches the player
+        /// nothing about what the unit is short of. When there is no selection the rating is
+        /// omitted, because Assess without a unit is always "no unit" / U and would look like
+        /// real readiness.
+        /// </remarks>
+        public static string PickerLabel(Ttp drill, UnitInstance unit)
+        {
+            if (drill == null) return string.Empty;
+            if (unit == null) return $"{drill.Code}  ·  {drill.Name}";
+            return $"{drill.Code}  ·  {drill.Name}  ·  {Assess(drill, unit).Code}";
+        }
+
+        /// <summary>
         /// The drill echelon a unit counts as.
         /// </summary>
         /// <remarks>
