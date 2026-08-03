@@ -1,0 +1,10 @@
+# The root .gitattributes routes every *.png/*.jpg in the repo through Git
+# LFS, which is right for Assets/ textures but wrong here: GitHub Pages'
+# Actions-based deploy does a plain `actions/checkout` with no LFS smudging,
+# so an LFS-tracked image under site/ would ship as its pointer stub instead
+# of the actual bytes — a broken <img> on the live page. These two
+# screenshots are a few hundred KB total; there's no reason to pull LFS
+# (and its bandwidth quota) into a static landing page. Un-set the filter and
+# treat them as ordinary binary blobs.
+*.png -filter -diff -merge -text
+*.jpg -filter -diff -merge -text

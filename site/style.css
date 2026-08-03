@@ -1,0 +1,226 @@
+/* Strategos landing page — plain static CSS, no framework, no build step. */
+
+:root {
+  --green: #2c5a38;
+  --green-dark: #1f4027;
+  --cream: #efede4;
+  --card: #faf9f4;
+  --ink: #262622;
+  --ink-muted: #58564c;
+  --border: #cdc7b3;
+  --blue: #3f7f9b;
+  --red: #b8483e;
+  --mono: "Consolas", "SFMono-Regular", Menlo, monospace;
+  --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: light; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--cream);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+a { color: var(--green-dark); }
+a:hover { color: var(--green); }
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---- Header ------------------------------------------------------------ */
+
+header.site {
+  background: var(--green);
+  color: #f2f1ea;
+  padding: 1.75rem 0 1.5rem;
+}
+
+header.site .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+
+header.site h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+header.site .tagline {
+  margin: 0.35rem 0 0;
+  color: #cfe0d2;
+  font-size: 0.98rem;
+  max-width: 42em;
+}
+
+header.site nav a {
+  color: #e7f0e8;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  font-size: 0.92rem;
+}
+
+header.site nav a:hover { border-bottom-color: #e7f0e8; }
+
+/* ---- Status strip -------------------------------------------------------*/
+
+.status-strip {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 0;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.status-strip strong { color: var(--ink); }
+
+/* ---- Main content -------------------------------------------------------*/
+
+main { padding: 2.25rem 0 3rem; }
+
+section { margin-bottom: 2.75rem; }
+
+section:last-child { margin-bottom: 1rem; }
+
+h2 {
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--green-dark);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+h3 {
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 1.4rem 0 0.5rem;
+}
+
+p { margin: 0 0 1rem; }
+
+.lede {
+  font-size: 1.08rem;
+  color: var(--ink);
+}
+
+ul.plain, ul.gaps {
+  margin: 0 0 1rem;
+  padding-left: 1.3rem;
+}
+
+ul.plain li, ul.gaps li { margin-bottom: 0.45rem; }
+
+ul.gaps { color: var(--ink-muted); }
+
+figure {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.5rem;
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+}
+
+figcaption {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  padding: 0.55rem 0.35rem 0.15rem;
+}
+
+figcaption .cap-label { color: var(--ink); font-weight: 600; }
+
+/* ---- Tables --------------------------------------------------------------*/
+
+.table-scroll { overflow-x: auto; margin-bottom: 1rem; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+  background: var(--card);
+}
+
+caption {
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.4rem;
+  caption-side: top;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--green);
+  color: #f2f1ea;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+tbody tr:nth-child(even) { background: #f2f0e6; }
+
+td.status-done { color: var(--green-dark); font-weight: 600; white-space: nowrap; }
+td.status-progress { color: #8a6410; font-weight: 600; white-space: nowrap; }
+td.status-partial { color: var(--ink-muted); font-weight: 600; white-space: nowrap; }
+td.status-none { color: var(--ink-muted); white-space: nowrap; }
+
+/* ---- Callout / echelon note ---------------------------------------------*/
+
+.note {
+  border-left: 3px solid var(--blue);
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+}
+
+/* ---- Footer ---------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 0 2.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+footer p { margin: 0 0 0.5rem; }
+
+footer .license {
+  font-size: 0.8rem;
+}
+
+/* ---- Responsive ---------------------------------------------------------*/
+
+@media (max-width: 600px) {
+  header.site h1 { font-size: 1.35rem; }
+  h2 { font-size: 0.95rem; }
+  table { font-size: 0.82rem; }
+  th, td { padding: 0.35rem 0.45rem; }
+}
