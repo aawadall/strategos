@@ -24,6 +24,7 @@ namespace Strategos.UI
     {
         private const float LegThickness = 3f;
         private const float ArrowSize = 16f;
+        private const float HandleSize = 10f;
 
         /// <summary>Legs shorter than this are not worth drawing and look like specks.</summary>
         private const float MinLegPixels = 6f;
@@ -31,9 +32,11 @@ namespace Strategos.UI
         private readonly RectTransform _parent;
         private readonly List<RawImage> _legs = new();
         private readonly List<Image> _heads = new();
+        private readonly List<Image> _handles = new();
 
         private int _legCount;
         private int _headCount;
+        private int _handleCount;
 
         public OrderTrackLayer(RectTransform parent) => _parent = parent;
 
@@ -42,6 +45,7 @@ namespace Strategos.UI
         {
             _legCount = 0;
             _headCount = 0;
+            _handleCount = 0;
         }
 
         /// <summary>
@@ -114,11 +118,30 @@ namespace Strategos.UI
             rt.GetComponent<Image>().color = colour;
         }
 
+        /// <summary>
+        /// Draft waypoint handle (#54). Visual only — hit-testing stays in PLAY so route
+        /// legs can keep <c>raycastTarget = false</c>.
+        /// </summary>
+        public void AddHandle(MapSheetCard card, Vector2 cell, Color colour)
+        {
+            if (card == null) return;
+            if (!card.CellToLocal(cell, out var local)) return;
+
+            var rt = HandleAt(_handleCount++);
+            rt.gameObject.SetActive(true);
+            rt.sizeDelta = new Vector2(HandleSize, HandleSize);
+            rt.anchoredPosition = local;
+            rt.localRotation = Quaternion.identity;
+            rt.GetComponent<Image>().color = colour;
+        }
+
         /// <summary>Hides anything not used this frame.</summary>
         public void End()
         {
             for (int i = _legCount; i < _legs.Count; i++) _legs[i].gameObject.SetActive(false);
             for (int i = _headCount; i < _heads.Count; i++) _heads[i].gameObject.SetActive(false);
+            for (int i = _handleCount; i < _handles.Count; i++)
+                _handles[i].gameObject.SetActive(false);
         }
 
         public void Clear()
@@ -156,6 +179,20 @@ namespace Strategos.UI
                 _heads.Add(img);
             }
             return (RectTransform)_heads[i].transform;
+        }
+
+        private RectTransform HandleAt(int i)
+        {
+            while (_handles.Count <= i)
+            {
+                var rt = UiFactory.CreateRect($"Handle{_handles.Count}", _parent);
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.raycastTarget = false;
+                _handles.Add(img);
+            }
+            return (RectTransform)_handles[i].transform;
         }
     }
 }

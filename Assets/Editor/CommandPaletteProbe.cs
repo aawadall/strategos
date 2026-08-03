@@ -1,7 +1,7 @@
 // CommandPaletteProbe.cs
-// The armable-verb table (#127 / #129): MoveTo and Engage are present, None is not a row,
-// every verb has a shortcut that does not steal Space, and clear is Escape — so chrome and
-// Update can stay table-driven.
+// The armable-verb table (#127 / #129 / #54): MoveTo, Engage and Waypoints are present,
+// None is not a row, every verb has a shortcut that does not steal Space, and clear is
+// Escape — so chrome and Update can stay table-driven.
 //
 // Menu:  Strategos > Probe Command Palette
 // Batch: -executeMethod Strategos.Editor.CommandPaletteProbe.Run
@@ -33,9 +33,9 @@ namespace Strategos.Editor
         private static bool TableIsArmable(StringBuilder log)
         {
             var verbs = CommandPalette.Verbs;
-            if (verbs == null || verbs.Length < 2)
+            if (verbs == null || verbs.Length < 3)
             {
-                log.AppendLine("  palette: FAILED, need at least MoveTo and Engage");
+                log.AppendLine("  palette: FAILED, need MoveTo, Engage and Waypoints");
                 return false;
             }
 
@@ -51,7 +51,7 @@ namespace Strategos.Editor
                 return false;
             }
 
-            bool sawMove = false, sawEngage = false;
+            bool sawMove = false, sawEngage = false, sawWaypoints = false;
             var seenKeys = new HashSet<KeyCode> { CommandPalette.ClearShortcut };
 
             for (int i = 0; i < verbs.Length; i++)
@@ -114,17 +114,30 @@ namespace Strategos.Editor
                     }
                 }
 
-                log.AppendLine($"    {v.Id,-8} '{v.Label}' → {v.Kind}  [{v.ShortcutLabel}]");
+                if (v.Id == PaletteVerb.Waypoints)
+                {
+                    sawWaypoints = true;
+                    if (v.Kind != CommandKind.MoveTo)
+                    {
+                        log.AppendLine("  palette: FAILED, Waypoints must map to MoveTo " +
+                                       "(legs are ordinary MoveTos, #54)");
+                        return false;
+                    }
+                }
+
+                log.AppendLine($"    {v.Id,-10} '{v.Label}' → {v.Kind}  [{v.ShortcutLabel}]");
             }
 
-            if (!sawMove || !sawEngage)
+            if (!sawMove || !sawEngage || !sawWaypoints)
             {
-                log.AppendLine($"  palette: FAILED, MoveTo={sawMove} Engage={sawEngage}");
+                log.AppendLine(
+                    $"  palette: FAILED, MoveTo={sawMove} Engage={sawEngage} Waypoints={sawWaypoints}");
                 return false;
             }
 
             if (!CommandPalette.TryGet(PaletteVerb.MoveTo, out _) ||
-                !CommandPalette.TryGet(PaletteVerb.Engage, out _))
+                !CommandPalette.TryGet(PaletteVerb.Engage, out _) ||
+                !CommandPalette.TryGet(PaletteVerb.Waypoints, out _))
             {
                 log.AppendLine("  palette: FAILED, TryGet missed a shipped verb");
                 return false;
