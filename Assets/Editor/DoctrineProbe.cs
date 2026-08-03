@@ -51,6 +51,7 @@ namespace Strategos.Editor
             ok &= RoundTrip(log);
             ok &= LoadsFromResources(log);
             ok &= PrintSyntheticReadiness(log);
+            ok &= PickerLabelsTrackSelection(log);
             PrintReadiness(log);
 
             Debug.Log(log.ToString());
@@ -251,6 +252,83 @@ namespace Strategos.Editor
                            $"P={sawPractice} U={sawUntrained} — a rating never appears, so " +
                            "the thresholds are untested");
             return false;
+        }
+
+        /// <summary>
+        /// PLAY's drill dropdown labels must change with the selected unit (#97).
+        /// </summary>
+        /// <remarks>
+        /// The failure mode is a one-shot list built at Build() that never consults
+        /// <see cref="TtpReadiness"/> — a probe that only asserts "a letter is present"
+        /// would pass before and after. This one builds labels for two units that Assess
+        /// rates differently on the same drill, and fails if either label does not carry
+        /// that unit's own code, or if the two labels are identical.
+        /// </remarks>
+        private static bool PickerLabelsTrackSelection(StringBuilder log)
+        {
+            var drills = TtpLibrary.All;
+            if (drills.Count == 0)
+            {
+                log.AppendLine("  picker labels: FAILED, no drills loaded");
+                return false;
+            }
+
+            // Fresh platoon → T on platoon tasks; destroyed platoon → U on everything.
+            var trained = new Strategos.Units.UnitInstance
+            {
+                Sidc = Strategos.NatoSymbols.SIDCBuilder.Build(
+                    Strategos.NatoSymbols.Affiliation.Friend,
+                    Strategos.NatoSymbols.Echelon.Platoon,
+                    entityCode: 11, entityType: 0).Raw,
+                Strength = 100f,
+                Readiness = 100f,
+            };
+            var untrained = new Strategos.Units.UnitInstance
+            {
+                Sidc = trained.Sidc,
+                Strength = 0f,
+                Readiness = 100f,
+            };
+
+            Ttp drill = null;
+            for (int i = 0; i < drills.Count; i++)
+            {
+                if (drills[i].Echelon == DrillEchelon.Platoon)
+                {
+                    drill = drills[i];
+                    break;
+                }
+            }
+            if (drill == null) drill = drills[0];
+
+            var a = TtpReadiness.Assess(drill, trained);
+            var b = TtpReadiness.Assess(drill, untrained);
+            if (a.Code == b.Code)
+            {
+                log.AppendLine($"  picker labels: FAILED, Assess rated both units {a.Code} " +
+                               $"on {drill.Code} — fixture does not differ");
+                return false;
+            }
+
+            string labelA = TtpReadiness.PickerLabel(drill, trained);
+            string labelB = TtpReadiness.PickerLabel(drill, untrained);
+
+            if (!labelA.EndsWith("  ·  " + a.Code) || !labelB.EndsWith("  ·  " + b.Code))
+            {
+                log.AppendLine($"  picker labels: FAILED, label does not carry Assess code — " +
+                               $"'{labelA}' vs {a.Code}, '{labelB}' vs {b.Code}");
+                return false;
+            }
+
+            if (labelA == labelB)
+            {
+                log.AppendLine($"  picker labels: FAILED, labels identical across selection " +
+                               $"('{labelA}') — would not update when the player changes unit");
+                return false;
+            }
+
+            log.AppendLine($"  picker labels: {drill.Code}  '{labelA}' / '{labelB}'  ok");
+            return true;
         }
 
         /// <summary>

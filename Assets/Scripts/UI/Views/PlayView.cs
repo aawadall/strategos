@@ -436,12 +436,61 @@ namespace Strategos.UI.Views
             SetDrop(_speedDrop, speeds, 0);
             SetDrop(_roeDrop, RoeLabels, (int)RulesOfEngagement.ReturnFire);
 
+            // Drills are selection-sensitive (T/P/U annotation); RefreshSelection rebuilds them.
+            _drillOptionsKey = null;
+            RefreshDrillOptions();
+            _suppress = false;
+        }
+
+        /// <summary>
+        /// What the drill dropdown was last built for. Same role as <see cref="_planKey"/>:
+        /// <see cref="RefreshSelection"/> runs every tick while a unit is selected, and
+        /// rebuilding a TMP_Dropdown that often closes the list under the pointer.
+        /// </summary>
+        private string _drillOptionsKey;
+
+        /// <summary>
+        /// Annotates each drill with the selected unit's T/P/U readiness, and rebuilds only
+        /// when the selection (or its effectiveness) changes.
+        /// </summary>
+        private void RefreshDrillOptions()
+        {
+            if (_drillDrop == null) return;
+
+            UnitInstance unit = null;
+            if (_selection.Count > 0 && _scenario != null)
+                unit = _scenario.FindUnit(_selection[0]);
+
+            // Effectiveness drives Assess; round so a fractional drift every tick does not
+            // thrash the options list, but a real drop in EFF still updates the letter.
+            string key = unit == null
+                ? "none"
+                : $"{unit.Id}|{unit.IsDestroyed}|{unit.Effectiveness:0.00}|{TtpReadiness.EchelonOf(unit)}";
+            if (key == _drillOptionsKey) return;
+            _drillOptionsKey = key;
+
             var drills = TtpLibrary.All;
+            string keep = null;
+            if (drills.Count > 0)
+                keep = drills[Mathf.Clamp(_drillDrop.value, 0, drills.Count - 1)].Code;
+
             var labels = new string[drills.Count];
             for (int i = 0; i < drills.Count; i++)
-                labels[i] = $"{drills[i].Code}  ·  {drills[i].Name}";
-            SetDrop(_drillDrop, labels, 0);
-            _suppress = false;
+                labels[i] = TtpReadiness.PickerLabel(drills[i], unit);
+
+            int index = 0;
+            if (keep != null)
+            {
+                for (int i = 0; i < drills.Count; i++)
+                {
+                    if (drills[i].Code == keep) { index = i; break; }
+                }
+            }
+
+            bool was = _suppress;
+            _suppress = true;
+            SetDrop(_drillDrop, labels, index);
+            _suppress = was;
         }
 
         // ─── Scenario ─────────────────────────────────────────────────────────
@@ -2110,6 +2159,8 @@ namespace Strategos.UI.Views
                 _roeDrop.value = (int)unit.Roe;
                 _suppress = false;
             }
+
+            RefreshDrillOptions();
 
             if (_detailsTitle != null)
             {
