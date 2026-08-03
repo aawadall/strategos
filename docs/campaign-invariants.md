@@ -6,9 +6,11 @@ touching anything under `Core/Campaigns`.** [CLAUDE.md](../CLAUDE.md) is the ind
 This page covers #75 chunks 1 through 4: the data shape and its JSON I/O, the carry-over logic
 that turns a finished `Simulation` into the next entry's starting state, the merge that turns
 that carried-over state into the next entry's actual starting `Scenario`/`Simulation`, and the
-three-operation acceptance probe proving #75's own criteria end to end. `CampaignChain.Validate()`
-and any wiring into PLAY/UI are still not here — see "What is deliberately not here yet" below.
-Neither `CampaignCarryOver.CarryOver` nor
+three-operation acceptance probe proving #75's own criteria end to end. PLAY wiring is tracked
+under parent [#114](https://github.com/aawadall/strategos/issues/114) — see
+[campaign-play-plan.md](campaign-play-plan.md) for the child sequence (#138–#140).
+`CampaignChain.Validate()` and any wiring into PLAY/UI are still not here — see "What is
+deliberately not here yet" below. Neither `CampaignCarryOver.CarryOver` nor
 `CampaignChainDriver` runs inside a `Simulation` tick or is part of `Simulation.Signature()`, so
 neither has anything to add to [docs/simulation-invariants.md](simulation-invariants.md)'s
 replay-divergence rules. Extend this page, not that one, as later `Core/Campaigns` chunks add
@@ -219,12 +221,15 @@ way, per the Id-consistency rule above — this chunk did not change that rule o
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
-- **Validation** — no `CampaignChain.Validate()`. Skipped for chunk 1 rather than done half-way: a
-  scenario-name reference can only be checked meaningfully against a catalogue/map the way
-  `Scenario.Validate` does, which is more than "nearly free" for a data-only chunk.
+- **Validation** — no `CampaignChain.Validate()` yet. Tracked as [#138](https://github.com/aawadall/strategos/issues/138)
+  (child of [#114](https://github.com/aawadall/strategos/issues/114)). Skipped in #75 rather than
+  done half-way: a scenario-name reference can only be checked meaningfully against a
+  catalogue/map the way `Scenario.Validate` does.
 - **Wiring into PLAY/UI** — nothing under `Assets/Scripts/UI` reads or calls any of this yet.
-  `CampaignChainDriver.StartNext` is a standalone function a future campaign runner will call
-  between operations.
+  `CampaignChainDriver.StartNext` is a standalone function. Parent
+  [#114](https://github.com/aawadall/strategos/issues/114): start+advance is
+  [#139](https://github.com/aawadall/strategos/issues/139); mid-campaign save is
+  [#140](https://github.com/aawadall/strategos/issues/140).
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`
