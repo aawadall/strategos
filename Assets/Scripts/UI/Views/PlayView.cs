@@ -351,10 +351,11 @@ namespace Strategos.UI.Views
 
             AddSection(content, "ORDERS");
             var hint = CreateTmp("Hint", content,
-                "Left-click selects.  Right-click orders a move, or fire if it lands on an enemy." +
+                "Left-click selects, or issues the armed verb when one is armed." +
+                "\nRight-click still orders a move, or fire if it lands on an enemy." +
                 "\nHold Shift to queue behind the current plan." +
                 "\nCANCEL drops that order and every one queued behind it." +
-                "\nPalette arms MOVE / ENGAGE (click-to-issue is a follow-up); SELECT clears.",
+                "\nPalette: SELECT clears; MOVE / ENGAGE arm a confirming left-click.",
                 10, FontStyles.Italic);
             hint.color = Theme.InkMuted;
             hint.GetComponent<LayoutElement>().preferredHeight = 56;
@@ -410,7 +411,7 @@ namespace Strategos.UI.Views
 
         /// <summary>
         /// Table-driven arming chrome. Iterates <see cref="CommandPalette.Verbs"/> — adding a
-        /// verb is a table row, not a new branch here. Does not change right-click (#127).
+        /// verb is a table row, not a new branch here. Right-click stays its own shortcut (#53).
         /// </summary>
         private void BuildVerbPalette(Transform parent)
         {
@@ -435,7 +436,7 @@ namespace Strategos.UI.Views
             RefreshVerbChrome();
         }
 
-        /// <summary>Arms a palette verb (or clears to select-only). Chrome only until #128.</summary>
+        /// <summary>Arms a palette verb (or clears to select-only).</summary>
         private void ArmVerb(PaletteVerb verb)
         {
             if (_armedVerb == verb) return;
@@ -459,7 +460,7 @@ namespace Strategos.UI.Views
             if (_armedVerb == PaletteVerb.None ||
                 !CommandPalette.TryGet(_armedVerb, out var def))
             {
-                _armedLabel.text = "ARMED  ·  SELECT  (right-click still orders)";
+                _armedLabel.text = "ARMED  ·  SELECT  ·  left-click picks a unit";
                 return;
             }
 
@@ -467,7 +468,7 @@ namespace Strategos.UI.Views
                 (string.IsNullOrEmpty(def.ShortcutLabel)
                     ? string.Empty
                     : $"  ({def.ShortcutLabel})") +
-                "  ·  right-click still orders";
+                "  ·  left-click issues  ·  right-click still shortcuts";
         }
 
         private static void PaintVerbButton(Button btn, bool armed)
@@ -1381,13 +1382,13 @@ namespace Strategos.UI.Views
 
         private void OnMapClicked(UnityEngine.EventSystems.PointerEventData e)
         {
-            // Left selects, right orders — the convention every player already knows, and it
-            // removes the ambiguity of one button meaning "select this" and "go there"
-            // depending on what happens to be under the cursor.
+            // Left selects (or issues the armed verb), right-click is the practised shortcut —
+            // engage-or-march by what is under the cursor. The shortcut path is deliberately
+            // not the palette: #53 keeps it unchanged so a practised player is not taxed.
             if (e.button == UnityEngine.EventSystems.PointerEventData.InputButton.Right)
             {
                 _dragDistance = 0f;
-                OrderMoveTo(e);
+                OrderByRightClick(e);
                 return;
             }
 
@@ -1396,47 +1397,101 @@ namespace Strategos.UI.Views
             if (_dragDistance > ClickSlop) { _dragDistance = 0f; return; }
             _dragDistance = 0f;
 
+            // Armed confirming click (#128): dispatch from the table row, not a new if-ladder
+            // per verb. Unarmed left-click keeps selecting.
+            if (_armedVerb != PaletteVerb.None)
+            {
+                IssueArmedVerb(e);
+                return;
+            }
+
             var hit = UnitAt(e);
             if (hit == null) ClearSelection();
             else Select(hit.Id);
         }
 
         /// <summary>
-        /// Right-click: engage if the click landed on an enemy, otherwise march to the ground.
-        ///
-        /// One button for both because the distinction is in the world, not in the input —
-        /// right-clicking an enemy has meant "attack that" for thirty years, and a separate
-        /// attack mode would be a mode to forget you were in. The order goes onto the bus
-        /// rather than doing anything: logged, delivered next step, carried out by an executor.
-        /// That indirection is the whole point of #9 — the same path serves a player, a replay
-        /// and, later, an AI.
+        /// Right-click shortcut: engage if the click landed on an enemy, otherwise march.
         /// </summary>
-        private void OrderMoveTo(UnityEngine.EventSystems.PointerEventData e)
+        /// <remarks>
+        /// One button for both because the distinction is in the world, not in the input —
+        /// right-clicking an enemy has meant "attack that" for thirty years. Kept as its own
+        /// path so the palette (#53) cannot silently change it. Shared issue helpers below
+        /// keep Shift-queue semantics identical to the armed click path.
+        /// </remarks>
+        private void OrderByRightClick(UnityEngine.EventSystems.PointerEventData e)
         {
             if (_sim == null || _selection.Count == 0) return;
 
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
 
-            var actor = ActorId.ForSide(unit.Side);
-
-            // Queue behind the existing plan when shift is held, replace it otherwise. A plan
-            // that silently grew every time you clicked would be worse than one that did not
-            // exist.
-            bool queue = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
+            bool queue = WantsQueue();
             var target = UnitAt(e);
             if (target != null && IsHostileTo(unit, target))
             {
-                if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
-                _sim.Issue(Command.Engage(actor, unit.Id, target.Id));
+                IssueEngage(unit, target, queue);
                 return;
             }
 
             if (!CellAt(e, out var cell)) return;
+            IssueMoveTo(unit, cell, queue);
+        }
 
+        /// <summary>
+        /// Left-click with a verb armed: issue that verb from the palette table (#128).
+        /// </summary>
+        /// <remarks>
+        /// Dispatches on <see cref="PaletteVerbDef.Kind"/> so a new table row does not need a
+        /// new branch in <see cref="OnMapClicked"/>. A miss (Engage on empty ground, no
+        /// selection) issues nothing and leaves the verb armed.
+        /// </remarks>
+        private void IssueArmedVerb(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (_sim == null || _selection.Count == 0) return;
+            if (!CommandPalette.TryGet(_armedVerb, out var def)) return;
+
+            var unit = _scenario.FindUnit(_selection[0]);
+            if (unit == null || !IsPlayerCommanded(unit)) return;
+
+            bool queue = WantsQueue();
+
+            switch (def.Kind)
+            {
+                case CommandKind.MoveTo:
+                    if (!CellAt(e, out var cell)) return;
+                    IssueMoveTo(unit, cell, queue);
+                    return;
+
+                case CommandKind.Engage:
+                {
+                    var target = UnitAt(e);
+                    if (target == null || !IsHostileTo(unit, target)) return;
+                    IssueEngage(unit, target, queue);
+                    return;
+                }
+
+                default:
+                    // Future table rows (#33) land here — until then, unknown kinds no-op.
+                    return;
+            }
+        }
+
+        private static bool WantsQueue() =>
+            Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        private void IssueMoveTo(UnitInstance unit, Vector2 cell, bool queue)
+        {
+            var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
+        }
+
+        private void IssueEngage(UnitInstance unit, UnitInstance target, bool queue)
+        {
+            var actor = ActorId.ForSide(unit.Side);
+            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
+            _sim.Issue(Command.Engage(actor, unit.Id, target.Id));
         }
 
         /// <summary>

@@ -1,9 +1,10 @@
 // CommandPalette.cs
 // In-code table of armable PLAY verbs (#127 / #53).
 //
-// Adding a verb is a row here — not a new branch in PlayView.OnMapClicked. #128 will
-// dispatch from the armed row; #129 will read Shortcut. Loading this table from config
-// is a future enhancement (#130) and must not block the in-code table.
+// Adding a verb is a row here — not a new branch in PlayView.OnMapClicked. PlayView
+// dispatches armed left-clicks from PaletteVerbDef.Kind (#128); #129 will read Shortcut.
+// Loading this table from config is a future enhancement (#130) and must not block the
+// in-code table.
 //
 // Right-click shortcuts stay a separate path (#53): this table does not redefine them.
 
@@ -20,7 +21,7 @@ namespace Strategos.UI
         Engage = 2,
     }
 
-    /// <summary>One armable verb — chrome, shortcuts, and (later) the click issuer.</summary>
+    /// <summary>One armable verb — chrome, shortcuts, and Kind for the confirming click.</summary>
     public readonly struct PaletteVerbDef
     {
         public readonly PaletteVerb Id;

@@ -129,10 +129,14 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   battalion with 1.1x of zoom on the shipped 6.4 km sheet — the feature was dead in the only
   scenario that ships, and the probe passed because a collapsed range is still a range.
   `ClampedTo` preserves the band's *ratio*; `EchelonProbe` now fails under 2x.
-- **PLAY's command palette arms verbs from a table, not from click-handler branches (#127).**
+- **PLAY's command palette arms verbs from a table, not from click-handler branches (#127 / #128).**
   `CommandPalette.Verbs` is the row list the rail iterates; `PaletteVerb.None` is select-only
-  and is not a table row. Right-click ordering stays a separate path until #128 wires armed
-  clicks. Config-loading the table is #130 and must not block the in-code table.
+  and is not a table row. An armed left-click issues via `PaletteVerbDef.Kind` (MoveTo /
+  Engage) through the same `Command` / bus helpers as the right-click shortcut; a miss
+  (Engage on empty ground, no selection) issues nothing and leaves the verb armed.
+  Right-click remains its own engage-or-march path and must not be redefined by the table
+  (#53). Shift-queue matches both paths. Keyboard arming is #129; config-loading the table
+  is #130 and must not block the in-code table.
 - **A drag must not also select.** Unity delivers `OnPointerClick` on release whether or not
   the pointer moved, so panning would select whatever the cursor stopped over.
   `PlayView.ClickSlop` is the threshold; right-click ordering resets it so a stale drag cannot
