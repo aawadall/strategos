@@ -157,7 +157,9 @@ Tick++
 - **`Attack` expands at delivery** into MoveTo (to `AttackStandoffCells` of the threat) +
   Engage. Already inside standoff → Engage only. Empty `AgainstUnit` → `NearestHostile`.
 - **`Recon` expands at delivery** into MoveTo (to `ReconStandoffCells`, farther than Attack) +
-  Screen — move to see, then watch. Remaining under #85: Exploit (#152), Pursue (#153).
+  Screen — move to see, then watch.
+- **`Exploit` expands at delivery** into MoveTo *past* the threat (`ExploitDepthCells`) +
+  Engage — follow-through, not Attack's close-and-standoff. Remaining under #85: Pursue (#153).
 - **A drill expands at delivery; it never reaches an executor.** `CommandKind.Drill` names a
   code and is unpacked into the orders its steps become, each issued through `Issue` so the log
   records the drill **and** what it became. The formation check runs first, so a drill given to

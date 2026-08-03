@@ -126,6 +126,11 @@ namespace Strategos.Commands
         /// </summary>
         Recon = 11,
 
+        /// <summary>
+        /// Push through a broken enemy — MoveTo past the threat + Engage (#152 / #85).
+        /// </summary>
+        Exploit = 12,
+
         // ─── Control commands (act on the queue, resolve at once) ───
         Abort = 100,
         CancelFrom = 101,
@@ -310,6 +315,16 @@ namespace Strategos.Commands
             Kind = CommandKind.Recon, AgainstUnit = against,
         };
 
+        /// <summary>
+        /// Push through the enemy. Empty <paramref name="against"/> → nearest hostile.
+        /// </summary>
+        public static Command Exploit(ActorId by, UnitId unit, UnitId against = default,
+            int tick = 0) => new()
+        {
+            Tick = tick, IssuedBy = by, TargetUnit = unit,
+            Kind = CommandKind.Exploit, AgainstUnit = against,
+        };
+
         public override string ToString()
         {
             string what = Kind switch
@@ -319,6 +334,7 @@ namespace Strategos.Commands
                 CommandKind.Withdraw => $"Withdraw({AgainstUnit})",
                 CommandKind.Attack => $"Attack({AgainstUnit})",
                 CommandKind.Recon => $"Recon({AgainstUnit})",
+                CommandKind.Exploit => $"Exploit({AgainstUnit})",
                 CommandKind.CancelFrom => $"CancelFrom({Index})",
                 CommandKind.Drill => $"Drill({DrillCode})",
                 _ => Kind.ToString(),
