@@ -92,6 +92,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Headquarters (HQ) units with C2 radius and morale bonus *(HQ as symbol/type exists; radius bonus does not)*
 
 ### 3.3 Commander Assignment
+- [x] Command rank as shoulder-board insignia derived from ORBAT echelon + `Side.RankLadder` (#38)
+- [ ] Rank insignia decorator variants by country / division / era (#125)
 - [ ] `Commander` entity: name, rank, skill stats (leadership, tactics, logistics, intel)
 - [ ] Commander bonuses applied to subordinate units within command radius
 - [ ] Commander career progression (earned by player or AI through scenario performance) *(related: #76, #109)*
@@ -175,6 +177,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 ### 5.4 Doctrine Templates
 - [x] Shipped TTP packs as JSON; DRILLS binder (read-only)
 - [x] Execute a drill — group addressing and mission executors (#77)
+- [x] PLAY drill picker annotated with T/P/U for the selected unit (#97)
 - [ ] AI and human players can load and apply doctrine templates in PLAY authoring UX
 - [ ] Player can create and save custom doctrine templates (#65 — authoring is echelon-gated)
 
@@ -336,7 +339,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ## Phase 10 — Polish, Accessibility & Release
 **Goal:** Shippable 1.0 build.
-**Status:** Early — Windows builds and a status site exist; audio issues filed (#40–#46).
+**Status:** Early — Windows builds and a GitHub Pages site (OG/CTA) exist; shoulder-board
+rank insignia ships; audio issues filed (#40–#46).
 
 ### Audio
 - [ ] Ambient terrain soundscapes (forest, urban, desert, arctic)
@@ -347,12 +351,16 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### UI / UX
 - [x] Tab-shell military map aesthetic (working UI, not final skin)
+- [x] Shoulder-board command-rank insignia in the shell (#38)
+- [x] GitHub Pages status site with OG/Twitter meta and header CTA (#120 partial)
 - [ ] Full UI skin — finished military map aesthetic
 - [ ] Colour-blind accessible symbol and map palettes
 - [ ] Keyboard shortcut remapping
 - [ ] Controller support (console stretch goal)
 - [ ] Comprehensive settings: graphics, audio, gameplay, accessibility
 - [ ] Explicit command palette / armed verbs / waypoints (#32, #53, #54)
+- [ ] Site motion capture / GIF for the landing page (#120 remainder)
+- [ ] In-game / web field-manual reference (#124)
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems

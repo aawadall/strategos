@@ -14,17 +14,19 @@ as GitHub issues; known defects that are deliberate or deferred live in
 The **Playable scenario sandbox** milestone is complete (9/9). Two forces load onto generated
 terrain, take orders, move by terrain-cost A\*, fight under ROE, dig in, tire, report contacts,
 and resolve victory — all deterministically, save/loadable, and replayable from the command log.
+The shell shows the player's command rank as a shoulder board; the drill picker rates the
+selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 
 | Area | State |
 |---|---|
 | Phase 0 — Foundation | **Done** for a local buildable project. CI is scaffolded but Unity license secrets are unset (green CI ≠ coverage). No EditMode test assembly yet. Steamworks not started. |
 | Phase 1 — Map | **Largely built.** Procedural generation + 2D topographic sheet + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, alternate render modes, basin-breaching for lake-heavy maps. |
 | Phase 2 — Symbols | **Complete** for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (`FRAME ONLY`), animated states. |
-| Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides. Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
+| Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
 | Phase 4 — Movement & combat | **Core path done.** A\* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning (#35). |
-| Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder (read) + drill execution, `ISidePolicy` seam. Still missing: remaining mission types (#85), spatial comms (#47), intel fusion, doctrine authoring (#65). |
+| Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder + drill execution with readiness-aware picker (#97), `ISidePolicy` seam. Still missing: remaining mission types (#85), spatial comms (#47), intel fusion, doctrine authoring (#65). |
 | Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over probes land (#75). Still missing: PLAY wiring (#114), scenario editor, feature-placed objectives (#51), historical packs. |
-| Phases 7–10 | **Unbuilt**, except early design issues filed (audio, AI env epic #99, release engineering #83). |
+| Phases 7–10 | **Mostly unbuilt.** Windows builds + GitHub Pages site (OG/CTA in; GIF still #120). Audio and release-engineering issues filed. |
 
 ### Near-term focus — "First playable game"
 
@@ -41,14 +43,15 @@ environment epic (#99) which already has a policy seam (#100 closed).
 
 ### Outstanding themes (open issues, grouped)
 
-- **Command UX / play** — #32, #53, #54, #97, #38
+- **Command UX / play** — #32, #53 (#127–#129), #54; later: config-loaded verb table (#130)
 - **Campaign & progression** — #78, #114, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85, #65
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99–#106
 - **Persistence beyond run saves** — #66
 - **Audio (Phase 10 early)** — #40–#46
-- **Release / site** — #83, #120
+- **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
+- **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
 
 ---
 
@@ -168,9 +171,11 @@ Accounts, matchmaking, workshop, leaderboards, mod support. Unbuilt.
 
 ### Phase 10 — Polish, Accessibility & Release
 Audio (#40–#46 filed early), UI/UX, tutorials, performance, platform builds, Steam assets,
-1.0 launch. Mostly unbuilt; Windows player builds and a GitHub Pages site exist.
+1.0 launch. Early: Windows player builds and a GitHub Pages site (meta + CTA; GIF still open).
+Command-rank shoulder insignia ships in the shell.
 
 See [docs/phases.md](docs/phases.md) for the full task breakdown and checkboxes.
+See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 See [docs/command-architecture.md](docs/command-architecture.md) for the command/situation topic design that Phases 3–5 build on.
 See [docs/steam.md](docs/steam.md) for the Steam publishing guide, Early Access strategy, and Steamworks integration details.
 
