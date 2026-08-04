@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Climb campaign scenarios (#405): `climb-squad` / `climb-company` / `climb-battalion` with
+  escalating `PlayerEchelon` and Id-stable leaves (1/2 + reinforcement HQs); ScenarioProbe fixtures.
 - Climb campaign design note (#404 / #403): `docs/climb-campaign.md` — Squad → Company →
   Battalion seat ladder, Id-stable scenario sketch, reuse rules vs Valley/Highland/#289.
 - Display prefs contract probe (#392): `DisplayPrefsProbe` — Fullscreen/WxH round-trip plus
