@@ -99,10 +99,11 @@ shared terrain.
 
 ### PLAY entry (#407)
 
-Add `START CLIMB CAMPAIGN` (wording flexible) on `MainMenuView` / PLAY campaign
-row beside Valley and Highland. Wire through `AppShell` → `PlayView` the same way
-`StartValleyCampaign` / `StartHighlandCampaign` already do. `RankGate.Authorize`
-on the first op still runs — default battalion career may command Squad.
+Add `START CLIMB CAMPAIGN` on `MainMenuView` / PLAY campaign
+row beside Valley and Highland. Wired through `AppShell.StartClimbFromMenu` →
+`PlayView.StartClimbCampaign` the same way Valley/Highland already do.
+`RankGate.Authorize` on the first op still runs — default battalion career may
+command Squad.
 
 ### Probe (#408)
 
@@ -128,4 +129,4 @@ campaign probe style (`CampaignChainDriverProbe`) over a PLAY UI click script.
 
 ## Implementation order (unchanged from #403)
 
-`#404` (this note) → `#405` scenarios → `#406` chain JSON (shipped) → `#407` menu/PLAY → `#408` probe → `#409` docs cross-link polish.
+`#404` (this note) → `#405` scenarios → `#406` chain JSON (shipped) → `#407` menu/PLAY (shipped) → `#408` probe → `#409` docs cross-link polish.

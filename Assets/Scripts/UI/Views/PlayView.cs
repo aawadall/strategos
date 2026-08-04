@@ -307,6 +307,7 @@ namespace Strategos.UI.Views
         public void LoadScenarioPublic(string name) => LoadScenario(name);
         public void StartValleyCampaignPublic() => StartValleyCampaign();
         public void StartHighlandCampaignPublic() => StartHighlandCampaign();
+        public void StartClimbCampaignPublic() => StartClimbCampaign();
         public void QuickSavePublic() => QuickSave();
         public void QuickLoadPublic() => QuickLoad();
 
@@ -805,6 +806,7 @@ namespace Strategos.UI.Views
             var row = AddButtonRow(parent);
             AddButton(row, "START VALLEY", StartValleyCampaign);
             AddButton(row, "START HIGHLAND", StartHighlandCampaign);
+            AddButton(row, "START CLIMB", StartClimbCampaign);
             _continueCampaignButton = AddButton(row, "CONTINUE", AdvanceCampaign);
             _continueCampaignButton.interactable = false;
 
@@ -921,6 +923,13 @@ namespace Strategos.UI.Views
         /// </summary>
         private void StartHighlandCampaign() =>
             StartNamedCampaign(CampaignSamples.HighlandName);
+
+        /// <summary>
+        /// Starts the shipped Squad → Company → Battalion climb (#403 / #407).
+        /// Default battalion career may command the opening Squad seat via RankGate.
+        /// </summary>
+        private void StartClimbCampaign() =>
+            StartNamedCampaign(CampaignSamples.ClimbName);
 
         /// <summary>Shared start path for authored campaign chains.</summary>
         private void StartNamedCampaign(string campaignName)

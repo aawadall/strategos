@@ -80,6 +80,7 @@ namespace Strategos.UI.Views
             Section(col, "CAMPAIGN / SCENARIO");
             AddButton(col, "START VALLEY CAMPAIGN", () => Shell?.StartValleyFromMenu());
             AddButton(col, "START HIGHLAND CAMPAIGN", () => Shell?.StartHighlandFromMenu());
+            AddButton(col, "START CLIMB CAMPAIGN", () => Shell?.StartClimbFromMenu());
             AddButton(col, "SKIRMISH ONLY", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.SkirmishName));
             AddButton(col, "PUSH NORTH", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.PushNorthName));
             AddButton(col, "SQUAD TUTORIAL",
