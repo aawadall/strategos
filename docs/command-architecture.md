@@ -8,12 +8,15 @@ deterministic.
 > [CLAUDE.md](../CLAUDE.md). For the phase breakdown this feeds, see
 > [phases.md](phases.md) §5.
 
-**Status: built, and this describes the code.** Both topics, the queues, the delivery rules,
-the command log and the report log are implemented under `Assets/Scripts/Core/Messaging/`,
-`Core/Commands/` and `Core/Reports/`, and are covered by `CommandProbe` and `ReportProbe`.
+**Status: built, and this describes the code.** The command and situation topics, the
+queues, the delivery rules, the command log and the report log are implemented under
+`Assets/Scripts/Core/Messaging/`, `Core/Commands/` and `Core/Reports/`, and are covered by
+`CommandProbe` and `ReportProbe`. Directives from higher (#73) ride a third topic
+(`DirectiveBus` under `Core/Directives/`); the player sits as a node between that inbound
+face and outbound orders (#36).
 
 Three things below are still forward-looking and say so where they appear: the **C3 section**
-(noise, latency, hijack), **order decomposition at echelon**, and everything filed under a
+(noise, latency, hijack), **mid-run FRAGO streams from higher**, and everything filed under a
 later phase. The message shapes carry the fields those need — `ObservedTick`, `Confidence`,
 `TargetGroup`, `ParentId` — with no behaviour behind them yet, deliberately: a field that is
 currently a copy is cheap, and a message format that cannot express staleness has to be
@@ -41,9 +44,16 @@ four.
 
 ## Topology
 
-Two topics, matching the direction of real command flow:
+Three topics, matching the direction of real command flow. The player is a **node** in the
+chain (#36): directives arrive from higher on one face; orders leave to subordinates on
+another. Reports still climb the situation topic.
 
 ```
+                    ┌─────────────────────┐
+   higher HQ ──────►│   DIRECTIVE topic   │────► player (acknowledge; never auto-decompose)
+                    │   (intent down)     │────► UI            (read-only)
+                    └─────────────────────┘────► recorder      (read-only)
+
                     ┌─────────────────────┐
    player / AI ────►│   COMMAND topic     │────► units (filter by addressee)
                     │   (orders down)     │────► UI            (read-only)
@@ -55,10 +65,26 @@ Two topics, matching the direction of real command flow:
                     └─────────────────────┘────► intel system  (Phase 5.3)
 ```
 
-This mirrors C2 doctrine rather than merely borrowing its vocabulary: orders are directed
-downward to an addressee, reports flow upward and outward to whoever is listening. The
-topology and the subject matter agree, which is what makes the later phases fit without
-reshaping it.
+A directive is **not** an order: publishing one on the command topic would hit formation
+decomposition and quietly issue moves the player never chose (#73). Orders addressed above
+the player's authored or derived echelon (`Scenario.PlayerEchelon` /
+`CommandScope`) are refused at `Simulation.Issue` and hidden in PLAY (#268).
+
+This mirrors C2 doctrine rather than merely borrowing its vocabulary: intent from higher,
+orders downward to an addressee, reports upward and outward. The topology and the subject
+matter agree, which is what makes the later phases fit without reshaping it.
+
+### Player as a node — two interfaces
+
+| Face | Topic | What the player does |
+|---|---|---|
+| In | Directive | Receive one opening directive; acknowledge (no refuse path in v1) |
+| Out | Command | Issue / Abort / CancelFrom to units at or below their echelon band |
+
+Career rank (#76) authorizes the seat; `PlayerEchelon` *is* the seat. Zoom uses the same
+band. Mid-run re-task from higher (a live FRAGO stream onto `DirectiveBus`) is deferred —
+v1's plan cut is `CancelFrom` on the command topic, and higher's voice is the single
+scenario directive published at start (#269).
 
 ---
 

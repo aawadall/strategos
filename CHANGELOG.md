@@ -13,6 +13,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Player as a node in the chain (#36 / #266–#269): `Scenario.PlayerEchelon`,
+  `CommandScope` / `Issue` refuse out-of-band addresses, PLAY zoom and order chrome follow
+  the seat; design note for directives-in / orders-out; FRAGO plan cut remains `CancelFrom`
+  (mid-run directive stream deferred); `CommandScopeProbe`.
 - Rank gates (#76 / #222–#225): `RankAuthority` table (rank → max echelon), PLAY refuses
   under-rank scenario/campaign start, promote one rung on campaign win; `RankGateProbe`.
 - US/NATO topographic map palette (#169 / #188–#192): `MapRenderMode.NatoTopo` with

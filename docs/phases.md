@@ -164,6 +164,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [x] Order propagation delay via formation decomposition (one echelon per step)
 - [ ] Order propagation delay by distance / terrain / comms modality (#47)
 - [x] Directives from higher — player as receiver (#73); acknowledge is replayable (#94)
+- [x] Player as a node in the chain (#36 / #266–#269): `PlayerEchelon`, command-scope guard,
+  two-interface docs; mid-run directive FRAGO stream still deferred
 - [ ] Commander's intent field: free-text or template-based *(directive text exists; free authoring UX does not)*
 
 ### 5.2 Communications

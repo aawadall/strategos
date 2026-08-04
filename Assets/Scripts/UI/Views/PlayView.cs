@@ -1949,7 +1949,8 @@ namespace Strategos.UI.Views
                 ? _sim.Hierarchy.IsDestroyed(unit.Id)
                 : unit.IsDestroyed) &&
             (_scenario == null || !_scenario.PlayerSide.IsValid ||
-             unit.Side == _scenario.PlayerSide);
+             unit.Side == _scenario.PlayerSide) &&
+            Commands.CommandScope.CanAddress(_scenario, unit);
 
         private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
             Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
@@ -2119,8 +2120,9 @@ namespace Strategos.UI.Views
         /// The echelon the player commands, and therefore how much ground they may see.
         /// </summary>
         /// <remarks>
-        /// Taken from the top of their own ORBAT, so it follows the scenario rather than a
-        /// setting and will follow rank once #76 gates which formations a player is given.
+        /// Taken from <see cref="Commands.CommandScope.EffectivePlayerEchelon"/> — authored
+        /// <see cref="Scenario.PlayerEchelon"/> when set, else the top of their ORBAT — so
+        /// zoom follows the seat (#36) and career rank (#76) gates which seats they get.
         /// With no player side declared the game is hot-seat and nobody's echelon is
         /// privileged, so the highest on the map wins.
         /// </remarks>
@@ -2128,23 +2130,9 @@ namespace Strategos.UI.Views
             EchelonSpanIO.Current.For(CommandEchelon())
                 .ClampedTo(_map == null ? 0f : _map.Header.WidthMetres);
 
-        /// <summary>Highest echelon on the player's ORBAT (or on the map, in hot-seat).</summary>
-        private NatoSymbols.Echelon CommandEchelon()
-        {
-            var echelon = NatoSymbols.Echelon.None;
-
-            if (_sim != null)
-                foreach (var unit in _sim.AllUnits)
-                {
-                    if (_scenario != null && _scenario.PlayerSide.IsValid &&
-                        unit.Side != _scenario.PlayerSide) continue;
-
-                    var e = unit.ToSidcCode().Echelon;
-                    if ((int)e > (int)echelon) echelon = e;
-                }
-
-            return echelon;
-        }
+        /// <summary>Player command echelon — authored or derived from the ORBAT.</summary>
+        private NatoSymbols.Echelon CommandEchelon() =>
+            Commands.CommandScope.EffectivePlayerEchelon(_scenario);
 
         /// <summary>Publishes who the player commands so the shell can show rank insignia.</summary>
         private void PublishCommandContext()
