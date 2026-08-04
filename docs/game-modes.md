@@ -23,12 +23,16 @@ Mode-select sits on the PLAY CAMPAIGN rail **before** scenario / campaign start 
 Changing mode does not reload the map by itself; the next `LoadScenario` /
 `StartNamedCampaign` / `BindSimulation` applies director and Issue rules.
 
+AI difficulty / personality (#291) live on the same rail and feed
+`EnableDirector(..., DifficultyParams)` — see [ai-difficulty.md](ai-difficulty.md).
+
 ---
 
 ## BindSimulation rules
 
-- **Solo** — today's path: `EnableDirector` on every side except `PlayerSide`.
-- **Spectator** — `EnableDirector` on **all** sides; PLAY Issue chrome is inert
+- **Solo** — today's path: `EnableDirector` on every side except `PlayerSide`, with the
+  session's resolved `DifficultyParams`.
+- **Spectator** — `EnableDirector` on **all** sides (same params); PLAY Issue chrome is inert
   (`IsPlayerCommanded` false).
 - **Hotseat** — no director; `AppSession.HotseatSide` starts at `PlayerSide` (or first
   side); **SWITCH SIDE** flips who may be ordered and which side GCM fog uses.

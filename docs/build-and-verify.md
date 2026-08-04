@@ -156,6 +156,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CommandScopeProbe.Run` | PlayerEchelon derive/validate; Company seat refuses BN Issue; rank prefers authored |
 | `Strategos.Editor.CareerAcrossCampaignsProbe.Run` | CareerProfile stamp/round-trip; highland Regiment≠valley; directive From continues |
 | `Strategos.Editor.GameModesProbe.Run` | ModeKind; spectator both directors decide; hotseat side flip |
+| `Strategos.Editor.AiDifficultyProbe.Run` | Easy/Hard ladder; personality packs; Hard issues more orders than Easy |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
