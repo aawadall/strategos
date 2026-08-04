@@ -3,7 +3,9 @@
 Phase 6.2 research half — epic
 [#332](https://github.com/aawadall/strategos/issues/332) (children #335–#340).
 Conversion to playable scenarios is
-[#333](https://github.com/aawadall/strategos/issues/333).
+[#333](https://github.com/aawadall/strategos/issues/333) — starter shipped as
+`ScenarioSamples.LittleRoundTop` /
+`Assets/Resources/Scenarios/little-round-top-20th-maine.json`.
 
 ## Where material lives
 

@@ -40,6 +40,11 @@ namespace Strategos.Editor
             ScenarioIO.SaveToFile(ScenarioSamples.PushNorth(), pushNorthPath);
             Debug.Log($"[ScenarioProbe] wrote {pushNorthPath}");
 
+            // #333 / #342: historical pack starter.
+            var lrtPath = Path.Combine(ResourceDir, ScenarioSamples.LittleRoundTopName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.LittleRoundTop(), lrtPath);
+            Debug.Log($"[ScenarioProbe] wrote {lrtPath}");
+
             AssetDatabase.Refresh();
         }
 
@@ -242,6 +247,28 @@ namespace Strategos.Editor
                 log.AppendLine($"    {side.Name,-8} {side.Affiliation,-8} " +
                                $"{shipped.CountUnitsOf(side.Id)} units");
 
+            // #333 / #342: historical sample must match its committed JSON too.
+            bad += CheckNamedShippedFixture(ScenarioSamples.LittleRoundTopName,
+                ScenarioSamples.LittleRoundTop(), log);
+
+            return bad;
+        }
+
+        private static int CheckNamedShippedFixture(string name, Scenario built, StringBuilder log)
+        {
+            var shipped = ScenarioIO.Load(name);
+            if (shipped == null)
+            {
+                log.AppendLine($"  FAIL no shipped scenario '{name}' " +
+                               $"(run Strategos > Write Sample Scenarios)");
+                return 1;
+            }
+
+            int bad = Compare(built, shipped, log, $"shipped '{name}'");
+            var problems = shipped.Validate();
+            foreach (var p in problems) log.AppendLine($"  FAIL shipped '{name}' invalid: {p}");
+            bad += problems.Count;
+            log.AppendLine($"  shipped '{name}': {shipped}");
             return bad;
         }
 
