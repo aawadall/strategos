@@ -170,6 +170,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/unity-gotchas.md](docs/unity-gotchas.md) | Adding an asset, a package, or a serialised type |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
 | [docs/game-modes.md](docs/game-modes.md) | Touching PLAY mode-select, spectator, hotseat, replay (#287) |
+| [docs/ai-difficulty.md](docs/ai-difficulty.md) | Touching `SideDirector` difficulty / personality (#291) |
 | [docs/known-gaps.md](docs/known-gaps.md) | Chasing anything that looks like a bug — it may already be recorded |
 
 Reference material, unchanged:

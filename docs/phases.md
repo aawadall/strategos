@@ -239,9 +239,9 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 multiplayer (§7.3) still open.
 
 ### 7.1 Single Player vs AI
-- [x] Player selects mode + scenario (#287 / #294–#295) — echelon/difficulty pickers still open
+- [x] Player selects mode + scenario (#287 / #294–#295) — echelon picker still open
 - [x] Opposing side can run under `ISidePolicy` / `SideDirector` (reflex-level intent, not planning AI)
-- [ ] Difficulty: Recruit → Regular → Veteran → Elite → Legendary (#291)
+- [x] Difficulty ladder Easy / Normal / Hard via `DifficultyParams` (#291 / #318–#320) — Recruit→Legendary rename still open
 - [x] Post-battle AAR (After-Action Review): map replay with analytics (#287 — `REPLAY SAVE` / Replayer; analytics still open)
 
 ### 7.2 Hotseat Multiplayer
@@ -288,7 +288,7 @@ intelligence / ML-Agents unbuilt.
 ### 8.1 Rule-Based AI (baseline)
 - [x] Reflex-level opposing intent (`SideDirector` / ROE) — not doctrine-driven planning
 - [ ] Doctrine-driven behaviour trees per mission type
-- [ ] Used for lowest difficulty levels and as RL environment baseline (#291)
+- [x] Tunable difficulty / personality on the reflex opponent (#291) — RL baseline still open
 - [x] Exposes same action API as ML agent for compatibility (#102)
 
 ### 8.2 Reinforcement Learning (RL)
@@ -320,7 +320,8 @@ intelligence / ML-Agents unbuilt.
 - [ ] GA + RL hybrid: GA evolves high-level strategy; RL handles tactical execution
 
 ### 8.5 AI Difficulty & Personality
-- [ ] AI profiles: Aggressive, Defensive, Balanced, Feint-heavy, Attrition, Manoeuvre (#291 — near-term as `SideDirector` presets, not trained personalities)
+- [x] Near-term `SideDirector` presets: Easy/Normal/Hard × Aggressive/Defensive/Balanced (#291 / #318–#322)
+- [ ] Expanded profiles: Feint-heavy, Attrition, Manoeuvre (trained / doctrine-driven)
 - [ ] Personality parameters tune RL policy at inference time
 - [ ] Named commanders (personalities) with persistent stats across sessions
 

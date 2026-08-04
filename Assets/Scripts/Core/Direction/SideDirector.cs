@@ -25,6 +25,9 @@
 // #100: the first, default implementation of ISidePolicy. Everything below used to read
 // Simulation directly (_sim.Tick, _sim.IsOver, _sim.Units, _sim.QueueOf, _sim.Victory); it reads
 // the same facts off SideKnowledge now, and holds no Simulation reference as a result.
+//
+// #291: EvaluationInterval / RetryInterval / MinStrengthPercent come from DifficultyParams
+// rather than fixed constants, so Easy/Hard and personality packs can tune the same reflex.
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,30 +40,10 @@ namespace Strategos.Direction
 {
     public sealed class SideDirector : ISidePolicy
     {
-        /// <summary>
-        /// Ticks between re-evaluations.
-        ///
-        /// Not every tick: nothing this decides can change inside a few seconds, and a unit
-        /// that has just been given an order needs time to act on it before being reconsidered.
-        /// A constant rather than a setting, because changing it changes what the opponent does.
-        /// </summary>
+        /// <summary>Default evaluation cadence — same as <see cref="DifficultyParams.Normal"/>.</summary>
         public const int EvaluationInterval = 20;
 
-        /// <summary>
-        /// Ticks a unit is left alone after being given an order, before it may be given
-        /// another.
-        /// </summary>
-        /// <remarks>
-        /// **This is not politeness, it is the guard against an order storm.** A MoveTo whose
-        /// destination cannot be reached fails on the tick it is issued, leaving the queue
-        /// empty — so without a backoff the director finds the unit idle at the very next
-        /// evaluation and reissues, for ever. The first run of `DirectorProbe` recorded 1080
-        /// autonomous orders in an hour of simulated time, one per unit per evaluation, for a
-        /// scenario in which nothing moved at all.
-        ///
-        /// It also bounds the command log, which is the thing a replay and an after-action
-        /// review both read.
-        /// </remarks>
+        /// <summary>Default retry backoff — same as <see cref="DifficultyParams.Normal"/>.</summary>
         public const int RetryInterval = 300;
 
         private readonly List<SideId> _sides = new();
@@ -68,12 +51,16 @@ namespace Strategos.Direction
         // Last tick each unit was given an order. Lookup only, never iterated.
         private readonly Dictionary<int, int> _lastOrdered = new();
 
+        /// <summary>Live knobs for this director (#291). Never null after construction.</summary>
+        public DifficultyParams Params { get; }
+
         /// <summary>Orders issued on the directed sides' own initiative. Diagnostic.</summary>
         public int OrdersIssued { get; private set; }
 
-        public SideDirector(IEnumerable<SideId> sides)
+        public SideDirector(IEnumerable<SideId> sides, DifficultyParams? parameters = null)
         {
             if (sides != null) _sides.AddRange(sides);
+            Params = (parameters ?? DifficultyParams.Normal()).Clamped();
         }
 
         public bool Directs(SideId side)
@@ -85,7 +72,7 @@ namespace Strategos.Direction
         public IReadOnlyList<Command> Decide(SideKnowledge knowledge)
         {
             if (knowledge.Victory == null || _sides.Count == 0) return System.Array.Empty<Command>();
-            if (knowledge.Tick % EvaluationInterval != 0) return System.Array.Empty<Command>();
+            if (knowledge.Tick % Params.EvaluationInterval != 0) return System.Array.Empty<Command>();
             if (knowledge.IsOver) return System.Array.Empty<Command>();
 
             List<Command> orders = null;
@@ -115,15 +102,13 @@ namespace Strategos.Direction
             var queue = knowledge.QueueOf(unit.Id);
             if (queue != null && !queue.IsEmpty) return null;
 
-            // Spent units are not sent back. Without this, a unit that has just broken contact
-            // finishes withdrawing, is found idle, and is ordered straight back into the fight
-            // it fled — which reads as an opponent with no memory rather than as a decision.
-            if (unit.Strength < ReactionController.BreakStrengthPercent) return null;
+            // Spent units are not sent back. Difficulty raises/lowers this floor (#291).
+            if (unit.Strength < Params.MinStrengthPercent) return null;
 
             // Recently tasked. Either it is on its way, or the last attempt failed and
             // repeating it immediately will fail the same way.
             if (_lastOrdered.TryGetValue(unit.Id.Value, out int last) &&
-                knowledge.Tick - last < RetryInterval)
+                knowledge.Tick - last < Params.RetryInterval)
                 return null;
 
             var objective = NearestUnheld(unit, knowledge.Victory);
@@ -175,9 +160,9 @@ namespace Strategos.Direction
         /// <see cref="Commands.ActorId.ForSide"/>, so <c>CommandLog</c> cannot tell them apart —
         /// there is no way to reconstruct "which orders did the director itself issue" by
         /// reading the log back. Without this a restored director has no memory of
-        /// <see cref="RetryInterval"/> and can reissue on the very next evaluation an order the
-        /// original run was still waiting out — the order-storm #13 introduced this field to
-        /// stop, reappearing after every load rather than never.
+        /// <see cref="DifficultyParams.RetryInterval"/> and can reissue on the very next
+        /// evaluation an order the original run was still waiting out — the order-storm #13
+        /// introduced this field to stop, reappearing after every load rather than never.
         /// </remarks>
         public Dictionary<int, int> SnapshotLastOrdered() => new(_lastOrdered);
 

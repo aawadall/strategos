@@ -112,6 +112,25 @@ namespace Strategos.UI
         public SideId HotseatSide { get; set; }
 
         /// <summary>
+        /// Opposing <see cref="Direction.SideDirector"/> difficulty (#291). Applied when
+        /// PLAY enables directors; Normal matches the historical constants.
+        /// </summary>
+        public Direction.AiDifficultyLevel AiDifficulty { get; set; } =
+            Direction.AiDifficultyLevel.Normal;
+
+        /// <summary>
+        /// Personality pack on top of <see cref="AiDifficulty"/> (#321).
+        /// </summary>
+        public Direction.AiPersonality AiPersonality { get; set; } =
+            Direction.AiPersonality.Balanced;
+
+        /// <summary>
+        /// Resolved director knobs from the current difficulty × personality pick.
+        /// </summary>
+        public Direction.DifficultyParams ResolvedDirectorParams() =>
+            Direction.AiPresets.Resolve(AiDifficulty, AiPersonality);
+
+        /// <summary>
         /// Career profile across campaigns (#109). Rank, formation designation, and who
         /// addresses the player from higher. Survives <see cref="ClearCampaign"/>.
         /// </summary>

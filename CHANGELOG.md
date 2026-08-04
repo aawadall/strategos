@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- AI difficulty ladder (#291 / #318–#322): `DifficultyParams` + Easy/Normal/Hard and
+  Aggressive/Defensive/Balanced presets for `SideDirector`; PLAY **AI DIFFICULTY** /
+  **AI PERSONALITY** dropdowns; `AiDifficultyProbe`; `docs/ai-difficulty.md`.
 - Game modes (#287 / #294–#299): `ModeKind` + PLAY mode-select (solo / hotseat / spectator /
   replay); spectator directs both sides; hotseat **SWITCH SIDE** + GCM fog; **REPLAY SAVE**
   via `Replayer`; `GameModesProbe`; `docs/game-modes.md`.

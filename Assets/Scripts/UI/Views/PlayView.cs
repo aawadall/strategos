@@ -24,6 +24,7 @@ using Strategos.Campaigns;
 using Strategos.Commands;
 using Strategos.ControlMeasures;
 using Strategos.Directives;
+using Strategos.Direction;
 using Strategos.Doctrine;
 using Strategos.Maps;
 using Strategos.Modes;
@@ -104,6 +105,8 @@ namespace Strategos.UI.Views
         private TMP_Text _clockLabel;
         private TMP_Dropdown _speedDrop;
         private TMP_Dropdown _playModeDrop;
+        private TMP_Dropdown _aiDifficultyDrop;
+        private TMP_Dropdown _aiPersonalityDrop;
         private Button _switchSideButton;
 
         /// <summary>
@@ -666,6 +669,12 @@ namespace Strategos.UI.Views
             _playModeDrop = AddDropdown(parent, "PLAY MODE", OnPlayModeChanged);
             SetDrop(_playModeDrop, new[] { "SOLO", "HOTSEAT", "SPECTATOR", "REPLAY" }, 0);
 
+            _aiDifficultyDrop = AddDropdown(parent, "AI DIFFICULTY", OnAiDifficultyChanged);
+            SetDrop(_aiDifficultyDrop, new[] { "EASY", "NORMAL", "HARD" }, 1);
+
+            _aiPersonalityDrop = AddDropdown(parent, "AI PERSONALITY", OnAiPersonalityChanged);
+            SetDrop(_aiPersonalityDrop, new[] { "BALANCED", "AGGRESSIVE", "DEFENSIVE" }, 0);
+
             var row = AddButtonRow(parent);
             AddButton(row, "START VALLEY", StartValleyCampaign);
             AddButton(row, "START HIGHLAND", StartHighlandCampaign);
@@ -693,6 +702,27 @@ namespace Strategos.UI.Views
             RefreshCampaignChrome();
             Debug.Log($"[PlayView] play mode {_session.PlayMode}");
         }
+
+        private void OnAiDifficultyChanged()
+        {
+            if (_suppress || _session == null || _aiDifficultyDrop == null) return;
+            _session.AiDifficulty = (AiDifficultyLevel)Mathf.Clamp(_aiDifficultyDrop.value, 0, 2);
+            RefreshCampaignChrome();
+            Debug.Log($"[PlayView] AI difficulty {_session.AiDifficulty}");
+        }
+
+        private void OnAiPersonalityChanged()
+        {
+            if (_suppress || _session == null || _aiPersonalityDrop == null) return;
+            _session.AiPersonality = (AiPersonality)Mathf.Clamp(_aiPersonalityDrop.value, 0, 2);
+            RefreshCampaignChrome();
+            Debug.Log($"[PlayView] AI personality {_session.AiPersonality}");
+        }
+
+        private DifficultyParams CurrentDirectorParams() =>
+            _session != null
+                ? _session.ResolvedDirectorParams()
+                : DifficultyParams.Normal();
 
         private ModeKind CurrentPlayMode() =>
             _session?.PlayMode ?? ModeKind.Solo;
@@ -924,18 +954,20 @@ namespace Strategos.UI.Views
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
         }
 
-        /// <summary>#287: directors and hotseat seat follow <see cref="AppSession.PlayMode"/>.</summary>
+        /// <summary>#287 / #291: directors, hotseat seat, and difficulty follow AppSession.</summary>
         private void ApplyPlayModeDirectors(SimulationSnapshot restoreFrom)
         {
             var mode = CurrentPlayMode();
             if (_switchSideButton != null)
                 _switchSideButton.interactable = mode == ModeKind.Hotseat;
 
+            var parms = CurrentDirectorParams();
+
             if (mode == ModeKind.Spectator)
             {
                 var all = new List<SideId>();
                 foreach (var side in _scenario.Sides) all.Add(side.Id);
-                _sim.EnableDirector(all);
+                _sim.EnableDirector(all, parms);
                 if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
                 return;
             }
@@ -962,7 +994,7 @@ namespace Strategos.UI.Views
                 var opposing = new List<SideId>();
                 foreach (var side in _scenario.Sides)
                     if (side.Id != _scenario.PlayerSide) opposing.Add(side.Id);
-                _sim.EnableDirector(opposing);
+                _sim.EnableDirector(opposing, parms);
                 if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
             }
         }
@@ -1131,11 +1163,15 @@ namespace Strategos.UI.Views
             if (_campaignLabel == null) return;
 
             string modeTag = CurrentPlayMode().ToString().ToUpperInvariant();
+            string aiTag = _session != null
+                ? $"{_session.AiDifficulty.ToString().ToUpperInvariant()}/" +
+                  $"{_session.AiPersonality.ToString().ToUpperInvariant()}"
+                : "NORMAL/BALANCED";
 
             if (_session == null || !_session.HasActiveCampaign)
             {
                 _campaignLabel.text =
-                    $"{modeTag}  ·  Single scenario  ·  START loads the valley chain";
+                    $"{modeTag}  ·  {aiTag}  ·  Single scenario  ·  START loads the valley chain";
                 if (_continueCampaignButton != null)
                     _continueCampaignButton.interactable = false;
                 if (_switchSideButton != null)
@@ -1149,7 +1185,7 @@ namespace Strategos.UI.Views
             bool canContinue = _outcomeShown && _session.HasNextOperation;
 
             _campaignLabel.text =
-                $"{modeTag}  ·  {chain.Name}  ·  op {i + 1}/{chain.Operations.Count}  ·  {op.Name}" +
+                $"{modeTag}  ·  {aiTag}  ·  {chain.Name}  ·  op {i + 1}/{chain.Operations.Count}  ·  {op.Name}" +
                 (canContinue
                     ? "\nOperation decided  ·  CONTINUE carries the ORBAT forward"
                     : _outcomeShown && !_session.HasNextOperation

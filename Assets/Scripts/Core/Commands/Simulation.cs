@@ -158,9 +158,11 @@ namespace Strategos.Commands
         private Direction.ISidePolicy _policy;
 
         /// <summary>Turns on side-level intent for the given sides. Call once, before stepping.</summary>
-        public Direction.SideDirector EnableDirector(System.Collections.Generic.IEnumerable<SideId> sides)
+        public Direction.SideDirector EnableDirector(
+            System.Collections.Generic.IEnumerable<SideId> sides,
+            Direction.DifficultyParams? parameters = null)
         {
-            _policy ??= new Direction.SideDirector(sides);
+            _policy ??= new Direction.SideDirector(sides, parameters);
             return Director;
         }
 

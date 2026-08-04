@@ -262,9 +262,12 @@ Tick++
   the shipped skirmish once ran its full hour with 1080 autonomous orders and nobody moving,
   because the crossroads was one cell into a lake. `DirectorProbe` asserts it and names the
   nearest passable cell.
-- **`SideDirector.RetryInterval` is the guard against that order storm,** not politeness. Any
-  unreachable destination reproduces it otherwise, and the command log is what a replay and an
-  after-action review both read.
+- **`SideDirector`'s retry / evaluation intervals and strength floor come from
+  `DifficultyParams` (#291),** not fixed constants alone. The public consts
+  `SideDirector.EvaluationInterval` / `RetryInterval` remain the Normal defaults;
+  `AiPresets` builds Easy/Hard and personality packs. `RetryInterval` is still the guard
+  against that order storm, not politeness. Any unreachable destination reproduces it
+  otherwise, and the command log is what a replay and an after-action review both read.
 - **Side-level decision-making sits behind `ISidePolicy`, and `SideDirector` is the default
   implementation, not the only possible one (#100).** `Decide(SideKnowledge)` is pull-based on
   purpose: a policy returns the commands it wants issued and `Simulation.Step` issues each one
