@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Tutorial first beat (#310): `TutorialFirstBeat` checklist on tutorial load — select
+  friendly unit then real MoveTo; `TutorialFirstBeatProbe`.
 - Squad tutorial scenario skeleton (#309): `ScenarioSamples.Tutorial` /
   `tutorial-squad.json`, `PlayerEchelon` Squad; menu + PLAY load; ScenarioProbe fixture.
 - Context help for MOVE (#308): `ContextHelp` + `ContextHelpOverlay`; PLAY rail HELP;
