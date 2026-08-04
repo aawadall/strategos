@@ -122,6 +122,12 @@ namespace Strategos.UI
             _views.Get<PlayView>()?.StartHighlandCampaignPublic();
         }
 
+        public void StartClimbFromMenu()
+        {
+            Navigate("play");
+            _views.Get<PlayView>()?.StartClimbCampaignPublic();
+        }
+
         public void LoadScenarioFromMenu(string name)
         {
             Navigate("play");
