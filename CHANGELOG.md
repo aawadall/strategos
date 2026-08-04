@@ -13,6 +13,7 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- `SideEnv` — Reset/Step/(observation, reward, done); cached-map Restore; `EnvProbe` (#104 / #99).
 - `SideReward` / `SideRewardSnapshot` — terminal ±1/0/−1 plus potential shaping on
   owned objectives and force advantage (no contact term); `RewardProbe` (#103 / #99).
 - `SideActionSpace` / `SideActionMask` — drill + ADVANCE vocabulary and legality gates;

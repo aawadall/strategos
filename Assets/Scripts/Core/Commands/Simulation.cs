@@ -1286,14 +1286,20 @@ namespace Strategos.Commands
         /// <see cref="RestoreReactionPicture"/> / <see cref="RestoreDirectorMemory"/> — if the
         /// saved run had them. Executors and controllers are behaviour, not data; see
         /// <see cref="Persistence.SimulationSnapshot"/>'s header.
+        ///
+        /// Pass a cached <paramref name="map"/> for episode Reset (#104) so
+        /// <c>GenerateMap</c> is not paid every time; omit it to regenerate from scenario
+        /// settings (save/load path).
         /// </remarks>
         public static Simulation Restore(Persistence.SimulationSnapshot snapshot,
-            UnitCatalogue catalogue = null)
+            UnitCatalogue catalogue = null, Maps.MapData map = null)
         {
             if (snapshot == null) throw new System.ArgumentNullException(nameof(snapshot));
 
             var scenario = Scenarios.ScenarioIO.FromJson(snapshot.ScenarioJson);
-            var map = scenario.GenerateMap();
+            // Optional map: episode Reset (#104) must not pay GenerateMap every time. Callers that
+            // omit it keep the old path (regen from scenario settings — deterministic, expensive).
+            map ??= scenario.GenerateMap();
             var sim = new Simulation(scenario, map, catalogue);
 
             sim.Tick = snapshot.Tick;
