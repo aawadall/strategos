@@ -278,8 +278,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ## Phase 8 — AI System
 **Goal:** An AI that can be trained, evolved, transferred, and shared.
-**Status:** Environment API through lifecycle (#100–#104) shipped; #105–#106 and intelligence
-unbuilt under epic (#99).
+**Status:** Environment API through lifecycle (#100–#104) and throughput measurement (#105)
+shipped; #106 and intelligence unbuilt under epic (#99).
 
 ### 8.1 Rule-Based AI (baseline)
 - [x] Reflex-level opposing intent (`SideDirector` / ROE) — not doctrine-driven planning
@@ -292,7 +292,7 @@ unbuilt under epic (#99).
 - [x] Action space — drills + ADVANCE; `SideActionMask` gates; `ActionSpaceProbe` (#102)
 - [x] Reward — terminal ±1/0 + potential shaping on objectives/force; no contact term (#103)
 - [x] Environment lifecycle — `SideEnv` Reset/Step/(obs,reward,done); `EnvProbe` (#104)
-- [ ] Headless throughput measurement and improvement (#105)
+- [x] Headless throughput measurement — `ThroughputProbe` maps/hour and episodes/hour (#105)
 - [ ] Trajectory export from CommandLog + ReportLog (#106)
 - [ ] Unity ML-Agents integration (C# environment, Python trainer)
 - [ ] Self-play training loop: two instances of same model play against each other
