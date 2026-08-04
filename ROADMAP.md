@@ -53,7 +53,8 @@ layer (#34) are done.
 - **World & movement depth** — #33 / #34 **closed**; still open: #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
   is #334 (procedural scenarios — OOB/objectives/victory, not just terrain)
-- **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
+- **Persistence beyond run saves** — #66 (local store choice); mid-campaign save is #140
+  (shipped); the local/API seam question is #355, not #66
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)

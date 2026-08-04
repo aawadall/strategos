@@ -341,7 +341,7 @@ intelligence / ML-Agents unbuilt.
 **Goal:** Backend services supporting persistent accounts, matchmaking, and content sharing.
 **Status:** Unbuilt.
 
-- [ ] User accounts: registration, login, OAuth (Google/Discord)
+- [ ] User accounts: registration, login, OAuth (Google/Discord) (#355 — identity seam; Steam identity via #288 likely first)
 - [ ] Player profile: rank, win/loss, favourite doctrine, commander history
 - [ ] ELO-based matchmaking for online games
 - [ ] Global and faction leaderboards
