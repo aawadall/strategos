@@ -369,14 +369,16 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### UI / UX
 - [x] Tab-shell military map aesthetic (working UI, not final skin)
-- [x] Outside menu + in-game pause + drills quick-ref (#371) — Options/Help/Server stubs point at #289 / #124 / #288
+- [x] Outside menu + in-game pause + drills quick-ref (#371) — Help/Server stubs → #124 / #288;
+  Options opens settings shell (#306)
 - [x] Shoulder-board command-rank insignia in the shell (#38)
 - [x] GitHub Pages status site with OG/Twitter meta and header CTA (#120 partial)
 - [ ] Full UI skin — finished military map aesthetic
 - [ ] Colour-blind accessible symbol and map palettes
 - [ ] Keyboard shortcut remapping
 - [ ] Controller support (console stretch goal) (#290)
-- [ ] Comprehensive settings: graphics, audio, gameplay, accessibility (#289)
+- [ ] Comprehensive settings: graphics, audio, gameplay, accessibility (#289) —
+  shell (#306); preference store and controls still open (#307+)
 - [x] Explicit command palette / waypoints (#32, #53, #54) — verb table, arming, click-to-
   issue, keyboard shortcuts, and WAYPOINTS draft/commit (#127–#129, #54); config table (#130)
   still open
