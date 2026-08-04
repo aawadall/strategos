@@ -278,8 +278,12 @@ Tick++
   `ADVANCE` to nearest unheld objective), not cell `MoveTo`. `SideActionMask` gates alive,
   idle queue, `TtpReadiness` ≠ Untrained, and (leaves) ExpandDrill-compatible bindability via
   `DrillBindability`; threat for bindability is ground truth because `ExpandDrill` still is.
-  `ActionSpaceProbe` holds one case per gate. `ISidePolicy.Decide` still takes `SideKnowledge`;
-  wiring observation/actions into the env lifecycle is #103–#104. `Simulation.Director` stays
+  `ActionSpaceProbe` holds one case per gate. **Reward (#103)** is `SideReward`: terminal
+  +1/0/−1 on win/draw/loss, plus potential-based shaping
+  `Φ = w_obj·owned + w_force·force_advantage` (deltas of `OwnerOf` / `RemainingFraction` —
+  the same facts victory uses). Contact reports are deliberately not a reward input;
+  `RewardProbe` guards that. `ISidePolicy.Decide` still takes `SideKnowledge`; wiring
+  observation/actions/reward into the env lifecycle is #104. `Simulation.Director` stays
   typed as the concrete `SideDirector` (an `as` cast over the policy field) because existing
   callers read `OrdersIssued` and the save/load retry memory off it specifically;
   `Simulation.SetPolicy` is the general seam, and `DirectorProbe`'s `NoSimulationStubPolicy` —
