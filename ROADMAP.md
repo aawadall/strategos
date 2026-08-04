@@ -60,7 +60,8 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
   (shipped); local/API seam #355 **closed** (#361–#367)
 - **Audio (Phase 10 early)** — #40–#46; VO scripts and Suno prompts drafted in
   `Research/audio/`, with production tasks filed against them: #395–#397 (voice), #398–#399
-  (soundtrack)
+  (soundtrack); automation tooling #400 (ElevenLabs script) and #401 (OGG conversion, per
+  `docs/assets.md`'s existing music/SFX pipeline — voice format still undecided)
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
 - **UI revamp** — #371 **closed** (#375–#379 via #374; Help/Server stubs → #124 / #288;
