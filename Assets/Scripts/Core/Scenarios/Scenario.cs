@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using Strategos.ControlMeasures;
 using Strategos.Directives;
 using Strategos.Maps;
 using Strategos.Movement;
@@ -68,6 +69,13 @@ namespace Strategos.Scenarios
         /// in <see cref="Objectives.VictoryEvaluator"/>.
         /// </summary>
         public List<Objective> Objectives = new();
+
+        /// <summary>
+        /// Authored graphic control measures (#161 / #160) — checkpoints, phase lines,
+        /// boundaries. Definitions only; drawn by <see cref="ControlMeasureDrawer"/> over the
+        /// map sheet, never stored on <see cref="MapData"/>.
+        /// </summary>
+        public List<ControlMeasure> ControlMeasures = new();
 
         /// <summary>
         /// How this scenario can end. An empty list means it cannot, which is legal — a
@@ -255,6 +263,7 @@ namespace Strategos.Scenarios
                 problems.Add($"Scenario is played as {PlayerSide}, which does not exist.");
 
             ValidateVictory(problems);
+            ValidateControlMeasures(problems);
             ValidateDirective(problems);
 
             if (catalogue != null && map != null)
@@ -367,6 +376,76 @@ namespace Strategos.Scenarios
             if (TimeLimitTicks < 0)
                 problems.Add($"Time limit {TimeLimitTicks} is negative.");
         }
+
+        /// <summary>
+        /// Graphic control measures (#161): unique ids, known owners, on-map geometry.
+        /// </summary>
+        private void ValidateControlMeasures(List<string> problems)
+        {
+            var seen = new HashSet<int>();
+            foreach (var m in ControlMeasures)
+            {
+                if (m == null)
+                {
+                    problems.Add("A control measure entry is null.");
+                    continue;
+                }
+
+                if (!seen.Add(m.Id)) problems.Add($"Duplicate control measure id {m.Id}.");
+                if (string.IsNullOrWhiteSpace(m.Name))
+                    problems.Add($"Control measure {m.Id} has no name.");
+
+                if (m.Owner.IsValid && FindSide(m.Owner) == null)
+                    problems.Add($"Control measure {m.Id} '{m.Name}' is owned by {m.Owner}, " +
+                                 "which does not exist.");
+
+                switch (m.Kind)
+                {
+                    case ControlMeasureKind.Checkpoint:
+                        if (m.RadiusCells <= 0f)
+                            problems.Add($"Control measure {m.Id} '{m.Name}' has radius {m.RadiusCells}.");
+                        if (Map != null && OffMap(m.Cell))
+                            problems.Add($"Control measure {m.Id} '{m.Name}' is off the map.");
+                        break;
+
+                    case ControlMeasureKind.PhaseLine:
+                    case ControlMeasureKind.Boundary:
+                        int n = m.Points?.Count ?? 0;
+                        if (n < 2)
+                            problems.Add($"Control measure {m.Id} '{m.Name}' needs at least " +
+                                         $"2 points, has {n}.");
+                        else if (Map != null)
+                        {
+                            for (int i = 0; i < n; i++)
+                                if (OffMap(m.Points[i]))
+                                {
+                                    problems.Add($"Control measure {m.Id} '{m.Name}' point {i} " +
+                                                 "is off the map.");
+                                    break;
+                                }
+                        }
+                        if (m.Kind == ControlMeasureKind.Boundary && m.Echelon == Echelon.None)
+                            problems.Add($"Boundary {m.Id} '{m.Name}' has no echelon tick.");
+                        break;
+
+                    // Arrow / area kinds (#164 / #165) — accept in JSON, do not validate geometry yet.
+                    case ControlMeasureKind.AxisOfAdvance:
+                    case ControlMeasureKind.DirectionOfAttack:
+                    case ControlMeasureKind.BattlePosition:
+                    case ControlMeasureKind.EngagementArea:
+                    case ControlMeasureKind.KillZone:
+                        break;
+
+                    default:
+                        problems.Add($"Control measure {m.Id} has unknown kind {(int)m.Kind}.");
+                        break;
+                }
+            }
+        }
+
+        private bool OffMap(Vector2 cell) =>
+            cell.x < -0.5f || cell.x > Map.Width - 0.5f ||
+            cell.y < -0.5f || cell.y > Map.Height - 0.5f;
 
         /// <summary>
         /// The scenario's one directive, if it has one.

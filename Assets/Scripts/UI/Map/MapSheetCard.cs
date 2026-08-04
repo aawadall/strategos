@@ -112,11 +112,21 @@ namespace Strategos.UI
         /// a card that cannot map a pixel to a cell cannot report coordinates under the
         /// cursor, and rederiving the transform from the texture size is guesswork.
         /// </summary>
-        public void Render(MapData map, MapRenderOptions options)
+        public void Render(MapData map, MapRenderOptions options) =>
+            Render(map, options, afterPixels: null);
+
+        /// <summary>
+        /// Renders <paramref name="map"/> then optionally paints into the same pixel buffer
+        /// (control measures, fog, etc.) before uploading the texture — see
+        /// <see cref="MapRasterizer.RenderPixels"/>'s composite note.
+        /// </summary>
+        public void Render(MapData map, MapRenderOptions options,
+            System.Action<Color32[], MapViewport> afterPixels)
         {
             if (map == null) return;
 
             var pixels = MapRasterizer.RenderPixels(map, options, out var view);
+            afterPixels?.Invoke(pixels, view);
             var tex = new Texture2D(view.Width, view.Height, TextureFormat.RGBA32, false)
             {
                 filterMode = FilterMode.Bilinear,

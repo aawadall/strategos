@@ -22,6 +22,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Campaigns;
 using Strategos.Commands;
+using Strategos.ControlMeasures;
 using Strategos.Directives;
 using Strategos.Doctrine;
 using Strategos.Maps;
@@ -979,9 +980,26 @@ namespace Strategos.UI.Views
             options.PixelsPerCell =
                 Mathf.Clamp(1600f / Mathf.Max(_map.Width, _map.Height), 0.5f, 4f);
 
-            _card.Render(_map, options);
+            _card.Render(_map, options, (pixels, view) =>
+            {
+                if (_scenario?.ControlMeasures == null || _scenario.ControlMeasures.Count == 0)
+                    return;
+                ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk);
+            });
             _card.SetMarginaliaFor(_map, _scenario.Map.Seed);
             LayOutMarkers();
+        }
+
+        private Color32 SideInk(SideId side)
+        {
+            var s = _scenario?.FindSide(side);
+            if (s == null) return new Color32(40, 40, 40, 220);
+            var c = s.Colour;
+            return new Color32(
+                (byte)Mathf.Clamp(Mathf.RoundToInt(c.r * 255f), 0, 255),
+                (byte)Mathf.Clamp(Mathf.RoundToInt(c.g * 255f), 0, 255),
+                (byte)Mathf.Clamp(Mathf.RoundToInt(c.b * 255f), 0, 255),
+                220);
         }
 
         // ─── Unit markers ─────────────────────────────────────────────────────

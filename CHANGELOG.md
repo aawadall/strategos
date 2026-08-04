@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Graphic control measures (#161–#163 / #160): `ControlMeasure` on `Scenario`, checkpoints /
+  phase lines / boundaries drawn over the map sheet via `ControlMeasureDrawer`;
+  `ControlMeasureProbe`.
 - PLAY scenario pick: **PUSH NORTH** beside **SKIRMISH ONLY** so the shipped second
   scenario is reachable without editing code (#133).
 - `Trajectory` / `TrajectoryExporter` — (obs, action) export from CommandLog + ReportLog via

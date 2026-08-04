@@ -76,6 +76,9 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   map with a different scale on each axis misreports every distance on it. The crop is a
   `uvRect` recomputed on resize, because regenerating would stall for a few hundred
   milliseconds.
+- **Control measures paint into sheet pixels after `RenderPixels` (#161–#163).**
+  `MapSheetCard.Render(..., afterPixels)` is the hook; PLAY passes `ControlMeasureDrawer`
+  over `Scenario.ControlMeasures`. Not UI markers like objectives — baked into the texture.
 - **Map generation is synchronous on the main thread** (~200 ms at 200 cells, over a second
   at 512 with erosion). It stays behind discrete controls and an explicit button. Do not
   put map generation behind a slider. Mesh detail and vertical exaggeration *are* safe to

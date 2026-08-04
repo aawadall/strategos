@@ -7,6 +7,7 @@
 // shipped file fails the probe rather than failing in front of a player.
 
 using UnityEngine;
+using Strategos.ControlMeasures;
 using Strategos.Directives;
 using Strategos.Maps;
 using Strategos.NatoSymbols;
@@ -130,6 +131,45 @@ namespace Strategos.Scenarios
                 Cell = new Vector2(119f, 114f),
                 RadiusCells = 10f,
                 InitialOwner = SideId.None,
+            });
+
+            // #161–#163: one of each authored GCM family so the sheet and ScenarioProbe
+            // exercise the path. Placed clear of the lake and the objective circle.
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 1,
+                Kind = ControlMeasureKind.Checkpoint,
+                Name = "CP ROCK",
+                Owner = blue.Id,
+                Cell = new Vector2(90f, 100f),
+                RadiusCells = 4f,
+            });
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 2,
+                Kind = ControlMeasureKind.PhaseLine,
+                Name = "PL AMBER",
+                Owner = blue.Id,
+                Points =
+                {
+                    new Vector2(70f, 130f),
+                    new Vector2(110f, 128f),
+                    new Vector2(150f, 132f),
+                },
+            });
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 3,
+                Kind = ControlMeasureKind.Boundary,
+                Name = "BDE BOUNDARY",
+                Owner = blue.Id,
+                Echelon = Echelon.Brigade,
+                Points =
+                {
+                    new Vector2(40f, 80f),
+                    new Vector2(100f, 90f),
+                    new Vector2(160f, 85f),
+                },
             });
 
             // #73/#36: a directive from higher, addressed to the one BLUFOR root (TF 1-7 IN,
