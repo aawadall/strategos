@@ -31,20 +31,20 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 ### Near-term focus — "First playable game"
 
 Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
-environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), and the
-US/NATO topo map palette (#169) are done.
+environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), US/NATO
+topo palette (#169), and rank gates (#76) are done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#76](https://github.com/aawadall/strategos/issues/76) | Epic: rank gates echelon (difficulty curve) — under #78; children #222–#225 |
 | [#36](https://github.com/aawadall/strategos/issues/36) | Epic: player as a node in the chain — children #266–#269 |
+| [#109](https://github.com/aawadall/strategos/issues/109) | Epic: career across campaigns — children #212–#215 |
 
 ### Outstanding themes (open issues, grouped)
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
-- **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
+- **Campaign & progression** — #114 / #138–#140 / #76 shipped; still open: #78 (only #76 was left — close when checklist updated), #109
 - **C2 / C3 depth** — #36, #47, #62, #65 (#85 mission types shipped)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33, #34, #35, #51

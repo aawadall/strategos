@@ -1,9 +1,9 @@
 // RankLadder.cs
 // Echelon → commander's rank title and shoulder-board mark, as configurable data.
 //
-// Rank is the visible expression of which echelon the player commands (#38). It must be
-// derived from that echelon, never set independently — two sources of truth for "what am I
-// commanding" would drift, and the one on screen is the one the player would believe.
+// Rank is the visible expression of which echelon the player commands (#38). Display still
+// derives from the live ORBAT. Career *authority* — which echelon a player may be given —
+// is RankAuthority / RankGate (#76), stored on AppSession.CareerRankId.
 //
 // NATIONAL, NOT GLOBAL. US bars-and-leaves and Soviet pips-and-stars are different geometries
 // for the same echelons. A Side carries which ladder it uses; the mapping itself is JSON so a

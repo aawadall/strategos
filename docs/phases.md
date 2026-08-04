@@ -96,7 +96,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Rank insignia decorator variants by country / division / era (#125)
 - [ ] `Commander` entity: name, rank, skill stats (leadership, tactics, logistics, intel)
 - [ ] Commander bonuses applied to subordinate units within command radius
-- [ ] Commander career progression (earned by player or AI through scenario performance) *(related: #76, #109)*
+- [x] Commander career progression — rank gates (#76 / #222–#225); multi-campaign career (#109) still open
 - [ ] Historical commander database (optional DLC/data pack)
 
 **Milestone M3:** Multi-echelon ORBAT displayed; units selectable, state shown. Met.
