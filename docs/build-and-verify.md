@@ -146,6 +146,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ExploitProbe.Run` | Exploit drives past the threat and Engages |
 | `Strategos.Editor.PursueProbe.Run` | Pursue closes tighter than Attack then Engages |
 | `Strategos.Editor.ObservationProbe.Run` | Fog-leak: belief identical for unseen hostile move; naive GT differs; in-range differs |
+| `Strategos.Editor.ActionSpaceProbe.Run` | Drill+ADVANCE mask gates vs ExpandDrill / readiness / busy / unheld objectives |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
@@ -156,7 +157,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 **Fifteen of the probes above run with `scenario.Map.EnableErosion = false`** —
 `CampaignCarryOverProbe`, `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`,
 `ScreenProbe`, `GuardProbe`, `CoverProbe`, `WithdrawProbe`, `DelayProbe`, `AttackProbe`,
-`ReconProbe`, `ExploitProbe`, `PursueProbe`, `ObservationProbe`,
+`ReconProbe`, `ExploitProbe`, `PursueProbe`, `ObservationProbe`, `ActionSpaceProbe`,
 `DirectiveProbe`, `DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`,
 `ReactionProbe`, `ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because
 erosion is the dominant generation cost and none of them are *reasoning about terrain*: they

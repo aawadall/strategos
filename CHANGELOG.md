@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- `SideActionSpace` / `SideActionMask` — drill + ADVANCE vocabulary and legality gates;
+  `ActionSpaceProbe` (#102 / #99).
 - `SideObservation` / `SideObservationEncoder` — fixed-shape side knowledge from report
   belief (not enemy ground truth); `ObservationProbe` fog-leak guard (#101 / #99).
 - Pursue mission order: tight standoff MoveTo + Engage; PLAY PURSUE; `PursueProbe`
