@@ -89,6 +89,11 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/Core/Doctrine/` | TTPs — coded drills, figures, readiness, pack IO |
 | `Assets/Scripts/Core/Campaigns/` | `CampaignChain` — linked scenarios sharing one ORBAT, JSON IO |
+| `Assets/Scripts/Core/Observation/` | `SideObservation` / encoder — belief-only side knowledge |
+| `Assets/Scripts/Core/Actions/` | `SideActionSpace` / mask — drill + ADVANCE vocabulary |
+| `Assets/Scripts/Core/Reward/` | `SideReward` — terminal + potential shaping |
+| `Assets/Scripts/Core/SimEnv/` | `SideEnv` — Reset/Step environment lifecycle |
+| `Assets/Scripts/Core/Trajectories/` | `Trajectory` / exporter — CommandLog+ReportLog demos |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |

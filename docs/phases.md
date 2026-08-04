@@ -270,7 +270,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [x] Deterministic `Replayer` / signature divergence check
 - [ ] Compressed replay file format (`.stgreplay`) with scrub, pause, rewind, speed control UX
 - [ ] Replay sharing: upload to server, download community replays
-- [ ] AI training ingestion: replay files can be fed into the RL pipeline (#106)
+- [x] AI training ingestion: trajectory export from CommandLog + ReportLog (#106)
 
 **Milestone M7:** All five modes launchable and playable end-to-end without crashes.
 
@@ -278,8 +278,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ## Phase 8 — AI System
 **Goal:** An AI that can be trained, evolved, transferred, and shared.
-**Status:** Environment API through lifecycle (#100–#104) and throughput measurement (#105)
-shipped; #106 and intelligence unbuilt under epic (#99).
+**Status:** Environment API through trajectory export (#100–#106) shipped under epic (#99);
+intelligence / ML-Agents unbuilt.
 
 ### 8.1 Rule-Based AI (baseline)
 - [x] Reflex-level opposing intent (`SideDirector` / ROE) — not doctrine-driven planning
@@ -293,7 +293,7 @@ shipped; #106 and intelligence unbuilt under epic (#99).
 - [x] Reward — terminal ±1/0 + potential shaping on objectives/force; no contact term (#103)
 - [x] Environment lifecycle — `SideEnv` Reset/Step/(obs,reward,done); `EnvProbe` (#104)
 - [x] Headless throughput measurement — `ThroughputProbe` maps/hour and episodes/hour (#105)
-- [ ] Trajectory export from CommandLog + ReportLog (#106)
+- [x] Trajectory export from CommandLog + ReportLog (#106)
 - [ ] Unity ML-Agents integration (C# environment, Python trainer)
 - [ ] Self-play training loop: two instances of same model play against each other
 - [ ] Curriculum learning: start with small scenarios (company level), progress to corps
