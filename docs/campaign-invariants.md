@@ -127,6 +127,12 @@ A next-scenario unit with **no** carried-over match keeps its own authored state
 this is how a new operation introduces reinforcements, proven by assertion in
 `CampaignChainDriverProbe`, not assumed.
 
+**Scenario-level fields** (`PlayerSide`, `PlayerEchelon`, `Map`, `Sides`, `Objectives`,
+`ControlMeasures`, `Victory`, `TimeLimitTicks`, `Directive`, name/description) are copied
+from the next scenario unchanged. `PlayerEchelon` must survive the merge — climb ops 2–3
+author a higher seat; dropping it to `None` would fall back to ORBAT-max and hide the
+authored seat ladder (`ClimbCampaignProbe` / #408).
+
 ### An unmatched carried-over unit is a campaign authoring error
 
 A carried-over unit whose `Id` has **no** match anywhere in the next scenario's `Units` is not
@@ -259,7 +265,7 @@ Seat escalation inside **one** chain (Squad → Company → Battalion) is specif
 (#406) over `climb-squad` → `climb-company` → `climb-battalion` (#405). Third
 shipped campaign beside Valley and Highland — not a replacement for either, and
 not the #289 tutorial. Menu/PLAY entry is shipped (#407); carry-over climb
-probe is #408.
+probe is shipped (#408). Docs polish is #409.
 
 ## What is deliberately not here yet
 
