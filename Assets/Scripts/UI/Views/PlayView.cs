@@ -26,6 +26,7 @@ using Strategos.ControlMeasures;
 using Strategos.Directives;
 using Strategos.Doctrine;
 using Strategos.Maps;
+using Strategos.Modes;
 using Strategos.Movement;
 using Strategos.NatoSymbols;
 using Strategos.Objectives;
@@ -102,6 +103,8 @@ namespace Strategos.UI.Views
         private Toggle _runToggle;
         private TMP_Text _clockLabel;
         private TMP_Dropdown _speedDrop;
+        private TMP_Dropdown _playModeDrop;
+        private Button _switchSideButton;
 
         /// <summary>
         /// Real-time multiplier. 1 means a simulated second per real second.
@@ -648,8 +651,8 @@ namespace Strategos.UI.Views
             _store ??= new FileGameStore(FileGameStore.DefaultDirectory);
 
         /// <summary>
-        /// CAMPAIGN rail (#139 / #140): start the shipped valley chain, continue after an
-        /// operation decides, or quicksave / load mid-run. Not a new top-level tab.
+        /// CAMPAIGN rail (#139 / #140) and mode-select (#287 / #295): pick how to play, then
+        /// start a chain or scenario. Not a new top-level tab.
         /// </summary>
         private void BuildCampaignCard(Transform parent)
         {
@@ -659,6 +662,9 @@ namespace Strategos.UI.Views
                 "Single scenario  ·  START loads the valley chain", 11, FontStyles.Normal);
             _campaignLabel.color = Theme.InkMuted;
             _campaignLabel.GetComponent<LayoutElement>().preferredHeight = 36;
+
+            _playModeDrop = AddDropdown(parent, "PLAY MODE", OnPlayModeChanged);
+            SetDrop(_playModeDrop, new[] { "SOLO", "HOTSEAT", "SPECTATOR", "REPLAY" }, 0);
 
             var row = AddButtonRow(parent);
             AddButton(row, "START VALLEY", StartValleyCampaign);
@@ -673,6 +679,50 @@ namespace Strategos.UI.Views
             var row3 = AddButtonRow(parent);
             AddButton(row3, "SAVE", QuickSave);
             AddButton(row3, "LOAD", QuickLoad);
+            AddButton(row3, "REPLAY SAVE", ReplayQuickSave);
+            _switchSideButton = AddButton(row3, "SWITCH SIDE", SwitchHotseatSide);
+            _switchSideButton.interactable = false;
+        }
+
+        private void OnPlayModeChanged()
+        {
+            if (_suppress || _session == null || _playModeDrop == null) return;
+            _session.PlayMode = (ModeKind)Mathf.Clamp(_playModeDrop.value, 0, 3);
+            if (_switchSideButton != null)
+                _switchSideButton.interactable = _session.PlayMode == ModeKind.Hotseat;
+            RefreshCampaignChrome();
+            Debug.Log($"[PlayView] play mode {_session.PlayMode}");
+        }
+
+        private ModeKind CurrentPlayMode() =>
+            _session?.PlayMode ?? ModeKind.Solo;
+
+        /// <summary>Side used for Issue chrome and GCM fog (#297).</summary>
+        private SideId ViewerSide()
+        {
+            if (CurrentPlayMode() == ModeKind.Hotseat &&
+                _session != null && _session.HotseatSide.IsValid)
+                return _session.HotseatSide;
+            return _scenario != null ? _scenario.PlayerSide : SideId.None;
+        }
+
+        private void SwitchHotseatSide()
+        {
+            if (_session == null || _scenario == null || CurrentPlayMode() != ModeKind.Hotseat)
+                return;
+            if (_scenario.Sides == null || _scenario.Sides.Count < 2) return;
+
+            int i = 0;
+            for (; i < _scenario.Sides.Count; i++)
+                if (_scenario.Sides[i].Id == _session.HotseatSide) break;
+            i = (i + 1) % _scenario.Sides.Count;
+            _session.HotseatSide = _scenario.Sides[i].Id;
+            ClearSelection();
+            PublishCommandContext();
+            RefreshSheet();
+            RefreshCampaignChrome();
+            _statusLabel.text = $"HOTSEAT  ·  {_scenario.FindSide(_session.HotseatSide)?.Name ?? _session.HotseatSide.ToString()}";
+            Debug.Log($"[PlayView] hotseat side {_session.HotseatSide}");
         }
 
         private void LoadScenario(string name)
@@ -841,14 +891,8 @@ namespace Strategos.UI.Views
             _sim.EnableReactions();
             if (restoreFrom != null) _sim.RestoreReactionPicture(restoreFrom);
 
-            if (_scenario.PlayerSide.IsValid)
-            {
-                var opposing = new List<SideId>();
-                foreach (var side in _scenario.Sides)
-                    if (side.Id != _scenario.PlayerSide) opposing.Add(side.Id);
-                _sim.EnableDirector(opposing);
-                if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
-            }
+            ApplyPlayModeDirectors(restoreFrom);
+
             _tickAccumulator = 0f;
             _running = true;
             if (_runToggle != null)
@@ -878,6 +922,49 @@ namespace Strategos.UI.Views
             RefreshCampaignChrome();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
+        }
+
+        /// <summary>#287: directors and hotseat seat follow <see cref="AppSession.PlayMode"/>.</summary>
+        private void ApplyPlayModeDirectors(SimulationSnapshot restoreFrom)
+        {
+            var mode = CurrentPlayMode();
+            if (_switchSideButton != null)
+                _switchSideButton.interactable = mode == ModeKind.Hotseat;
+
+            if (mode == ModeKind.Spectator)
+            {
+                var all = new List<SideId>();
+                foreach (var side in _scenario.Sides) all.Add(side.Id);
+                _sim.EnableDirector(all);
+                if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
+                return;
+            }
+
+            if (mode == ModeKind.Hotseat)
+            {
+                if (_session != null)
+                {
+                    if (!_session.HotseatSide.IsValid)
+                    {
+                        _session.HotseatSide = _scenario.PlayerSide.IsValid
+                            ? _scenario.PlayerSide
+                            : (_scenario.Sides.Count > 0 ? _scenario.Sides[0].Id : SideId.None);
+                    }
+                }
+                return;
+            }
+
+            if (mode == ModeKind.Replay) return;
+
+            // Solo (default).
+            if (_scenario.PlayerSide.IsValid)
+            {
+                var opposing = new List<SideId>();
+                foreach (var side in _scenario.Sides)
+                    if (side.Id != _scenario.PlayerSide) opposing.Add(side.Id);
+                _sim.EnableDirector(opposing);
+                if (restoreFrom != null) _sim.RestoreDirectorMemory(restoreFrom);
+            }
         }
 
         /// <summary>Quicksave the live run — campaign chain blob included when active (#140).</summary>
@@ -964,6 +1051,68 @@ namespace Strategos.UI.Views
             Debug.Log($"[PlayView] loaded '{QuickSaveId}' at tick {sim.Tick}");
         }
 
+        /// <summary>
+        /// #298: load the quicksave's logs into a fresh sim via <see cref="Replayer"/> —
+        /// Issue chrome stays off under Replay mode.
+        /// </summary>
+        private void ReplayQuickSave()
+        {
+            if (_session != null)
+            {
+                _session.PlayMode = ModeKind.Replay;
+                if (_playModeDrop != null)
+                {
+                    _suppress = true;
+                    _playModeDrop.value = (int)ModeKind.Replay;
+                    _suppress = false;
+                }
+            }
+
+            SaveRecord record;
+            try { record = Store.Load(QuickSaveId); }
+            catch (SaveVersionMismatchException ex)
+            {
+                Debug.LogError($"[PlayView] {ex.Message}");
+                _statusLabel.text = "SAVE VERSION MISMATCH";
+                return;
+            }
+
+            if (record?.Snapshot == null)
+            {
+                _statusLabel.text = "NO QUICKSAVE TO REPLAY";
+                return;
+            }
+
+            _session?.ClearCampaign();
+
+            var recorded = Simulation.Restore(record.Snapshot, UnitCatalogue.Default());
+            var scenario = recorded.Scenario;
+            var map = recorded.Map;
+            var target = new Simulation(scenario, map, UnitCatalogue.Default());
+            BindSimulation(target);
+
+            int steps = Mathf.Max(0, record.Tick);
+            Replayer.Run(recorded, target, steps);
+
+            if (_runToggle != null)
+            {
+                _suppress = true;
+                _runToggle.isOn = false;
+                _suppress = false;
+            }
+            _running = false;
+
+            RefreshSheet();
+            BuildMarkers();
+            BuildOrbat();
+            ClearSelection();
+            PublishCommandContext();
+
+            _statusLabel.text =
+                $"REPLAY  ·  {scenario.Name.ToUpperInvariant()}  ·  {steps} TICKS";
+            Debug.Log($"[PlayView] replayed '{QuickSaveId}' through {steps} ticks");
+        }
+
         private string HeaderForCurrent()
         {
             if (_session != null && _session.HasActiveCampaign)
@@ -981,11 +1130,16 @@ namespace Strategos.UI.Views
         {
             if (_campaignLabel == null) return;
 
+            string modeTag = CurrentPlayMode().ToString().ToUpperInvariant();
+
             if (_session == null || !_session.HasActiveCampaign)
             {
-                _campaignLabel.text = "Single scenario  ·  START loads the valley chain";
+                _campaignLabel.text =
+                    $"{modeTag}  ·  Single scenario  ·  START loads the valley chain";
                 if (_continueCampaignButton != null)
                     _continueCampaignButton.interactable = false;
+                if (_switchSideButton != null)
+                    _switchSideButton.interactable = CurrentPlayMode() == ModeKind.Hotseat;
                 return;
             }
 
@@ -995,7 +1149,7 @@ namespace Strategos.UI.Views
             bool canContinue = _outcomeShown && _session.HasNextOperation;
 
             _campaignLabel.text =
-                $"{chain.Name}  ·  op {i + 1}/{chain.Operations.Count}  ·  {op.Name}" +
+                $"{modeTag}  ·  {chain.Name}  ·  op {i + 1}/{chain.Operations.Count}  ·  {op.Name}" +
                 (canContinue
                     ? "\nOperation decided  ·  CONTINUE carries the ORBAT forward"
                     : _outcomeShown && !_session.HasNextOperation
@@ -1004,6 +1158,8 @@ namespace Strategos.UI.Views
 
             if (_continueCampaignButton != null)
                 _continueCampaignButton.interactable = canContinue;
+            if (_switchSideButton != null)
+                _switchSideButton.interactable = CurrentPlayMode() == ModeKind.Hotseat;
         }
 
         private void RefreshSheet()
@@ -1021,7 +1177,7 @@ namespace Strategos.UI.Views
                     return;
                 // #186: hide opposing-owned GCMs; shared (Owner = None) still draw.
                 ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk,
-                    _scenario.PlayerSide);
+                    ViewerSide());
             });
             _card.SetMarginaliaFor(_map, _scenario.Map.Seed);
             LayOutMarkers();
@@ -1961,13 +2117,26 @@ namespace Strategos.UI.Views
         /// A scenario with no declared player side leaves everything commandable, which is how
         /// a hot-seat game is spelled.
         /// </remarks>
-        private bool IsPlayerCommanded(UnitInstance unit) =>
-            !(_sim != null && _sim.Hierarchy.IsFormation(unit.Id)
-                ? _sim.Hierarchy.IsDestroyed(unit.Id)
-                : unit.IsDestroyed) &&
-            (_scenario == null || !_scenario.PlayerSide.IsValid ||
-             unit.Side == _scenario.PlayerSide) &&
-            Commands.CommandScope.CanAddress(_scenario, unit);
+        private bool IsPlayerCommanded(UnitInstance unit)
+        {
+            if (_sim != null && _sim.Hierarchy.IsFormation(unit.Id)
+                    ? _sim.Hierarchy.IsDestroyed(unit.Id)
+                    : unit.IsDestroyed)
+                return false;
+
+            var mode = CurrentPlayMode();
+            if (mode == ModeKind.Spectator || mode == ModeKind.Replay) return false;
+
+            if (mode == ModeKind.Hotseat)
+            {
+                if (_session == null || !_session.HotseatSide.IsValid) return false;
+                return unit.Side == _session.HotseatSide;
+            }
+
+            return (_scenario == null || !_scenario.PlayerSide.IsValid ||
+                    unit.Side == _scenario.PlayerSide) &&
+                   Commands.CommandScope.CanAddress(_scenario, unit);
+        }
 
         private bool IsHostileTo(UnitInstance a, UnitInstance b) =>
             Side.AreHostile(_scenario?.FindSide(a.Side), _scenario?.FindSide(b.Side));
@@ -2156,13 +2325,20 @@ namespace Strategos.UI.Views
         {
             if (_session == null) return;
 
-            if (_scenario == null || !_scenario.PlayerSide.IsValid)
+            if (CurrentPlayMode() == ModeKind.Spectator || CurrentPlayMode() == ModeKind.Replay)
             {
                 _session.ClearCommandContext();
                 return;
             }
 
-            var side = _scenario.FindSide(_scenario.PlayerSide);
+            var sideId = ViewerSide();
+            if (_scenario == null || !sideId.IsValid)
+            {
+                _session.ClearCommandContext();
+                return;
+            }
+
+            var side = _scenario.FindSide(sideId);
             _session.SetCommandContext(side, CommandEchelon());
         }
 

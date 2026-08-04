@@ -235,17 +235,18 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ## Phase 7 — Game Modes
 **Goal:** All five game modes functional and stable.
-**Status:** Unbuilt. Deterministic command/report logs are the prerequisite and already ship.
+**Status:** Core modes shipping under #287 — see [game-modes.md](game-modes.md). Online
+multiplayer (§7.3) still open.
 
 ### 7.1 Single Player vs AI
-- [ ] Player selects side, echelon scale, and scenario (#287)
+- [x] Player selects mode + scenario (#287 / #294–#295) — echelon/difficulty pickers still open
 - [x] Opposing side can run under `ISidePolicy` / `SideDirector` (reflex-level intent, not planning AI)
 - [ ] Difficulty: Recruit → Regular → Veteran → Elite → Legendary (#291)
-- [ ] Post-battle AAR (After-Action Review): map replay with analytics (#287 — replay viewer child)
+- [x] Post-battle AAR (After-Action Review): map replay with analytics (#287 — `REPLAY SAVE` / Replayer; analytics still open)
 
 ### 7.2 Hotseat Multiplayer
-- [ ] Simultaneous orders input, then resolution phase (WEGO) (#287)
-- [ ] Hidden information: each player sees only their own intel
+- [x] Side switch + per-side GCM fog (#287 / #297) — WEGO simultaneous orders still open
+- [x] Hidden information: GCM viewer follows active hotseat side (#186 / #297)
 - [ ] Screen-swap prompts between player turns
 - [ ] Local AI fill-in if player disconnects
 - [ ] Steam Remote Play Together: enable in Steamworks portal to allow internet hotseat at zero networking cost (#288, once #287's hotseat exists)
@@ -262,7 +263,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Steam Rich Presence: show current game state (scenario name, echelon, turn) in Steam profile
 
 ### 7.4 AI vs AI (Watch Mode)
-- [ ] Player sets up two AI commanders (faction, difficulty, doctrine, model)
+- [x] Spectator mode: both sides under SideDirector (#287 / #296)
 - [x] Speed control in PLAY (time compression) — reusable building block
 - [ ] Commentary overlay (optional, generated from game events)
 - [ ] Export battle as replay file
@@ -270,6 +271,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 ### 7.5 Replay System
 - [x] All commands (and acknowledgements) recorded to `CommandLog`; reports to `ReportLog`
 - [x] Deterministic `Replayer` / signature divergence check
+- [x] PLAY `REPLAY SAVE` drives `Commands.Replayer` (#287 / #298)
 - [ ] Compressed replay file format (`.stgreplay`) with scrub, pause, rewind, speed control UX
 - [ ] Replay sharing: upload to server, download community replays
 - [x] AI training ingestion: trajectory export from CommandLog + ReportLog (#106)
