@@ -1,0 +1,12 @@
+{
+  "FormatVersion": 1,
+  "Name": "Highland Campaign",
+  "Description": "One-op second theatre at regiment seat after a valley campaign win promotes the career (#109 / #213). Higher HQ (3 BDE) still addresses the player (#214).",
+  "Operations": [
+    {
+      "ScenarioName": "highland-opening",
+      "Name": "Regimental Opening",
+      "Outcome": "Unplayed"
+    }
+  ]
+}

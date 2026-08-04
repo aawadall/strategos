@@ -1,0 +1,612 @@
+{
+  "FormatVersion": 1,
+  "Name": "Highland Opening",
+  "Description": "Regiment-seat opening after a valley campaign — same higher HQ still speaks.",
+  "Map": {
+    "Name": "Valley",
+    "Seed": 20260729,
+    "Width": 256,
+    "Height": 256,
+    "MetresPerCell": 25.0,
+    "Profile": "Rolling",
+    "Origin": {
+      "Zone": 32,
+      "Band": "U",
+      "Easting": 500000.0,
+      "Northing": 5600000.0
+    },
+    "EnableErosion": true,
+    "EnableCulture": true
+  },
+  "Sides": [
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Name": "BLUFOR",
+      "Affiliation": "Friend",
+      "Colour": {
+        "r": 0.502,
+        "g": 0.878,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "RankLadder": "us-army"
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Name": "OPFOR",
+      "Affiliation": "Hostile",
+      "Colour": {
+        "r": 1.0,
+        "g": 0.502,
+        "b": 0.502,
+        "a": 1.0
+      },
+      "RankLadder": "soviet"
+    }
+  ],
+  "Units": [
+    {
+      "Id": {
+        "Value": 7
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 17
+      },
+      "Sidc": "10031000161211000000",
+      "Designation": "TF 1-7 IN",
+      "HigherFormation": "1st Inf Regt",
+      "CapabilityId": "inf-mech",
+      "Cell": {
+        "x": 60.0,
+        "y": 66.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 8
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10061000171211000000",
+      "Designation": "2 MRR",
+      "HigherFormation": "2 MRD",
+      "CapabilityId": "inf-motor",
+      "Cell": {
+        "x": 182.0,
+        "y": 180.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 7
+      },
+      "Sidc": "10031000151212000000",
+      "Designation": "A/1-7 IN",
+      "HigherFormation": "1-7 IN",
+      "CapabilityId": "inf-mech",
+      "Cell": {
+        "x": 58.0,
+        "y": 72.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 7
+      },
+      "Sidc": "10031000141611000000",
+      "Designation": "1/A/2-69 AR",
+      "HigherFormation": "2-69 AR",
+      "CapabilityId": "armor",
+      "Cell": {
+        "x": 76.0,
+        "y": 60.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 3
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 7
+      },
+      "Sidc": "10031000141913000000",
+      "Designation": "SCT/1-7 IN",
+      "HigherFormation": "1-7 IN",
+      "CapabilityId": "recon-motor",
+      "Cell": {
+        "x": 88.0,
+        "y": 92.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 55.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 4
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 8
+      },
+      "Sidc": "10061000151213000000",
+      "Designation": "3/2 MRR",
+      "HigherFormation": "2 MRR",
+      "CapabilityId": "inf-motor",
+      "Cell": {
+        "x": 180.0,
+        "y": 176.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 70.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 5
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 8
+      },
+      "Sidc": "10061000141611000000",
+      "Designation": "1/3/2 MRR",
+      "HigherFormation": "2 MRR",
+      "CapabilityId": "armor",
+      "Cell": {
+        "x": 178.0,
+        "y": 196.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 6
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 8
+      },
+      "Sidc": "10061000151311000000",
+      "Designation": "BTY/2 MRR",
+      "HigherFormation": "2 MRR",
+      "CapabilityId": "artillery",
+      "Cell": {
+        "x": 186.0,
+        "y": 150.0
+      },
+      "Strength": 90.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 17
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10031000171211000000",
+      "Designation": "1st Inf Regt",
+      "HigherFormation": "3 BDE",
+      "CapabilityId": "inf-mech",
+      "Cell": {
+        "x": 60.0,
+        "y": 66.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    }
+  ],
+  "PlayerSide": {
+    "Value": 1
+  },
+  "PlayerEchelon": "Regiment",
+  "Objectives": [
+    {
+      "Id": 1,
+      "Name": "OBJECTIVE ANVIL",
+      "Cell": {
+        "x": 119.0,
+        "y": 114.0
+      },
+      "RadiusCells": 10.0,
+      "InitialOwner": {
+        "Value": 0
+      }
+    }
+  ],
+  "ControlMeasures": [
+    {
+      "Id": 1,
+      "Kind": "Checkpoint",
+      "Name": "CP ROCK",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 90.0,
+        "y": 100.0
+      },
+      "RadiusCells": 4.0,
+      "Points": [],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 2,
+      "Kind": "PhaseLine",
+      "Name": "PL AMBER",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 70.0,
+          "y": 130.0
+        },
+        {
+          "x": 110.0,
+          "y": 128.0
+        },
+        {
+          "x": 150.0,
+          "y": 132.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 3,
+      "Kind": "Boundary",
+      "Name": "BDE BOUNDARY",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 40.0,
+          "y": 80.0
+        },
+        {
+          "x": 100.0,
+          "y": 90.0
+        },
+        {
+          "x": 160.0,
+          "y": 85.0
+        }
+      ],
+      "Echelon": "Brigade",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 4,
+      "Kind": "AxisOfAdvance",
+      "Name": "AXIS BLUE",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 55.0,
+          "y": 70.0
+        },
+        {
+          "x": 90.0,
+          "y": 95.0
+        },
+        {
+          "x": 115.0,
+          "y": 110.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 5,
+      "Kind": "DirectionOfAttack",
+      "Name": "DOA NORTH",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 100.0,
+          "y": 70.0
+        },
+        {
+          "x": 118.0,
+          "y": 100.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 6,
+      "Kind": "EngagementArea",
+      "Name": "EA ANVIL",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 108.0,
+          "y": 104.0
+        },
+        {
+          "x": 130.0,
+          "y": 104.0
+        },
+        {
+          "x": 130.0,
+          "y": 124.0
+        },
+        {
+          "x": 108.0,
+          "y": 124.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 7,
+      "Kind": "Checkpoint",
+      "Name": "CP RED",
+      "Owner": {
+        "Value": 2
+      },
+      "Cell": {
+        "x": 170.0,
+        "y": 170.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    }
+  ],
+  "Victory": [
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "BLUFOR held OBJECTIVE ANVIL for ten minutes.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 600,
+      "DeadlineTick": 0,
+      "DirectiveId": 1
+    },
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "OPFOR held OBJECTIVE ANVIL for ten minutes.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 600,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "OPFOR was rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "BLUFOR was rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    }
+  ],
+  "TimeLimitTicks": 3600,
+  "Directive": {
+    "Id": 1,
+    "Seq": 0,
+    "Tick": 0,
+    "TargetUnit": {
+      "Value": 17
+    },
+    "From": "3 BDE",
+    "Intent": "Open the highland approach. Hold the regiment's assigned ground and deny the enemy the ridge line for brigade's follow-on forces.",
+    "Constraints": "Do not become decisively engaged beyond the objective. Preserve combat power for brigade's main effort.",
+    "DeadlineTick": 1200,
+    "ObjectiveIds": [
+      1
+    ]
+  }
+}

@@ -238,18 +238,27 @@ Probe: `Strategos > Probe Campaign Chain Validate` /
 ## Rank gates (#76)
 
 `RankAuthority` / `RankGate` in `Core/Units/`: career rank id → max command echelon.
-`AppSession.CareerRankId` defaults to `battalion` (shipped ORBATs). PLAY
-`LoadScenario` / `StartValleyCampaign` refuse when required ORBAT echelon exceeds
-authority. Winning the last campaign operation promotes one rung. Probe:
-`Strategos > Probe Rank Gates`. Multi-campaign persistence of rank is #109.
+`AppSession.CareerRankId` (facade over `CareerProfile`) defaults to `battalion` (shipped
+ORBATs). PLAY `LoadScenario` / campaign start refuse when required ORBAT echelon exceeds
+authority. Winning the last campaign operation promotes one rung.
+
+## Career across campaigns (#109)
+
+`CareerProfile` / `CareerProfileIO` in `Core/Campaigns/`: rank id, formation designation,
+and higher-formation label that outlive one `CampaignChain`. On campaign complete PLAY
+stamps formation from the finished scenario; a win still promotes via `RankGate`. The
+shipped `highland-campaign` opens at `PlayerEchelon = Regiment` with a directive whose
+`From` is still `3 BDE` — the same higher HQ that addressed the valley seat. Probe:
+`Strategos > Probe Career Across Campaigns`.
 
 ## What is deliberately not here yet
 
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
-- **Career across campaigns (#109)** — rank gates inside one campaign ship (#76); persisting
-  rank and formation across campaign boundaries remains open.
+- **Disk-backed career across process restarts** — `CareerProfile` is session memory with JSON
+  IO for probes and a Resources default; wiring it into `IGameStore` / save records is still
+  open under the broader player-profile story.
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`

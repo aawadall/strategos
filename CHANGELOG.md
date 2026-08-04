@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Career across campaigns (#109 / #212–#215): `CareerProfile` (rank + formation + higher),
+  highland regiment-seat campaign, PLAY **START HIGHLAND**, same higher HQ still addresses
+  after the switch; `CareerAcrossCampaignsProbe`.
 - Player as a node in the chain (#36 / #266–#269): `Scenario.PlayerEchelon`,
   `CommandScope` / `Issue` refuse out-of-band addresses, PLAY zoom and order chrome follow
   the seat; design note for directives-in / orders-out; FRAGO plan cut remains `CancelFrom`

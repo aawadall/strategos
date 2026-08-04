@@ -662,6 +662,7 @@ namespace Strategos.UI.Views
 
             var row = AddButtonRow(parent);
             AddButton(row, "START VALLEY", StartValleyCampaign);
+            AddButton(row, "START HIGHLAND", StartHighlandCampaign);
             _continueCampaignButton = AddButton(row, "CONTINUE", AdvanceCampaign);
             _continueCampaignButton.interactable = false;
 
@@ -703,13 +704,24 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>Starts the shipped three-op valley campaign (#139).</summary>
-        private void StartValleyCampaign()
+        private void StartValleyCampaign() =>
+            StartNamedCampaign(CampaignSamples.ValleyName);
+
+        /// <summary>
+        /// Starts the shipped regiment-seat highland campaign (#109 / #213) — expects career
+        /// rank that can command Regiment (after a valley win promotes battalion → regiment).
+        /// </summary>
+        private void StartHighlandCampaign() =>
+            StartNamedCampaign(CampaignSamples.HighlandName);
+
+        /// <summary>Shared start path for authored campaign chains.</summary>
+        private void StartNamedCampaign(string campaignName)
         {
-            var chain = CampaignChainIO.Load(CampaignSamples.ValleyName);
+            var chain = CampaignChainIO.Load(campaignName);
             if (chain == null)
             {
                 Debug.LogError(
-                    $"[PlayView] no campaign '{CampaignSamples.ValleyName}' in " +
+                    $"[PlayView] no campaign '{campaignName}' in " +
                     $"Resources/{CampaignChainIO.ResourceFolder}");
                 _statusLabel.text = "CAMPAIGN NOT FOUND";
                 return;
@@ -1636,6 +1648,9 @@ namespace Strategos.UI.Views
                 else
                 {
                     campaignNote = "   ·   CAMPAIGN COMPLETE";
+                    // #212: formation labels outlive the finished chain.
+                    _session.Career.StampFormationFrom(_scenario);
+
                     // #224: one promotion when the player wins the last operation.
                     bool playerWon = !outcome.IsDraw &&
                                      _scenario != null &&
@@ -1650,7 +1665,9 @@ namespace Strategos.UI.Views
                             var step = RankAuthorityIO.Current.Find(rank);
                             campaignNote +=
                                 $"   ·   PROMOTED TO {(step?.Title ?? rank).ToUpperInvariant()}";
-                            Debug.Log($"[PlayView] career promoted to '{rank}'");
+                            Debug.Log($"[PlayView] career promoted to '{rank}' " +
+                                      $"(formation '{_session.Career.FormationDesignation}', " +
+                                      $"higher '{_session.Career.HigherFormation}')");
                         }
                     }
                 }

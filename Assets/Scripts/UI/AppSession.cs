@@ -100,10 +100,26 @@ namespace Strategos.UI
         public CampaignChain ActiveChain { get; private set; }
 
         /// <summary>
-        /// Career command rank id into <see cref="RankAuthorityIO"/> (#76). Defaults to
-        /// battalion so shipped BN-top ORBATs load; promotion climbs the authority table.
+        /// Career profile across campaigns (#109). Rank, formation designation, and who
+        /// addresses the player from higher. Survives <see cref="ClearCampaign"/>.
         /// </summary>
-        public string CareerRankId { get; set; } = RankAuthorityDefaults.DefaultRankId;
+        public CareerProfile Career { get; private set; } = CareerProfile.Default();
+
+        /// <summary>
+        /// Career command rank id into <see cref="RankAuthorityIO"/> (#76). Facade over
+        /// <see cref="Career"/>.<see cref="CareerProfile.CareerRankId"/>.
+        /// </summary>
+        public string CareerRankId
+        {
+            get => Career.CareerRankId;
+            set => Career.CareerRankId = string.IsNullOrEmpty(value)
+                ? RankAuthorityDefaults.DefaultRankId
+                : value;
+        }
+
+        /// <summary>Replaces the live career profile (load / probe).</summary>
+        public void SetCareer(CareerProfile profile) =>
+            Career = profile ?? CareerProfile.Default();
 
         /// <summary>Index into <see cref="ActiveChain"/>.Operations, or -1 when no campaign.</summary>
         public int ActiveOperationIndex { get; private set; } = -1;
