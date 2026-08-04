@@ -20,21 +20,20 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
-**Settings shell (#306 / #307 / #389).** `SettingsView` (`-view settings`) is a no-tab screen
-opened from menu Options. GRAPHICS has a **FULLSCREEN** toggle that calls
-`AppShell.ApplyFullscreen` / `ApplyWindowed` and persists `PlayerPreferences.Fullscreen`
-(same path as F11). AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted
-`ConfirmOrders`. Windowed size presets are #390; boot apply is #391. Tab strip stays
-hidden the same way as the menu. Preference round-trip is probed by `PreferenceStoreProbe`
-(#307); tutorial Validate is #311.
+**Settings shell (#306 / #307 / #389 / #390).** `SettingsView` (`-view settings`) is a no-tab
+screen opened from menu Options. GRAPHICS has **FULLSCREEN** (shared with F11 via
+`AppShell.ApplyFullscreen` / `ApplyWindowed`) and **WINDOWED SIZE** presets
+(1280×720 / 1600×900 / 1920×1080) — copy states these are windowed only; borderless
+fullscreen matches the display. AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted
+`ConfirmOrders`. Boot apply is #391. Tab strip stays hidden the same way as the menu.
+Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
 
-**Display mode (#387 / #388 / #389 / #385).** F11 calls `AppShell.ToggleFullscreen`, which
-shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless
-`FullScreenWindow` at the current display size; windowed restores a remembered size
-(default 1600×900, or prefs WxH from Settings). `PlayerPreferences` carries `Fullscreen`,
-`WindowWidth`, `WindowHeight` (#388); boot apply is #391; size presets UI is #390.
-`DisplayModeProbe` checks the AppShell API + GRAPHICS category; `PreferenceStoreProbe`
-round-trips the display fields.
+**Display mode (#387 / #388 / #389 / #390 / #385).** F11 calls `AppShell.ToggleFullscreen`,
+which shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless
+`FullScreenWindow` at the current display size; windowed restores prefs WxH (or remembered
+size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (#388);
+boot apply is #391. `DisplayModeProbe` checks the AppShell API + presets;
+`PreferenceStoreProbe` round-trips the display fields.
 
 **Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
 help; then the pause overlay resumes; then an armed palette verb clears

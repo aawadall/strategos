@@ -71,6 +71,28 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  SettingsView GRAPHICS category present ok");
+
+                // #390: windowed presets are fixed sizes, not a fullscreen res list.
+                var presets = Strategos.UI.Views.SettingsView.WindowedPresets;
+                if (presets == null || presets.Length < 3)
+                {
+                    log.AppendLine("  FAIL WindowedPresets want >=3 got " +
+                                   (presets == null ? "null" : presets.Length.ToString()));
+                    bad++;
+                }
+                else if (presets[0].Width != 1280 || presets[1].Width != 1600 || presets[2].Width != 1920)
+                {
+                    log.AppendLine("  FAIL WindowedPresets widths want 1280/1600/1920");
+                    bad++;
+                }
+                else log.AppendLine("  WindowedPresets 1280/1600/1920 ok");
+
+                if (Strategos.UI.Views.SettingsView.IndexOfPreset(1600, 900) != 1)
+                {
+                    log.AppendLine("  FAIL IndexOfPreset(1600,900) want 1");
+                    bad++;
+                }
+                else log.AppendLine("  IndexOfPreset(1600,900)=1 ok");
             }
             finally
             {
