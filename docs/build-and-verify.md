@@ -151,7 +151,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.EnvProbe.Run` | SideEnv Reset signature-stable; Step Issue-path parity; mask skip; done on win |
 | `Strategos.Editor.ThroughputProbe.Run` | Map gen + 3600-tick step timings; maps/hour and episodes/hour |
 | `Strategos.Editor.TrajectoryProbe.Run` | Trajectory JSON round-trip; belief-only obs from ReportLog; fog-leak twin |
-| `Strategos.Editor.ControlMeasureProbe.Run` | GCM JSON round-trip; validation; draw (points/lines/arrows/areas); viewer fog |
+| `Strategos.Editor.MapPaletteProbe.Run` | NatoTopo in dropdown; colours distinct from Topographic; draw differs |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
@@ -162,7 +162,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 **Fifteen of the probes above run with `scenario.Map.EnableErosion = false`** —
 `CampaignCarryOverProbe`, `CasualtyProbe`, `CombatProbe`, `CommandProbe`, `DefendProbe`,
 `ScreenProbe`, `GuardProbe`, `CoverProbe`, `WithdrawProbe`, `DelayProbe`, `AttackProbe`,
-`ReconProbe`, `ExploitProbe`, `PursueProbe`, `ObservationProbe`, `ActionSpaceProbe`, `RewardProbe`, `EnvProbe`, `ThroughputProbe`, `TrajectoryProbe`, `ControlMeasureProbe`,
+`ReconProbe`, `ExploitProbe`, `PursueProbe`, `ObservationProbe`, `ActionSpaceProbe`, `RewardProbe`, `EnvProbe`, `ThroughputProbe`, `TrajectoryProbe`, `ControlMeasureProbe`, `MapPaletteProbe`,
 `DirectiveProbe`, `DirectorProbe`, `DrillProbe`, `HierarchyProbe`, `MapMeshProbe`,
 `ReactionProbe`, `ReportProbe`, `ScenarioProbe`, `UnitModelProbe`, `VictoryProbe` — because
 erosion is the dominant generation cost and none of them are *reasoning about terrain*: they

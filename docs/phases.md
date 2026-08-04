@@ -33,7 +33,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Heightmap ingestion pipeline (SRTM/GeoTIFF → Unity Terrain) *(superseded for now by procedural `MapGenerator`)*
 - [x] Procedural contour-line overlay generation from heightmap data
 - [x] Terrain classification layer (open ground, forest, urban, mountain, water, swamp, desert)
-- [ ] Map rendering modes: satellite, topographic, hybrid, schematic (op-map style) *(topographic only; standard US/NATO topo palette as a fifth mode is #169)*
+- [x] Map rendering modes: schematic, topographic, hybrid, terrain, US/NATO topo (#169 / #188–#192); satellite still open
 - [x] Smooth zoom / pan on the 2D sheet *(echelon-bounded in PLAY; theater-scale 5,000 km not a target yet)*
 - [x] Grid system overlay on the sheet
 - [ ] Line-of-sight (LOS) and line-of-communication (LOC) raycasting

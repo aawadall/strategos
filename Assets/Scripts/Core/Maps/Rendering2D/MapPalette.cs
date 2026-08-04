@@ -11,8 +11,8 @@ using UnityEngine;
 namespace Strategos.Maps
 {
     /// <summary>
-    /// Presentation style. Mirrors the four modes the roadmap calls for: a survey
-    /// sheet, a stripped-back operations map, a terrain-dominant view, and a blend.
+    /// Presentation style. Survey sheet, operations map, terrain-dominant, blend, and
+    /// US/NATO five-colour topo (#169).
     /// </summary>
     public enum MapRenderMode
     {
@@ -20,6 +20,8 @@ namespace Strategos.Maps
         Schematic   = 1,
         Terrain     = 2,
         Hybrid      = 3,
+        /// <summary>US/NATO military topo colours (FM 3-25.26 / FM 21-31) — #169.</summary>
+        NatoTopo    = 4,
     }
 
     /// <summary>Style for one class of linear feature.</summary>
@@ -167,6 +169,7 @@ namespace Strategos.Maps
                 case MapRenderMode.Schematic: return Schematic();
                 case MapRenderMode.Terrain:   return Terrain();
                 case MapRenderMode.Hybrid:    return Hybrid();
+                case MapRenderMode.NatoTopo:  return NatoTopo();
                 default:                      return Topographic();
             }
         }
@@ -273,6 +276,59 @@ namespace Strategos.Maps
             p.ForestStipple = Hex(0x7E, 0x99, 0x6A);
             return p;
         }
+
+        /// <summary>
+        /// US/NATO large-scale topo colours (#169) — FM 3-25.26 §3-5 / FM 21-31 five-colour
+        /// convention: black cultural, blue water, brown relief, green vegetation, white paper.
+        /// Distinct from <see cref="Topographic"/> aged-paper survey look.
+        /// </summary>
+        public static MapPalette NatoTopo() => new MapPalette
+        {
+            Paper        = Hex(0xF7, 0xF7, 0xF2),
+            Water        = Hex(0xA8, 0xC8, 0xE0),
+            WaterEdge    = Hex(0x4A, 0x7A, 0x9C),
+
+            Contour      = Hex(0xB8, 0x7A, 0x4A),
+            ContourIndex = Hex(0x8B, 0x5A, 0x2B),
+            ContourWater = Hex(0x6A, 0x90, 0xA8),
+            HillshadeStrength = 0.22f,
+
+            Grid      = Hex(0xC8, 0xC8, 0xC0),
+            GridIndex = Hex(0xA0, 0xA0, 0x96),
+            GridLabel = Hex(0x4A, 0x4A, 0x44),
+
+            Ink       = Hex(0x1A, 0x1A, 0x1A),
+            InkMuted  = Hex(0x4A, 0x4A, 0x44),
+            WaterInk  = Hex(0x2A, 0x5A, 0x7A),
+            LabelHalo = Hex(0xFF, 0xFF, 0xFA),
+
+            Open          = Hex(0xF0, 0xED, 0xE4),
+            Cropland      = Hex(0xE8, 0xE0, 0xC8),
+            Forest        = Hex(0xA8, 0xC8, 0x90),
+            ForestStipple = Hex(0x5A, 0x8A, 0x4A),
+            Urban         = Hex(0xD8, 0xD0, 0xC8),
+            UrbanHatch    = Hex(0x4A, 0x4A, 0x4A),
+            Marsh         = Hex(0xB8, 0xD0, 0xC0),
+            MarshTick     = Hex(0x4A, 0x7A, 0x6A),
+            Rock          = Hex(0xC8, 0xC0, 0xB4),
+            Sand          = Hex(0xE8, 0xDC, 0xB0),
+            Snow          = Hex(0xF8, 0xF8, 0xF6),
+
+            RampPositions = new[] { 0f, 0.18f, 0.38f, 0.58f, 0.78f, 1f },
+            RampColours = new[]
+            {
+                Hex(0xC8, 0xDC, 0xB0), // low green
+                Hex(0xE0, 0xE8, 0xB0),
+                Hex(0xE8, 0xD8, 0x98),
+                Hex(0xD8, 0xB8, 0x78),
+                Hex(0xC0, 0x98, 0x68),
+                Hex(0xA8, 0x78, 0x50), // high brown
+            },
+
+            UseHypsometricTint = true,
+            UseLandcover       = true,
+            LandcoverBlend     = 0.65f,
+        };
 
         private static Color32 Hex(int r, int g, int b) => new((byte)r, (byte)g, (byte)b, 255);
     }

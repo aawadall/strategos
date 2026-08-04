@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- US/NATO topographic map palette (#169 / #188–#192): `MapRenderMode.NatoTopo` with
+  FM 3-25.26 / FM 21-31 five-colour ground colours; PLAY / SCENARIO / EXPLORE dropdowns;
+  `MapPaletteProbe` + `MapContactSheet` coverage.
 - Graphic control measures complete (#160 / #161–#166): arrows (axis / direction / retirement /
   counterattack), areas (battle position / engagement area / kill zone), PLAY `afterPixels`
   with per-side fog (#283); earlier #174 shipped data model, checkpoints, phase lines,
