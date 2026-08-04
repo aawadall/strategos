@@ -1,6 +1,7 @@
 // SettingsView.cs
 // #306: settings screen shell — graphics / audio / gameplay / accessibility.
 // #307: GAMEPLAY hosts one persisted ConfirmOrders toggle via IPreferenceStore.
+// #389: GRAPHICS fullscreen toggle → AppShell display API + PlayerPreferences.Fullscreen.
 
 using TMPro;
 using UnityEngine;
@@ -25,6 +26,7 @@ namespace Strategos.UI.Views
 
         private Texture2D _paperTex;
         private Toggle _confirmOrders;
+        private Toggle _fullscreen;
         private PlayerPreferences _prefs;
 
         /// <summary>Category section labels in display order (#306).</summary>
@@ -75,7 +77,7 @@ namespace Strategos.UI.Views
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
 
             var sub = CreateTmp("Sub", col,
-                "One gameplay preference persists · more controls land with later #289 children",
+                "Fullscreen + confirm-orders persist · windowed size presets land in #390",
                 14, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
@@ -96,6 +98,7 @@ namespace Strategos.UI.Views
             _prefs = Store.Load();
             if (_confirmOrders != null)
                 _confirmOrders.SetIsOnWithoutNotify(_prefs.ConfirmOrders);
+            SyncFullscreenToggle();
         }
 
         public void OnHidden() { }
@@ -116,6 +119,14 @@ namespace Strategos.UI.Views
             t.characterSpacing = 4f;
             t.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
 
+            if (label == "GRAPHICS")
+            {
+                var on = Shell != null ? Shell.IsFullscreen : _prefs.Fullscreen;
+                _fullscreen = AddToggle(parent, "FULLSCREEN", on, PersistFullscreen);
+                Spacer(parent, 6);
+                return;
+            }
+
             if (label == "GAMEPLAY")
             {
                 _confirmOrders = AddToggle(parent, "CONFIRM ORDERS", _prefs.ConfirmOrders, PersistConfirm);
@@ -129,6 +140,33 @@ namespace Strategos.UI.Views
             empty.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
 
             Spacer(parent, 6);
+        }
+
+        private void SyncFullscreenToggle()
+        {
+            if (_fullscreen == null) return;
+            var on = Shell != null ? Shell.IsFullscreen : _prefs.Fullscreen;
+            _fullscreen.SetIsOnWithoutNotify(on);
+        }
+
+        private void PersistFullscreen()
+        {
+            if (_fullscreen == null || Store == null) return;
+            _prefs ??= new PlayerPreferences();
+            _prefs.Fullscreen = _fullscreen.isOn;
+            // Keep remembered windowed size when leaving fullscreen (#388 fields; UI presets #390).
+            if (!_fullscreen.isOn && _prefs.WindowWidth <= 0)
+            {
+                _prefs.WindowWidth = 1600;
+                _prefs.WindowHeight = 900;
+            }
+            Store.Save(_prefs);
+
+            if (Shell == null) return;
+            if (_fullscreen.isOn)
+                Shell.ApplyFullscreen();
+            else
+                Shell.ApplyWindowed(_prefs.WindowWidth, _prefs.WindowHeight);
         }
 
         private void PersistConfirm()
