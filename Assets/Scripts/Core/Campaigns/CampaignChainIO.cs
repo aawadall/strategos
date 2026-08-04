@@ -68,14 +68,14 @@ namespace Strategos.Campaigns
             File.Exists(path) ? FromJson(File.ReadAllText(path)) : null;
 
         /// <summary>
-        /// Loads a shipped campaign chain by name, e.g. <c>Load("first-campaign")</c>. Resources
-        /// rather than StreamingAssets, for the identical reason
-        /// <see cref="ScenarioIO.Load"/> gives.
+        /// Loads a shipped campaign chain by name. Thin-wraps
+        /// <see cref="Strategos.Content.Resources.ResourcesCampaignChainSource"/> (#355 / #366).
         /// </summary>
-        public static CampaignChain Load(string name)
-        {
-            var asset = Resources.Load<TextAsset>($"{ResourceFolder}/{name}");
-            return asset == null ? null : FromJson(asset.text);
-        }
+        public static CampaignChain Load(string name) =>
+            DefaultContentSource.Load(name);
+
+        /// <summary>Default Resources-backed content source (#355 / #366).</summary>
+        public static Strategos.Content.IContentSource<CampaignChain> DefaultContentSource { get; } =
+            new Strategos.Content.Resources.ResourcesCampaignChainSource();
     }
 }

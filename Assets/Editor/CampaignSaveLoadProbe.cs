@@ -91,9 +91,10 @@ namespace Strategos.Editor
                     OperationIndex = 1,
                     CampaignChainJson = CampaignChainIO.ToJson(chain),
                 };
-                store.Save(record);
+                store.SaveAsync(record).GetAwaiter().GetResult();
 
-                var loaded = store.Load("campaign-mid");
+                var load = store.LoadAsync("campaign-mid").GetAwaiter().GetResult();
+                var loaded = load.Ok ? load.Value : null;
                 if (loaded == null || string.IsNullOrEmpty(loaded.CampaignChainJson))
                 {
                     log.AppendLine("  FAIL campaign save lost CampaignChainJson");

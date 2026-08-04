@@ -794,44 +794,47 @@ namespace Strategos.Editor
                     SavedAtUtc = DateTime.UtcNow.ToString("o"),
                     Snapshot = snap,
                 };
-                store.Save(record);
+                store.SaveAsync(record).GetAwaiter().GetResult();
 
-                var loaded = store.Load("probe-1");
-                if (loaded == null)
+                var load = store.LoadAsync("probe-1").GetAwaiter().GetResult();
+                if (!load.Ok || load.Value == null)
                 {
-                    log.AppendLine("  FAIL Load('probe-1') returned null after Save");
+                    log.AppendLine("  FAIL LoadAsync('probe-1') not Ok after SaveAsync");
                     return bad + 1;
                 }
 
+                var loaded = load.Value;
                 var restored = Simulation.Restore(loaded.Snapshot);
                 if (restored.Signature() != sim.Signature())
                 {
                     log.AppendLine("  FAIL Signature() diverged after a real file round trip " +
-                                   "(Save -> Load -> Restore)");
+                                   "(SaveAsync -> LoadAsync -> Restore)");
                     bad++;
                 }
 
-                var listed = store.ListSaves();
-                if (listed.Count != 1 || listed[0].SaveId != "probe-1")
+                var listed = store.ListSavesAsync().GetAwaiter().GetResult();
+                if (!listed.Ok || listed.Value.Count != 1 || listed.Value[0].SaveId != "probe-1")
                 {
-                    log.AppendLine($"  FAIL ListSaves returned {listed.Count} entrie(s), " +
-                                   "expected exactly 1 named 'probe-1'");
+                    log.AppendLine($"  FAIL ListSavesAsync returned {listed.Value?.Count ?? -1} " +
+                                   "entrie(s), expected exactly 1 named 'probe-1'");
                     bad++;
                 }
 
-                if (!store.Delete("probe-1"))
+                var deleted = store.DeleteAsync("probe-1").GetAwaiter().GetResult();
+                if (!deleted.Ok || !deleted.Value)
                 {
-                    log.AppendLine("  FAIL Delete('probe-1') returned false for a save that exists");
+                    log.AppendLine("  FAIL DeleteAsync('probe-1') did not remove an existing save");
                     bad++;
                 }
-                if (store.Load("probe-1") != null)
+                var afterDelete = store.LoadAsync("probe-1").GetAwaiter().GetResult();
+                if (afterDelete.Status != StoreStatus.NotFound)
                 {
-                    log.AppendLine("  FAIL Load('probe-1') still returns a record after Delete");
+                    log.AppendLine("  FAIL LoadAsync('probe-1') not NotFound after DeleteAsync");
                     bad++;
                 }
 
-                log.AppendLine($"  file store: save -> load -> restore round trip identical, " +
-                               $"list and delete both correct  {(bad == 0 ? "ok" : "FAILED")}");
+                log.AppendLine($"  file store SaveAsync/LoadAsync/ListSavesAsync/DeleteAsync " +
+                               $"round trip  {(bad == 0 ? "ok" : "FAILED")}");
             }
             finally
             {
@@ -845,6 +848,7 @@ namespace Strategos.Editor
         /// misloads across an incompatible one. Exercised against a deliberately bad
         /// SaveRecord.FormatVersion, through the real file-backed store — not asserted in the
         /// abstract, since an untested refusal path is the same defect as an untested happy path.
+        /// #355: refusal is StoreStatus.VersionMismatch, not only an exception.
         /// </summary>
         private static int CheckVersionRefusal(StringBuilder log)
         {
@@ -863,15 +867,14 @@ namespace Strategos.Editor
                     SavedAtUtc = DateTime.UtcNow.ToString("o"),
                     Snapshot = sim.Snapshot(),
                 };
-                store.Save(record);
+                store.SaveAsync(record).GetAwaiter().GetResult();
 
-                bool refused = false;
-                try { store.Load("bad-version"); }
-                catch (SaveVersionMismatchException) { refused = true; }
+                var load = store.LoadAsync("bad-version").GetAwaiter().GetResult();
+                bool refused = load.Status == StoreStatus.VersionMismatch;
 
                 if (!refused)
                 {
-                    log.AppendLine("  FAIL Load did not throw SaveVersionMismatchException for a " +
+                    log.AppendLine("  FAIL LoadAsync did not return VersionMismatch for a " +
                                    $"save at version {record.FormatVersion} against current " +
                                    $"{SaveRecord.CurrentFormatVersion}");
                     bad++;

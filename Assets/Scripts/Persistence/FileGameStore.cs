@@ -4,6 +4,9 @@
 // follow-up; if this file is ever tempted to grow a query, that is the sign the follow-up has
 // arrived, not a reason to add one here.
 //
+// #355: SaveAsync / LoadAsync / … return StoreResult via Task.FromResult — file IO stays on
+// the calling thread today; a remote store can await without changing the interface.
+//
 // LIVES OUTSIDE Core ON PURPOSE. Core/Persistence/IGameStore.cs defines the seam and the data
 // it carries; Core/Commands/Simulation.cs knows how to turn itself into a SimulationSnapshot
 // and back. Neither of those files reads or writes a byte. This one does, and it is the only
@@ -24,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Strategos.Persistence;
@@ -51,69 +55,104 @@ namespace Strategos.Persistence.Files
         private string PathFor(string saveId) =>
             Path.Combine(_directory, SanitizeFileName(saveId) + Extension);
 
-        public void Save(SaveRecord record)
+        public Task<StoreResult> SaveAsync(SaveRecord record)
         {
-            if (record == null) throw new ArgumentNullException(nameof(record));
-            if (string.IsNullOrWhiteSpace(record.SaveId))
-                throw new ArgumentException("A save needs a SaveId.", nameof(record));
-
-            Directory.CreateDirectory(_directory);
-            File.WriteAllText(PathFor(record.SaveId), ToJson(record));
-        }
-
-        public SaveRecord Load(string saveId)
-        {
-            var path = PathFor(saveId);
-            if (!File.Exists(path)) return null;
-
-            var record = FromJson(File.ReadAllText(path));
-            if (record == null) return null;
-
-            // #74's own acceptance criterion: refuse rather than misload across an incompatible
-            // version. Checked here, before any caller sees the payload, rather than left for a
-            // field to have silently deserialised to its default.
-            if (record.FormatVersion != SaveRecord.CurrentFormatVersion)
-                throw new SaveVersionMismatchException(saveId, record.FormatVersion,
-                    SaveRecord.CurrentFormatVersion);
-
-            return record;
-        }
-
-        public IReadOnlyList<SaveSummary> ListSaves()
-        {
-            var summaries = new List<SaveSummary>();
-            if (!Directory.Exists(_directory)) return summaries;
-
-            foreach (var file in Directory.GetFiles(_directory, "*" + Extension))
+            try
             {
-                SaveRecord record;
-                try { record = FromJson(File.ReadAllText(file)); }
-                catch { continue; }   // a listing degrades past an unreadable file; Load() is
-                                      // where refusing a bad version is a contract, not this.
-                if (record == null) continue;
+                if (record == null)
+                    return Task.FromResult(StoreResult.Failed("A save needs a record."));
+                if (string.IsNullOrWhiteSpace(record.SaveId))
+                    return Task.FromResult(StoreResult.Failed("A save needs a SaveId."));
 
-                summaries.Add(new SaveSummary
-                {
-                    SaveId = record.SaveId,
-                    ScenarioName = record.ScenarioName,
-                    Tick = record.Tick,
-                    SavedAtUtc = record.SavedAtUtc,
-                    CampaignName = record.CampaignName ?? string.Empty,
-                    OperationIndex = record.OperationIndex,
-                });
+                Directory.CreateDirectory(_directory);
+                File.WriteAllText(PathFor(record.SaveId), ToJson(record));
+                return Task.FromResult(StoreResult.Success());
             }
-
-            // Newest first. SavedAtUtc is ISO-8601, so ordinal string comparison is chronological.
-            summaries.Sort((a, b) => string.CompareOrdinal(b.SavedAtUtc, a.SavedAtUtc));
-            return summaries;
+            catch (Exception ex)
+            {
+                return Task.FromResult(StoreResult.Failed(ex.Message));
+            }
         }
 
-        public bool Delete(string saveId)
+        public Task<StoreResult<SaveRecord>> LoadAsync(string saveId)
         {
-            var path = PathFor(saveId);
-            if (!File.Exists(path)) return false;
-            File.Delete(path);
-            return true;
+            try
+            {
+                var path = PathFor(saveId);
+                if (!File.Exists(path))
+                    return Task.FromResult(StoreResult<SaveRecord>.NotFound($"No save '{saveId}'."));
+
+                var record = FromJson(File.ReadAllText(path));
+                if (record == null)
+                    return Task.FromResult(StoreResult<SaveRecord>.Failed($"Save '{saveId}' did not parse."));
+
+                if (record.FormatVersion != SaveRecord.CurrentFormatVersion)
+                {
+                    return Task.FromResult(StoreResult<SaveRecord>.VersionMismatch(
+                        $"Save '{saveId}' is format version {record.FormatVersion}; this build " +
+                        $"reads version {SaveRecord.CurrentFormatVersion}."));
+                }
+
+                return Task.FromResult(StoreResult<SaveRecord>.Success(record));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(StoreResult<SaveRecord>.Failed(ex.Message));
+            }
+        }
+
+        public Task<StoreResult<IReadOnlyList<SaveSummary>>> ListSavesAsync()
+        {
+            try
+            {
+                var summaries = new List<SaveSummary>();
+                if (!Directory.Exists(_directory))
+                    return Task.FromResult(
+                        StoreResult<IReadOnlyList<SaveSummary>>.Success(summaries));
+
+                foreach (var file in Directory.GetFiles(_directory, "*" + Extension))
+                {
+                    SaveRecord record;
+                    try { record = FromJson(File.ReadAllText(file)); }
+                    catch { continue; }
+                    if (record == null) continue;
+
+                    summaries.Add(new SaveSummary
+                    {
+                        SaveId = record.SaveId,
+                        ScenarioName = record.ScenarioName,
+                        Tick = record.Tick,
+                        SavedAtUtc = record.SavedAtUtc,
+                        CampaignName = record.CampaignName ?? string.Empty,
+                        OperationIndex = record.OperationIndex,
+                    });
+                }
+
+                summaries.Sort((a, b) => string.CompareOrdinal(b.SavedAtUtc, a.SavedAtUtc));
+                return Task.FromResult(
+                    StoreResult<IReadOnlyList<SaveSummary>>.Success(summaries));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(
+                    StoreResult<IReadOnlyList<SaveSummary>>.Failed(ex.Message));
+            }
+        }
+
+        public Task<StoreResult<bool>> DeleteAsync(string saveId)
+        {
+            try
+            {
+                var path = PathFor(saveId);
+                if (!File.Exists(path))
+                    return Task.FromResult(StoreResult<bool>.Success(false));
+                File.Delete(path);
+                return Task.FromResult(StoreResult<bool>.Success(true));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(StoreResult<bool>.Failed(ex.Message));
+            }
         }
 
         // ─── JSON ─────────────────────────────────────────────────────────────

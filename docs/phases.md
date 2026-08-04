@@ -337,7 +337,9 @@ intelligence / ML-Agents unbuilt.
 **Goal:** Backend services supporting persistent accounts, matchmaking, and content sharing.
 **Status:** Unbuilt.
 
-- [ ] User accounts: registration, login, OAuth (Google/Discord) (#355 — identity seam; Steam identity via #288 likely first)
+- [x] Local/API seam for saves, content, and player identity (#355 / #361–#367) — see `docs/local-api-seam.md`
+- [ ] User accounts: registration, login, OAuth (Google/Discord) (builds on #355 identity; Steam via #288 likely first)
+- [ ] Embedded store for player data when accounts exist (#66)
 - [ ] Player profile: rank, win/loss, favourite doctrine, commander history
 - [ ] ELO-based matchmaking for online games
 - [ ] Global and faction leaderboards
@@ -348,7 +350,6 @@ intelligence / ML-Agents unbuilt.
 - [ ] Mod support API: custom units, terrain packs, doctrine packs
 - [ ] Steam Leaderboards (`SteamUserStats`): global and friends-only leaderboards as primary backend
 - [ ] Steam Rich Presence updates: reflect match status across all online modes
-- [ ] Embedded store for player data when accounts exist (#66)
 
 **Milestone M9:** Backend deployed; account creation, matchmaking, and scenario upload/download working in production.
 
