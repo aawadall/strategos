@@ -13,6 +13,10 @@
 // the map and the capability, all of which a replay reproduces exactly, so caching one is safe
 // and rebuilding it on replay yields the same cells. Nothing about a path is written into the
 // command log.
+//
+// #35: the cache is invalidated when a remaining waypoint (or the current leg) is no longer
+// Passable — e.g. a HazardBlocking spawn (#34) — and PlanCells runs again toward the same
+// Target. Unreachable after replan → Failed, same as an initially unreachable destination.
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -201,21 +205,68 @@ namespace Strategos.Commands
             if (_routes.TryGetValue(unit.Id.Value, out var existing) &&
                 Vector2.Distance(existing.Target, target) <= ArrivalCells &&
                 existing.Cells != null && existing.Cells.Count > 0)
-                return existing;
+            {
+                // #270 / #271: live Passable (hazards, etc.) can invalidate a warm cache.
+                if (!RouteInvalid(existing, grid, unit.Cell))
+                    return existing;
 
+                var replanned = PlanFromUnit(unit, target, grid);
+                if (replanned == null)
+                {
+                    _routes.Remove(unit.Id.Value);
+                    return null;
+                }
+
+                existing.Target = target;
+                existing.Cells = replanned;
+                existing.Index = 0;
+                return existing;
+            }
+
+            var cells = PlanFromUnit(unit, target, grid);
+            if (cells == null) { _routes.Remove(unit.Id.Value); return null; }
+
+            var route = new Route { Target = target, Cells = cells, Index = 0 };
+            _routes[unit.Id.Value] = route;
+            return route;
+        }
+
+        private static List<Vector2Int> PlanFromUnit(UnitInstance unit, Vector2 target,
+            MovementGrid grid)
+        {
             var from = new Vector2Int(
                 Mathf.Clamp(Mathf.RoundToInt(unit.Cell.x), 0, grid.Width - 1),
                 Mathf.Clamp(Mathf.RoundToInt(unit.Cell.y), 0, grid.Height - 1));
             var to = new Vector2Int(
                 Mathf.Clamp(Mathf.RoundToInt(target.x), 0, grid.Width - 1),
                 Mathf.Clamp(Mathf.RoundToInt(target.y), 0, grid.Height - 1));
+            return PlanCells(grid, from, to);
+        }
 
-            var cells = PlanCells(grid, from, to);
-            if (cells == null) { _routes.Remove(unit.Id.Value); return null; }
+        /// <summary>
+        /// True when the remaining plan is no longer walkable (#270) — a remaining waypoint
+        /// impassable, or the straight leg from the unit to the next waypoint crosses an
+        /// impassable cell (smoothed routes skip intermediate waypoints).
+        /// </summary>
+        private static bool RouteInvalid(Route route, MovementGrid grid, Vector2 unitCell)
+        {
+            if (route?.Cells == null || grid == null) return true;
 
-            var route = new Route { Target = target, Cells = cells, Index = 0 };
-            _routes[unit.Id.Value] = route;
-            return route;
+            for (int i = route.Index; i < route.Cells.Count; i++)
+            {
+                var c = route.Cells[i];
+                if (!grid.Passable(c.x, c.y)) return true;
+            }
+
+            if (route.Index >= route.Cells.Count) return false;
+
+            var next = route.Cells[route.Index];
+            int x0 = Mathf.Clamp(Mathf.RoundToInt(unitCell.x), 0, grid.Width - 1);
+            int y0 = Mathf.Clamp(Mathf.RoundToInt(unitCell.y), 0, grid.Height - 1);
+            foreach (var c in MapGeometry.LineCells(x0, y0, next.x, next.y))
+                if (!grid.Passable(c.x, c.y)) return true;
+
+            return false;
         }
 
         private MovementGrid GridForCached(MapData map, UnitCapabilities caps,
