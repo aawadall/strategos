@@ -41,7 +41,8 @@ are done.
 | Issue | Title |
 |---|---|
 | [#34](https://github.com/aawadall/strategos/issues/34) | Epic: dynamic world layer — children #273–#277 |
-| [#289](https://github.com/aawadall/strategos/issues/289) | Epic: tutorial / help / settings — children #300+ |
+| [#334](https://github.com/aawadall/strategos/issues/334) | Epic: procedural scenario generation — children #347–#352 |
+| [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -65,8 +66,8 @@ are done.
   viewer), #288 Steamworks SDK integration (App ID, Overlay, Achievements, Cloud), #289
   tutorial/contextual help/settings screen, #290 controller support (Steam Deck), #291 an
   AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
-- **Historical scenarios** — Phase 6.2's initial pack, split #332 (research real
-  engagements into `Research/`) and #333 (convert into `Scenario` JSON), depends on #332
+- **Historical scenarios** — #332 research (#335–#340) then #333 convert (#341–#346)
+- **Procedural scenarios** — #334 (#347–#352); distinct from §6.3 campaign sequencing
 
 ---
 
