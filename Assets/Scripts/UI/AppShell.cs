@@ -1,15 +1,8 @@
-// AppShell.cs
+﻿// AppShell.cs
 // The application root: one Canvas, one EventSystem, a tab bar, and a host for the views.
 //
-// Before this existed, SymbolBuilderPanel created its own Canvas at sortingOrder 100 and
-// was installed by its own [RuntimeInitializeOnLoadMethod] gated on the scene's name. Two
-// such panels would have meant two stacked canvases and two EventSystems' worth of
-// raycasting, so canvas ownership moves here and the views own only their content.
-//
-// Layout uses anchored rects rather than layout groups for the chrome. A horizontal group
-// holding one fixed-width child and one flexible one is exactly the configuration where
-// childForceExpandWidth inflates the fixed child past the screen edge, and the chrome is
-// simple enough not to need a group at all.
+// #371: boots into MainMenuView (front door). PLAY is a session entered from the menu;
+// EXPLORE / SCENARIO / DRILLS / BUILDER remain Tools. Pause overlay lives inside PlayView.
 
 using System;
 using TMPro;
@@ -25,40 +18,23 @@ namespace Strategos.UI
 {
     public sealed class AppShell : MonoBehaviour
     {
-        /// <summary>Height of the top chrome bar, in reference-resolution px.</summary>
         private const float TopBarHeight = 44f;
-
-        /// <summary>
-        /// Layer the 3D map drape renders on. The drape's own camera is masked to it and
-        /// the scene's main camera is masked out of it, so a terrain mesh that only ever
-        /// appears inside a card is not also drawn behind the whole UI.
-        /// </summary>
         public const int MapDrapeLayer = 8;
 
         private ViewHost _views;
         private AppSession _session;
         private RectTransform _insignia;
         private Image _insigniaImage;
+        private GameObject _tabStripGo;
 
-        /// <summary>Shared map / symbol state. Views read and write this, not each other.</summary>
         public AppSession Session => _session;
 
-        // ─── Bootstrap ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Installs the shell if the scene does not already contain one.
-        ///
-        /// Deliberately NOT gated on the scene's name. The old gate existed only because
-        /// the committed demo scene had no builder object in it, and it would now mean a
-        /// build launched from any other scene showed nothing at all.
-        /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInScene()
         {
             var scene = SceneManager.GetActiveScene();
             if (!scene.IsValid()) return;
             if (FindAnyObjectByType<AppShell>() != null) return;
-
             new GameObject("AppShell").AddComponent<AppShell>();
         }
 
@@ -66,61 +42,85 @@ namespace Strategos.UI
         {
             UiFactory.EnsureEventSystem();
             MaskDrapeLayerFromSceneCameras();
-
             _session = new AppSession();
 
             BuildChrome(out var tabStrip, out var contentHost);
+            _tabStripGo = tabStrip.gameObject;
             _views = new ViewHost(contentHost, tabStrip);
 
-            _views.Add<PlayView>(v => ((PlayView)v).Session = _session);
+            _views.Add<MainMenuView>(v =>
+            {
+                var m = (MainMenuView)v;
+                m.Session = _session;
+                m.Shell = this;
+            }, showTab: false);
+            _views.Add<PlayView>(v =>
+            {
+                var p = (PlayView)v;
+                p.Session = _session;
+                p.Shell = this;
+            });
             _views.Add<ExplorerView>(v => ((ExplorerView)v).Session = _session);
             _views.Add<ScenarioSetupView>(v => ((ScenarioSetupView)v).Session = _session);
             _views.Add<TtpView>(v => ((TtpView)v).Session = _session);
             _views.Add<SymbolBuilderPanel>();
 
-            // Canvas sizes have to be settled before a view measures its own rects.
+            if (tabStrip != null)
+                UiFactory.AddTabButton(tabStrip, "MENU", GoToMainMenu);
+
             Canvas.ForceUpdateCanvases();
 
             var requested = RequestedViewKey();
-            if (requested != null && _views.Has(requested)) _views.Select(requested);
-            else _views.SelectFirst();
+            if (requested != null && _views.Has(requested)) Navigate(requested);
+            else Navigate("menu");
 
-            // Worth a line in Player.log: a UI exception truncates a layout silently, so
-            // "the shell came up and selected a view" is otherwise unobservable from
-            // outside — and a batch build that shipped stale assemblies looks identical to
-            // one that shipped nothing at all.
             Debug.Log($"[AppShell] {_views.Count} view(s), showing '{_views.Current?.Key}' " +
                       $"at {Screen.width}x{Screen.height}, F11 toggles full screen");
         }
 
-        // ─── Window ───────────────────────────────────────────────────────────
+        public void Navigate(string key)
+        {
+            if (string.IsNullOrEmpty(key) || !_views.Has(key)) return;
+            bool tools = !string.Equals(key, "menu", StringComparison.OrdinalIgnoreCase);
+            if (_tabStripGo != null) _tabStripGo.SetActive(tools);
+            _views.Select(key);
+        }
 
-        /// <summary>Windowed size to come back to, remembered before going full screen.</summary>
+        public void GoToMainMenu() => Navigate("menu");
+        public void EnterPlaySession() => Navigate("play");
+        public void EnterTools(string key) => Navigate(key);
+
+        public void StartValleyFromMenu()
+        {
+            Navigate("play");
+            _views.Get<PlayView>()?.StartValleyCampaignPublic();
+        }
+
+        public void StartHighlandFromMenu()
+        {
+            Navigate("play");
+            _views.Get<PlayView>()?.StartHighlandCampaignPublic();
+        }
+
+        public void LoadScenarioFromMenu(string name)
+        {
+            Navigate("play");
+            _views.Get<PlayView>()?.LoadScenarioPublic(name);
+        }
+
+        public void QuickSaveFromMenu() => _views.Get<PlayView>()?.QuickSavePublic();
+
+        public void QuickLoadFromMenu()
+        {
+            Navigate("play");
+            _views.Get<PlayView>()?.QuickLoadPublic();
+        }
+
         private Vector2Int _windowed;
 
-        /// <summary>
-        /// F11 toggles full screen, as it does in every application with a window.
-        /// </summary>
-        /// <remarks>
-        /// Lives here rather than in a view because it is a property of the *application*, and
-        /// a view that owned it would stop working the moment the player was on a different
-        /// tab. PlayView's Space is the counterpart — that one is a game control and belongs
-        /// to the game.
-        ///
-        /// Borderless (<see cref="FullScreenMode.FullScreenWindow"/>) rather than exclusive:
-        /// it alt-tabs cleanly, changes no display mode, and needs no resolution list. The
-        /// CanvasScaler is already ScaleWithScreenSize against a 1920x1080 reference, so the
-        /// UI simply scales — and `MapSheetCard` re-crops on resize rather than stretching, so
-        /// a different aspect ratio shows more or less ground rather than a squashed sheet.
-        ///
-        /// The windowed size is remembered rather than recomputed. Restoring to
-        /// `Screen.currentResolution` would come back full-screen-sized in a window, which
-        /// looks like the toggle failed.
-        /// </remarks>
         private void Update()
         {
             if (!Input.GetKeyDown(KeyCode.F11)) return;
-
             if (Screen.fullScreen)
             {
                 var size = _windowed.x > 0 ? _windowed : new Vector2Int(1600, 900);
@@ -130,12 +130,9 @@ namespace Strategos.UI
             {
                 _windowed = new Vector2Int(Screen.width, Screen.height);
                 var display = Screen.currentResolution;
-                Screen.SetResolution(display.width, display.height,
-                    FullScreenMode.FullScreenWindow);
+                Screen.SetResolution(display.width, display.height, FullScreenMode.FullScreenWindow);
             }
         }
-
-        // ─── Chrome ───────────────────────────────────────────────────────────
 
         private void BuildChrome(out Transform tabStrip, out RectTransform contentHost)
         {
@@ -157,7 +154,6 @@ namespace Strategos.UI
             UiFactory.Stretch(root);
             root.gameObject.AddComponent<Image>().color = UiTheme.StageBg;
 
-            // --- Top bar ---
             var bar = UiFactory.CreateRect("TopBar", root);
             bar.anchorMin = new Vector2(0, 1);
             bar.anchorMax = new Vector2(1, 1);
@@ -177,9 +173,6 @@ namespace Strategos.UI
             brand.color = UiTheme.AccentText;
             brand.characterSpacing = 8f;
 
-            // Shoulder board for the echelon the player commands (#38). Hidden until PLAY
-            // publishes a command context. Derived from ORBAT + Side.RankLadder — never a
-            // free-floating rank setting.
             _insignia = UiFactory.CreateRect("RankInsignia", bar);
             _insignia.anchorMin = new Vector2(0, 0.5f);
             _insignia.anchorMax = new Vector2(0, 0.5f);
@@ -194,8 +187,6 @@ namespace Strategos.UI
             _session.CommandContextChanged += RefreshInsignia;
             RefreshInsignia();
 
-            // Tab strip, right-aligned. childForceExpandWidth stays off: the tabs are
-            // fixed width and must not absorb the bar's surplus.
             var strip = UiFactory.CreateRect("TabStrip", bar);
             strip.anchorMin = new Vector2(1, 0);
             strip.anchorMax = new Vector2(1, 1);
@@ -212,21 +203,15 @@ namespace Strategos.UI
             var stripFit = strip.gameObject.AddComponent<ContentSizeFitter>();
             stripFit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // --- Content host ---
             contentHost = UiFactory.CreateRect("ContentHost", root);
             UiFactory.Stretch(contentHost);
             contentHost.offsetMax = new Vector2(0, -TopBarHeight);
-
             tabStrip = strip;
         }
 
-        /// <summary>
-        /// Shoulder board for the player's command echelon — epaulette, not a text label (#38).
-        /// </summary>
         private void RefreshInsignia()
         {
             if (_insignia == null || _insigniaImage == null || _session == null) return;
-
             var side = _session.PlayerSide;
             var echelon = _session.PlayerCommandEchelon;
             if (side == null || echelon == Echelon.None)
@@ -234,7 +219,6 @@ namespace Strategos.UI
                 _insignia.gameObject.SetActive(false);
                 return;
             }
-
             var ladder = RankLadderIO.Resolve(side.RankLadder);
             var step = ladder.For(echelon);
             _insigniaImage.sprite = RankInsignia.For(step);
@@ -243,23 +227,9 @@ namespace Strategos.UI
             _insignia.gameObject.SetActive(true);
         }
 
-        // ─── Command line ─────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Reads <c>-view &lt;key&gt;</c>. Lets a capture run screenshot any view without
-        /// driving the UI, which is the difference between a change being verifiable and
-        /// not.
-        /// </summary>
         private static string RequestedViewKey() => CommandLineValue("-view");
-
-        /// <summary>
-        /// The requested view key, exposed so a view hosting sub-views can honour it too.
-        /// A key naming a sub-view will not match at the top level, so the shell falls back
-        /// to the first view, which then selects the sub-view itself.
-        /// </summary>
         public static string RequestedView => CommandLineValue("-view");
 
-        /// <summary>Value following <paramref name="flag"/> on the command line, or null.</summary>
         private static string CommandLineValue(string flag)
         {
             var args = Environment.GetCommandLineArgs();
@@ -269,7 +239,6 @@ namespace Strategos.UI
             return null;
         }
 
-        /// <summary>True when the player was launched with <c>-view3d</c>.</summary>
         public static bool View3dRequested
         {
             get
@@ -281,16 +250,6 @@ namespace Strategos.UI
             }
         }
 
-        // ─── Layers ───────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Keeps every camera already in the scene off the drape layer.
-        ///
-        /// SceneBootstrapper sets this on the camera it creates, but doing it again here
-        /// means a stale or hand-edited scene cannot resurrect the problem — and the
-        /// symptom would be invisible (the drape hides behind the overlay canvas) while
-        /// costing a full terrain render every frame.
-        /// </summary>
         private static void MaskDrapeLayerFromSceneCameras()
         {
             foreach (var cam in Camera.allCameras)

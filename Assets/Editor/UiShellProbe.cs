@@ -1,0 +1,61 @@
+﻿// UiShellProbe.cs
+// #371: MainMenuView / PauseOverlay build; view keys stable for -view.
+// Batch: -executeMethod Strategos.Editor.UiShellProbe.Run
+
+#if UNITY_EDITOR
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+using Strategos.UI;
+using Strategos.UI.Views;
+
+namespace Strategos.Editor
+{
+    public static class UiShellProbe
+    {
+        [MenuItem("Strategos/Probe UI Shell")]
+        public static void Run()
+        {
+            var log = new StringBuilder();
+            int bad = 0;
+
+            var menu = new GameObject("probe-menu").AddComponent<MainMenuView>();
+            if (menu.Key != "menu" || menu.Title != "MENU")
+            {
+                log.AppendLine("  FAIL MainMenuView key/title");
+                bad++;
+            }
+            else log.AppendLine("  MainMenuView key=menu ok");
+            Object.DestroyImmediate(menu.gameObject);
+
+            var play = new GameObject("probe-play").AddComponent<PlayView>();
+            if (play.Key != "play") { log.AppendLine("  FAIL PlayView.Key"); bad++; }
+            else log.AppendLine("  PlayView key=play ok");
+            Object.DestroyImmediate(play.gameObject);
+
+            var hostGo = new GameObject("probe-host", typeof(RectTransform));
+            var host = hostGo.GetComponent<RectTransform>();
+            var pause = hostGo.AddComponent<PauseOverlay>();
+            try
+            {
+                pause.Build(host, () => { }, () => { }, () => { }, () => { });
+                pause.Open();
+                if (!pause.IsOpen) { log.AppendLine("  FAIL PauseOverlay.Open"); bad++; }
+                pause.Close();
+                if (pause.IsOpen) { log.AppendLine("  FAIL PauseOverlay.Close"); bad++; }
+                log.AppendLine("  PauseOverlay Build/Open/Close ok");
+            }
+            catch (System.Exception ex)
+            {
+                log.AppendLine("  FAIL PauseOverlay: " + ex.Message);
+                bad++;
+            }
+            finally { Object.DestroyImmediate(hostGo); }
+
+            log.AppendLine(bad == 0 ? "PROBE PASSED" : ("PROBE FAILED with " + bad + " problem(s)"));
+            if (bad == 0) Debug.Log("[UiShellProbe]\n" + log);
+            else Debug.LogError("[UiShellProbe]\n" + log);
+        }
+    }
+}
+#endif

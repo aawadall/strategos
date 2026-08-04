@@ -35,10 +35,10 @@ Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D s
 
 **Phase 2 (the symbol system) is complete; Phase 1's map system is largely built.** The
 map has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape
-(a heightfield mesh textured with the 2D sheet). The app is a tab shell over five
-views: **PLAY** (a loaded scenario you can command), **EXPLORE** (a symbol-library
-browser and a pannable, zoomable map inspector), **SCENARIO** (map settings with a 2D or
-3D preview), **DRILLS** (the TTP binder, read-only) and **BUILDER** (the digit-by-digit
+(a heightfield mesh textured with the 2D sheet). The app boots to a **main menu**
+(#371), then enters **PLAY** as a session (pause overlay + drills quick-ref) or opens
+Tools tabs: **EXPLORE** (symbol-library browser and pannable map), **SCENARIO** (map
+settings with 2D/3D preview), **DRILLS** (TTP binder), **BUILDER** (digit-by-digit
 symbol composer).
 
 **The sandbox is playable and units can fight.** A scenario loads two sides onto generated
