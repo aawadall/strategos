@@ -51,7 +51,8 @@ are done.
 - **Steam readiness** — #287 / #291 **closed**; still open: #288–#290, #293 (children #300+)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33 **closed**; still open: #34, #35, #51
-- **AI as environment** — #99 closed (#100–#106 shipped)
+- **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
+  is #334 (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)

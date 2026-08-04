@@ -227,7 +227,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
   - [x] Mid-campaign save/resume (#140)
 - [ ] Strategic map layer: campaign moves between operations
 - [ ] Operational-level resupply and reinforcement between scenarios
-- [ ] Dynamic campaign generator (procedural)
+- [ ] Dynamic campaign generator (procedural) — sequencing; see #334 for per-scenario generation
 - [ ] Full campaign arc: drills, directives, positions, execution, rank (#78)
 
 **Milestone M6:** Editor ships, at least five built-in scenarios playable, campaign chain of three linked operations works in PLAY. Data-side three-op probe exists; PLAY entry is #114 / #138–#140.
