@@ -47,7 +47,16 @@ namespace Strategos.Commands
         /// the same directive in both runs" stops holding and a replayed acknowledgement would
         /// resolve against the wrong thing, or nothing.
         /// </remarks>
-        public static void Run(Simulation recorded, Simulation target, int steps)
+        public static void Run(Simulation recorded, Simulation target, int steps) =>
+            Run(recorded, target, steps, afterStep: null);
+
+        /// <summary>
+        /// Same as <see cref="Run(Simulation, Simulation, int)"/>, then invokes
+        /// <paramref name="afterStep"/>(target, commandsAtTick) after each Step — used by
+        /// trajectory export (#106) so it cannot fork a second replay loop.
+        /// </summary>
+        public static void Run(Simulation recorded, Simulation target, int steps,
+            System.Action<Simulation, int> afterStep)
         {
             var commandsByTick = GroupByTick(recorded.Log.Entries, static c => c.Tick);
             var responsesByTick = GroupByTick(recorded.DirectiveResponses.Entries, static r => r.Tick);
@@ -68,6 +77,7 @@ namespace Strategos.Commands
                     foreach (var r in responses) Apply(target, r);
 
                 target.Step();
+                afterStep?.Invoke(target, due);
             }
         }
 

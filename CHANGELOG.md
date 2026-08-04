@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- `Trajectory` / `TrajectoryExporter` — (obs, action) export from CommandLog + ReportLog via
+  belief-only encoding; `TrajectoryProbe` (#106 / #99).
 - `ThroughputProbe` — times map generation (erosion on/off) and 3,600-tick step loops;
   reports maps/hour and episodes/hour (#105 / #99).
 - `SideEnv` — Reset/Step/(observation, reward, done); cached-map Restore; `EnvProbe` (#104 / #99).

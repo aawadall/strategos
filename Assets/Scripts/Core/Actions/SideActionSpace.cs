@@ -97,6 +97,41 @@ namespace Strategos.Actions
         }
 
         /// <summary>
+        /// Best-effort reverse of <see cref="TryToCommand"/> for trajectory export.
+        /// Returns false for command kinds outside the 13-slot vocabulary.
+        /// </summary>
+        public static bool TryFromCommand(in Command command, UnitInstance unit,
+            VictoryEvaluator victory, out int index)
+        {
+            index = -1;
+            if (unit == null) return false;
+
+            if (command.Kind == CommandKind.Drill)
+            {
+                for (int i = 0; i < AdvanceIndex; i++)
+                {
+                    if (string.Equals(CodeAt(i), command.DrillCode, StringComparison.OrdinalIgnoreCase))
+                    {
+                        index = i;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            if (command.Kind == CommandKind.MoveTo)
+            {
+                var objective = NearestUnheld(unit, victory);
+                if (objective == null) return false;
+                if ((command.TargetCell - objective.Cell).sqrMagnitude > 0.01f) return false;
+                index = AdvanceIndex;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Closest objective this unit's side does not hold, or null.
         /// Same rule as SideDirector's private NearestUnheld (authored order, strict &lt; ties).
         /// </summary>

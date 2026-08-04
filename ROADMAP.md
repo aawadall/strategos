@@ -36,9 +36,9 @@ Explicit command controls (#32) are done. Next player-facing gap is **campaign i
 |---|---|
 | [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player — children #138–#140 **shipped** |
 | [#85](https://github.com/aawadall/strategos/issues/85) | Epic: remaining mission types — **children complete** (#150–#153 + earlier slices) |
-| [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (#100–#105 shipped; #106 open) |
+| [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (#100–#106 shipped) |
 
-Close behind that: trajectory export (#106). Later command polish: config-loaded verb table (#130).
+Later command polish: config-loaded verb table (#130).
 
 ### Outstanding themes (open issues, grouped)
 
@@ -47,7 +47,7 @@ Close behind that: trajectory export (#106). Later command polish: config-loaded
 - **C2 / C3 depth** — #36, #47, #62, #85 (mission types shipped), #65
 - **Graphic control measures** — #160 epic (data model #161, points #162, lines #163, arrows #164, areas #165, render integration #166)
 - **World & movement depth** — #33, #34, #35, #51
-- **AI as environment** — #99; #100–#105 shipped; #106 open
+- **AI as environment** — #99; #100–#106 shipped
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
@@ -167,7 +167,7 @@ command log already records the stream replay and multiplayer will ship.
 
 ### Phase 8 — AI System
 Rule-based → RL → transfer → GA. Unbuilt as intelligence; reflexes and `ISidePolicy` are the
-seams. Epic #99: #100–#105 shipped; #106 (trajectory export) remains.
+seams. Epic #99: #100–#106 shipped (environment API complete; intelligence unbuilt).
 
 ### Phase 9 — Online Services & Community
 Accounts, matchmaking, workshop, leaderboards, mod support. Unbuilt.
