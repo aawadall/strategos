@@ -13,6 +13,7 @@
 using System;
 using Strategos.Campaigns;
 using Strategos.Maps;
+using Strategos.Modes;
 using Strategos.NatoSymbols;
 using Strategos.Units;
 using UnityEngine;
@@ -98,6 +99,17 @@ namespace Strategos.UI
         /// ordinary single-scenario play. The same instance CarryOver mutates between ops.
         /// </summary>
         public CampaignChain ActiveChain { get; private set; }
+
+        /// <summary>
+        /// How PLAY is contested (#287). Distinct from <see cref="Mode"/> (map render palette).
+        /// </summary>
+        public ModeKind PlayMode { get; set; } = ModeKind.Solo;
+
+        /// <summary>
+        /// Side the hotseat player currently commands (#297). Ignored unless
+        /// <see cref="PlayMode"/> is <see cref="ModeKind.Hotseat"/>.
+        /// </summary>
+        public SideId HotseatSide { get; set; }
 
         /// <summary>
         /// Career profile across campaigns (#109). Rank, formation designation, and who

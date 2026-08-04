@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Game modes (#287 / #294–#299): `ModeKind` + PLAY mode-select (solo / hotseat / spectator /
+  replay); spectator directs both sides; hotseat **SWITCH SIDE** + GCM fog; **REPLAY SAVE**
+  via `Replayer`; `GameModesProbe`; `docs/game-modes.md`.
 - Career across campaigns (#109 / #212–#215): `CareerProfile` (rank + formation + higher),
   highland regiment-seat campaign, PLAY **START HIGHLAND**, same higher HQ still addresses
   after the switch; `CareerAcrossCampaignsProbe`.
