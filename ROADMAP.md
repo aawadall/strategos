@@ -42,6 +42,7 @@ layer (#34), procedural scenario generation (#334), and A* replan (#35) are done
 |---|---|
 | [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
 | [#51](https://github.com/aawadall/strategos/issues/51) | Epic: place objectives by map feature — children #235–#238, #358–#359 |
+| [#355](https://github.com/aawadall/strategos/issues/355) | Epic: local/API seam (store, content, identity) — children #361–#367 |
 
 ### Outstanding themes (open issues, grouped)
 
