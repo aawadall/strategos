@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Apply display prefs on AppShell boot (#391): `ApplyDisplayPreferences` seeds remembered
+  windowed size and applies fullscreen/windowed from `PlayerPreferences` before chrome builds.
 - Settings GRAPHICS windowed size presets (#390): 1280×720 / 1600×900 / 1920×1080 dropdown
   (windowed only — not a fullscreen resolution list); persists `WindowWidth`/`WindowHeight`.
 - Settings GRAPHICS fullscreen toggle (#389): calls `AppShell.ApplyFullscreen` /

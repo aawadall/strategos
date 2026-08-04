@@ -20,20 +20,22 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
-**Settings shell (#306 / #307 / #389 / #390).** `SettingsView` (`-view settings`) is a no-tab
-screen opened from menu Options. GRAPHICS has **FULLSCREEN** (shared with F11 via
+**Settings shell (#306 / #307 / #389 / #390 / #391).** `SettingsView` (`-view settings`) is a
+no-tab screen opened from menu Options. GRAPHICS has **FULLSCREEN** (shared with F11 via
 `AppShell.ApplyFullscreen` / `ApplyWindowed`) and **WINDOWED SIZE** presets
 (1280×720 / 1600×900 / 1920×1080) — copy states these are windowed only; borderless
-fullscreen matches the display. AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted
-`ConfirmOrders`. Boot apply is #391. Tab strip stays hidden the same way as the menu.
-Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
+fullscreen matches the display. Prefs are applied again on `AppShell` boot (#391).
+AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted `ConfirmOrders`. Tab strip stays
+hidden the same way as the menu. Preference round-trip is probed by `PreferenceStoreProbe`
+(#307); tutorial Validate is #311.
 
-**Display mode (#387 / #388 / #389 / #390 / #385).** F11 calls `AppShell.ToggleFullscreen`,
+**Display mode (#387 / #388 / #389 / #390 / #391 / #385).** F11 calls `AppShell.ToggleFullscreen`,
 which shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless
 `FullScreenWindow` at the current display size; windowed restores prefs WxH (or remembered
 size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (#388);
-boot apply is #391. `DisplayModeProbe` checks the AppShell API + presets;
-`PreferenceStoreProbe` round-trips the display fields.
+`AppShell.Start` calls `ApplyDisplayPreferences` so the choice survives restart (#391).
+`DisplayModeProbe` checks the AppShell API + presets + boot seed;
+`PreferenceStoreProbe` round-trips the display fields. Full Settings/F11 contract probe is #392.
 
 **Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
 help; then the pause overlay resumes; then an armed palette verb clears
