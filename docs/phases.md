@@ -219,6 +219,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Initial pack: 5–10 historical engagements at varied echelon scales (#332 research, #333 conversion)
 - [ ] Data format allows community-built historical packs (#333)
 - [ ] Historical AI behaviour seeding (see Phase 8)
+- [x] Procedural scenario generation — OOB / objectives / victory from parameters (#334 / #347–#352); feature placement stays #51
 
 ### 6.3 Campaign Mode
 - [x] Linked scenario chain with persistent ORBAT and casualty carry-over (#75 — data + probes)

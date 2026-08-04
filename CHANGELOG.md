@@ -13,6 +13,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Procedural scenario generation (#334 / #347–#352): `ScenarioGenerationSettings` +
+  `ScenarioGenerator` (ORBAT from catalogue, engagement victory templates, MapGenerator
+  reuse); `ValidateGenerated` (reachability + force balance); `ScenarioGeneratorProbe`;
+  `docs/scenario-generation.md`. Objective feature placement stays #51.
 - Dynamic world layer (#34 / #273–#277): `WorldObject` / `WorldLayer` on `Simulation`;
   `HazardBlocking` blocks `MovementGrid.Passable`; PLAY sheet mark via `WorldObjectDrawer`;
   snapshot + Signature; `WorldLayerProbe`.

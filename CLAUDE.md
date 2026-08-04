@@ -78,7 +78,7 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Maps/Rendering2D/` | CPU topographic renderer |
 | `Assets/Scripts/Core/Maps/Rendering3D/` | Drape mesh + mipmapped drape texture |
 | `Assets/Scripts/Core/Units/` | Unit instances, capabilities, catalogue, sides, ORBAT tree, fatigue |
-| `Assets/Scripts/Core/Scenarios/` | Scenario model, validation, Newtonsoft IO, samples |
+| `Assets/Scripts/Core/Scenarios/` | Scenario model, validation, Newtonsoft IO, samples, `ScenarioGenerator` (#334) |
 | `Assets/Scripts/Core/Messaging/` | `MessageBus<T>` — the delivery rules, once |
 | `Assets/Scripts/Core/Commands/` | Orders down: bus, log, queues, `Simulation`, executors |
 | `Assets/Scripts/Core/Reports/` | Reports up: bus, log, `ContactTracker` |
@@ -172,6 +172,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
 | [docs/game-modes.md](docs/game-modes.md) | Touching PLAY mode-select, spectator, hotseat, replay (#287) |
 | [docs/ai-difficulty.md](docs/ai-difficulty.md) | Touching `SideDirector` difficulty / personality (#291) |
+| [docs/scenario-generation.md](docs/scenario-generation.md) | Touching `ScenarioGenerator` / procedural scenarios (#334) |
 | [docs/known-gaps.md](docs/known-gaps.md) | Chasing anything that looks like a bug — it may already be recorded |
 
 Reference material, unchanged:

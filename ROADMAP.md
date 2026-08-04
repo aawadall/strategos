@@ -34,14 +34,14 @@ Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#8
 environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), US/NATO
 topo palette (#169), and rank gates (#76) are done. Player-as-node (#36), career across
 campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn (#33), and dynamic world
-layer (#34) are done.
+layer (#34) and procedural scenario generation (#334) are done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#334](https://github.com/aawadall/strategos/issues/334) | Epic: procedural scenario generation — children #347–#352 |
 | [#35](https://github.com/aawadall/strategos/issues/35) | Epic: A* replan when situation changes — children #270–#272 |
+| [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -52,7 +52,7 @@ layer (#34) are done.
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33 / #34 **closed**; still open: #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
-  is #334 (procedural scenarios — OOB/objectives/victory, not just terrain)
+  #334 **closed** (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66 (local store choice); mid-campaign save is #140
   (shipped); the local/API seam question is #355, not #66
 - **Audio (Phase 10 early)** — #40–#46
@@ -67,7 +67,7 @@ layer (#34) are done.
   tutorial/contextual help/settings screen, #290 controller support (Steam Deck), #291 an
   AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
 - **Historical scenarios** — #332 research (#335–#340) then #333 convert (#341–#346)
-- **Procedural scenarios** — #334 (#347–#352); distinct from §6.3 campaign sequencing
+- **Procedural scenarios** — #334 **closed** (#347–#352); distinct from §6.3 campaign sequencing
 
 ---
 
