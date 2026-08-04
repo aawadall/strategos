@@ -9,6 +9,7 @@ Local and (selectively) committed research material for Strategos.
 | `Research/*.pdf` (and other third-party binaries) | **No** — gitignored | Copyrighted or bulky sources (e.g. APP-6D PDF) |
 | `Research/historical/*.md` | **Yes** — notes only | Authored engagement digests for Phase 6.2 (#332) |
 | `Research/historical/SHORTLIST.md` | **Yes** | Candidate engagements across echelons |
+| `Research/audio/*.md` | **Yes** — scripts/prompts only | VO scripts (#42) and Suno prompts (#43) — no generated audio committed here |
 
 Do **not** commit source PDFs, scraped HTML dumps, or copyrighted reproductions.
 Summarise into markdown; cite the public-domain (or otherwise cleared) source and licence
