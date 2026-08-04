@@ -67,7 +67,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### 2.3 Symbol Editor (in-game)
 - [x] Digit-by-digit symbol composer (BUILDER view)
-- [ ] Drag-and-drop symbol placement in scenario editor *(no scenario editor yet)*
+- [ ] Drag-and-drop symbol placement in scenario editor *(no scenario editor yet; surfaced as unfiled by #371)*
 - [ ] Right-click context menu for symbol properties
 
 **Milestone M2:** Any land APP-6D symbol can be created, placed on the map sheet, and rendered. Met for land.
@@ -203,7 +203,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ### 6.1 Scenario Editor
 - [x] Scenario model with JSON round-trip; map generation settings; shipped samples
-- [ ] Map selection and terrain editing UI (beyond SCENARIO preview)
+- [ ] Map selection and terrain editing UI (beyond SCENARIO preview) *(surfaced as unfiled by #371)*
 - [ ] ORBAT builder (both sides)
 - [x] Objectives and victory conditions in data + evaluator
 - [x] Objectives may place by map feature (`PlaceNearKind` → `ObjectivePlacement`) (#51 / #235–#238, #358–#359)
@@ -250,7 +250,7 @@ multiplayer (§7.3) still open.
 - [ ] Steam Remote Play Together: enable in Steamworks portal to allow internet hotseat at zero networking cost (#288, once #287's hotseat exists)
 
 ### 7.3 Online Multiplayer
-- [ ] Unity Netcode for GameObjects (primary) / Mirror (fallback)
+- [ ] Unity Netcode for GameObjects (primary) / Mirror (fallback) *(a front-door "Server" menu entry is #371, blocked on this and #288)*
 - [ ] Lobby system: create/join game, password, invite via link
 - [ ] Turn timer with async option (email-style, submit orders when ready)
 - [ ] Spectator slot
@@ -368,6 +368,8 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### UI / UX
 - [x] Tab-shell military map aesthetic (working UI, not final skin)
+- [ ] Outside menu (Load/Save/Options/Campaign Editor-Selector/Help/Server/Play), in-game
+  pause menu, and in-session reference navigation — restructures the flat tab shell (#371)
 - [x] Shoulder-board command-rank insignia in the shell (#38)
 - [x] GitHub Pages status site with OG/Twitter meta and header CTA (#120 partial)
 - [ ] Full UI skin — finished military map aesthetic

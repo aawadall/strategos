@@ -60,6 +60,8 @@ are done.
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
+- **UI revamp** — #371 (outside menu, in-game pause menu, in-session doc/drill navigation);
+  surfaces two real unfiled gaps — the scenario editor (§6.1) and online multiplayer (§7.3)
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
