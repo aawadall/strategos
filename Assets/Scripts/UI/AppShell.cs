@@ -5,6 +5,7 @@
 // EXPLORE / SCENARIO / DRILLS / BUILDER remain Tools. Pause overlay lives inside PlayView.
 // #306: SettingsView is a no-tab screen reached from menu Options.
 // #387: F11 fullscreen/windowed goes through ToggleFullscreen / ApplyWindowed / ApplyFullscreen.
+// #391: Start loads PlayerPreferences and applies fullscreen / windowed size.
 
 using System;
 using TMPro;
@@ -13,6 +14,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Strategos.Demo;
 using Strategos.NatoSymbols;
+using Strategos.Persistence.Files;
+using Strategos.Preferences;
 using Strategos.UI.Views;
 using Strategos.Units;
 
@@ -31,6 +34,9 @@ namespace Strategos.UI
 
         public AppSession Session => _session;
 
+        /// <summary>Injected for probes; defaults to <see cref="JsonPreferenceStore"/>.</summary>
+        public IPreferenceStore PreferenceStore { get; set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureInScene()
         {
@@ -42,6 +48,8 @@ namespace Strategos.UI
 
         private void Start()
         {
+            ApplyDisplayPreferences();
+
             UiFactory.EnsureEventSystem();
             MaskDrapeLayerFromSceneCameras();
             _session = new AppSession();
@@ -129,8 +137,8 @@ namespace Strategos.UI
         }
 
         /// <summary>
-        /// Last windowed size remembered across F11 toggles. Empty until the player leaves
-        /// fullscreen once; then falls back to 1600×900 (#387 / #385). Prefs apply lands in #391.
+        /// Last windowed size remembered across F11 toggles and seeded from prefs on boot (#391).
+        /// Empty until prefs or an explicit ApplyWindowed; then falls back to 1600×900.
         /// </summary>
         private Vector2Int _windowed;
 
@@ -140,6 +148,27 @@ namespace Strategos.UI
         /// <summary>Windowed size F11 / Settings will restore to (default 1600×900).</summary>
         public Vector2Int RememberedWindowedSize =>
             _windowed.x > 0 ? _windowed : new Vector2Int(1600, 900);
+
+        /// <summary>
+        /// Load prefs (or use <paramref name="prefs"/>) and apply fullscreen / windowed size.
+        /// Seeds <see cref="RememberedWindowedSize"/> so F11 restore survives restart (#391).
+        /// </summary>
+        public void ApplyDisplayPreferences(PlayerPreferences prefs = null)
+        {
+            PreferenceStore ??= new JsonPreferenceStore();
+            prefs ??= PreferenceStore.Load();
+            int w = prefs.WindowWidth > 0 ? prefs.WindowWidth : 1600;
+            int h = prefs.WindowHeight > 0 ? prefs.WindowHeight : 900;
+            _windowed = new Vector2Int(w, h);
+
+            if (prefs.Fullscreen)
+            {
+                var display = Screen.currentResolution;
+                Screen.SetResolution(display.width, display.height, FullScreenMode.FullScreenWindow);
+            }
+            else
+                Screen.SetResolution(w, h, FullScreenMode.Windowed);
+        }
 
         /// <summary>
         /// F11 and Settings share this path (#387) — borderless fullscreen matches the display;

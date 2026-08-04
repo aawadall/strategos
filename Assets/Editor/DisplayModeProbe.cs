@@ -93,6 +93,23 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  IndexOfPreset(1600,900)=1 ok");
+
+                // #391: boot apply seeds remembered size from prefs without requiring Start().
+                var boot = new Strategos.Preferences.PlayerPreferences
+                {
+                    Fullscreen = false,
+                    WindowWidth = 1920,
+                    WindowHeight = 1080,
+                };
+                shell.ApplyDisplayPreferences(boot);
+                var seeded = shell.RememberedWindowedSize;
+                if (seeded.x != 1920 || seeded.y != 1080)
+                {
+                    log.AppendLine("  FAIL ApplyDisplayPreferences seed want 1920x1080 got " +
+                                   seeded.x + "x" + seeded.y);
+                    bad++;
+                }
+                else log.AppendLine("  ApplyDisplayPreferences seeds 1920x1080 ok");
             }
             finally
             {
