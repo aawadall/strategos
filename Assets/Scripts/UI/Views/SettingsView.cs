@@ -1,11 +1,12 @@
 // SettingsView.cs
-// #306: settings screen shell — graphics / audio / gameplay / accessibility categories
-// with no controls yet (#307 preference store; audio wiring #40). Opened from main-menu
-// Options; paper aesthetic matching MainMenuView.
+// #306: settings screen shell — graphics / audio / gameplay / accessibility.
+// #307: GAMEPLAY hosts one persisted ConfirmOrders toggle via IPreferenceStore.
 
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Persistence.Files;
+using Strategos.Preferences;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -19,7 +20,12 @@ namespace Strategos.UI.Views
 
         public AppShell Shell { get; set; }
 
+        /// <summary>Injected for probes; defaults to <see cref="JsonPreferenceStore"/>.</summary>
+        public IPreferenceStore Store { get; set; }
+
         private Texture2D _paperTex;
+        private Toggle _confirmOrders;
+        private PlayerPreferences _prefs;
 
         /// <summary>Category section labels in display order (#306).</summary>
         public static readonly string[] Categories =
@@ -32,6 +38,9 @@ namespace Strategos.UI.Views
 
         public void Build(RectTransform host)
         {
+            Store ??= new JsonPreferenceStore();
+            _prefs = Store.Load();
+
             var root = CreateRect("Root", host);
             Stretch(root);
             root.gameObject.AddComponent<Image>().color = Theme.StageBg;
@@ -66,7 +75,7 @@ namespace Strategos.UI.Views
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
 
             var sub = CreateTmp("Sub", col,
-                "Categories only · controls arrive with #307 and later #289 children",
+                "One gameplay preference persists · more controls land with later #289 children",
                 14, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
@@ -81,7 +90,13 @@ namespace Strategos.UI.Views
             AddButton(col, "BACK TO MENU", () => Shell?.GoToMainMenu());
         }
 
-        public void OnShown() { }
+        public void OnShown()
+        {
+            Store ??= new JsonPreferenceStore();
+            _prefs = Store.Load();
+            if (_confirmOrders != null)
+                _confirmOrders.SetIsOnWithoutNotify(_prefs.ConfirmOrders);
+        }
 
         public void OnHidden() { }
 
@@ -94,12 +109,19 @@ namespace Strategos.UI.Views
             }
         }
 
-        private static void CategoryBlock(Transform parent, string label)
+        private void CategoryBlock(Transform parent, string label)
         {
             var t = CreateTmp("Cat_" + label, parent, label, 12, FontStyles.Bold);
             t.color = Theme.InkMuted;
             t.characterSpacing = 4f;
             t.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+
+            if (label == "GAMEPLAY")
+            {
+                _confirmOrders = AddToggle(parent, "CONFIRM ORDERS", _prefs.ConfirmOrders, PersistConfirm);
+                Spacer(parent, 6);
+                return;
+            }
 
             var empty = CreateTmp("Empty_" + label, parent, "No options yet", 14, FontStyles.Italic);
             empty.alignment = TextAlignmentOptions.Center;
@@ -107,6 +129,14 @@ namespace Strategos.UI.Views
             empty.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
 
             Spacer(parent, 6);
+        }
+
+        private void PersistConfirm()
+        {
+            if (_confirmOrders == null || Store == null) return;
+            _prefs ??= new PlayerPreferences();
+            _prefs.ConfirmOrders = _confirmOrders.isOn;
+            Store.Save(_prefs);
         }
 
         private static void Spacer(Transform parent, float h)

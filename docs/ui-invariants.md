@@ -20,9 +20,11 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
-**Settings shell (#306).** `SettingsView` (`-view settings`) is a no-tab screen opened from
-menu Options. It lists empty GRAPHICS / AUDIO / GAMEPLAY / ACCESSIBILITY sections — no
-preference store yet (#307). Tab strip stays hidden the same way as the menu.
+**Settings shell (#306 / #307).** `SettingsView` (`-view settings`) is a no-tab screen opened
+from menu Options. GRAPHICS / AUDIO / ACCESSIBILITY stay empty placeholders; GAMEPLAY has one
+persisted `ConfirmOrders` toggle via `IPreferenceStore` / `JsonPreferenceStore`
+(`persistentDataPath/preferences.json`). Tab strip stays hidden the same way as the menu.
+Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
 
 **Esc precedence in PLAY (#371 / #129):** drills quick-ref closes first; then the pause
 overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else

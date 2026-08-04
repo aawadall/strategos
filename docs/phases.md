@@ -378,7 +378,7 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] Keyboard shortcut remapping
 - [ ] Controller support (console stretch goal) (#290)
 - [ ] Comprehensive settings: graphics, audio, gameplay, accessibility (#289) —
-  shell (#306); preference store and controls still open (#307+)
+  shell (#306); preference store + ConfirmOrders (#307); more controls / #311 still open
 - [x] Explicit command palette / waypoints (#32, #53, #54) — verb table, arming, click-to-
   issue, keyboard shortcuts, and WAYPOINTS draft/commit (#127–#129, #54); config table (#130)
   still open

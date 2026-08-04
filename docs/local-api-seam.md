@@ -28,7 +28,8 @@ not this epic.
 
 ## Out of scope
 
-Server, Workshop, OAuth UI, Steamworks package, SQLite/#66 choice.
+Server, Workshop, OAuth UI, Steamworks package, SQLite/#66 choice. Player *options*
+(`IPreferenceStore` / #307) are a separate thin JSON prefs file, not this seam.
 
 ## Probe
 
