@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Context help for MOVE (#308): `ContextHelp` + `ContextHelpOverlay`; PLAY rail HELP;
+  Esc closes help before clearing the palette; `ContextHelpProbe`.
 - Preference store stub (#307): `PlayerPreferences` + `IPreferenceStore` /
   `JsonPreferenceStore`; GAMEPLAY ConfirmOrders toggle on `SettingsView`;
   `PreferenceStoreProbe`.

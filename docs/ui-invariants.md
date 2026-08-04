@@ -26,9 +26,14 @@ persisted `ConfirmOrders` toggle via `IPreferenceStore` / `JsonPreferenceStore`
 (`persistentDataPath/preferences.json`). Tab strip stays hidden the same way as the menu.
 Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
 
-**Esc precedence in PLAY (#371 / #129):** drills quick-ref closes first; then the pause
-overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else
-Esc opens pause and stops the clock. Space remains the clock toggle and must not open pause.
+**Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
+help; then the pause overlay resumes; then an armed palette verb clears
+(`CommandPalette.ClearShortcut`); else Esc opens pause and stops the clock. Space remains
+the clock toggle and must not open pause.
+
+**Context help (#308).** PLAY rail **HELP** opens `ContextHelpOverlay` for the armed verb.
+Only **MOVE** has authored copy today — other verbs get a stub pointing at MOVE / #124.
+Distinct from the field manual (#124).
 
 **Pause overlay** is built under PlayView's host (one Canvas — no second EventSystem). Save /
 Load call the same quicksave path as the rail; Exit returns to the main menu without

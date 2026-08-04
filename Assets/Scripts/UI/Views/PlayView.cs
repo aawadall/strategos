@@ -187,6 +187,7 @@ namespace Strategos.UI.Views
         public AppShell Shell { get; set; }
 
         private PauseOverlay _pause;
+        private ContextHelpOverlay _contextHelp;
         private bool _runningBeforePause = true;
 
         // ─── IAppView ─────────────────────────────────────────────────────────
@@ -209,6 +210,7 @@ namespace Strategos.UI.Views
 
         public void OnHidden()
         {
+            _contextHelp?.Close();
             _pause?.Close();
             HideDropdownsIn(transform);
         }
@@ -243,8 +245,8 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Esc layering (#371 / #129): drills panel → close; pause open → resume; armed verb
-        /// → clear via palette; else open pause and stop the clock.
+        /// Esc layering (#371 / #129 / #308): drills → context help → pause resume →
+        /// armed verb clear → open pause.
         /// </summary>
         private bool HandlePauseKeys()
         {
@@ -253,6 +255,12 @@ namespace Strategos.UI.Views
             if (_pause != null && _pause.DrillsOpen)
             {
                 _pause.CloseDrillsOnly();
+                return true;
+            }
+
+            if (_contextHelp != null && _contextHelp.IsOpen)
+            {
+                _contextHelp.Close();
                 return true;
             }
 
@@ -326,6 +334,9 @@ namespace Strategos.UI.Views
                     ClosePause(resumeClock: false);
                     Shell?.GoToMainMenu();
                 });
+
+            _contextHelp = host.gameObject.AddComponent<ContextHelpOverlay>();
+            _contextHelp.Build(host);
         }
 
         private void BuildStage(Transform root)
@@ -558,8 +569,25 @@ namespace Strategos.UI.Views
 
             var confirmRow = AddButtonRow(parent);
             _confirmWaypointsButton = AddButton(confirmRow, "CONFIRM ROUTE", CommitWaypoints);
+            AddButton(confirmRow, "HELP", OpenContextHelp);
 
             RefreshVerbChrome();
+        }
+
+        private void OpenContextHelp()
+        {
+            if (_contextHelp == null) return;
+            // #308 ships authored copy for MOVE only — arm it if the player asks for help
+            // while another verb (or SELECT) is active so the one control still explains itself.
+            var verb = _armedVerb == PaletteVerb.None ? PaletteVerb.MoveTo : _armedVerb;
+            if (!ContextHelp.TryGet(verb, out var title, out var body))
+            {
+                title = "HELP";
+                body = "Context help for this control is not authored yet. " +
+                       "Arm MOVE (M) and open HELP again — MOVE is the #308 example. " +
+                       "Glossary / field manual remains #124.";
+            }
+            _contextHelp.Open(title, body);
         }
 
         /// <summary>Arms a palette verb (or clears to select-only). Clears any open draft.</summary>
