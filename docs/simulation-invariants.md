@@ -153,6 +153,11 @@ Tick++
   despawn / lifetime ticks; `HazardBlocking` makes `MovementGrid.Passable` false without
   baking into `_passable`. Included in `Signature()` and `SimulationSnapshot`. PLAY draws via
   `WorldObjectDrawer`. `WorldLayerProbe` covers spawn, block, despawn, twin signature, pixels.
+- **MoveTo replans when the cached route is no longer Passable (#35).** Remaining waypoints
+  and the current straight leg are checked each tick against the live grid (hazards included).
+  Invalid → `PlanCells` again toward the same `TargetCell`; still unreachable → `Failed`.
+  Paths stay derived (not in the command log). `ReplanProbe` blocks mid-march and asserts no
+  walk-through.
 - **`Screen` is the other never-ending hold, and it buys reach rather than protection.** Same
   queue shape as Defend, but posture is `Posture.Screening` — combat exposure matches Halted
   (`PostureFactor` 1.0), and `ContactTracker` multiplies detection by

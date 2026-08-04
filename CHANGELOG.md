@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- A* replan mid-march (#35 / #270–#272): `MoveToExecutor` invalidates cached routes when
+  remaining waypoints or the current leg are no longer `Passable` (e.g. `HazardBlocking`);
+  recomputes toward the same target or Fails; `ReplanProbe`.
 - Procedural scenario generation (#334 / #347–#352): `ScenarioGenerationSettings` +
   `ScenarioGenerator` (ORBAT from catalogue, engagement victory templates, MapGenerator
   reuse); `ValidateGenerated` (reachability + force balance); `ScenarioGeneratorProbe`;
