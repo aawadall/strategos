@@ -12,6 +12,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Strategos.Audio;
 using Strategos.Demo;
 using Strategos.NatoSymbols;
 using Strategos.Persistence.Files;
@@ -48,7 +49,12 @@ namespace Strategos.UI
 
         private void Start()
         {
-            ApplyDisplayPreferences();
+            PreferenceStore ??= new JsonPreferenceStore();
+            var prefs = PreferenceStore.Load();
+            ApplyDisplayPreferences(prefs);
+
+            var audio = AudioService.Ensure(gameObject);
+            audio?.ApplyPreferences(prefs);
 
             UiFactory.EnsureEventSystem();
             MaskDrapeLayerFromSceneCameras();
@@ -99,6 +105,20 @@ namespace Strategos.UI
             bool tools = !IsChromeHiddenView(key);
             if (_tabStripGo != null) _tabStripGo.SetActive(tools);
             _views.Select(key);
+            UpdateSoundtrack(key);
+        }
+
+        /// <summary>
+        /// Menu / tools / settings share the menu loop (#253); PLAY gets the ambient bed (#254).
+        /// </summary>
+        private static void UpdateSoundtrack(string key)
+        {
+            var audio = AudioService.Instance;
+            if (audio == null) return;
+            if (string.Equals(key, "play", StringComparison.OrdinalIgnoreCase))
+                audio.PlayMusicLoop(AudioService.PlayAmbientResource);
+            else
+                audio.PlayMusicLoop(AudioService.MenuLoopResource);
         }
 
         private static bool IsChromeHiddenView(string key) =>
