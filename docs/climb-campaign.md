@@ -85,8 +85,9 @@ Op3 Battalion: 7 (battalion HQ) → 11 → 1, 3
 ```
 
 Hostile ids `2` (and later hostile formation ids) follow the same stability rule.
-Exact SIDCs / capabilities are #405's job; this sketch only freezes the id/parent
-shape so carry-over cannot throw.
+Shipped in #405 as `ScenarioSamples.ClimbSquad` / `ClimbCompany` /
+`ClimbBattalion` and `Assets/Resources/Scenarios/climb-*.json` — leaf ids `1`/`2`,
+company HQs `11`/`12`, battalion HQs `7`/`8`, optional leaves `3`/`4`.
 
 ### Maps
 

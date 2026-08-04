@@ -544,6 +544,212 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Resources name for climb op 1 — squad seat (#405 / #403).</summary>
+        public const string ClimbSquadName = "climb-squad";
+
+        /// <summary>Resources name for climb op 2 — company seat (#405 / #403).</summary>
+        public const string ClimbCompanyName = "climb-company";
+
+        /// <summary>Resources name for climb op 3 — battalion seat (#405 / #403).</summary>
+        public const string ClimbBattalionName = "climb-battalion";
+
+        public const string ClimbSquadDisplayName = "Climb — Squad Seat";
+        public const string ClimbCompanyDisplayName = "Climb — Company Seat";
+        public const string ClimbBattalionDisplayName = "Climb — Battalion Seat";
+
+        /// <summary>
+        /// #405: climb op 1. Thin variant of <see cref="Tutorial"/> with a different display
+        /// name so <see cref="IsTutorial"/> / #310 does not fire mid-campaign. Leaf ids 1
+        /// (friendly) and 2 (hostile) are the stable carry-over pair for the whole climb
+        /// chain — see docs/climb-campaign.md.
+        /// </summary>
+        public static Scenario ClimbSquad()
+        {
+            var s = Tutorial();
+            s.Name = ClimbSquadDisplayName;
+            s.Description =
+                "Climb campaign op 1: command a single squad. You are the unit — no C2 " +
+                "problem yet. Surviving leaf ids carry into the company seat.";
+            s.Map.Name = "Climb Glade";
+            s.Map.Seed = 20260805;
+            return s;
+        }
+
+        /// <summary>
+        /// #405: climb op 2. Company HQ (id 11) over squad leaf 1 plus reinforcement squad 3;
+        /// hostile company 12 over leaf 2 plus squad 4. PlayerEchelon = Company.
+        /// </summary>
+        public static Scenario ClimbCompany()
+        {
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var s = new Scenario
+            {
+                Name = ClimbCompanyDisplayName,
+                Description =
+                    "Climb campaign op 2: take the company seat. Leaf squad 1 reports to " +
+                    "company HQ 11; a second squad attaches as reinforcement.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Climb Company Ground",
+                    Seed = 20260806,
+                    Width = 64,
+                    Height = 64,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Plains,
+                    EnableErosion = false,
+                    EnableCulture = false,
+                },
+                PlayerEchelon = Echelon.Company,
+            };
+
+            s.Sides.Add(blue);
+            s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
+
+            Add(s, blue.Id, 11, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(18f, 32f), "A CO", "1 BN",
+                UnitCatalogue.InfantryFoot);
+            Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(20f, 30f), "1 SQD / A", "A CO",
+                UnitCatalogue.InfantryFoot, parent: 11);
+            Add(s, blue.Id, 3, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(20f, 34f), "2 SQD / A", "A CO",
+                UnitCatalogue.InfantryFoot, parent: 11);
+
+            Add(s, red.Id, 12, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(46f, 32f), "OPFOR CO", "OPFOR BN",
+                UnitCatalogue.InfantryFoot);
+            Add(s, red.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(48f, 30f), "OPFOR SQD 1", "OPFOR CO",
+                UnitCatalogue.InfantryFoot, training: 70f, parent: 12);
+            Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(48f, 34f), "OPFOR SQD 2", "OPFOR CO",
+                UnitCatalogue.InfantryFoot, training: 70f, parent: 12);
+
+            AddClimbObjectiveAndVictory(s, blue.Id, red.Id);
+            s.TimeLimitTicks = 1800;
+            return s;
+        }
+
+        /// <summary>
+        /// #405: climb op 3. Battalion HQ (id 7) over company 11 (leaves 1, 3); hostile
+        /// battalion 8 over company 12 (leaves 2, 4). PlayerEchelon = Battalion.
+        /// </summary>
+        public static Scenario ClimbBattalion()
+        {
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var s = new Scenario
+            {
+                Name = ClimbBattalionDisplayName,
+                Description =
+                    "Climb campaign op 3: take the battalion seat. Company 11 falls under " +
+                    "battalion HQ 7; formation orders now decompose one echelon per step.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Climb Battalion Ground",
+                    Seed = 20260807,
+                    Width = 128,
+                    Height = 128,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Rolling,
+                    EnableErosion = true,
+                    EnableCulture = false,
+                },
+                PlayerEchelon = Echelon.Battalion,
+            };
+
+            s.Sides.Add(blue);
+            s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
+
+            Add(s, blue.Id, 7, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(36f, 64f), "1 BN", "3 BDE",
+                UnitCatalogue.InfantryFoot);
+            Add(s, blue.Id, 11, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(40f, 64f), "A CO", "1 BN",
+                UnitCatalogue.InfantryFoot, parent: 7);
+            Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(42f, 60f), "1 SQD / A", "A CO",
+                UnitCatalogue.InfantryFoot, parent: 11);
+            Add(s, blue.Id, 3, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(42f, 68f), "2 SQD / A", "A CO",
+                UnitCatalogue.InfantryFoot, parent: 11);
+
+            Add(s, red.Id, 8, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(92f, 64f), "OPFOR BN", "OPFOR BDE",
+                UnitCatalogue.InfantryFoot);
+            Add(s, red.Id, 12, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(88f, 64f), "OPFOR CO", "OPFOR BN",
+                UnitCatalogue.InfantryFoot, parent: 8);
+            Add(s, red.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(86f, 60f), "OPFOR SQD 1", "OPFOR CO",
+                UnitCatalogue.InfantryFoot, training: 70f, parent: 12);
+            Add(s, red.Id, 4, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(86f, 68f), "OPFOR SQD 2", "OPFOR CO",
+                UnitCatalogue.InfantryFoot, training: 70f, parent: 12);
+
+            AddClimbObjectiveAndVictory(s, blue.Id, red.Id, objectiveCell: new Vector2(64f, 64f),
+                radius: 8f);
+            s.TimeLimitTicks = 2400;
+            return s;
+        }
+
+        private static void AddClimbObjectiveAndVictory(Scenario s, SideId blue, SideId red,
+            Vector2? objectiveCell = null, float radius = 6f)
+        {
+            var cell = objectiveCell ?? new Vector2(32f, 32f);
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "RALLY POINT",
+                Cell = cell,
+                RadiusCells = radius,
+                InitialOwner = SideId.None,
+                PlaceNearKind = MapPoiKind.SpotHeight,
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = blue, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 300,
+                Description = "BLUFOR held the rally point.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = red, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 300,
+                Description = "OPFOR held the rally point.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = blue, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "OPFOR rendered combat ineffective.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = red, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "BLUFOR rendered combat ineffective.",
+            });
+        }
+
         /// <summary>Name of the Little Round Top historical scenario (#333 / #342).</summary>
         public const string LittleRoundTopName = "little-round-top-20th-maine";
 

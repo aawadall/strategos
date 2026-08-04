@@ -49,7 +49,19 @@ namespace Strategos.Editor
             ScenarioIO.SaveToFile(ScenarioSamples.Tutorial(), tutPath);
             Debug.Log($"[ScenarioProbe] wrote {tutPath}");
 
+            // #405 / #403: climb campaign seat ladder (Squad → Company → Battalion).
+            WriteClimb(ScenarioSamples.ClimbSquadName, ScenarioSamples.ClimbSquad());
+            WriteClimb(ScenarioSamples.ClimbCompanyName, ScenarioSamples.ClimbCompany());
+            WriteClimb(ScenarioSamples.ClimbBattalionName, ScenarioSamples.ClimbBattalion());
+
             AssetDatabase.Refresh();
+
+            void WriteClimb(string name, Scenario scenario)
+            {
+                var p = Path.Combine(ResourceDir, name + ".json");
+                ScenarioIO.SaveToFile(scenario, p);
+                Debug.Log($"[ScenarioProbe] wrote {p}");
+            }
         }
 
         [MenuItem("Strategos/Probe Scenario")]
@@ -258,6 +270,14 @@ namespace Strategos.Editor
             // #309: squad tutorial skeleton.
             bad += CheckNamedShippedFixture(ScenarioSamples.TutorialName,
                 ScenarioSamples.Tutorial(), log);
+
+            // #405: climb campaign seat ladder.
+            bad += CheckNamedShippedFixture(ScenarioSamples.ClimbSquadName,
+                ScenarioSamples.ClimbSquad(), log);
+            bad += CheckNamedShippedFixture(ScenarioSamples.ClimbCompanyName,
+                ScenarioSamples.ClimbCompany(), log);
+            bad += CheckNamedShippedFixture(ScenarioSamples.ClimbBattalionName,
+                ScenarioSamples.ClimbBattalion(), log);
 
             return bad;
         }
