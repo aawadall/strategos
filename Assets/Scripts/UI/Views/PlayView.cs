@@ -666,6 +666,7 @@ namespace Strategos.UI.Views
 
             var row2 = AddButtonRow(parent);
             AddButton(row2, "SKIRMISH ONLY", () => LoadScenario(ScenarioSamples.SkirmishName));
+            AddButton(row2, "PUSH NORTH", () => LoadScenario(ScenarioSamples.PushNorthName));
 
             var row3 = AddButtonRow(parent);
             AddButton(row3, "SAVE", QuickSave);

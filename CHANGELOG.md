@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- PLAY scenario pick: **PUSH NORTH** beside **SKIRMISH ONLY** so the shipped second
+  scenario is reachable without editing code (#133).
 - `Trajectory` / `TrajectoryExporter` — (obs, action) export from CommandLog + ReportLog via
   belief-only encoding; `TrajectoryProbe` (#106 / #99).
 - `ThroughputProbe` — times map generation (erosion on/off) and 3,600-tick step loops;
