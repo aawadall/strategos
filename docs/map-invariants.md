@@ -28,6 +28,12 @@ Same failure mode: the sheet comes out drawable but wrong.
   makes `MovementGrid.Passable` false for that cell without mutating landcover. PLAY draws
   them in the same `afterPixels` pass as GCMs via `WorldObjectDrawer`. Do not add hazards as
   `MapPoiKind` / `MapLineKind`.
+- **Objectives may bind to `MapPoi` features (#51), not only absolute cells.**
+  `Objective.PlaceNearKind` / `PlaceNearName` are authoring intent;
+  `ObjectivePlacement.Apply` (from `Scenario.GenerateMap`) snaps `Cell` to the nearest
+  matching POI. The evaluator still reads `Cell` only. Missing match ⇒ Validate error
+  (authored) or clear-ref fallback (ScenarioGenerator training path). See
+  `docs/scenario-generation.md` and `docs/known-gaps.md` (#95).
 - **`MapRenderMode.NatoTopo` is the US/NATO colour convention (#169), not aged paper.**
   `Topographic` stays the project’s paper survey look. NatoTopo follows the five-colour
   military map convention (FM 3-25.26 §3-5 / FM 21-31): black cultural, blue hydrography,

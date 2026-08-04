@@ -54,6 +54,13 @@ namespace Strategos.Scenarios
         /// <summary>Tolerance band around ForceRatio for <see cref="ScenarioGenerator.ValidateGenerated"/>.</summary>
         public float ForceRatioTolerance = 0.35f;
 
+        /// <summary>
+        /// When set, the generated objective prefers this POI kind (#51 / #359). Null = stub
+        /// cell only. Default SpotHeight works without culture. If no POI matches, the
+        /// generator clears the ref and keeps the passable stub so training loops do not die.
+        /// </summary>
+        public MapPoiKind? PlaceNearKind = MapPoiKind.SpotHeight;
+
         public MapGenerationSettings ToMapSettings() => new()
         {
             Name = "Generated",

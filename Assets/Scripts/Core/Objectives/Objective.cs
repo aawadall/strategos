@@ -11,9 +11,13 @@
 // the command-chain model (#36) they arrive as the content of a *directive* from a higher
 // formation, which is why nothing here reaches for a global list and why VictoryEvaluator is
 // handed its objectives rather than fetching them.
+//
+// #51: PlaceNearKind / PlaceNearName are authoring intent. Cell is the resolved centre the
+// evaluator uses — ObjectivePlacement.Apply snaps Cell after map gen.
 
 using System;
 using UnityEngine;
+using Strategos.Maps;
 using Strategos.Units;
 
 namespace Strategos.Objectives
@@ -27,7 +31,10 @@ namespace Strategos.Objectives
         /// <summary>What it is called in a briefing — "HILL 232", "THE BRIDGE".</summary>
         public string Name = "Objective";
 
-        /// <summary>Centre, in fractional cell coordinates like everything else positional.</summary>
+        /// <summary>
+        /// Centre, in fractional cell coordinates. After <see cref="ObjectivePlacement.Apply"/>
+        /// this is the resolved position (feature or authored coordinate).
+        /// </summary>
         public Vector2 Cell;
 
         /// <summary>
@@ -42,10 +49,24 @@ namespace Strategos.Objectives
         /// <summary>Who holds it at the start. <see cref="SideId.None"/> for neutral ground.</summary>
         public SideId InitialOwner;
 
+        /// <summary>
+        /// When set, <see cref="ObjectivePlacement"/> snaps <see cref="Cell"/> to the nearest
+        /// matching <see cref="MapPoi"/> after map generation (#51 / #235). Null = coordinate
+        /// only (existing authored behaviour).
+        /// </summary>
+        public MapPoiKind? PlaceNearKind;
+
+        /// <summary>
+        /// Optional case-insensitive substring against <see cref="MapPoi.Name"/>. Empty = any
+        /// POI of <see cref="PlaceNearKind"/>.
+        /// </summary>
+        public string PlaceNearName = string.Empty;
+
         public bool Contains(Vector2 cell) =>
             (cell - Cell).sqrMagnitude <= RadiusCells * RadiusCells;
 
         public override string ToString() =>
-            $"[{Id}] {Name} @ ({Cell.x:0},{Cell.y:0}) r{RadiusCells:0}";
+            $"[{Id}] {Name} @ ({Cell.x:0},{Cell.y:0}) r{RadiusCells:0}" +
+            (PlaceNearKind.HasValue ? $" near {PlaceNearKind}" : string.Empty);
     }
 }

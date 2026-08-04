@@ -108,6 +108,6 @@ Recorded so they are not re-investigated. None are fixed.
   perimeter settlements, no loops on this seed) never reaches the interior valley where the
   two forces meet — the closest any road gets to the contested ground is 68 cells (1700 m).
   "Place the objective on a real road junction" is not achievable there without abandoning the
-  scenario's roughly-equidistant meeting-engagement premise, which is itself evidence for #51
-  ("place objectives by map feature, not only by coordinate") over patching individual
-  coordinates as they are found broken.
+  scenario's roughly-equidistant meeting-engagement premise. **#51 shipped** the general fix:
+  `PlaceNearKind` / `ObjectivePlacement` bind other scenarios (e.g. PushNorth SpotHeight) to
+  generated POIs; Skirmish ANVIL remains a deliberate coordinate for that equidistant premise.

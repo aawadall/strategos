@@ -277,6 +277,7 @@
   "PlayerSide": {
     "Value": 1
   },
+  "PlayerEchelon": "None",
   "Objectives": [
     {
       "Id": 1,
@@ -288,7 +289,9 @@
       "RadiusCells": 8.0,
       "InitialOwner": {
         "Value": 0
-      }
+      },
+      "PlaceNearKind": "SpotHeight",
+      "PlaceNearName": ""
     }
   ],
   "ControlMeasures": [],

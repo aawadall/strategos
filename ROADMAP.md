@@ -25,7 +25,7 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 | Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
 | Phase 4 — Movement & combat | **Core path done.** A\* movement + mid-march replan (#35), direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC. |
 | Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder + drill execution (#97), mission types (#85), graphic control measures (#160), `ISidePolicy` seam. Still missing: spatial comms (#47), intel fusion, doctrine authoring (#65). |
-| Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over + PLAY start/advance/save (#75, #114 / #138–#140). Still missing: scenario editor, feature-placed objectives (#51), historical packs, full arc (#78). |
+| Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship (feature-placed objectives #51); campaign chain data + carry-over + PLAY start/advance/save (#75, #114 / #138–#140). Still missing: scenario editor UI, historical packs, full arc (#78). |
 | Phases 7–10 | **Mostly unbuilt.** Windows builds + GitHub Pages site (OG/CTA in; GIF still #120). Audio and release-engineering issues filed. |
 
 ### Near-term focus — "First playable game"
@@ -35,13 +35,13 @@ environment API (#99 / #100–#106), graphic control measures (#160 / #161–#16
 topo palette (#169), and rank gates (#76) are done. Player-as-node (#36), career across
 campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn (#33), and dynamic world
 layer (#34), procedural scenario generation (#334), and A* replan (#35) are done.
+Feature-placed objectives (#51) are done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
 | [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
-| [#51](https://github.com/aawadall/strategos/issues/51) | Epic: place objectives by map feature — children #235–#238, #358–#359 |
 | [#355](https://github.com/aawadall/strategos/issues/355) | Epic: local/API seam (store, content, identity) — children #361–#367 |
 
 ### Outstanding themes (open issues, grouped)
@@ -51,7 +51,7 @@ layer (#34), procedural scenario generation (#334), and A* replan (#35) are done
 - **C2 / C3 depth** — #36 closed (#266–#269); still open: #47, #62, #65 (#85 mission types shipped)
 - **Steam readiness** — #287 / #291 **closed**; still open: #288–#290, #293 (children #300+)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
-- **World & movement depth** — #33 / #34 / #35 **closed**; still open: #51 (#235–#238, #358–#359)
+- **World & movement depth** — #33 / #34 / #35 / #51 **closed**
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
   #334 **closed** (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66 (local store choice); mid-campaign save is #140
