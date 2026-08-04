@@ -55,6 +55,7 @@ namespace Strategos.Editor
             MapRenderMode.Schematic,
             MapRenderMode.Terrain,
             MapRenderMode.Hybrid,
+            MapRenderMode.NatoTopo,
         };
 
         [MenuItem("Strategos/Bake Map Contact Sheet")]

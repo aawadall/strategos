@@ -23,6 +23,25 @@ Same failure mode: the sheet comes out drawable but wrong.
   PLAY filters by `PlayerSide` (#186): opposing-owned measures are omitted; shared
   (`Owner = None`) still draw. EXPLORE / SCENARIO stay MapData-only — GCMs are scenario plan
   graphics, not generator preview (#187).
+- **`MapRenderMode.NatoTopo` is the US/NATO colour convention (#169), not aged paper.**
+  `Topographic` stays the project’s paper survey look. NatoTopo follows the five-colour
+  military map convention (FM 3-25.26 §3-5 / FM 21-31): black cultural, blue hydrography,
+  brown relief, green vegetation, near-white paper. Ground colours implemented in
+  `MapPalette.NatoTopo()`:
+
+  | Role | Hex | Notes |
+  |---|---|---|
+  | Paper | `#F7F7F2` | Printed sheet, not aged stock |
+  | Water / edge | `#A8C8E0` / `#4A7A9C` | Blue hydrography |
+  | Contour / index | `#B87A4A` / `#8B5A2B` | Brown relief |
+  | Forest / stipple | `#A8C890` / `#5A8A4A` | Green vegetation |
+  | Open / cropland | `#F0EDE4` / `#E8E0C8` | Clear / cultivated |
+  | Urban / hatch | `#D8D0C8` / `#4A4A4A` | Cultural fill + black hatch |
+  | Ink | `#1A1A1A` | Cultural labels and marks |
+  | Hypsometric ramp | green → yellow → tan → brown | Layer-tint style elevation |
+
+  Cite the field manuals, not a screenshot of one sheet — editions vary (red-brown
+  red-light-readable maps, etc.). NatoTopo is the large-scale five-colour reading.
 - **Point marks generalise by dropping, not by shrinking** (`DetailZoom`, a **private**
   const at `MapRasterizer.cs:641` — promote it if a new view needs the same rule).
   A line can thin; a ford's circle has a minimum legible size, so below the threshold

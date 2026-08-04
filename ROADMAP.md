@@ -20,7 +20,7 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 | Area | State |
 |---|---|
 | Phase 0 — Foundation | **Done** for a local buildable project. CI is scaffolded but Unity license secrets are unset (green CI ≠ coverage). No EditMode test assembly yet. Steamworks not started. |
-| Phase 1 — Map | **Largely built.** Procedural generation + 2D topographic sheet + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, alternate render modes, basin-breaching for lake-heavy maps. |
+| Phase 1 — Map | **Largely built.** Procedural generation + 2D sheet (schematic / topographic / hybrid / terrain / NatoTopo) + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, satellite mode, basin-breaching for lake-heavy maps. |
 | Phase 2 — Symbols | **Complete** for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (`FRAME ONLY`), animated states. |
 | Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
 | Phase 4 — Movement & combat | **Core path done.** A\* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning (#35). |
@@ -31,13 +31,13 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 ### Near-term focus — "First playable game"
 
 Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
-environment API (#99 / #100–#106), and graphic control measures (#160 / #161–#166) are done.
+environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), and the
+US/NATO topo map palette (#169) are done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#169](https://github.com/aawadall/strategos/issues/169) | Epic: US/NATO topographic map palette — children #188–#192 |
 | [#76](https://github.com/aawadall/strategos/issues/76) | Epic: rank gates echelon (difficulty curve) — under #78; children #222–#225 |
 | [#36](https://github.com/aawadall/strategos/issues/36) | Epic: player as a node in the chain — children #266–#269 |
 
@@ -54,7 +54,7 @@ environment API (#99 / #100–#106), and graphic control measures (#160 / #161�
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
-- **Map palette** — #169 (standard US/NATO topo palette as a fifth render mode)
+- **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
 
 ---

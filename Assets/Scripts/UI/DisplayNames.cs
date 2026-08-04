@@ -128,6 +128,7 @@ namespace Strategos.UI
         {
             MapRenderMode.Schematic, MapRenderMode.Topographic,
             MapRenderMode.Hybrid, MapRenderMode.Terrain,
+            MapRenderMode.NatoTopo,
         };
 
         // ─── Labels ───────────────────────────────────────────────────────────
@@ -236,7 +237,11 @@ namespace Strategos.UI
         public static string AffiliationLabel(Affiliation a) => Prettify(a.ToString());
         public static string HqTfLabel(HeadquartersTaskForceDummy h) => Prettify(h.ToString());
         public static string ProfileLabel(ReliefProfile p) => Prettify(p.ToString());
-        public static string RenderModeLabel(MapRenderMode m) => Prettify(m.ToString());
+        public static string RenderModeLabel(MapRenderMode m) => m switch
+        {
+            MapRenderMode.NatoTopo => "US/NATO Topo",
+            _ => Prettify(m.ToString()),
+        };
 
         // ─── Convenience: label arrays for SetDrop ────────────────────────────
 
