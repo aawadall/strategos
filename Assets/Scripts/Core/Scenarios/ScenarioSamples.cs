@@ -279,6 +279,49 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Name of the highland opening under Resources/Scenarios (#109 / #213).</summary>
+        public const string HighlandOpeningName = "highland-opening";
+
+        /// <summary>
+        /// Second-theatre fixture: Skirmish ORBAT with a Regiment above the BN, authored
+        /// <see cref="Scenario.PlayerEchelon"/> = Regiment, and a directive whose
+        /// <c>From</c> is still <c>3 BDE</c> — the same higher HQ that addressed the valley
+        /// seat (#214). Requires career rank regiment (#76) after a valley win promotes.
+        /// </summary>
+        public static Scenario HighlandOpening()
+        {
+            var s = Skirmish();
+            s.Name = "Highland Opening";
+            s.Description =
+                "Regiment-seat opening after a valley campaign — same higher HQ still speaks.";
+            s.PlayerEchelon = Echelon.Regiment;
+
+            var blue = s.PlayerSide;
+            Add(s, blue, 17, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Regiment, new Vector2(60f, 66f), "1st Inf Regt", "3 BDE",
+                UnitCatalogue.InfantryMech);
+
+            var bn = s.FindUnit(new UnitId(7));
+            if (bn != null)
+            {
+                bn.ParentId = new UnitId(17);
+                bn.HigherFormation = "1st Inf Regt";
+            }
+
+            if (s.Directive.HasValue)
+            {
+                var d = s.Directive.Value;
+                d.TargetUnit = new UnitId(17);
+                d.From = "3 BDE";
+                d.Intent =
+                    "Open the highland approach. Hold the regiment's assigned ground and " +
+                    "deny the enemy the ridge line for brigade's follow-on forces.";
+                s.Directive = d;
+            }
+
+            return s;
+        }
+
         /// <summary>Name of the push-north follow-on operation under Resources/Scenarios.</summary>
         public const string PushNorthName = "push-north";
 

@@ -9,5 +9,10 @@ namespace Strategos.Campaigns
         /// Three-op valley chain (skirmish → push-north → skirmish). The #75 / #139 fixture.
         /// </summary>
         public const string ValleyName = "valley-campaign";
+
+        /// <summary>
+        /// One-op highland chain at regiment seat — #109 second theatre after valley promotion.
+        /// </summary>
+        public const string HighlandName = "highland-campaign";
     }
 }

@@ -32,19 +32,22 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 
 Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
 environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), US/NATO
-topo palette (#169), and rank gates (#76) are done. Player-as-node (#36) is done.
+topo palette (#169), and rank gates (#76) are done. Player-as-node (#36) and career across
+campaigns (#109) are done.
 
-**Recommended next** (player-facing, ~5m children ready):
+**Recommended next** (player-facing; gap epics #287–#293 need size:5m children first):
 
 | Issue | Title |
 |---|---|
-| [#109](https://github.com/aawadall/strategos/issues/109) | Epic: career across campaigns — children #212–#215 |
+| [#33](https://github.com/aawadall/strategos/issues/33) | Epic: special-action seam — children #278–#282 |
+| [#132](https://github.com/aawadall/strategos/issues/132) | Epic: selectable dark UI theme — children #193–#197 |
 
 ### Outstanding themes (open issues, grouped)
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
-- **Campaign & progression** — #114 / #138–#140 / #76 shipped; still open: #109
+- **Campaign & progression** — #114 / #138–#140 / #76 / #109 shipped
 - **C2 / C3 depth** — #36 closed (#266–#269); still open: #47, #62, #65 (#85 mission types shipped)
+- **Steam readiness** — #287–#291, #293 filed (trackers; children not yet split)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped)
