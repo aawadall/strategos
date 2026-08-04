@@ -64,6 +64,8 @@ are done.
   viewer), #288 Steamworks SDK integration (App ID, Overlay, Achievements, Cloud), #289
   tutorial/contextual help/settings screen, #290 controller support (Steam Deck), #291 an
   AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
+- **Historical scenarios** — Phase 6.2's initial pack, split #332 (research real
+  engagements into `Research/`) and #333 (convert into `Scenario` JSON), depends on #332
 
 ---
 

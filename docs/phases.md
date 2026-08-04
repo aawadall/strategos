@@ -215,8 +215,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Workshop item structure / tags
 
 ### 6.2 Historical Scenarios
-- [ ] Initial pack: 5–10 historical engagements at varied echelon scales
-- [ ] Data format allows community-built historical packs
+- [ ] Initial pack: 5–10 historical engagements at varied echelon scales (#332 research, #333 conversion)
+- [ ] Data format allows community-built historical packs (#333)
 - [ ] Historical AI behaviour seeding (see Phase 8)
 
 ### 6.3 Campaign Mode
