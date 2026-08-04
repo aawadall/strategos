@@ -225,7 +225,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Strategic map layer: campaign moves between operations
 - [ ] Operational-level resupply and reinforcement between scenarios
 - [ ] Dynamic campaign generator (procedural) — sequencing; see #334 for per-scenario generation
-- [ ] Full campaign arc: drills, directives, positions, execution, rank (#78)
+- [x] Full campaign arc: drills, directives, positions, execution, rank (#78 — closed)
+- [ ] Multi-echelon climb campaign: seat ladder in one chain (#403 / #404–#409)
 
 **Milestone M6:** Editor ships, at least five built-in scenarios playable, campaign chain of three linked operations works in PLAY. Data-side three-op probe exists; PLAY entry is #114 / #138–#140.
 
@@ -388,6 +389,7 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289) —
+  distinct from the multi-echelon **climb campaign** content pack (#403). Squad
   scenario skeleton (#309); first select→MoveTo beat (#310); more beats open
 - [ ] Context-sensitive in-game help overlay (#289) — MOVE help shipped (#308); more controls open
 - [ ] Doctrinal reference wiki (in-game and web) (#124)

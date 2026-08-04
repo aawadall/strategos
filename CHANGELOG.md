@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Climb campaign design note (#404 / #403): `docs/climb-campaign.md` — Squad → Company →
+  Battalion seat ladder, Id-stable scenario sketch, reuse rules vs Valley/Highland/#289.
 - Display prefs contract probe (#392): `DisplayPrefsProbe` — Fullscreen/WxH round-trip plus
   Settings/F11 shared AppShell Apply* / ToggleFullscreen / boot apply.
 - Apply display prefs on AppShell boot (#391): `ApplyDisplayPreferences` seeds remembered

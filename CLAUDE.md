@@ -174,6 +174,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/unity-gotchas.md](docs/unity-gotchas.md) | Adding an asset, a package, or a serialised type |
 | [docs/local-api-seam.md](docs/local-api-seam.md) | Touching `IGameStore`, `IContentSource`, `IPlayerIdentity` (#355 vs #66) |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
+| [docs/climb-campaign.md](docs/climb-campaign.md) | Multi-echelon climb campaign (#403) — seat ladder and scenario Id rules |
 | [docs/game-modes.md](docs/game-modes.md) | Touching PLAY mode-select, spectator, hotseat, replay (#287) |
 | [docs/ai-difficulty.md](docs/ai-difficulty.md) | Touching `SideDirector` difficulty / personality (#291) |
 | [docs/scenario-generation.md](docs/scenario-generation.md) | Touching `ScenarioGenerator` / procedural scenarios (#334) |
