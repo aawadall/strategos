@@ -80,7 +80,7 @@ namespace Strategos.Commands
             }
 
             var caps = unit.Capabilities(context.Catalogue);
-            var grid = GridForCached(map, caps);
+            var grid = GridForCached(map, caps, context.World);
 
             var route = RouteFor(unit, target, grid);
             if (route == null)
@@ -189,10 +189,11 @@ namespace Strategos.Commands
         /// <summary>
         /// Builds (or reuses) a movement grid for preview — same as the executor's cache key.
         /// </summary>
-        public static MovementGrid GridFor(MapData map, UnitCapabilities caps)
+        public static MovementGrid GridFor(MapData map, UnitCapabilities caps,
+            World.WorldLayer world = null)
         {
             if (map == null || caps == null) return null;
-            return MovementGrid.Build(map, caps);
+            return MovementGrid.Build(map, caps, world);
         }
 
         private Route RouteFor(UnitInstance unit, Vector2 target, MovementGrid grid)
@@ -217,10 +218,11 @@ namespace Strategos.Commands
             return route;
         }
 
-        private MovementGrid GridForCached(MapData map, UnitCapabilities caps)
+        private MovementGrid GridForCached(MapData map, UnitCapabilities caps,
+            World.WorldLayer world)
         {
             if (_grids.TryGetValue(caps.Id, out var grid) && grid.Map == map) return grid;
-            grid = MovementGrid.Build(map, caps);
+            grid = MovementGrid.Build(map, caps, world);
             _grids[caps.Id] = grid;
             return grid;
         }

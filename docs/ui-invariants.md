@@ -78,7 +78,8 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   milliseconds.
 - **Control measures paint into sheet pixels after `RenderPixels` (#160–#166).**
   `MapSheetCard.Render(..., afterPixels)` is the hook; PLAY passes `ControlMeasureDrawer`
-  over `Scenario.ControlMeasures` with `PlayerSide` as viewer. Not UI markers like
+  over `Scenario.ControlMeasures` with `PlayerSide` as viewer, then `WorldObjectDrawer` for
+  live hazards (#34). Not UI markers like
   objectives — baked into the texture. Distinct from `OrderTrackLayer` live-plan arrows.
 - **Map generation is synchronous on the main thread** (~200 ms at 200 cells, over a second
   at 512 with erosion). It stays behind discrete controls and an explicit button. Do not

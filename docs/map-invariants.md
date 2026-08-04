@@ -23,6 +23,11 @@ Same failure mode: the sheet comes out drawable but wrong.
   PLAY filters by `PlayerSide` (#186): opposing-owned measures are omitted; shared
   (`Owner = None`) still draw. EXPLORE / SCENARIO stay MapData-only — GCMs are scenario plan
   graphics, not generator preview (#187).
+- **Dynamic world objects are not `MapData` and not GCMs (#34).** `WorldObject` /
+  `WorldLayer` live on `Simulation` (spawn/despawn, signature, snapshot). `HazardBlocking`
+  makes `MovementGrid.Passable` false for that cell without mutating landcover. PLAY draws
+  them in the same `afterPixels` pass as GCMs via `WorldObjectDrawer`. Do not add hazards as
+  `MapPoiKind` / `MapLineKind`.
 - **`MapRenderMode.NatoTopo` is the US/NATO colour convention (#169), not aged paper.**
   `Topographic` stays the project’s paper survey look. NatoTopo follows the five-colour
   military map convention (FM 3-25.26 §3-5 / FM 21-31): black cultural, blue hydrography,

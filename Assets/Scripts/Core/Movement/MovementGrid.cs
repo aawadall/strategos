@@ -39,6 +39,12 @@ namespace Strategos.Movement
         private readonly bool[] _road;
 
         /// <summary>
+        /// Optional dynamic blockers (#34). Same instance as <see cref="World.WorldLayer"/> on
+        /// the live Simulation — spawn/despawn update Passable without rebuilding the grid.
+        /// </summary>
+        private readonly World.WorldLayer _world;
+
+        /// <summary>
         /// Cells occupied by a major watercourse, minus the ones a crossing opens.
         ///
         /// A COST, NOT A WALL. Blocking rivers outright was tried and is unworkable on this
@@ -65,10 +71,11 @@ namespace Strategos.Movement
         public int Width => Map.Width;
         public int Height => Map.Height;
 
-        private MovementGrid(MapData map, UnitCapabilities caps)
+        private MovementGrid(MapData map, UnitCapabilities caps, World.WorldLayer world)
         {
             Map = map;
             Capabilities = caps;
+            _world = world;
 
             int n = map.Width * map.Height;
             _passable = new bool[n];
@@ -77,11 +84,12 @@ namespace Strategos.Movement
             _secondsToEnter = new float[n];
         }
 
-        public static MovementGrid Build(MapData map, UnitCapabilities caps)
+        public static MovementGrid Build(MapData map, UnitCapabilities caps,
+            World.WorldLayer world = null)
         {
             if (map == null || caps == null) return null;
 
-            var grid = new MovementGrid(map, caps);
+            var grid = new MovementGrid(map, caps, world);
             grid.MarkRoads();
             grid.MarkBarriers();
             grid.MarkPassability();
@@ -195,7 +203,8 @@ namespace Strategos.Movement
         public bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
         public bool Passable(int x, int y) =>
-            InBounds(x, y) && _passable[y * Width + x];
+            InBounds(x, y) && _passable[y * Width + x] &&
+            (_world == null || !_world.BlocksMovement(x, y));
 
         public bool OnRoad(int x, int y) => InBounds(x, y) && _road[y * Width + x];
 
