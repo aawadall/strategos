@@ -369,8 +369,7 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### UI / UX
 - [x] Tab-shell military map aesthetic (working UI, not final skin)
-- [ ] Outside menu (Load/Save/Options/Campaign Editor-Selector/Help/Server/Play), in-game
-  pause menu, and in-session reference navigation — restructures the flat tab shell (#371)
+- [x] Outside menu + in-game pause + drills quick-ref (#371) — Options/Help/Server stubs point at #289 / #124 / #288
 - [x] Shoulder-board command-rank insignia in the shell (#38)
 - [x] GitHub Pages status site with OG/Twitter meta and header CTA (#120 partial)
 - [ ] Full UI skin — finished military map aesthetic

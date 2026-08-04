@@ -15,6 +15,22 @@ tab bar. Views own only their content and are handed a rect to build into. `View
 switches between them and is used twice — once for the top-level tabs, once for
 EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 
+**#371 hierarchy.** The app boots into `MainMenuView` (`-view menu`), not PLAY. PLAY is a
+*session* entered from the menu (or `-view play` for capture). EXPLORE / SCENARIO / DRILLS /
+BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
+main menu; a **MENU** tab returns from Tools/PLAY.
+
+**Esc precedence in PLAY (#371 / #129):** drills quick-ref closes first; then the pause
+overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else
+Esc opens pause and stops the clock. Space remains the clock toggle and must not open pause.
+
+**Pause overlay** is built under PlayView's host (one Canvas — no second EventSystem). Save /
+Load call the same quicksave path as the rail; Exit returns to the main menu without
+destroying the session (Resume / Continue can re-enter).
+
+**In-session drills** from pause are a *quick-reference lookup* (interpretation a of #371),
+not optional quests. Full binder remains the DRILLS tab; issuing drills stays on PLAY's rail.
+
 - **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
   them multiplies exposure to the silent-layout-truncation failure mode and pays every
   view's startup cost whichever tab you wanted. Not destroyed, because rebuilding costs a

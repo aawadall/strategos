@@ -58,7 +58,11 @@ namespace Strategos.UI
         /// shared state goes: a view cannot take constructor arguments, and Build is too
         /// late because it already needs them.
         /// </param>
-        public void Add<T>(Action<IAppView> configure = null) where T : MonoBehaviour, IAppView
+        /// <param name="showTab">
+        /// When false, the view is registered without a chrome tab (#371 main menu / session).
+        /// </param>
+        public void Add<T>(Action<IAppView> configure = null, bool showTab = true)
+            where T : MonoBehaviour, IAppView
         {
             var go = new GameObject(typeof(T).Name, typeof(RectTransform));
             go.transform.SetParent(_host, false);
@@ -69,7 +73,7 @@ namespace Strategos.UI
             configure?.Invoke(view);
             var entry = new Entry { View = view, Go = go, Built = false };
 
-            if (_tabStrip != null)
+            if (showTab && _tabStrip != null)
             {
                 var (_, face, text) = UiFactory.AddTabButton(
                     _tabStrip, view.Title, () => Select(view.Key));
@@ -78,6 +82,24 @@ namespace Strategos.UI
             }
 
             _entries.Add(entry);
+        }
+
+        /// <summary>Returns the registered view of type <typeparamref name="T"/>, or null.</summary>
+        public T Get<T>() where T : class, IAppView
+        {
+            foreach (var e in _entries)
+                if (e.View is T typed) return typed;
+            return null;
+        }
+
+        /// <summary>Show or hide every tab button (main menu hides the strip's siblings).</summary>
+        public void SetTabButtonsVisible(bool visible)
+        {
+            foreach (var e in _entries)
+            {
+                if (e.TabFace == null) continue;
+                e.TabFace.transform.parent.gameObject.SetActive(visible);
+            }
         }
 
         /// <summary>Selects a view by <see cref="IAppView.Key"/>. Unknown keys are ignored.</summary>

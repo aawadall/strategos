@@ -184,6 +184,10 @@ namespace Strategos.UI.Views
         public string Title => "PLAY";
         public string Key => "play";
         public AppSession Session { set => _session = value; }
+        public AppShell Shell { get; set; }
+
+        private PauseOverlay _pause;
+        private bool _runningBeforePause = true;
 
         // ─── IAppView ─────────────────────────────────────────────────────────
 
@@ -192,6 +196,8 @@ namespace Strategos.UI.Views
             BuildUi(host);
             PopulateOptions();
             Canvas.ForceUpdateCanvases();
+            // Cold start still loads skirmish so -view play / capture keep working (#371
+            // front door is the usual entry; menu starts call LoadScenarioPublic).
             LoadScenario(ScenarioSamples.SkirmishName);
         }
 
@@ -201,18 +207,24 @@ namespace Strategos.UI.Views
             LayOutMarkers();
         }
 
-        public void OnHidden() => HideDropdownsIn(transform);
+        public void OnHidden()
+        {
+            _pause?.Close();
+            HideDropdownsIn(transform);
+        }
 
         private void OnDestroy() => _card?.Dispose();
 
         private void Update()
         {
-            // Space pauses, as it does in every game of this shape. Safe here because this
-            // view has no text input to steal it from. Palette shortcuts never bind Space
-            // (probe-enforced); they are read from the verb table, not hard-wired (#129).
-            if (Input.GetKeyDown(KeyCode.Space) && _runToggle != null)
+            if (HandlePauseKeys())
             {
-                _runToggle.isOn = !_runToggle.isOn;   // fires the toggle's own handler
+                // Pause owns Escape this frame — do not also clear the palette / arm verbs.
+            }
+            else if (Input.GetKeyDown(KeyCode.Space) && _runToggle != null &&
+                     (_pause == null || !_pause.IsOpen))
+            {
+                _runToggle.isOn = !_runToggle.isOn;
                 RefreshClock();
             }
             else if (CommandPalette.TryReadArmingKey(out var arm))
@@ -224,13 +236,69 @@ namespace Strategos.UI.Views
                 CommitWaypoints();
             }
 
-            AdvanceSimulation();
+            if (_pause == null || !_pause.IsOpen)
+                AdvanceSimulation();
             _card?.PollResize();
-            // Markers follow the sheet rather than caching screen positions, so a window
-            // resize or a re-crop keeps every symbol on its own ground. Cheap at this unit
-            // count; if it ever is not, drive it from the crop changing instead.
             LayOutMarkers();
         }
+
+        /// <summary>
+        /// Esc layering (#371 / #129): drills panel → close; pause open → resume; armed verb
+        /// → clear via palette; else open pause and stop the clock.
+        /// </summary>
+        private bool HandlePauseKeys()
+        {
+            if (!Input.GetKeyDown(KeyCode.Escape)) return false;
+
+            if (_pause != null && _pause.DrillsOpen)
+            {
+                _pause.CloseDrillsOnly();
+                return true;
+            }
+
+            if (_pause != null && _pause.IsOpen)
+            {
+                ClosePause(resumeClock: true);
+                return true;
+            }
+
+            if (_armedVerb != PaletteVerb.None)
+            {
+                ArmVerb(PaletteVerb.None);
+                return true;
+            }
+
+            OpenPause();
+            return true;
+        }
+
+        private void OpenPause()
+        {
+            if (_pause == null) return;
+            _runningBeforePause = _running;
+            if (_runToggle != null) _runToggle.isOn = false;
+            else _running = false;
+            RefreshClock();
+            _pause.Open();
+        }
+
+        private void ClosePause(bool resumeClock)
+        {
+            _pause?.Close();
+            if (resumeClock && _runToggle != null)
+            {
+                _runToggle.isOn = _runningBeforePause;
+                RefreshClock();
+            }
+        }
+
+        // ─── Menu / shell entry points (#371) ─────────────────────────────────
+
+        public void LoadScenarioPublic(string name) => LoadScenario(name);
+        public void StartValleyCampaignPublic() => StartValleyCampaign();
+        public void StartHighlandCampaignPublic() => StartHighlandCampaign();
+        public void QuickSavePublic() => QuickSave();
+        public void QuickLoadPublic() => QuickLoad();
 
         // ─── UI ───────────────────────────────────────────────────────────────
 
@@ -242,11 +310,22 @@ namespace Strategos.UI.Views
             var rootH = root.gameObject.AddComponent<HorizontalLayoutGroup>();
             rootH.childControlWidth = true;
             rootH.childControlHeight = true;
-            rootH.childForceExpandWidth = false;   // keep the fixed rail off the surplus
+            rootH.childForceExpandWidth = false;
             rootH.childForceExpandHeight = true;
 
             BuildStage(root);
             BuildRail(root);
+
+            _pause = host.gameObject.AddComponent<PauseOverlay>();
+            _pause.Build(host,
+                onResume: () => ClosePause(resumeClock: true),
+                onSave: QuickSave,
+                onLoad: QuickLoad,
+                onExitMenu: () =>
+                {
+                    ClosePause(resumeClock: false);
+                    Shell?.GoToMainMenu();
+                });
         }
 
         private void BuildStage(Transform root)

@@ -37,13 +37,14 @@ campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn 
 layer (#34), procedural scenario generation (#334), and A* replan (#35) are done.
 Feature-placed objectives (#51) and historical research into `Research/historical/` (#332)
 are done. First historical Scenario JSON (Little Round Top, #333) is done. Local/API seam
-(#355) is done.
+(#355) is done. UI front door + pause + drills quick-ref (#371) is done.
 
-**Recommended next** (player-facing, ~5m children ready):
+**Recommended next** (player-facing):
 
 | Issue | Title |
 |---|---|
-| [#371](https://github.com/aawadall/strategos/issues/371) | Epic: UI revamp — outside menu, pause menu, in-session reference |
+| [#289](https://github.com/aawadall/strategos/issues/289) | Epic: tutorial / contextual help / settings (#306–#311) |
+| [#288](https://github.com/aawadall/strategos/issues/288) | Epic: Steamworks SDK (App ID, Overlay, Achievements, Cloud) |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -60,8 +61,7 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
-- **UI revamp** — #371 (outside menu, in-game pause menu, in-session doc/drill navigation);
-  surfaces two real unfiled gaps — the scenario editor (§6.1) and online multiplayer (§7.3)
+- **UI revamp** — #371 **closed** (main menu, pause overlay, drills quick-ref; Options/Help/Server remain stubs → #289 / #124 / #288)
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)

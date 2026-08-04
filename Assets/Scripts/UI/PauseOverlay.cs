@@ -1,0 +1,100 @@
+// PauseOverlay.cs
+// #371: in-session pause panel — Save / Load / Drills quick-ref / Resume / Exit to menu.
+// Owned by PlayView; Esc opens when the palette is idle.
+
+using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+using Theme = Strategos.UI.UiTheme;
+using static Strategos.UI.UiFactory;
+
+namespace Strategos.UI
+{
+    public sealed class PauseOverlay : MonoBehaviour
+    {
+        private GameObject _panel;
+        private DrillQuickRefPanel _drills;
+        private Action _onResume;
+        private Action _onSave;
+        private Action _onLoad;
+        private Action _onExitMenu;
+
+        public bool IsOpen => _panel != null && _panel.activeSelf;
+        public bool DrillsOpen => _drills != null && _drills.IsOpen;
+
+        public void Build(RectTransform host, Action onResume, Action onSave, Action onLoad,
+            Action onExitMenu)
+        {
+            _onResume = onResume;
+            _onSave = onSave;
+            _onLoad = onLoad;
+            _onExitMenu = onExitMenu;
+
+            var root = CreateRect("PauseOverlay", host);
+            Stretch(root);
+            root.SetAsLastSibling();
+            var dim = root.gameObject.AddComponent<Image>();
+            dim.color = new Color(0.12f, 0.10f, 0.08f, 0.55f);
+            dim.raycastTarget = true;
+
+            var card = CreateRect("Card", root);
+            card.anchorMin = new Vector2(0.5f, 0.5f);
+            card.anchorMax = new Vector2(0.5f, 0.5f);
+            card.pivot = new Vector2(0.5f, 0.5f);
+            card.sizeDelta = new Vector2(420, 420);
+            card.gameObject.AddComponent<Image>().color = Theme.CardBg;
+
+            var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(28, 28, 24, 24);
+            v.spacing = 10;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+
+            var title = CreateTmp("Title", card, "PAUSED", 22, FontStyles.Bold);
+            title.alignment = TextAlignmentOptions.Center;
+            title.color = Theme.Ink;
+            title.characterSpacing = 6f;
+            title.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
+
+            var hint = CreateTmp("Hint", card, "Esc resumes · Space still toggles the clock",
+                13, FontStyles.Normal);
+            hint.alignment = TextAlignmentOptions.Center;
+            hint.color = Theme.InkMuted;
+            hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
+
+            AddButton(card, "RESUME", () => _onResume?.Invoke());
+            AddButton(card, "SAVE", () => _onSave?.Invoke());
+            AddButton(card, "LOAD", () => _onLoad?.Invoke());
+            AddButton(card, "DRILLS  (quick ref)", OpenDrills);
+            AddButton(card, "EXIT TO MENU", () => _onExitMenu?.Invoke());
+
+            _drills = root.gameObject.AddComponent<DrillQuickRefPanel>();
+            _drills.Build(root);
+
+            _panel = root.gameObject;
+            _panel.SetActive(false);
+        }
+
+        public void Open()
+        {
+            if (_panel == null) return;
+            _drills?.Close();
+            _panel.SetActive(true);
+            _panel.transform.SetAsLastSibling();
+        }
+
+        public void Close()
+        {
+            _drills?.Close();
+            if (_panel != null) _panel.SetActive(false);
+        }
+
+        public void CloseDrillsOnly() => _drills?.Close();
+
+        private void OpenDrills() => _drills?.Open();
+    }
+}

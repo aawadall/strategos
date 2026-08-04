@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- UI revamp (#371): `MainMenuView` front door; PLAY pause overlay (Esc) with Save/Load/
+  Exit; drills quick-ref from pause; Tools tabs from menu; `UiShellProbe`; ui-invariants.
 - Local/API seam (#355 / #361–#367): `StoreResult` + async `IGameStore` (`FileGameStore`);
   `IContentSource` + Resources Scenario/Campaign/Doctrine adapters; `IPlayerIdentity` +
   `LocalAnonymousIdentity`; `docs/local-api-seam.md`; `GameStoreSeamProbe`.
