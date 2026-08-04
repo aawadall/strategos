@@ -405,7 +405,7 @@ Deliberately absent, with the phase that owns each:
 
 - Order propagation delay varying by echelon, distance or terrain — Phase 5.2.
 - Mission-type orders (Attack, Defend, Delay, Screen …) — Phase 5.1.
-- Graphic control measures: axes, phase lines, boundaries, engagement areas — Phase 5.1.
+- Graphic control measures: arrows / areas / final render seam (#164–#166 under #160). Checkpoints, phase lines and boundaries ship (#161–#163).
 - Intelligence fusion and source correlation — Phase 5.3.
 - An external message broker. Bridging the in-process stream to MQTT/NATS/gRPC is
   attractive for reinforcement-learning agents, but it belongs at the process boundary and

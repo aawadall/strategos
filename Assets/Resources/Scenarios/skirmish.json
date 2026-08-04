@@ -323,6 +323,79 @@
       }
     }
   ],
+  "ControlMeasures": [
+    {
+      "Id": 1,
+      "Kind": "Checkpoint",
+      "Name": "CP ROCK",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 90.0,
+        "y": 100.0
+      },
+      "RadiusCells": 4.0,
+      "Points": [],
+      "Echelon": "None"
+    },
+    {
+      "Id": 2,
+      "Kind": "PhaseLine",
+      "Name": "PL AMBER",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 70.0,
+          "y": 130.0
+        },
+        {
+          "x": 110.0,
+          "y": 128.0
+        },
+        {
+          "x": 150.0,
+          "y": 132.0
+        }
+      ],
+      "Echelon": "None"
+    },
+    {
+      "Id": 3,
+      "Kind": "Boundary",
+      "Name": "BDE BOUNDARY",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 40.0,
+          "y": 80.0
+        },
+        {
+          "x": 100.0,
+          "y": 90.0
+        },
+        {
+          "x": 160.0,
+          "y": 85.0
+        }
+      ],
+      "Echelon": "Brigade"
+    }
+  ],
   "Victory": [
     {
       "Kind": "HoldObjectives",

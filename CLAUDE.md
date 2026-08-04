@@ -94,6 +94,7 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Reward/` | `SideReward` — terminal + potential shaping |
 | `Assets/Scripts/Core/SimEnv/` | `SideEnv` — Reset/Step environment lifecycle |
 | `Assets/Scripts/Core/Trajectories/` | `Trajectory` / exporter — CommandLog+ReportLog demos |
+| `Assets/Scripts/Core/ControlMeasures/` | Authored GCMs — checkpoints, phase lines, boundaries |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |

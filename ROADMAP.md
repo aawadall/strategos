@@ -45,9 +45,9 @@ Later command polish: config-loaded verb table (#130).
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
 - **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85 (mission types shipped), #65
-- **Graphic control measures** — #160 epic (data model #161, points #162, lines #163, arrows #164, areas #165, render integration #166)
+- **Graphic control measures** — #160; #161–#163 shipped (data, checkpoints, phase lines/boundaries); #164–#166 open
 - **World & movement depth** — #33, #34, #35, #51
-- **AI as environment** — #99; #100–#106 shipped
+- **AI as environment** — #99 closed (#100–#106 shipped)
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)

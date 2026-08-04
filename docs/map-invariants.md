@@ -16,6 +16,10 @@ Same failure mode: the sheet comes out drawable but wrong.
   at its authored 2 px is 50 m of ground width at 1 px per cell, so the whole drainage
   network rendered as ribbons and the map read as flooded. Floor the **final pixel width**
   at 1 instead, so features thin to hairlines rather than vanish.
+- **Graphic control measures are not `MapData` (#161–#163).** Checkpoints, phase lines and
+  boundaries live on `Scenario.ControlMeasures` and paint via `ControlMeasureDrawer` after
+  `RenderPixels` (PLAY's `MapSheetCard.Render` `afterPixels` hook). Do not add them as
+  `MapLineKind` / `MapPoiKind` — those enums are generator terrain.
 - **Point marks generalise by dropping, not by shrinking** (`DetailZoom`, a **private**
   const at `MapRasterizer.cs:641` — promote it if a new view needs the same rule).
   A line can thin; a ford's circle has a minimum legible size, so below the threshold

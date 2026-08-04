@@ -160,7 +160,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
   - [x] Reconnaissance — #151
   - [x] Exploit — #152
   - [x] Pursue — #153
-- [ ] Graphic control measures: axes of advance, battle positions, phase lines, checkpoints, boundaries, engagement areas, kill zones (#160 epic — #161 data model, #162 points, #163 lines, #164 arrows, #165 areas, #166 render integration)
+- [x] Graphic control measures: data model + checkpoints + phase lines/boundaries (#161–#163 under #160); arrows/areas/render-seam #164–#166 open
 - [x] Order propagation delay via formation decomposition (one echelon per step)
 - [ ] Order propagation delay by distance / terrain / comms modality (#47)
 - [x] Directives from higher — player as receiver (#73); acknowledge is replayable (#94)
