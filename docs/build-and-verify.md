@@ -167,6 +167,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.ShippedMapProbe.Run` | Every shipped scenario, generated with erosion exactly as authored: objective and unit cells are passable, and every objective is reachable per side by a real `PathFinder.Find` |
 | `Strategos.Editor.SaveLoadProbe.Run` | Round-trip and step-after-restore `Signature()` comparisons, one dedicated assertion per state-audit row `Signature()` does not cover, the file store round trip, and version refusal |
 | `Strategos.Editor.GameStoreSeamProbe.Run` | `IGameStore` async + `StoreResult`; `IContentSource`; anonymous `IPlayerIdentity` |
+| `Strategos.Editor.PreferenceStoreProbe.Run` | `JsonPreferenceStore` ConfirmOrders write/read round-trip |
 | `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView categories / PauseOverlay keys and Build/Open/Close |
 | `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
 | `Strategos.Editor.CampaignCarryOverProbe.Run` | `CampaignCarryOver.CarryOver` — wreck exclusion (red-then-green), exact readiness-recovery arithmetic unclamped and at the clamp, outcome mapping for Won/Lost/Drew, both undecided-simulation caller-error paths — #75 chunk 2, carry-over logic only |

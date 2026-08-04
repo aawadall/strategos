@@ -62,7 +62,7 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
 - **UI revamp** — #371 **closed** (#375–#379 via #374; Help/Server stubs → #124 / #288;
-  Options → #306 settings shell, rest of #289 still open)
+  Options → #306 settings shell + #307 preference store; rest of #289 still open)
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)

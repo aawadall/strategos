@@ -37,7 +37,7 @@ Unity 6 (`6000.0.75f1`) / URP tactical command simulation built on NATO APP-6D s
 map has a data model, a generation pipeline, a 2D topographic renderer and a 3D drape
 (a heightfield mesh textured with the 2D sheet). The app boots to a **main menu**
 (#371), then enters **PLAY** as a session (pause overlay + drills quick-ref), opens
-**OPTIONS** (`SettingsView`, #306 — empty category shell), or opens Tools tabs:
+**OPTIONS** (`SettingsView`, #306 — category shell; #307 persists ConfirmOrders), or opens Tools tabs:
 **EXPLORE** (symbol-library browser and pannable map), **SCENARIO** (map
 settings with 2D/3D preview), **DRILLS** (TTP binder), **BUILDER** (digit-by-digit
 symbol composer).
@@ -97,6 +97,8 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/SimEnv/` | `SideEnv` — Reset/Step environment lifecycle |
 | `Assets/Scripts/Core/Trajectories/` | `Trajectory` / exporter — CommandLog+ReportLog demos |
 | `Assets/Scripts/Core/ControlMeasures/` | Authored GCMs — checkpoints, phase lines, boundaries |
+| `Assets/Scripts/Core/Preferences/` | `PlayerPreferences` + `IPreferenceStore` (#307) |
+| `Assets/Scripts/Persistence/` | `FileGameStore`, `JsonPreferenceStore` (bytes outside Core) |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |
