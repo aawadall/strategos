@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Display prefs fields (#388): `PlayerPreferences.Fullscreen` / `WindowWidth` /
+  `WindowHeight` (defaults false / 1600×900); `PreferenceStoreProbe` round-trip + legacy JSON.
 - Display-mode API on AppShell (#387): `ToggleFullscreen` / `ApplyWindowed` /
   `ApplyFullscreen` shared with F11; `DisplayModeProbe`. Settings wiring is #389.
 - Tutorial first beat (#310): `TutorialFirstBeat` checklist on tutorial load — select

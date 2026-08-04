@@ -26,11 +26,12 @@ persisted `ConfirmOrders` toggle via `IPreferenceStore` / `JsonPreferenceStore`
 (`persistentDataPath/preferences.json`). Tab strip stays hidden the same way as the menu.
 Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
 
-**Display mode (#387 / #385).** F11 calls `AppShell.ToggleFullscreen`, which shares
+**Display mode (#387 / #388 / #385).** F11 calls `AppShell.ToggleFullscreen`, which shares
 `ApplyWindowed` / `ApplyFullscreen` with Settings (wired in #389). Fullscreen is borderless
 `FullScreenWindow` at the current display size; windowed restores a remembered size
-(default 1600×900). Prefs + size presets are #388 / #390 / #391. `DisplayModeProbe`
-checks the API without building chrome.
+(default 1600×900). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight`
+(#388); boot apply is #391; size presets UI is #390. `DisplayModeProbe` checks the AppShell
+API; `PreferenceStoreProbe` round-trips the display fields.
 
 **Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
 help; then the pause overlay resumes; then an armed palette verb clears
