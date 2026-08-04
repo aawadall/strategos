@@ -140,6 +140,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.WorldLayerProbe.Run` | Spawn changes Signature; hazard blocks Passable; despawn; drawer pixels |
 | `Strategos.Editor.ScenarioGeneratorProbe.Run` | Generated scenario validates; force ratio; SideEnv Reset/Step smoke |
 | `Strategos.Editor.ReplanProbe.Run` | Mid-march hazard: detour or fail; never walk through blocked cell |
+| `Strategos.Editor.ObjectivePlacementProbe.Run` | PlaceNear resolve; missing ref fails; generator fallback |
 | `Strategos.Editor.ScreenProbe.Run` | Screen never ends, does not dig in, detection reaches further than Halted |
 | `Strategos.Editor.GuardProbe.Run` | Guard never ends, digs in like Defend, modest detection once prepared |
 | `Strategos.Editor.CoverProbe.Run` | Cover digs in, no watch bonus, does not break contact while covering |

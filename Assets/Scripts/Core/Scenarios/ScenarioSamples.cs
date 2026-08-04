@@ -411,6 +411,8 @@ namespace Strategos.Scenarios
             // Direction/SideDirector.cs: with none, NearestUnheld always returns null and an
             // unattended run never moves. Dead centre of the small map, well clear of either
             // start line.
+            // #51 / #238: bind to a SpotHeight POI (LandcoverStage always stamps these; works
+            // with culture off). Stub Cell is the pre-resolve hint / fallback for distance.
             s.Objectives.Add(new Objective
             {
                 Id = 1,
@@ -418,6 +420,7 @@ namespace Strategos.Scenarios
                 Cell = new Vector2(32f, 32f),
                 RadiusCells = 8f,
                 InitialOwner = SideId.None,
+                PlaceNearKind = MapPoiKind.SpotHeight,
             });
 
             // Destroy-enemy only, no hold requirement — this fixture only needs to decide

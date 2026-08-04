@@ -50,8 +50,8 @@ namespace Strategos.Scenarios
             {
                 Name = $"Generated {settings.Engagement} {settings.Echelon}",
                 Description =
-                    "Procedurally generated scenario (#334). Map from MapGenerator; ORBAT " +
-                    "from UnitCatalogue; objective cell stubbed until #51 feature placement.",
+                    "Procedurally generated scenario (#334 / #51). Map from MapGenerator; " +
+                    "ORBAT from UnitCatalogue; objective PlaceNear when a POI exists.",
                 Map = settings.ToMapSettings(),
                 PlayerEchelon = settings.Echelon,
                 TimeLimitTicks = Mathf.Max(0, settings.TimeLimitTicks),
@@ -112,7 +112,23 @@ namespace Strategos.Scenarios
                 Cell = new Vector2(objCell.x, objCell.y),
                 RadiusCells = 6f,
                 InitialOwner = initialOwner,
+                PlaceNearKind = settings.PlaceNearKind,
             });
+
+            // Objectives were added after GenerateMap — resolve now. Training fallback (#359):
+            // clear refs that did not match so ValidateGenerated still passes on sparse maps.
+            var unresolved = ObjectivePlacement.Apply(scenario, map);
+            if (unresolved.Count > 0)
+            {
+                for (int i = 0; i < scenario.Objectives.Count; i++)
+                {
+                    var o = scenario.Objectives[i];
+                    if (!ObjectivePlacement.HasFeatureRef(o)) continue;
+                    if (ObjectivePlacement.TryResolve(o, map, out _, out _)) continue;
+                    o.PlaceNearKind = null;
+                    o.PlaceNearName = string.Empty;
+                }
+            }
 
             ApplyVictoryTemplate(scenario, settings, blue.Id, red.Id);
             return scenario;

@@ -206,20 +206,14 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Map selection and terrain editing UI (beyond SCENARIO preview)
 - [ ] ORBAT builder (both sides)
 - [x] Objectives and victory conditions in data + evaluator
-- [ ] Objectives placement UI; place by map feature, not only by coordinate (#51)
-- [ ] Victory conditions editor
-- [ ] Weather and time-of-day presets
-- [ ] Trigger/event scripting (simple): reinforce at time X, event fires when Y captured
-- [x] Scenario metadata: name, description, author fields
-- [x] Export to JSON
-- [ ] Steam Workshop integration via `SteamUGC`
-- [ ] Workshop item structure / tags
+- [x] Objectives may place by map feature (`PlaceNearKind` → `ObjectivePlacement`) (#51 / #235–#238, #358–#359)
+- [ ] Objectives placement *UI* (editor) — still open; data path is #51
 
 ### 6.2 Historical Scenarios
 - [ ] Initial pack: 5–10 historical engagements at varied echelon scales (#332 research, #333 conversion)
 - [ ] Data format allows community-built historical packs (#333)
 - [ ] Historical AI behaviour seeding (see Phase 8)
-- [x] Procedural scenario generation — OOB / objectives / victory from parameters (#334 / #347–#352); feature placement stays #51
+- [x] Procedural scenario generation — OOB / objectives / victory from parameters (#334 / #347–#352); feature placement via #51
 
 ### 6.3 Campaign Mode
 - [x] Linked scenario chain with persistent ORBAT and casualty carry-over (#75 — data + probes)

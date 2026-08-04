@@ -165,7 +165,13 @@ namespace Strategos.Scenarios
         }
 
         /// <summary>Generates the ground this scenario describes.</summary>
-        public MapData GenerateMap() => MapGenerator.Generate(Map);
+        public MapData GenerateMap()
+        {
+            var map = MapGenerator.Generate(Map);
+            // #51: snap feature-ref objectives; unresolved refs leave Cell and fail Validate.
+            ObjectivePlacement.Apply(this, map);
+            return map;
+        }
 
         // ─── Validation ───────────────────────────────────────────────────────
 
@@ -282,6 +288,7 @@ namespace Strategos.Scenarios
 
             if (catalogue != null && map != null)
             {
+                ObjectivePlacement.ValidateRefs(this, map, problems);
                 CheckReachability(problems, catalogue, map);
                 CheckObjectivesPassable(problems, catalogue, map);
             }

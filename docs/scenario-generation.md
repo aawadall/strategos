@@ -23,6 +23,7 @@ objectives, victory. `ScenarioGenerator.Generate(settings)` builds those from:
 | `Echelon` | Root formation echelon per side; leaves sit one rung below |
 | `ForceRatio` | Enemy leaf count ÷ friendly leaf count |
 | `Engagement` | Meeting / Defend / Attack → victory templates + objective `InitialOwner` |
+| `PlaceNearKind` | Optional `MapPoiKind` for the stub objective (#51); default `SpotHeight` |
 | Map fields | Seed, size, profile, erosion — forwarded to `MapGenerationSettings` |
 
 `SideEnv.Create` takes an already-built `Scenario`. This generator is what feeds varied
@@ -51,8 +52,11 @@ must return an empty problem list. That combines:
    Authored scenarios skip this; generated ones cannot, because nothing else checks that a
    ratio did not produce a walkover or an unwinnable defence.
 
-Objective **feature** placement (town, bridge, ridge) stays [#51](https://github.com/aawadall/strategos/issues/51).
-Until then the generator stubs a centre-ish passable cell.
+Objective **feature** placement is [#51](https://github.com/aawadall/strategos/issues/51):
+`PlaceNearKind` on the generated objective; `ObjectivePlacement.Apply` after the objective
+list exists. If no POI matches, the generator **clears the ref** and keeps the passable
+stub so training loops do not die on sparse maps. Authored scenarios with a set ref that
+fails to match still fail `Validate`.
 
 ---
 
@@ -72,7 +76,8 @@ No new `VictoryKind` — combinations of the three existing kinds.
 
 ```
 Strategos.Editor.ScenarioGeneratorProbe.Run
+Strategos.Editor.ObjectivePlacementProbe.Run
 ```
 
 Asserts a meeting sample validates, Defend/Attack templates and ownership, force-ratio
-assembly, and `SideEnv.Create` / `Reset` / `Step` on a generated scenario.
+assembly, `SideEnv` smoke, and feature-ref resolve / missing-ref / generator PlaceNear.

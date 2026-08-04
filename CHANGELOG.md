@@ -13,6 +13,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Feature-placed objectives (#51 / #235–#238, #358–#359): `Objective.PlaceNearKind` /
+  `PlaceNearName`; `ObjectivePlacement.Apply` from `GenerateMap`; Validate on missing POI;
+  PushNorth SpotHeight sample; ScenarioGenerator PlaceNear with stub fallback;
+  `ObjectivePlacementProbe`.
 - A* replan mid-march (#35 / #270–#272): `MoveToExecutor` invalidates cached routes when
   remaining waypoints or the current leg are no longer `Passable` (e.g. `HazardBlocking`);
   recomputes toward the same target or Fails; `ReplanProbe`.
