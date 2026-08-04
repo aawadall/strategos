@@ -35,7 +35,9 @@ which shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is bo
 size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (#388);
 `AppShell.Start` calls `ApplyDisplayPreferences` so the choice survives restart (#391).
 `DisplayModeProbe` checks the AppShell API + presets + boot seed;
-`PreferenceStoreProbe` round-trips the display fields. Full Settings/F11 contract probe is #392.
+`PreferenceStoreProbe` round-trips the display fields. `DisplayPrefsProbe` (#392) asserts
+store round-trip plus Settings/F11 sharing `ApplyWindowed` / `ApplyFullscreen` /
+`ToggleFullscreen` / `ApplyDisplayPreferences`.
 
 **Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
 help; then the pause overlay resumes; then an armed palette verb clears
