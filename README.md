@@ -86,7 +86,7 @@ cd strategos
 
 ## Contributing
 
-Contributions are welcome — whether it's new NATO symbols, historical scenarios, AI improvements, or bug fixes. Please read [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) and open a PR against `main`.
+Contributions are welcome — whether it's new NATO symbols, historical scenarios, AI improvements, or bug fixes. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and open a PR against `master`.
 
 ---
 
