@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Settings GRAPHICS windowed size presets (#390): 1280×720 / 1600×900 / 1920×1080 dropdown
+  (windowed only — not a fullscreen resolution list); persists `WindowWidth`/`WindowHeight`.
 - Settings GRAPHICS fullscreen toggle (#389): calls `AppShell.ApplyFullscreen` /
   `ApplyWindowed` and persists `PlayerPreferences.Fullscreen` (shared with F11).
 - Display prefs fields (#388): `PlayerPreferences.Fullscreen` / `WindowWidth` /

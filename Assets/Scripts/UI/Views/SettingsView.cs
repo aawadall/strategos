@@ -2,6 +2,7 @@
 // #306: settings screen shell — graphics / audio / gameplay / accessibility.
 // #307: GAMEPLAY hosts one persisted ConfirmOrders toggle via IPreferenceStore.
 // #389: GRAPHICS fullscreen toggle → AppShell display API + PlayerPreferences.Fullscreen.
+// #390: GRAPHICS windowed size presets (not a fullscreen resolution list).
 
 using TMPro;
 using UnityEngine;
@@ -27,6 +28,7 @@ namespace Strategos.UI.Views
         private Texture2D _paperTex;
         private Toggle _confirmOrders;
         private Toggle _fullscreen;
+        private TMP_Dropdown _windowedSize;
         private PlayerPreferences _prefs;
 
         /// <summary>Category section labels in display order (#306).</summary>
@@ -36,6 +38,17 @@ namespace Strategos.UI.Views
             "AUDIO",
             "GAMEPLAY",
             "ACCESSIBILITY",
+        };
+
+        /// <summary>
+        /// Windowed size presets only (#390) — borderless fullscreen always matches the
+        /// display; CanvasScaler scales the UI.
+        /// </summary>
+        public static readonly (string Label, int Width, int Height)[] WindowedPresets =
+        {
+            ("1280 × 720", 1280, 720),
+            ("1600 × 900", 1600, 900),
+            ("1920 × 1080", 1920, 1080),
         };
 
         public void Build(RectTransform host)
@@ -77,7 +90,7 @@ namespace Strategos.UI.Views
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
 
             var sub = CreateTmp("Sub", col,
-                "Fullscreen + confirm-orders persist · windowed size presets land in #390",
+                "Fullscreen + windowed size + confirm-orders persist",
                 14, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
@@ -99,9 +112,10 @@ namespace Strategos.UI.Views
             if (_confirmOrders != null)
                 _confirmOrders.SetIsOnWithoutNotify(_prefs.ConfirmOrders);
             SyncFullscreenToggle();
+            SyncWindowedSizeDrop();
         }
 
-        public void OnHidden() { }
+        public void OnHidden() => HideDropdownsIn(transform);
 
         private void OnDestroy()
         {
@@ -123,6 +137,20 @@ namespace Strategos.UI.Views
             {
                 var on = Shell != null ? Shell.IsFullscreen : _prefs.Fullscreen;
                 _fullscreen = AddToggle(parent, "FULLSCREEN", on, PersistFullscreen);
+
+                _windowedSize = AddDropdown(parent, "WINDOWED SIZE", PersistWindowedSize);
+                var labels = new string[WindowedPresets.Length];
+                for (int i = 0; i < WindowedPresets.Length; i++)
+                    labels[i] = WindowedPresets[i].Label;
+                SetDrop(_windowedSize, labels, IndexOfPreset(_prefs.WindowWidth, _prefs.WindowHeight));
+
+                var hint = CreateTmp("WinHint", parent,
+                    "Windowed only — fullscreen matches the display",
+                    11, FontStyles.Italic);
+                hint.alignment = TextAlignmentOptions.Center;
+                hint.color = Theme.InkMuted;
+                hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+
                 Spacer(parent, 6);
                 return;
             }
@@ -149,17 +177,20 @@ namespace Strategos.UI.Views
             _fullscreen.SetIsOnWithoutNotify(on);
         }
 
+        private void SyncWindowedSizeDrop()
+        {
+            if (_windowedSize == null || _prefs == null) return;
+            var idx = IndexOfPreset(_prefs.WindowWidth, _prefs.WindowHeight);
+            _windowedSize.SetValueWithoutNotify(idx);
+            _windowedSize.RefreshShownValue();
+        }
+
         private void PersistFullscreen()
         {
             if (_fullscreen == null || Store == null) return;
             _prefs ??= new PlayerPreferences();
             _prefs.Fullscreen = _fullscreen.isOn;
-            // Keep remembered windowed size when leaving fullscreen (#388 fields; UI presets #390).
-            if (!_fullscreen.isOn && _prefs.WindowWidth <= 0)
-            {
-                _prefs.WindowWidth = 1600;
-                _prefs.WindowHeight = 900;
-            }
+            EnsureWindowedDefaults();
             Store.Save(_prefs);
 
             if (Shell == null) return;
@@ -169,12 +200,46 @@ namespace Strategos.UI.Views
                 Shell.ApplyWindowed(_prefs.WindowWidth, _prefs.WindowHeight);
         }
 
+        private void PersistWindowedSize()
+        {
+            if (_windowedSize == null || Store == null) return;
+            _prefs ??= new PlayerPreferences();
+            var preset = WindowedPresets[Mathf.Clamp(_windowedSize.value, 0, WindowedPresets.Length - 1)];
+            _prefs.WindowWidth = preset.Width;
+            _prefs.WindowHeight = preset.Height;
+            Store.Save(_prefs);
+
+            // Apply immediately only when windowed — fullscreen keeps display match (#385).
+            var fullscreen = Shell != null ? Shell.IsFullscreen : _prefs.Fullscreen;
+            if (!fullscreen)
+                Shell?.ApplyWindowed(_prefs.WindowWidth, _prefs.WindowHeight);
+        }
+
         private void PersistConfirm()
         {
             if (_confirmOrders == null || Store == null) return;
             _prefs ??= new PlayerPreferences();
             _prefs.ConfirmOrders = _confirmOrders.isOn;
             Store.Save(_prefs);
+        }
+
+        private void EnsureWindowedDefaults()
+        {
+            if (_prefs.WindowWidth > 0 && _prefs.WindowHeight > 0) return;
+            _prefs.WindowWidth = 1600;
+            _prefs.WindowHeight = 900;
+        }
+
+        /// <summary>Nearest preset index; defaults to 1600×900 when no exact match.</summary>
+        public static int IndexOfPreset(int width, int height)
+        {
+            for (int i = 0; i < WindowedPresets.Length; i++)
+            {
+                if (WindowedPresets[i].Width == width && WindowedPresets[i].Height == height)
+                    return i;
+            }
+            // Default middle preset (1600×900).
+            return 1;
         }
 
         private static void Spacer(Transform parent, float h)
