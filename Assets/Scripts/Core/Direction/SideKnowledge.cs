@@ -6,12 +6,12 @@
 // made: the exact fields Evaluate/Direct used to read off Simulation directly (_sim.Tick,
 // _sim.IsOver, _sim.Units, _sim.QueueOf, _sim.Victory), gathered here instead.
 //
-// NOT an observation encoding. #101 (still open at the time this was written) is what proposes
-// a fixed-shape "a side's knowledge" built strictly from ContactTracker's published reports,
-// never from ground truth -- Units and Victory below are still ground truth, exactly as
-// SideDirector read them before this refactor (see its own NearestUnheld remark: "Ground truth,
-// deliberately and temporarily"). If #101 lands, a policy wanting belief-correct knowledge
-// should consume its type; this struct is not trying to be that, only to be the seam.
+// NOT an observation encoding. #101 ships SideObservation / SideObservationEncoder for
+// belief-correct knowledge built from ContactTracker's published reports. This struct is
+// only the seam: Units and Victory below are still ground truth, exactly as SideDirector
+// read them before this refactor (see its own NearestUnheld remark: "Ground truth,
+// deliberately and temporarily"). A policy wanting belief-correct knowledge should consume
+// SideObservation; this struct is not trying to be that.
 //
 // A struct, not a class: built fresh once per Step() and handed to Decide by value, so nothing
 // a policy does to its fields (it shouldn't, but nothing stops it) can be observed by anyone
