@@ -443,6 +443,99 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Name of the squad tutorial under Resources/Scenarios (#309).</summary>
+        public const string TutorialName = "tutorial-squad";
+
+        /// <summary>
+        /// #309: squad-echelon skeleton for the interactive tutorial (#289). One friendly
+        /// squad is the player's seat (ROADMAP: at squad you *are* the unit); one distant
+        /// OPFOR squad and a centre objective give the same select/order path as skirmish
+        /// without company C2. Small map, erosion off — same reasoning as
+        /// <see cref="PushNorth"/>: load and Validate fast; #310 adds the first beat.
+        /// </summary>
+        public static Scenario Tutorial()
+        {
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var s = new Scenario
+            {
+                Name = "Squad Tutorial",
+                Description =
+                    "Learn select and move at squad echelon — you are the unit. " +
+                    "A quiet patch of ground before the full command problem.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Tutorial Glade",
+                    Seed = 20260804,
+                    Width = 64,
+                    Height = 64,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Plains,
+                    EnableErosion = false,
+                    EnableCulture = false,
+                },
+                PlayerEchelon = Echelon.Squad,
+            };
+
+            s.Sides.Add(blue);
+            s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
+
+            Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(20f, 32f), "1 SQD / A", "A PLT",
+                UnitCatalogue.InfantryFoot);
+
+            Add(s, red.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(48f, 32f), "OPFOR SQD", "OPFOR",
+                UnitCatalogue.InfantryFoot, training: 70f);
+
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "RALLY POINT",
+                Cell = new Vector2(32f, 32f),
+                RadiusCells = 6f,
+                InitialOwner = SideId.None,
+                PlaceNearKind = MapPoiKind.SpotHeight,
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 300,
+                Description = "BLUFOR held the rally point.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = red.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 300,
+                Description = "OPFOR held the rally point.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = blue.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "OPFOR rendered combat ineffective.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = red.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "BLUFOR rendered combat ineffective.",
+            });
+
+            s.TimeLimitTicks = 1800;
+
+            return s;
+        }
+
         /// <summary>Name of the Little Round Top historical scenario (#333 / #342).</summary>
         public const string LittleRoundTopName = "little-round-top-20th-maine";
 

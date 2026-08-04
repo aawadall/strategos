@@ -1,0 +1,197 @@
+{
+  "FormatVersion": 1,
+  "Name": "Squad Tutorial",
+  "Description": "Learn select and move at squad echelon — you are the unit. A quiet patch of ground before the full command problem.",
+  "Map": {
+    "Name": "Tutorial Glade",
+    "Seed": 20260804,
+    "Width": 64,
+    "Height": 64,
+    "MetresPerCell": 25.0,
+    "Profile": "Plains",
+    "Origin": {
+      "Zone": 32,
+      "Band": "U",
+      "Easting": 500000.0,
+      "Northing": 5600000.0
+    },
+    "EnableErosion": false,
+    "EnableCulture": false
+  },
+  "Sides": [
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Name": "BLUFOR",
+      "Affiliation": "Friend",
+      "Colour": {
+        "r": 0.502,
+        "g": 0.878,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "RankLadder": "us-army"
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Name": "OPFOR",
+      "Affiliation": "Hostile",
+      "Colour": {
+        "r": 1.0,
+        "g": 0.502,
+        "b": 0.502,
+        "a": 1.0
+      },
+      "RankLadder": "soviet"
+    }
+  ],
+  "Units": [
+    {
+      "Id": {
+        "Value": 1
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10031000121211000000",
+      "Designation": "1 SQD / A",
+      "HigherFormation": "A PLT",
+      "CapabilityId": "inf-foot",
+      "Cell": {
+        "x": 20.0,
+        "y": 32.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Side": {
+        "Value": 2
+      },
+      "ParentId": {
+        "Value": 0
+      },
+      "Sidc": "10061000121211000000",
+      "Designation": "OPFOR SQD",
+      "HigherFormation": "OPFOR",
+      "CapabilityId": "inf-foot",
+      "Cell": {
+        "x": 48.0,
+        "y": 32.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 70.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    }
+  ],
+  "PlayerSide": {
+    "Value": 1
+  },
+  "PlayerEchelon": "Squad",
+  "Objectives": [
+    {
+      "Id": 1,
+      "Name": "RALLY POINT",
+      "Cell": {
+        "x": 32.0,
+        "y": 32.0
+      },
+      "RadiusCells": 6.0,
+      "InitialOwner": {
+        "Value": 0
+      },
+      "PlaceNearKind": "SpotHeight",
+      "PlaceNearName": ""
+    }
+  ],
+  "ControlMeasures": [],
+  "Victory": [
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "BLUFOR held the rally point.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 300,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    },
+    {
+      "Kind": "HoldObjectives",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "OPFOR held the rally point.",
+      "Priority": 10,
+      "StrengthThresholdPercent": 25.0,
+      "ObjectiveIds": [
+        1
+      ],
+      "HoldTicks": 300,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 1
+      },
+      "Description": "OPFOR rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 40.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    },
+    {
+      "Kind": "DestroyEnemy",
+      "Side": {
+        "Value": 2
+      },
+      "Description": "BLUFOR rendered combat ineffective.",
+      "Priority": 5,
+      "StrengthThresholdPercent": 40.0,
+      "ObjectiveIds": [],
+      "HoldTicks": 0,
+      "DeadlineTick": 0,
+      "DirectiveId": 0
+    }
+  ],
+  "TimeLimitTicks": 1800
+}

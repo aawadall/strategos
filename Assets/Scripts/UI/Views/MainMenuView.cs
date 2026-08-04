@@ -82,6 +82,8 @@ namespace Strategos.UI.Views
             AddButton(col, "START HIGHLAND CAMPAIGN", () => Shell?.StartHighlandFromMenu());
             AddButton(col, "SKIRMISH ONLY", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.SkirmishName));
             AddButton(col, "PUSH NORTH", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.PushNorthName));
+            AddButton(col, "SQUAD TUTORIAL",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.TutorialName));
             AddButton(col, "LITTLE ROUND TOP",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.LittleRoundTopName));
 
