@@ -4,6 +4,7 @@
 // #371: boots into MainMenuView (front door). PLAY is a session entered from the menu;
 // EXPLORE / SCENARIO / DRILLS / BUILDER remain Tools. Pause overlay lives inside PlayView.
 // #306: SettingsView is a no-tab screen reached from menu Options.
+// #387: F11 fullscreen/windowed goes through ToggleFullscreen / ApplyWindowed / ApplyFullscreen.
 
 using System;
 using TMPro;
@@ -127,22 +128,57 @@ namespace Strategos.UI
             _views.Get<PlayView>()?.QuickLoadPublic();
         }
 
+        /// <summary>
+        /// Last windowed size remembered across F11 toggles. Empty until the player leaves
+        /// fullscreen once; then falls back to 1600×900 (#387 / #385). Prefs apply lands in #391.
+        /// </summary>
         private Vector2Int _windowed;
+
+        /// <summary>True when the player is in borderless fullscreen (not exclusive).</summary>
+        public bool IsFullscreen => Screen.fullScreen;
+
+        /// <summary>Windowed size F11 / Settings will restore to (default 1600×900).</summary>
+        public Vector2Int RememberedWindowedSize =>
+            _windowed.x > 0 ? _windowed : new Vector2Int(1600, 900);
+
+        /// <summary>
+        /// F11 and Settings share this path (#387) — borderless fullscreen matches the display;
+        /// windowed uses the remembered size (or an explicit preset from #390).
+        /// </summary>
+        public void ToggleFullscreen()
+        {
+            if (IsFullscreen) ApplyWindowed();
+            else ApplyFullscreen();
+        }
+
+        /// <summary>
+        /// Enter windowed mode. Optional <paramref name="width"/>/<paramref name="height"/>
+        /// become the remembered size when both are positive.
+        /// </summary>
+        public void ApplyWindowed(int width = 0, int height = 0)
+        {
+            if (width > 0 && height > 0)
+                _windowed = new Vector2Int(width, height);
+            var size = RememberedWindowedSize;
+            Screen.SetResolution(size.x, size.y, FullScreenMode.Windowed);
+        }
+
+        /// <summary>
+        /// Enter borderless fullscreen at the current display resolution. Remembers the
+        /// outgoing windowed size when leaving windowed mode.
+        /// </summary>
+        public void ApplyFullscreen()
+        {
+            if (!Screen.fullScreen)
+                _windowed = new Vector2Int(Screen.width, Screen.height);
+            var display = Screen.currentResolution;
+            Screen.SetResolution(display.width, display.height, FullScreenMode.FullScreenWindow);
+        }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.F11)) return;
-            if (Screen.fullScreen)
-            {
-                var size = _windowed.x > 0 ? _windowed : new Vector2Int(1600, 900);
-                Screen.SetResolution(size.x, size.y, FullScreenMode.Windowed);
-            }
-            else
-            {
-                _windowed = new Vector2Int(Screen.width, Screen.height);
-                var display = Screen.currentResolution;
-                Screen.SetResolution(display.width, display.height, FullScreenMode.FullScreenWindow);
-            }
+            if (Input.GetKeyDown(KeyCode.F11))
+                ToggleFullscreen();
         }
 
         private void BuildChrome(out Transform tabStrip, out RectTransform contentHost)
