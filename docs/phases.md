@@ -116,6 +116,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Forced march (speed boost with readiness penalty) *(fatigue from marching exists; forced-march order does not)*
 - [ ] River crossing: bridge vs. ford vs. wet gap crossing *(bridges/fords generate; DigIn seam #33 shipped — Bridge/Clear still reserved)*
 - [x] Special-action seam: `ActionKind` + DigIn → Hold/Defend (#33 / #278–#282)
+- [x] Dynamic world layer: spawn/despawn hazards, Signature, PLAY mark (#34 / #273–#277)
 - [ ] A* as a living plan — replan when the situation changes (#35)
 
 ### 4.2 Combat

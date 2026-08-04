@@ -85,6 +85,7 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Combat/` | `EngagementResolver` — the direct-fire model |
 | `Assets/Scripts/Core/Reactions/` | `ReactionController` — ROE and reflexes |
 | `Assets/Scripts/Core/Direction/` | `SideDirector` — side-level intent for an unplayed side |
+| `Assets/Scripts/Core/World/` | Dynamic world objects — hazards etc. (#34) |
 | `Assets/Scripts/Core/Objectives/` | Objectives, victory conditions, the evaluator |
 | `Assets/Scripts/Core/Movement/` | Movement grid and A\* |
 | `Assets/Scripts/Core/Doctrine/` | TTPs — coded drills, figures, readiness, pack IO |

@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Dynamic world layer (#34 / #273–#277): `WorldObject` / `WorldLayer` on `Simulation`;
+  `HazardBlocking` blocks `MovementGrid.Passable`; PLAY sheet mark via `WorldObjectDrawer`;
+  snapshot + Signature; `WorldLayerProbe`.
 - Special-action seam (#33 / #278–#282): `ActionKind` + `UnitCapabilities.CanDigIn`; DigIn
   expands to Hold/Defend (same dig-in clock / half fire); PLAY **DIG IN** palette verb; HOLD
   gated the same way; artillery ships without dig-in; `SpecialActionsProbe`.

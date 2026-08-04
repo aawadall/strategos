@@ -1219,11 +1219,16 @@ namespace Strategos.UI.Views
 
             _card.Render(_map, options, (pixels, view) =>
             {
-                if (_scenario?.ControlMeasures == null || _scenario.ControlMeasures.Count == 0)
-                    return;
-                // #186: hide opposing-owned GCMs; shared (Owner = None) still draw.
-                ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk,
-                    ViewerSide());
+                if (_scenario?.ControlMeasures != null && _scenario.ControlMeasures.Count > 0)
+                {
+                    // #186: hide opposing-owned GCMs; shared (Owner = None) still draw.
+                    ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk,
+                        ViewerSide());
+                }
+
+                // #34 / #276: dynamic hazards on the sheet, same pixel space as GCMs.
+                if (_sim?.World != null && _sim.World.Count > 0)
+                    World.WorldObjectDrawer.Draw(pixels, view, _sim.World.Objects);
             });
             _card.SetMarginaliaFor(_map, _scenario.Map.Seed);
             LayOutMarkers();

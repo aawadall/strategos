@@ -82,6 +82,12 @@ namespace Strategos.Persistence
         public List<DirectiveResponse> DirectiveResponses = new();
         public List<Casualty> Casualties = new();
 
+        /// <summary>Dynamic world objects (#34). Empty when the run had none.</summary>
+        public List<Strategos.World.WorldObject> WorldObjects = new();
+
+        /// <summary>Next id the layer would assign — keeps spawn ids stable across restore.</summary>
+        public int WorldNextId = 1;
+
         /// <summary>
         /// Messages published during the tick the snapshot was taken, not yet delivered. See
         /// <c>Messaging.MessageBus&lt;T&gt;.Pending</c>'s own remarks for why these are real

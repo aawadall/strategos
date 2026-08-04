@@ -53,6 +53,8 @@ namespace Strategos.Commands
     {
         public MapData Map;
         public UnitCatalogue Catalogue;
+        /// <summary>Live world layer (#34), or null when the run has none.</summary>
+        public World.WorldLayer World;
 
         /// <summary>Current simulation step.</summary>
         public int Tick;

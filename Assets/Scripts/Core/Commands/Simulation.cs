@@ -72,6 +72,10 @@ namespace Strategos.Commands
         public Scenario Scenario { get; }
         public MapData Map { get; }
         public UnitCatalogue Catalogue { get; }
+
+        /// <summary>Dynamic world objects (#34) — hazards etc., neither MapData nor units.</summary>
+        public World.WorldLayer World { get; } = new();
+
         public CommandBus Bus { get; } = new();
         public CommandLog Log { get; } = new();
 
@@ -255,6 +259,14 @@ namespace Strategos.Commands
         public CommandQueue QueueOf(UnitId id) =>
             _queues.TryGetValue(id.Value, out var q) ? q : null;
 
+        /// <summary>Spawns a world object (#34). Returns its id.</summary>
+        public int SpawnWorldObject(World.WorldObjectKind kind, Vector2Int cell,
+            int lifetimeTicks = -1) =>
+            World.Spawn(kind, cell, lifetimeTicks);
+
+        /// <summary>Removes a world object by id (#34).</summary>
+        public bool DespawnWorldObject(int id) => World.Despawn(id);
+
         /// <summary>
         /// The route a unit is currently walking, from whichever executor planned it, or null.
         /// Asked rather than recomputed, so what a view draws is what the unit is following.
@@ -433,12 +445,15 @@ namespace Strategos.Commands
 
             _context.Map = Map;
             _context.Catalogue = Catalogue;
+            _context.World = World;
             _context.Tick = Tick;
             _context.SecondsPerTick = SecondsPerTick;
 
             Bus.Deliver();
             Reports.Deliver();
             Directives.Deliver();
+
+            World.TickLifetimes();
 
             // Reflexes decide from the picture as it stands at the START of the step, before
             // anyone has moved or fired. A reaction therefore cannot be influenced by something
@@ -1198,6 +1213,8 @@ namespace Strategos.Commands
             sb.Append(DirectiveLog.Signature()).Append('|');
             Casualties.AppendSignature(sb);
             sb.Append('|');
+            World.AppendSignature(sb);
+            sb.Append('|');
             Victory?.AppendSignature(sb);
             sb.Append('|');
 
@@ -1263,6 +1280,10 @@ namespace Strategos.Commands
             snap.DirectiveLog.AddRange(DirectiveLog.Entries);
             snap.DirectiveResponses.AddRange(DirectiveResponses.Entries);
             snap.Casualties.AddRange(Casualties.Entries);
+
+            for (int i = 0; i < World.Objects.Count; i++)
+                snap.WorldObjects.Add(World.Objects[i].Clone());
+            snap.WorldNextId = World.PeekNextId();
 
             snap.CommandBusPending.AddRange(Bus.Pending);
             snap.ReportBusPending.AddRange(Reports.Pending);
@@ -1345,6 +1366,8 @@ namespace Strategos.Commands
             sim.DirectiveLog.RestoreEntries(snapshot.DirectiveLog);
             sim.DirectiveResponses.RestoreEntries(snapshot.DirectiveResponses);
             sim.Casualties.RestoreEntries(snapshot.Casualties);
+
+            sim.World.Restore(snapshot.WorldObjects, snapshot.WorldNextId);
 
             sim.Bus.LoadPending(snapshot.CommandBusPending);
             sim.Reports.LoadPending(snapshot.ReportBusPending);

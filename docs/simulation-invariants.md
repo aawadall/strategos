@@ -3,7 +3,7 @@
 The fixed-step simulation: three topics, per-unit queues, combat,
 reflexes, objectives. **Read before touching anything under `Core/Commands`, `Core/Reports`,
 `Core/Combat`, `Core/Reactions`, `Core/Direction`, `Core/Directives`, `Core/Objectives`,
-`Core/Movement` or `Core/Messaging`.** Breaking one of these does not throw — it makes a replay diverge some
+`Core/Movement`, `Core/World` or `Core/Messaging`.** Breaking one of these does not throw — it makes a replay diverge some
 number of steps later.
 
 [docs/command-architecture.md](command-architecture.md) carries the reasoning; this carries
@@ -149,6 +149,10 @@ Tick++
   reserved kinds with no expansion yet. PLAY exposes DigIn as a palette verb and HOLD still
   goes through the same gate. Artillery ships with `CanDigIn = false`.
   `SpecialActionsProbe` asserts prep time, fire reduction, and refuse.
+- **Dynamic world objects (#34) live on `Simulation.World`, not on `MapData`.** Spawn /
+  despawn / lifetime ticks; `HazardBlocking` makes `MovementGrid.Passable` false without
+  baking into `_passable`. Included in `Signature()` and `SimulationSnapshot`. PLAY draws via
+  `WorldObjectDrawer`. `WorldLayerProbe` covers spawn, block, despawn, twin signature, pixels.
 - **`Screen` is the other never-ending hold, and it buys reach rather than protection.** Same
   queue shape as Defend, but posture is `Posture.Screening` — combat exposure matches Halted
   (`PostureFactor` 1.0), and `ContactTracker` multiplies detection by
@@ -363,9 +367,8 @@ Tick++
   satisfied for long enough, which can now lag the clock reaching `HoldTicks` by at most
   `EvaluationInterval` ticks rather than silently missing a broken hold altogether.
 - **`Simulation.Signature()` is what the divergence tests compare.** It covers unit state,
-  queue state *and* the report log — a run that lands units correctly but reports
-  differently has diverged in what its commander knows, which is exactly what an AI will
-  act on.
+  queue state, the report log, *and* the dynamic world layer (#34) — a run that places a
+  hazard differently has diverged in what units can walk through.
 - **Not everything that must replay correctly belongs in `Signature()`.** `DirectiveResponseLog`
   (#94) is deliberately absent: an acknowledgement already produces a `DirectiveAcknowledged`
   report, which `ReportLog.Signature()` already covers, so folding the response log in as well

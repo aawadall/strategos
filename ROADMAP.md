@@ -33,16 +33,15 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
 environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), US/NATO
 topo palette (#169), and rank gates (#76) are done. Player-as-node (#36), career across
-campaigns (#109), game modes (#287), AI difficulty (#291), and special-action DigIn (#33)
-are done.
+campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn (#33), and dynamic world
+layer (#34) are done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#34](https://github.com/aawadall/strategos/issues/34) | Epic: dynamic world layer — children #273–#277 |
 | [#334](https://github.com/aawadall/strategos/issues/334) | Epic: procedural scenario generation — children #347–#352 |
-| [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
+| [#35](https://github.com/aawadall/strategos/issues/35) | Epic: A* replan when situation changes — children #270–#272 |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -51,7 +50,7 @@ are done.
 - **C2 / C3 depth** — #36 closed (#266–#269); still open: #47, #62, #65 (#85 mission types shipped)
 - **Steam readiness** — #287 / #291 **closed**; still open: #288–#290, #293 (children #300+)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
-- **World & movement depth** — #33 **closed**; still open: #34, #35, #51
+- **World & movement depth** — #33 / #34 **closed**; still open: #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
   is #334 (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
