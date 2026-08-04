@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Display prefs contract probe (#392): `DisplayPrefsProbe` — Fullscreen/WxH round-trip plus
+  Settings/F11 shared AppShell Apply* / ToggleFullscreen / boot apply.
 - Apply display prefs on AppShell boot (#391): `ApplyDisplayPreferences` seeds remembered
   windowed size and applies fullscreen/windowed from `PlayerPreferences` before chrome builds.
 - Settings GRAPHICS windowed size presets (#390): 1280×720 / 1600×900 / 1920×1080 dropdown
