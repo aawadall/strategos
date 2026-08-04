@@ -274,12 +274,17 @@ Tick++
   `ObservationProbe` holds the fog-leak guard: two sims that differ only in an *unseen*
   hostile's true cell must encode identically, and a deliberate naive ground-truth encoder on
   the same pair must *not* (so the guard is shown live before the belief path is trusted).
-  `ISidePolicy.Decide` still takes `SideKnowledge`; wiring observation into the policy/env
-  lifecycle is #102–#104. `Simulation.Director` stays typed as the concrete `SideDirector`
-  (an `as` cast over the policy field) because existing callers read `OrdersIssued` and the
-  save/load retry memory off it specifically; `Simulation.SetPolicy` is the general seam, and
-  `DirectorProbe`'s `NoSimulationStubPolicy` — a `SideId` field and nothing else — is plugged
-  in through it as the direct disproof of the issue's own stated failure mode.
+  **Action space (#102)** is the drill vocabulary (`SideActionSpace`: twelve shipped codes +
+  `ADVANCE` to nearest unheld objective), not cell `MoveTo`. `SideActionMask` gates alive,
+  idle queue, `TtpReadiness` ≠ Untrained, and (leaves) ExpandDrill-compatible bindability via
+  `DrillBindability`; threat for bindability is ground truth because `ExpandDrill` still is.
+  `ActionSpaceProbe` holds one case per gate. `ISidePolicy.Decide` still takes `SideKnowledge`;
+  wiring observation/actions into the env lifecycle is #103–#104. `Simulation.Director` stays
+  typed as the concrete `SideDirector` (an `as` cast over the policy field) because existing
+  callers read `OrdersIssued` and the save/load retry memory off it specifically;
+  `Simulation.SetPolicy` is the general seam, and `DirectorProbe`'s `NoSimulationStubPolicy` —
+  a `SideId` field and nothing else — is plugged in through it as the direct disproof of the
+  issue's own stated failure mode.
 - **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
   standing where it was, to be destroyed a few seconds later.
 - **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data
