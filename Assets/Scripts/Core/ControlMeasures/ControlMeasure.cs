@@ -22,7 +22,7 @@ namespace Strategos.ControlMeasures
 
         public ControlMeasureKind Kind = ControlMeasureKind.Checkpoint;
 
-        /// <summary>Briefing label — "CP 1", "PL AMBER", "BDE BOUNDARY".</summary>
+        /// <summary>Briefing label — "CP 1", "PL AMBER", "AXIS BLUE".</summary>
         public string Name = "Control Measure";
 
         /// <summary>Owning side. <see cref="SideId.None"/> means shared / unowned.</summary>
@@ -37,26 +37,43 @@ namespace Strategos.ControlMeasures
         /// <summary>
         /// Optional radius in cells for a checkpoint — same idea as
         /// <see cref="Objectives.Objective.RadiusCells"/>, for Contains tests and draw size.
-        /// Ignored for line kinds.
+        /// Ignored for line / arrow / area kinds.
         /// </summary>
         public float RadiusCells = 3f;
 
         /// <summary>
-        /// Polyline vertices in cell coordinates (phase line, boundary). Empty for a
-        /// checkpoint that only uses <see cref="Cell"/>.
+        /// Polyline / polygon vertices in cell coordinates. Phase lines and arrows need
+        /// ≥2; areas ≥3. Empty for a checkpoint that only uses <see cref="Cell"/>.
         /// </summary>
         public List<Vector2> Points = new();
 
         /// <summary>
-        /// Boundary echelon tick mark. <see cref="Echelon.None"/> for phase lines and
-        /// checkpoints — ignored when drawing those kinds.
+        /// Boundary echelon tick mark. <see cref="Echelon.None"/> for other kinds —
+        /// ignored when drawing those.
         /// </summary>
         public Echelon Echelon = Echelon.None;
+
+        /// <summary>
+        /// Axis-of-advance role (#164). Ignored unless <see cref="Kind"/> is
+        /// <see cref="ControlMeasureKind.AxisOfAdvance"/>.
+        /// </summary>
+        public AxisOfAdvanceRole AxisRole = AxisOfAdvanceRole.Main;
 
         public bool IsPointKind => Kind == ControlMeasureKind.Checkpoint;
 
         public bool IsLineKind =>
             Kind == ControlMeasureKind.PhaseLine || Kind == ControlMeasureKind.Boundary;
+
+        public bool IsArrowKind =>
+            Kind == ControlMeasureKind.AxisOfAdvance ||
+            Kind == ControlMeasureKind.DirectionOfAttack ||
+            Kind == ControlMeasureKind.Retirement ||
+            Kind == ControlMeasureKind.Counterattack;
+
+        public bool IsAreaKind =>
+            Kind == ControlMeasureKind.BattlePosition ||
+            Kind == ControlMeasureKind.EngagementArea ||
+            Kind == ControlMeasureKind.KillZone;
 
         public bool Contains(Vector2 cell) =>
             IsPointKind && (cell - Cell).sqrMagnitude <= RadiusCells * RadiusCells;

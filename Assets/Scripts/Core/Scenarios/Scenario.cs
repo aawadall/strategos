@@ -410,36 +410,47 @@ namespace Strategos.Scenarios
 
                     case ControlMeasureKind.PhaseLine:
                     case ControlMeasureKind.Boundary:
-                        int n = m.Points?.Count ?? 0;
-                        if (n < 2)
-                            problems.Add($"Control measure {m.Id} '{m.Name}' needs at least " +
-                                         $"2 points, has {n}.");
-                        else if (Map != null)
-                        {
-                            for (int i = 0; i < n; i++)
-                                if (OffMap(m.Points[i]))
-                                {
-                                    problems.Add($"Control measure {m.Id} '{m.Name}' point {i} " +
-                                                 "is off the map.");
-                                    break;
-                                }
-                        }
+                        ValidatePolyline(m, minPoints: 2, problems);
                         if (m.Kind == ControlMeasureKind.Boundary && m.Echelon == Echelon.None)
                             problems.Add($"Boundary {m.Id} '{m.Name}' has no echelon tick.");
                         break;
 
-                    // Arrow / area kinds (#164 / #165) — accept in JSON, do not validate geometry yet.
                     case ControlMeasureKind.AxisOfAdvance:
                     case ControlMeasureKind.DirectionOfAttack:
+                    case ControlMeasureKind.Retirement:
+                    case ControlMeasureKind.Counterattack:
+                        ValidatePolyline(m, minPoints: 2, problems);
+                        break;
+
                     case ControlMeasureKind.BattlePosition:
                     case ControlMeasureKind.EngagementArea:
                     case ControlMeasureKind.KillZone:
+                        ValidatePolyline(m, minPoints: 3, problems);
                         break;
 
                     default:
                         problems.Add($"Control measure {m.Id} has unknown kind {(int)m.Kind}.");
                         break;
                 }
+            }
+        }
+
+        private void ValidatePolyline(ControlMeasure m, int minPoints, List<string> problems)
+        {
+            int n = m.Points?.Count ?? 0;
+            if (n < minPoints)
+            {
+                problems.Add($"Control measure {m.Id} '{m.Name}' needs at least " +
+                             $"{minPoints} points, has {n}.");
+                return;
+            }
+
+            if (Map == null) return;
+            for (int i = 0; i < n; i++)
+            {
+                if (!OffMap(m.Points[i])) continue;
+                problems.Add($"Control measure {m.Id} '{m.Name}' point {i} is off the map.");
+                break;
             }
         }
 

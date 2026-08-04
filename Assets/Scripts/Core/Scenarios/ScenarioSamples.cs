@@ -172,6 +172,58 @@ namespace Strategos.Scenarios
                 },
             });
 
+            // #164 / #165: arrows and areas — one of each family the drawer paints.
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 4,
+                Kind = ControlMeasureKind.AxisOfAdvance,
+                Name = "AXIS BLUE",
+                Owner = blue.Id,
+                AxisRole = AxisOfAdvanceRole.Main,
+                Points =
+                {
+                    new Vector2(55f, 70f),
+                    new Vector2(90f, 95f),
+                    new Vector2(115f, 110f),
+                },
+            });
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 5,
+                Kind = ControlMeasureKind.DirectionOfAttack,
+                Name = "DOA NORTH",
+                Owner = blue.Id,
+                Points =
+                {
+                    new Vector2(100f, 70f),
+                    new Vector2(118f, 100f),
+                },
+            });
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 6,
+                Kind = ControlMeasureKind.EngagementArea,
+                Name = "EA ANVIL",
+                Owner = blue.Id,
+                Points =
+                {
+                    new Vector2(108f, 104f),
+                    new Vector2(130f, 104f),
+                    new Vector2(130f, 124f),
+                    new Vector2(108f, 124f),
+                },
+            });
+            // Opposing-owned CP — PLAY with player=blue must hide it (#186).
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 7,
+                Kind = ControlMeasureKind.Checkpoint,
+                Name = "CP RED",
+                Owner = red.Id,
+                Cell = new Vector2(170f, 170f),
+                RadiusCells = 3f,
+            });
+
             // #73/#36: a directive from higher, addressed to the one BLUFOR root (TF 1-7 IN,
             // unit 7) and never decomposed into orders — the player reads it, acknowledges it,
             // and works out the how themselves. From is TF 1-7 IN's own HigherFormation, not
