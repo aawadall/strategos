@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Climb campaign chain (#406): `climb-campaign.json` + `CampaignSamples.ClimbName`;
+  CampaignSaveLoadProbe loads/Validates the shipped climb fixture.
 - Climb campaign scenarios (#405): `climb-squad` / `climb-company` / `climb-battalion` with
   escalating `PlayerEchelon` and Id-stable leaves (1/2 + reinforcement HQs); ScenarioProbe fixtures.
 - Climb campaign design note (#404 / #403): `docs/climb-campaign.md` — Squad → Company →

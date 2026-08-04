@@ -1,0 +1,22 @@
+{
+  "FormatVersion": 1,
+  "Name": "Climb Campaign",
+  "Description": "Three-op seat ladder — Squad → Company → Battalion (#403 / #406). Id-stable leaves across ops; Regiment stays Highland.",
+  "Operations": [
+    {
+      "ScenarioName": "climb-squad",
+      "Name": "Squad Seat",
+      "Outcome": "Unplayed"
+    },
+    {
+      "ScenarioName": "climb-company",
+      "Name": "Company Seat",
+      "Outcome": "Unplayed"
+    },
+    {
+      "ScenarioName": "climb-battalion",
+      "Name": "Battalion Seat",
+      "Outcome": "Unplayed"
+    }
+  ]
+}

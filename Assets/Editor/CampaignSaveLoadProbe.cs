@@ -43,6 +43,25 @@ namespace Strategos.Editor
             var dir = TempDir();
             try
             {
+                // #406: climb chain must load and Validate alongside Valley.
+                var climb = CampaignChainIO.Load(CampaignSamples.ClimbName);
+                if (climb == null)
+                {
+                    log.AppendLine("  FAIL shipped climb-campaign did not load");
+                    return 1;
+                }
+
+                var climbProblems = climb.Validate(UnitCatalogue.Default());
+                if (climbProblems.Count > 0)
+                {
+                    log.AppendLine($"  FAIL climb-campaign Validate: {climbProblems.Count} problem(s)");
+                    foreach (var p in climbProblems) log.AppendLine($"    - {p}");
+                    return 1;
+                }
+
+                log.AppendLine(
+                    $"  shipped '{CampaignSamples.ClimbName}': {climb.Name}, {climb.Operations.Count} ops");
+
                 var chain = CampaignChainIO.Load(CampaignSamples.ValleyName);
                 if (chain == null)
                 {

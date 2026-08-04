@@ -128,4 +128,4 @@ campaign probe style (`CampaignChainDriverProbe`) over a PLAY UI click script.
 
 ## Implementation order (unchanged from #403)
 
-`#404` (this note) → `#405` scenarios → `#406` chain JSON → `#407` menu/PLAY → `#408` probe → `#409` docs cross-link polish.
+`#404` (this note) → `#405` scenarios → `#406` chain JSON (shipped) → `#407` menu/PLAY → `#408` probe → `#409` docs cross-link polish.
