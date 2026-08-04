@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concepts — Strategos</title>
+<meta name="description" content="The design principles Strategos actually follows: echelon as the difficulty curve, factory-and-decorator pipelines, deterministic messaging, and procedural-first rendering.">
+<link rel="canonical" href="https://aawadall.github.io/strategos/concepts.html">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aawadall.github.io/strategos/concepts.html">
+<meta property="og:title" content="Concepts — Strategos">
+<meta property="og:description" content="The design principles Strategos actually follows: echelon as the difficulty curve, factory-and-decorator pipelines, deterministic messaging, and procedural-first rendering.">
+<meta property="og:image" content="https://aawadall.github.io/strategos/images/explore-symbol-library.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Concepts — Strategos">
+<meta name="twitter:description" content="The design principles Strategos actually follows.">
+<meta name="twitter:image" content="https://aawadall.github.io/strategos/images/explore-symbol-library.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div>
+      <h1>STRATEGOS</h1>
+      <p class="tagline">A tactical command simulation built on topographic maps, NATO APP-6D
+        symbology, and multi-echelon command — from a fireteam to a theatre command.</p>
+    </div>
+    <nav>
+      <a class="page" href="index.html">What's built</a>
+      <a class="page" href="roadmap.html">Roadmap</a>
+      <a class="page" href="concepts.html" aria-current="page">Concepts</a>
+      <a class="cta" href="https://github.com/aawadall/strategos">View source on GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="status-strip">
+  <div class="wrap">
+    <strong>What concepts we follow</strong> — the recurring design decisions behind the code,
+    not a feature list. Sourced from this repository's own internal documentation
+    (<a href="https://github.com/aawadall/strategos/blob/master/CLAUDE.md">CLAUDE.md</a>,
+    <a href="https://github.com/aawadall/strategos/blob/master/docs/command-architecture.md">docs/command-architecture.md</a>).
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <section id="echelon-curve">
+      <h2>Echelon is the difficulty curve</h2>
+      <div class="concept">
+        <h3>The scale you command determines how much of the command problem exists at all</h3>
+        <p>
+          Commanding a fireteam has no C2 problem — you <em>are</em> the unit, you see what it
+          sees, and orders are instant. By battalion, subordinates are out of sight and reports
+          mediate what you know. At corps and above, you work from reports already stale and issue
+          intent rather than instructions.
+        </p>
+        <table>
+          <thead><tr><th>Commanding</th><th>What command feels like</th></tr></thead>
+          <tbody>
+            <tr><td>Fireteam / squad</td><td>No C2 problem — you <em>are</em> the unit. You see what it sees; orders are instant.</td></tr>
+            <tr><td>Platoon / company</td><td>Subordinates exist but are close. Orders are near-immediate.</td></tr>
+            <tr><td>Battalion</td><td>Subordinates out of sight. Reports mediate what you know. Delay begins to bite.</td></tr>
+            <tr><td>Brigade / division</td><td>You command through subordinate headquarters. You cannot see the front.</td></tr>
+            <tr><td>Corps / army</td><td>You work from reports already stale. You issue intent, not instructions.</td></tr>
+            <tr><td>Theater</td><td>Coalition. Some formations you cannot order at all, only ask.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Communications degradation, order propagation delay and intelligence fusion aren't
+          features bolted onto a finished game — they're what makes each echelon feel different
+          rather than merely bigger. Introduced all at once at squad level they would be noise;
+          unlocked as the player climbs, they're the learning curve. The consequence for the code:
+          these effects are <strong>parameterised by echelon, not toggled</strong> — order delay is
+          a function of echelon, distance and terrain that returns approximately zero at squad
+          level and grows from there, one code path from tutorial to theatre rather than a mode
+          switch.
+        </p>
+      </div>
+    </section>
+
+    <section id="pipelines">
+      <h2>Factory builds the base; decorators append layers</h2>
+      <div class="concept">
+        <h3>The symbol system</h3>
+        <p>
+          <code>NatoSymbolComposer.Compose</code> is the entry point and fixes the order — later
+          stages read what earlier ones wrote:
+        </p>
+        <pre>SIDCParser → SIDCCode
+    └─ SymbolFactory.CreateBase      frame + fill
+       └─ IconDecorator              entity icon + entity-type variant mark
+          └─ SectorModifierDecorator sector 1 (upper) / sector 2 (lower)
+             └─ AmplifierDecorator   echelon, HQ staff, TF bracket, feint
+                └─ ConditionDecorator    condition bar + combat-power bar
+                   └─ TextAmplifierDecorator  fields T, M, F
+                      → NatoSymbolBaker.Bake → one Sprite</pre>
+        <p>
+          <code>INatoSymbol</code> is data only — an ordered list of draw layers plus text
+          amplifiers. Nothing rasterises until <code>Bake</code> runs, once, at the end.
+        </p>
+        <h3>The map system mirrors it</h3>
+        <p>
+          Same shape: an ordered pipeline over a data-only container, and nothing rasterises until
+          the renderer runs. <code>MapGenerator.Generate</code> hard-codes its stage order for the
+          same reason <code>Compose</code> does:
+        </p>
+        <pre>MapGenerationSettings → ReliefParameters
+    └─ TectonicStage      base landform, sea level
+       └─ (authored relief hook)
+          └─ ErosionStage      weathers the surface
+             └─ HydrologyStage  fill, D8 routing, lakes, rivers, moisture
+                └─ LandcoverStage  classification from slope + moisture
+                   └─ SettlementStage  towns, stamped into landcover
+                      └─ NetworkStage  roads between them, bridges and fords
+                         └─ (authored features hook)</pre>
+        <p>
+          <code>MapData</code> is data only. <code>MapRasterizer.RenderPixels</code> is the only
+          thing that draws, and its layer order is fixed too — ground, contours, areas, lines,
+          point marks, labels, grid. Labels come after every mark because placement can only avoid
+          collisions it can see; the grid comes last because a grid line that gives way to a road
+          has stopped being a coordinate reference.
+        </p>
+        <p>
+          The two systems share one primitive library. Symbols bake into a square buffer, maps
+          into a rectangular one, so every drawing primitive has a <code>(w, h)</code> overload
+          with the square one forwarding to it — one place to add a new shape, not two.
+        </p>
+      </div>
+    </section>
+
+    <section id="messaging">
+      <h2>Orders and reports are messages, not calls</h2>
+      <div class="concept">
+        <h3>Why</h3>
+        <p>
+          A direct call from the UI into a unit is the obvious implementation and the wrong one:
+          drawing in-progress orders, replaying a saved battle, shipping orders over a network for
+          multiplayer, and an AI issuing orders through the same path a player does all need to
+          <em>observe or inject</em> orders. Each is painful to retrofit onto direct calls and
+          nearly free if an order is a message on a topic. Two topics, matching the direction of
+          real command flow:
+        </p>
+        <pre>                    ┌─────────────────────┐
+   player / AI ────►│   COMMAND topic     │────► units (filter by addressee)
+                    │   (orders down)     │────► UI            (read-only)
+                    └─────────────────────┘────► recorder      (read-only)
+
+                    ┌─────────────────────┐
+   units ──────────►│   SITUATION topic   │────► UI            (read-only)
+                    │   (reports up)      │────► other units   (reaction)
+                    └─────────────────────┘────► intel system  (planned)</pre>
+        <h3>Four delivery rules, kept because determinism depends on them</h3>
+        <ul class="plain">
+          <li><strong>Publish to the next step.</strong> A message published during step N is
+            delivered at step N+1, never within the step that produced it — otherwise a report can
+            trigger a command that triggers another report, unbounded, inside one step. The same
+            mechanism is the degenerate case of order propagation delay: a uniform one-step delay
+            today, a function of echelon/distance/terrain later, one mechanism throughout.</li>
+          <li><strong>Dispatch synchronously, in a defined order.</strong> Not async, not
+            thread-pooled. Determinism requires a single stable order, every time.</li>
+          <li><strong>Only the owner mutates.</strong> Any subscriber may observe; only a unit may
+            modify its own queue, and only the executor may change world state. Otherwise dispatch
+            order becomes semantics, and the resulting bugs reproduce at only one interleaving.</li>
+          <li><strong>Subscribe for events, read for state.</strong> If a subscriber has to
+            remember what it heard to stay correct, it should be reading state instead — the live
+            plan in PLAY draws by walking each unit's actual queue every frame, not by
+            reconstructing a shadow copy from messages it happened to see.</li>
+        </ul>
+        <p>
+          The payoff: the whole simulation is deterministic and replayable from the command log
+          alone. Two different machines, or the same machine twice, produce the identical run from
+          the identical order stream.
+        </p>
+      </div>
+    </section>
+
+    <section id="procedural">
+      <h2>Generated at runtime, verified as a picture</h2>
+      <div class="concept">
+        <h3>Nothing visual is an imported file</h3>
+        <p>
+          Every sprite, texture and glyph — symbols, map sheets, UI chrome, the aged-paper stock
+          the field manual is drawn on — is generated procedurally at runtime, not authored in an
+          image editor and imported. It's a deliberate property, not an accident of what got built
+          first: it means any symbol/echelon/condition combination or any map at any seed exists
+          without an artist drawing it, and it's why introducing the project's first real imported
+          binary asset (audio) gets treated as a threshold crossed deliberately, not a formality.
+        </p>
+        <h3>A generator's output is a picture, so read the picture</h3>
+        <p>
+          This project verifies changes by building the player, capturing a screenshot, and reading
+          it — not by reading the code and assuming it's correct. Several real bugs (a symbol
+          rendering at a barely-visible alpha, an objective one cell inside a lake) were invisible
+          to code review and obvious in one frame. The same discipline applies to generators
+          directly: contact sheets bake every combination of a system — every symbol permutation,
+          every relief profile against every render mode — to one image, checked before the
+          numbers next to it, because a generator whose output no one looked at is a generator no
+          one has actually verified.
+        </p>
+      </div>
+    </section>
+
+    <p class="note">
+      This page summarises; the source documents are the reference —
+      <a href="https://github.com/aawadall/strategos/blob/master/CLAUDE.md">CLAUDE.md</a> for the
+      map/symbol pipelines and the project's verification discipline,
+      <a href="https://github.com/aawadall/strategos/blob/master/docs/command-architecture.md">docs/command-architecture.md</a>
+      for the full messaging design.
+    </p>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/aawadall/strategos">github.com/aawadall/strategos</a> —
+      Unity 6 (6000.0.75f1) / URP.
+    </p>
+    <p class="license">
+      Licensed under the Strategos License (MIT terms with a non-military-use restriction) —
+      see <a href="https://github.com/aawadall/strategos/blob/master/LICENSE">LICENSE</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -46,11 +46,15 @@ config-loaded verb table (#130).
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
 - **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
 - **C2 / C3 depth** — #36, #47, #62, #85 (mission types shipped), #65
+- **Graphic control measures** — #160 epic (data model #161, points #162, lines #163, arrows #164, areas #165, render integration #166)
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99; #100–#104 shipped; #105–#106 open
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
+- **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
+- **Scenario / map access** — #133 (PLAY picker — `push-north` ships but is unreachable)
+- **Map palette** — #169 (standard US/NATO topo palette as a fifth render mode)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
 
 ---

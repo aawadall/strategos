@@ -11,13 +11,13 @@
 <meta property="og:url" content="https://aawadall.github.io/strategos/">
 <meta property="og:title" content="Strategos — a tactical command simulation, in pre-production">
 <meta property="og:description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
-<meta property="og:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.jpg">
-<meta property="og:image:alt" content="The PLAY view mid-scenario: topographic map with blue and red NATO APP-6D unit symbols, a live movement plan, and the order-of-battle rail.">
+<meta property="og:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
+<meta property="og:image:alt" content="The PLAY view at scenario start: topographic map with blue and red NATO APP-6D unit symbols, a directive/campaign panel, and an armed command palette in the order-of-battle rail.">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Strategos — a tactical command simulation, in pre-production">
 <meta name="twitter:description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
-<meta name="twitter:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.jpg">
+<meta name="twitter:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -31,6 +31,9 @@
         symbology, and multi-echelon command — from a fireteam to a theatre command.</p>
     </div>
     <nav>
+      <a class="page" href="index.html" aria-current="page">What's built</a>
+      <a class="page" href="roadmap.html">Roadmap</a>
+      <a class="page" href="concepts.html">Concepts</a>
       <a class="cta" href="https://github.com/aawadall/strategos">View source on GitHub</a>
     </nav>
   </div>
@@ -39,8 +42,9 @@
 <div class="status-strip">
   <div class="wrap">
     <strong>Status: pre-production — playable sandbox.</strong> Phases 0–3 built; Phase 4–5 core
-    path ships (including command-rank insignia and readiness-aware drills). Phase 6 campaign data
-    started. Next: First playable game command UX. Unity 6 (6000.0.75f1).
+    path ships, including all remaining mission-type orders and a command palette with armed
+    verbs. Phase 6 campaign play now runs inside PLAY (start, continue, mid-campaign save).
+    Unity 6 (6000.0.75f1).
   </div>
 </div>
 
@@ -57,21 +61,23 @@
       <p>
         This page is a status report, not a pitch. The project is mid-build: some systems are
         finished, one is actively in progress, and most of the roadmap hasn't started. That's
-        stated plainly below, section by section.
+        stated plainly below, section by section. See <a href="roadmap.html">what's planned</a>
+        for what comes next, or <a href="concepts.html">concepts</a> for the design principles
+        the code actually follows.
       </p>
     </section>
 
     <section id="screenshot-play">
       <figure>
-        <img src="images/play-meeting-engagement.jpg"
-             alt="The PLAY view mid-scenario: a topographic map with blue and red NATO APP-6D unit symbols, a live movement plan drawn between them, a directive panel, and a scrolling contact log in the order-of-battle rail on the right.">
+        <img src="images/play-meeting-engagement.png"
+             alt="The PLAY view at scenario start: a topographic map with blue and red NATO APP-6D unit symbols around Objective Anvil, a directive-and-campaign panel, and an armed command palette (SELECT / MOVE / ENGAGE, WAYPOINTS) in the order-of-battle rail on the right.">
         <figcaption>
-          <span class="cap-label">PLAY, "Meeting Engagement," T+0058.</span>
+          <span class="cap-label">PLAY, "Meeting Engagement," T+0012.</span>
           Two sides on generated terrain around <em>Objective Anvil</em>. The right-hand rail
-          carries the side's directive, the selected unit's orders, the active drill and rules of
-          engagement, and a live situation log — three units already under orders, three contact
-          reports logged. Captured from a local build against this repository's current
-          <code>master</code>.
+          carries the side's directive from higher (with ACKNOWLEDGE), campaign controls
+          (start / skirmish-only / save / load), and the armed command palette that issues
+          MOVE or ENGAGE on a confirming click. Three contact reports already logged at T+0012.
+          Captured from a local build against this repository's current branch.
         </figcaption>
       </figure>
     </section>
@@ -127,6 +133,11 @@
         <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>.
       </p>
       <ul class="plain">
+        <li><strong>Latest</strong> — the remaining mission-type orders shipped complete (Screen,
+          Guard, Cover, Withdraw, Delay, Attack, Recon, Exploit, Pursue); campaign play now starts,
+          continues and mid-campaign-saves from inside PLAY, not only in scenario data; waypoints
+          let a march be plotted as a series of points; the command palette arms MOVE/ENGAGE from
+          a table, with left-click issuing the armed verb and keyboard shortcuts to arm it.</li>
         <li><strong>2026-08-03</strong> — Command-rank shoulder insignia; drill dropdown T/P/U;
           Pages OG meta and GitHub CTA; cancel/pause command fixes.</li>
         <li><strong>2026-08-02</strong> — Save/load a run; campaign chain carry-over (data);
@@ -144,45 +155,10 @@
           <span class="cap-label">EXPLORE, symbol library — 182 combinations.</span>
           Every unit type against every echelon, generated by the same composer that draws
           symbols on the map: frame, fill, icon, echelon mark and modifiers, each a decorator
-          layer over a data-only symbol description, baked to a sprite only at the end.
+          layer over a data-only symbol description, baked to a sprite only at the end. See
+          <a href="concepts.html">concepts</a> for why it's built that way.
         </figcaption>
       </figure>
-    </section>
-
-    <section id="echelon">
-      <h2>Command scales with echelon — that's the actual hook</h2>
-      <p>
-        The echelon the player commands is not just a matter of scale. It determines how much of
-        the command problem exists at all: at fireteam level there's no C2 problem, you
-        <em>are</em> the unit and orders are instant; by battalion, subordinates are out of
-        sight and reports mediate what you know; at corps and above you work from reports already
-        stale and issue intent rather than instructions. That's the intended progression, and it's
-        why later phases (communications degradation, order delay, intelligence fusion) are
-        planned as one code path parameterised by echelon rather than features bolted on later.
-      </p>
-      <div class="table-scroll">
-        <table>
-          <caption>Echelon Progression — from ROADMAP.md</caption>
-          <thead>
-            <tr><th>Symbol</th><th>Echelon</th><th>Typical strength</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>○</td><td>Fireteam / Crew</td><td>2–4</td></tr>
-            <tr><td>•</td><td>Squad</td><td>9–13</td></tr>
-            <tr><td>••</td><td>Section</td><td>8–13</td></tr>
-            <tr><td>•••</td><td>Platoon / Detachment</td><td>30–50</td></tr>
-            <tr><td>I</td><td>Company / Battery / Troop</td><td>80–250</td></tr>
-            <tr><td>II</td><td>Battalion / Squadron</td><td>300–1,000</td></tr>
-            <tr><td>III</td><td>Regiment / Group</td><td>1,000–3,000</td></tr>
-            <tr><td>X</td><td>Brigade / Combat Team</td><td>3,000–5,000</td></tr>
-            <tr><td>XX</td><td>Division</td><td>10,000–20,000</td></tr>
-            <tr><td>XXX</td><td>Corps</td><td>20,000–80,000</td></tr>
-            <tr><td>XXXX</td><td>Army</td><td>100,000+</td></tr>
-            <tr><td>XXXXX</td><td>Army Group / Front</td><td>multiple Armies</td></tr>
-            <tr><td>XXXXXX</td><td>Theater / Combatant Command</td><td>multiple Army Groups</td></tr>
-          </tbody>
-        </table>
-      </div>
     </section>
 
     <section id="gaps">
@@ -193,89 +169,12 @@
         other — there is no collision, no zone of control and no facing. A destroyed unit becomes a
         wreck (not commandable, not a contact) and the loss is logged; reconstitution between
         operations is still open. Reflexes and a side-policy seam are not intelligence — nothing
-        plans or manoeuvres yet. Campaign chains carry an ORBAT in data but cannot yet be started
-        from PLAY. Indirect fire, logistics, terrain LOS and online play remain unbuilt.
+        plans or manoeuvres yet. Indirect fire, logistics, terrain LOS and online play remain
+        unbuilt.
       </p>
       <p class="note">
-        Near-term focus is the <em>First playable game</em> milestone: explicit command controls,
-        a command palette, and waypoints. See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>.
-      </p>
-    </section>
-
-    <section id="roadmap">
-      <h2>Roadmap</h2>
-      <div class="table-scroll">
-        <table>
-          <caption>Phase Overview — from ROADMAP.md, status as of this page</caption>
-          <thead>
-            <tr><th>Phase</th><th>Focus</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>0 — Foundation &amp; Project Setup</td>
-              <td>Buildable Unity 6 project, repository structure, CI, base scenes, test framework.</td>
-              <td class="status-done">Done</td>
-            </tr>
-            <tr>
-              <td>1 — Topographic Map System</td>
-              <td>Zoomable heightmap terrain, contour overlays, terrain classification, LOS, fog of war, weather, grid systems.</td>
-              <td class="status-partial">Largely built</td>
-            </tr>
-            <tr>
-              <td>2 — NATO APP-6D Symbol Library</td>
-              <td>Composable military symbol system: frames, affiliation, unit types, echelon indicators, modifiers, map rendering.</td>
-              <td class="status-done">Complete</td>
-            </tr>
-            <tr>
-              <td>3 — Unit &amp; Echelon System</td>
-              <td>Hierarchical unit model, ORBAT system, commander assignment, equipment data, doctrine profiles, runtime unit state.</td>
-              <td class="status-done">Built</td>
-            </tr>
-            <tr>
-              <td>4 — Movement &amp; Combat Engine</td>
-              <td>Terrain-aware movement, pathfinding, combat resolution, suppression, indirect fire, logistics, attrition, recovery.</td>
-              <td class="status-partial">Core done; depth open</td>
-            </tr>
-            <tr>
-              <td>5 — Command &amp; Control (C2) System</td>
-              <td>Orders, mission types, command delays, communication degradation, intelligence, reconnaissance, deception, doctrine templates.</td>
-              <td class="status-partial">Foundations in</td>
-            </tr>
-            <tr>
-              <td>6 — Scenario &amp; Campaign System</td>
-              <td>Scenario editor, historical scenario support, objective system, victory conditions, triggers, linked campaigns.</td>
-              <td class="status-partial">Partial — data ships</td>
-            </tr>
-            <tr>
-              <td>7 — Game Modes</td>
-              <td>Solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, replay playback.</td>
-              <td class="status-none">Not started</td>
-            </tr>
-            <tr>
-              <td>8 — AI System</td>
-              <td>Rule-based AI, reinforcement learning, transfer learning from historical battles/replays, genetic strategy evolution, AI personalities, model sharing.</td>
-              <td class="status-none">Seam only</td>
-            </tr>
-            <tr>
-              <td>9 — Online Services &amp; Community</td>
-              <td>Accounts, matchmaking, leaderboards, scenario workshop, replay library, AI model hub, notifications, mod support.</td>
-              <td class="status-none">Not started</td>
-            </tr>
-            <tr>
-              <td>10 — Polish, Accessibility &amp; Release</td>
-              <td>Audio, UI/UX, tutorials, accessibility, performance optimization, platform builds, legal review, 1.0 launch assets.</td>
-              <td class="status-none">Not started</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p>
-        See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>
-        (backlog and phase status),
-        <a href="https://github.com/aawadall/strategos/blob/master/docs/phases.md">docs/phases.md</a>
-        (checkboxes), and
-        <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>
-        (what landed recently).
+        See <a href="roadmap.html">what's planned</a> for the full phase-by-phase state and the
+        near-term focus.
       </p>
     </section>
 

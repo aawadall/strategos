@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap — Strategos</title>
+<meta name="description" content="Strategos development roadmap: phase-by-phase status, near-term focus, and the open backlog, mirrored from ROADMAP.md.">
+<link rel="canonical" href="https://aawadall.github.io/strategos/roadmap.html">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aawadall.github.io/strategos/roadmap.html">
+<meta property="og:title" content="Roadmap — Strategos">
+<meta property="og:description" content="Strategos development roadmap: phase-by-phase status, near-term focus, and the open backlog.">
+<meta property="og:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Roadmap — Strategos">
+<meta name="twitter:description" content="Strategos development roadmap: phase-by-phase status, near-term focus, and the open backlog.">
+<meta name="twitter:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div>
+      <h1>STRATEGOS</h1>
+      <p class="tagline">A tactical command simulation built on topographic maps, NATO APP-6D
+        symbology, and multi-echelon command — from a fireteam to a theatre command.</p>
+    </div>
+    <nav>
+      <a class="page" href="index.html">What's built</a>
+      <a class="page" href="roadmap.html" aria-current="page">Roadmap</a>
+      <a class="page" href="concepts.html">Concepts</a>
+      <a class="cta" href="https://github.com/aawadall/strategos">View source on GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="status-strip">
+  <div class="wrap">
+    <strong>What's planned</strong> — mirrored from
+    <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>. Open
+    work is tracked as GitHub issues; this page summarises, the repo is the source of truth.
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <section id="where-we-are">
+      <h2>Where we are</h2>
+      <p class="lede">
+        The <strong>Playable scenario sandbox</strong> milestone is complete. Two forces load onto
+        generated terrain, take orders, move by terrain-cost A*, fight under rules of engagement,
+        dig in, tire, report contacts, and resolve victory — all deterministically, save/loadable,
+        and replayable from the command log.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <caption>Phase-by-phase state</caption>
+          <thead>
+            <tr><th>Area</th><th>State</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Phase 0 — Foundation</td><td>Done for a local buildable project. CI is scaffolded but Unity licence secrets are unset. No EditMode test assembly yet. Steamworks not started.</td></tr>
+            <tr><td>Phase 1 — Map</td><td>Largely built. Procedural generation + 2D topographic sheet + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, alternate render modes, basin-breaching for lake-heavy maps.</td></tr>
+            <tr><td>Phase 2 — Symbols</td><td>Complete for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (FRAME ONLY), animated states.</td></tr>
+            <tr><td>Phase 3 — Units / ORBAT</td><td>Built. Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders. Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles.</td></tr>
+            <tr><td>Phase 4 — Movement &amp; combat</td><td>Core path done. A* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + casualty log. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning.</td></tr>
+            <tr><td>Phase 5 — C2</td><td>Foundations in. Command/report/directive buses, queues, FRAGO-style cancel, ROE reflexes, TTP binder + drill execution with readiness-aware picker, a policy seam for the opposing side. Still missing: graphic control measures, spatial comms, intel fusion, doctrine authoring.</td></tr>
+            <tr><td>Phase 6 — Scenario &amp; campaign</td><td>Partial. Scenario JSON + objectives/victory ship; campaign chain data + carry-over + starting/advancing/saving a campaign in PLAY. Still missing: scenario editor, feature-placed objectives, historical packs, full campaign arc.</td></tr>
+            <tr><td>Phases 7–10</td><td>Mostly unbuilt. Windows builds + this GitHub Pages site exist. Audio and release-engineering work is planned, not started.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="near-term">
+      <h2>Near-term focus — "First playable game"</h2>
+      <p>
+        Explicit command controls are done, and so is campaign play in PLAY — starting, continuing
+        and mid-campaign-saving a linked chain of operations — and the full set of mission-type
+        orders (Screen, Guard, Cover, Withdraw, Delay, Attack, Recon, Exploit, Pursue). Next up:
+        graphic control measures (axes of advance, phase lines, boundaries, per APP-6D's
+        tactical-graphics set), the full campaign arc (drills, directives, positions, execution,
+        rank), and treating the simulation as an environment an AI agent (rule-based today, learned
+        later) can act in.
+      </p>
+    </section>
+
+    <section id="backlog">
+      <h2>Outstanding themes</h2>
+      <p>Open work, grouped by area. Each item is a real GitHub issue in the repository.</p>
+      <ul class="plain">
+        <li><strong>Campaign &amp; progression</strong> — career progression across multiple
+          campaigns; rank gating echelon; the full campaign arc (drills, directives, positions,
+          execution, rank).</li>
+        <li><strong>C2 / C3 depth</strong> — the player as a node in the chain of command; a
+          spatial, multi-modal comms network; one-way number stations; doctrine authoring as an
+          echelon-gated capability.</li>
+        <li><strong>Graphic control measures</strong> — axes of advance, phase lines, boundaries,
+          engagement areas and battle positions, per APP-6D's tactical-graphics set. An epic with
+          six children: a data/authoring model, then point, line, arrow and area measures each
+          separately, then where they render in the pipeline.</li>
+        <li><strong>World &amp; movement depth</strong> — special actions and a dynamic world
+          layer (objects and hazards that are neither terrain nor units); A* as a living plan that
+          replans as the situation changes; placing objectives by map feature, not only by
+          coordinate.</li>
+        <li><strong>AI as environment</strong> — an epic covering observation encoding, action
+          space, reward shaping, environment lifecycle, headless throughput, and trajectory
+          export, so the simulation can eventually be trained against, not just played.</li>
+        <li><strong>Persistence beyond run saves</strong> — content stays JSON; an embedded store
+          for player data once there is any to keep (careers, unlocks).</li>
+        <li><strong>Audio</strong> — wiring (where sound assets live, format, mixer buses, the
+          time-compression problem) and sourcing (planning, tooling, provenance) filed as
+          prerequisites to actual sound-effect, voice and music content.</li>
+        <li><strong>Docs / reference</strong> — an in-game/web field manual (glossary, basic
+          reference, drills folded in as a chapter); rank-insignia decorator variants by country,
+          division and era.</li>
+        <li><strong>UI / accessibility</strong> — a selectable dark theme alongside the current
+          light palette; colour-blind-accessible symbol and map palettes.</li>
+        <li><strong>Scenario / map access</strong> — a picker in PLAY, since a second shipped
+          scenario exists today but nothing in the UI can reach it.</li>
+        <li><strong>Map palette</strong> — a standard US/NATO topographic palette as a genuinely
+          distinct render mode, alongside the aged-paper look the current modes share.</li>
+        <li><strong>Release / site</strong> — versioning and release notes; itch.io; a short
+          capture/GIF for this page.</li>
+      </ul>
+    </section>
+
+    <section id="versioning">
+      <h2>Versioning strategy</h2>
+      <div class="table-scroll">
+        <table>
+          <caption>Release milestones</caption>
+          <thead>
+            <tr><th>Release</th><th>Focus</th><th>Progress</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0.1 Alpha</td><td>Phases 0–3: Map + Symbols + Units</td><td class="status-done">Reached</td></tr>
+            <tr><td>0.3 Alpha</td><td>Phases 4–5: Movement + Combat + C2</td><td class="status-progress">In progress</td></tr>
+            <tr><td>0.5 Beta</td><td>Phases 6–7: Scenarios + All Game Modes</td><td class="status-partial">Campaign data started</td></tr>
+            <tr><td>0.8 Beta</td><td>Phase 8: Full AI pipeline</td><td class="status-none">Policy seam only</td></tr>
+            <tr><td>0.9 RC</td><td>Phase 9: Online services</td><td class="status-none">Not started</td></tr>
+            <tr><td>1.0</td><td>Phase 10: Polish + Release</td><td class="status-none">Site + Windows builds only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        See <a href="https://github.com/aawadall/strategos/blob/master/ROADMAP.md">ROADMAP.md</a>
+        for the backlog and phase status in full,
+        <a href="https://github.com/aawadall/strategos/blob/master/docs/phases.md">docs/phases.md</a>
+        for the task-by-task checkboxes, and
+        <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>
+        for what landed recently.
+      </p>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/aawadall/strategos">github.com/aawadall/strategos</a> —
+      Unity 6 (6000.0.75f1) / URP.
+    </p>
+    <p class="license">
+      Licensed under the Strategos License (MIT terms with a non-military-use restriction) —
+      see <a href="https://github.com/aawadall/strategos/blob/master/LICENSE">LICENSE</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
