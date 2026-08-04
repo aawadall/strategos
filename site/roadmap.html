@@ -69,7 +69,7 @@
             <tr><td>Phase 2 — Symbols</td><td>Complete for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (FRAME ONLY), animated states.</td></tr>
             <tr><td>Phase 3 — Units / ORBAT</td><td>Built. Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders. Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles.</td></tr>
             <tr><td>Phase 4 — Movement &amp; combat</td><td>Core path done. A* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + casualty log. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning.</td></tr>
-            <tr><td>Phase 5 — C2</td><td>Foundations in. Command/report/directive buses, queues, FRAGO-style cancel, ROE reflexes, TTP binder + drill execution with readiness-aware picker, a policy seam for the opposing side. Still missing: graphic control measures, spatial comms, intel fusion, doctrine authoring.</td></tr>
+            <tr><td>Phase 5 — C2</td><td>Foundations in. Command/report/directive buses, queues, FRAGO-style cancel, ROE reflexes, TTP binder + drill execution with readiness-aware picker, mission types, graphic control measures (APP-6D), a policy seam for the opposing side. Still missing: spatial comms, intel fusion, doctrine authoring.</td></tr>
             <tr><td>Phase 6 — Scenario &amp; campaign</td><td>Partial. Scenario JSON + objectives/victory ship; campaign chain data + carry-over + starting/advancing/saving a campaign in PLAY. Still missing: scenario editor, feature-placed objectives, historical packs, full campaign arc.</td></tr>
             <tr><td>Phases 7–10</td><td>Mostly unbuilt. Windows builds + this GitHub Pages site exist. Audio and release-engineering work is planned, not started.</td></tr>
           </tbody>
@@ -81,12 +81,12 @@
       <h2>Near-term focus — "First playable game"</h2>
       <p>
         Explicit command controls are done, and so is campaign play in PLAY — starting, continuing
-        and mid-campaign-saving a linked chain of operations — and the full set of mission-type
-        orders (Screen, Guard, Cover, Withdraw, Delay, Attack, Recon, Exploit, Pursue). Next up:
-        graphic control measures (axes of advance, phase lines, boundaries, per APP-6D's
-        tactical-graphics set), the full campaign arc (drills, directives, positions, execution,
-        rank), and treating the simulation as an environment an AI agent (rule-based today, learned
-        later) can act in.
+        and mid-campaign-saving a linked chain of operations — the full set of mission-type
+        orders (Screen, Guard, Cover, Withdraw, Delay, Attack, Recon, Exploit, Pursue), the AI
+        environment API (observation / action / reward / env / throughput / trajectory), and
+        graphic control measures (checkpoints, phase lines, boundaries, axes, areas). Next up:
+        a US/NATO topographic map palette, the full campaign arc (rank gates, career), and
+        treating the player as a node in the chain of command.
       </p>
     </section>
 
@@ -100,17 +100,13 @@
         <li><strong>C2 / C3 depth</strong> — the player as a node in the chain of command; a
           spatial, multi-modal comms network; one-way number stations; doctrine authoring as an
           echelon-gated capability.</li>
-        <li><strong>Graphic control measures</strong> — axes of advance, phase lines, boundaries,
-          engagement areas and battle positions, per APP-6D's tactical-graphics set. An epic with
-          six children: a data/authoring model, then point, line, arrow and area measures each
-          separately, then where they render in the pipeline.</li>
         <li><strong>World &amp; movement depth</strong> — special actions and a dynamic world
           layer (objects and hazards that are neither terrain nor units); A* as a living plan that
           replans as the situation changes; placing objectives by map feature, not only by
           coordinate.</li>
-        <li><strong>AI as environment</strong> — an epic covering observation encoding, action
-          space, reward shaping, environment lifecycle, headless throughput, and trajectory
-          export, so the simulation can eventually be trained against, not just played.</li>
+        <li><strong>AI as environment</strong> — shipped (#99 / #100–#106): observation encoding,
+          action space, reward shaping, environment lifecycle, headless throughput, and trajectory
+          export. Intelligence (planning) remains Phase 8.</li>
         <li><strong>Persistence beyond run saves</strong> — content stays JSON; an embedded store
           for player data once there is any to keep (careers, unlocks).</li>
         <li><strong>Audio</strong> — wiring (where sound assets live, format, mixer buses, the
@@ -121,8 +117,8 @@
           division and era.</li>
         <li><strong>UI / accessibility</strong> — a selectable dark theme alongside the current
           light palette; colour-blind-accessible symbol and map palettes.</li>
-        <li><strong>Scenario / map access</strong> — a picker in PLAY, since a second shipped
-          scenario exists today but nothing in the UI can reach it.</li>
+        <li><strong>Scenario / map access</strong> — PLAY can pick <strong>PUSH NORTH</strong>
+          or <strong>SKIRMISH ONLY</strong> (#133).</li>
         <li><strong>Map palette</strong> — a standard US/NATO topographic palette as a genuinely
           distinct render mode, alongside the aged-paper look the current modes share.</li>
         <li><strong>Release / site</strong> — versioning and release notes; itch.io; a short

@@ -13,9 +13,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
-- Graphic control measures (#161–#163 / #160): `ControlMeasure` on `Scenario`, checkpoints /
-  phase lines / boundaries drawn over the map sheet via `ControlMeasureDrawer`;
-  `ControlMeasureProbe`.
+- Graphic control measures complete (#160 / #161–#166): arrows (axis / direction / retirement /
+  counterattack), areas (battle position / engagement area / kill zone), PLAY `afterPixels`
+  with per-side fog (#283); earlier #174 shipped data model, checkpoints, phase lines,
+  boundaries. `ControlMeasureProbe` covers round-trip, draw, and viewer filter.
 - PLAY scenario pick: **PUSH NORTH** beside **SKIRMISH ONLY** so the shipped second
   scenario is reachable without editing code (#133).
 - `Trajectory` / `TrajectoryExporter` — (obs, action) export from CommandLog + ReportLog via

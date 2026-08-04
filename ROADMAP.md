@@ -9,7 +9,7 @@ as GitHub issues; known defects that are deliberate or deferred live in
 
 ---
 
-## Where we are (2026-08-03)
+## Where we are (2026-08-04)
 
 The **Playable scenario sandbox** milestone is complete (9/9). Two forces load onto generated
 terrain, take orders, move by terrain-cost A\*, fight under ROE, dig in, tire, report contacts,
@@ -24,28 +24,29 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 | Phase 2 — Symbols | **Complete** for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (`FRAME ONLY`), animated states. |
 | Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |
 | Phase 4 — Movement & combat | **Core path done.** A\* movement, direct fire, suppression, dig-in Hold/Defend, wrecks + `CasualtyLog`. Still missing: indirect fire, logistics, reconstitution, formation movement, collision/ZoC, path replanning (#35). |
-| Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder + drill execution with readiness-aware picker (#97), `ISidePolicy` seam. Still missing: remaining mission types (#85), spatial comms (#47), intel fusion, doctrine authoring (#65). |
+| Phase 5 — C2 | **Foundations in.** Command/report/directive buses, queues, FRAGO-style `CancelFrom`, ROE reflexes, TTP binder + drill execution (#97), mission types (#85), graphic control measures (#160), `ISidePolicy` seam. Still missing: spatial comms (#47), intel fusion, doctrine authoring (#65). |
 | Phase 6 — Scenario & campaign | **Partial.** Scenario JSON + objectives/victory ship; campaign chain data + carry-over + PLAY start/advance/save (#75, #114 / #138–#140). Still missing: scenario editor, feature-placed objectives (#51), historical packs, full arc (#78). |
 | Phases 7–10 | **Mostly unbuilt.** Windows builds + GitHub Pages site (OG/CTA in; GIF still #120). Audio and release-engineering issues filed. |
 
 ### Near-term focus — "First playable game"
 
-Explicit command controls (#32) are done. Next player-facing gap is **campaign in PLAY**:
+Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
+environment API (#99 / #100–#106), and graphic control measures (#160 / #161–#166) are done.
+
+**Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#114](https://github.com/aawadall/strategos/issues/114) | Parent: campaign chain in the player — children #138–#140 **shipped** |
-| [#85](https://github.com/aawadall/strategos/issues/85) | Epic: remaining mission types — **children complete** (#150–#153 + earlier slices) |
-| [#99](https://github.com/aawadall/strategos/issues/99) | AI as environment (#100–#106 shipped) |
-
-Later command polish: config-loaded verb table (#130).
+| [#169](https://github.com/aawadall/strategos/issues/169) | Epic: US/NATO topographic map palette — children #188–#192 |
+| [#76](https://github.com/aawadall/strategos/issues/76) | Epic: rank gates echelon (difficulty curve) — under #78; children #222–#225 |
+| [#36](https://github.com/aawadall/strategos/issues/36) | Epic: player as a node in the chain — children #266–#269 |
 
 ### Outstanding themes (open issues, grouped)
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
 - **Campaign & progression** — #114 / #138–#140 shipped; still open: #78, #76, #109
-- **C2 / C3 depth** — #36, #47, #62, #85 (mission types shipped), #65
-- **Graphic control measures** — #160; #161–#163 shipped (data, checkpoints, phase lines/boundaries); #164–#166 open
+- **C2 / C3 depth** — #36, #47, #62, #65 (#85 mission types shipped)
+- **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped)
 - **Persistence beyond run saves** — #66; mid-campaign save is #140 (shipped)
@@ -152,13 +153,13 @@ movement, collision/ZoC, dynamic replan (#35), special actions / world objects (
 
 ### Phase 5 — Command & Control (C2) System — **foundations in**
 Orders down / reports up / directives in, per-unit queues, live plan + cancel, ROE reflexes,
-TTP pack IO + drill execution, `SideDirector` behind `ISidePolicy`. Remaining: Screen/Guard/
-Delay/Attack/Withdraw (#85), graphic control measures, spatial multi-modal comms (#47), intel
+TTP pack IO + drill execution, mission types (#85), graphic control measures (#160),
+`SideDirector` behind `ISidePolicy`. Remaining: spatial multi-modal comms (#47), intel
 fusion, doctrine authoring (#65).
 
 ### Phase 6 — Scenario & Campaign System — **partial**
 Scenario model + validation, objectives and victory, shipped samples, campaign chain + ORBAT
-carry-over (probed, not yet in PLAY). Remaining: campaign in PLAY (#114 / #138–#140), scenario editor,
+carry-over + PLAY start/advance/save (#114 / #138–#140). Remaining: scenario editor,
 feature-placed objectives (#51), historical packs, full campaign arc (#78).
 
 ### Phase 7 — Game Modes
