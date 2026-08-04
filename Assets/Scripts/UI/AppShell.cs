@@ -3,6 +3,7 @@
 //
 // #371: boots into MainMenuView (front door). PLAY is a session entered from the menu;
 // EXPLORE / SCENARIO / DRILLS / BUILDER remain Tools. Pause overlay lives inside PlayView.
+// #306: SettingsView is a no-tab screen reached from menu Options.
 
 using System;
 using TMPro;
@@ -54,6 +55,10 @@ namespace Strategos.UI
                 m.Session = _session;
                 m.Shell = this;
             }, showTab: false);
+            _views.Add<SettingsView>(v =>
+            {
+                ((SettingsView)v).Shell = this;
+            }, showTab: false);
             _views.Add<PlayView>(v =>
             {
                 var p = (PlayView)v;
@@ -81,12 +86,18 @@ namespace Strategos.UI
         public void Navigate(string key)
         {
             if (string.IsNullOrEmpty(key) || !_views.Has(key)) return;
-            bool tools = !string.Equals(key, "menu", StringComparison.OrdinalIgnoreCase);
+            // Menu and settings are outside the Tools tab strip (#371 / #306).
+            bool tools = !IsChromeHiddenView(key);
             if (_tabStripGo != null) _tabStripGo.SetActive(tools);
             _views.Select(key);
         }
 
+        private static bool IsChromeHiddenView(string key) =>
+            string.Equals(key, "menu", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(key, "settings", StringComparison.OrdinalIgnoreCase);
+
         public void GoToMainMenu() => Navigate("menu");
+        public void OpenSettings() => Navigate("settings");
         public void EnterPlaySession() => Navigate("play");
         public void EnterTools(string key) => Navigate(key);
 

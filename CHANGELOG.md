@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Settings screen shell (#306): `SettingsView` with empty GRAPHICS / AUDIO / GAMEPLAY /
+  ACCESSIBILITY sections; main-menu Options navigates to it; `UiShellProbe` extended.
 - UI revamp (#371 / #375–#379): `MainMenuView` front door; PLAY pause overlay (Esc) with Save/Load/
   Exit; drills quick-ref from pause; Tools tabs from menu; `UiShellProbe`; ui-invariants.
 - Local/API seam (#355 / #361–#367): `StoreResult` + async `IGameStore` (`FileGameStore`);

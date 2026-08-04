@@ -20,6 +20,10 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
+**Settings shell (#306).** `SettingsView` (`-view settings`) is a no-tab screen opened from
+menu Options. It lists empty GRAPHICS / AUDIO / GAMEPLAY / ACCESSIBILITY sections — no
+preference store yet (#307). Tab strip stays hidden the same way as the menu.
+
 **Esc precedence in PLAY (#371 / #129):** drills quick-ref closes first; then the pause
 overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else
 Esc opens pause and stops the clock. Space remains the clock toggle and must not open pause.

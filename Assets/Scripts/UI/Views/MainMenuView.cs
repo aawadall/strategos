@@ -1,6 +1,6 @@
 // MainMenuView.cs
 // #371: front door outside the tab shell — Play, campaign/scenario starts, Load/Save,
-// Options/Help stubs (#289 / #124), Server disabled (#288), Tools for the other tabs.
+// Options (#306 settings shell), Help stub (#124), Server disabled (#288), Tools tabs.
 //
 // Aged-paper aesthetic (UiTheme + PaperTexture Clean for the button stack). Not a dark
 // glass game-menu skin.
@@ -99,8 +99,7 @@ namespace Strategos.UI.Views
 
             Spacer(col, 8);
             Section(col, "ALSO");
-            var opt = AddButton(col, "OPTIONS  ·  see #289", () => { });
-            opt.interactable = false;
+            AddButton(col, "OPTIONS", () => Shell?.OpenSettings());
             var help = AddButton(col, "HELP  ·  see #124", () => { });
             help.interactable = false;
             var server = AddButton(col, "SERVER  ·  needs #288", () => { });

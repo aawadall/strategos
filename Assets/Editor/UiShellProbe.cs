@@ -1,5 +1,5 @@
 ﻿// UiShellProbe.cs
-// #371: MainMenuView / PauseOverlay build; view keys stable for -view.
+// #371 / #306: MainMenuView / SettingsView / PauseOverlay; view keys stable for -view.
 // Batch: -executeMethod Strategos.Editor.UiShellProbe.Run
 
 #if UNITY_EDITOR
@@ -27,6 +27,50 @@ namespace Strategos.Editor
             }
             else log.AppendLine("  MainMenuView key=menu ok");
             Object.DestroyImmediate(menu.gameObject);
+
+            var settingsGo = new GameObject("probe-settings", typeof(RectTransform));
+            var settings = settingsGo.AddComponent<SettingsView>();
+            if (settings.Key != "settings" || settings.Title != "OPTIONS")
+            {
+                log.AppendLine("  FAIL SettingsView key/title");
+                bad++;
+            }
+            else log.AppendLine("  SettingsView key=settings ok");
+
+            string[] want = { "GRAPHICS", "AUDIO", "GAMEPLAY", "ACCESSIBILITY" };
+            if (SettingsView.Categories == null || SettingsView.Categories.Length != want.Length)
+            {
+                log.AppendLine("  FAIL SettingsView.Categories count");
+                bad++;
+            }
+            else
+            {
+                bool catsOk = true;
+                for (int i = 0; i < want.Length; i++)
+                {
+                    if (SettingsView.Categories[i] != want[i])
+                    {
+                        log.AppendLine("  FAIL SettingsView.Categories[" + i + "]=" +
+                                       SettingsView.Categories[i]);
+                        bad++;
+                        catsOk = false;
+                    }
+                }
+                if (catsOk)
+                    log.AppendLine("  SettingsView categories GRAPHICS/AUDIO/GAMEPLAY/ACCESSIBILITY ok");
+            }
+
+            try
+            {
+                settings.Build(settingsGo.GetComponent<RectTransform>());
+                log.AppendLine("  SettingsView.Build ok");
+            }
+            catch (System.Exception ex)
+            {
+                log.AppendLine("  FAIL SettingsView.Build: " + ex.Message);
+                bad++;
+            }
+            finally { Object.DestroyImmediate(settingsGo); }
 
             var play = new GameObject("probe-play").AddComponent<PlayView>();
             if (play.Key != "play") { log.AppendLine("  FAIL PlayView.Key"); bad++; }
