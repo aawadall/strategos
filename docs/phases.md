@@ -210,7 +210,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Objectives placement *UI* (editor) — still open; data path is #51
 
 ### 6.2 Historical Scenarios
-- [ ] Initial pack: 5–10 historical engagements at varied echelon scales (#332 research, #333 conversion)
+- [x] Research pack notes at varied echelon scales into `Research/historical/` (#332 / #335–#340)
+- [ ] Initial pack: convert 5–10 engagements to Scenario JSON (#333 / #341–#346)
 - [ ] Data format allows community-built historical packs (#333)
 - [ ] Historical AI behaviour seeding (see Phase 8)
 - [x] Procedural scenario generation — OOB / objectives / victory from parameters (#334 / #347–#352); feature placement via #51
