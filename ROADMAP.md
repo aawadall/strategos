@@ -181,8 +181,11 @@ fusion, doctrine authoring (#65).
 ### Phase 6 — Scenario & Campaign System — **partial**
 Scenario model + validation, objectives and victory, shipped samples, campaign chain + ORBAT
 carry-over + PLAY start/advance/save (#114 / #138–#140), career across campaigns (#109).
-Remaining: scenario editor, multi-echelon climb campaign (#403 / #404–#409), strategic map,
-inter-op resupply, procedural campaign sequencing.
+Remaining: scenario editor, strategic map,
+inter-op resupply, procedural campaign sequencing. Multi-echelon climb campaign
+(#403 / #404–#409) ships as `climb-campaign` (Squad → Company → Battalion) —
+see [docs/climb-campaign.md](docs/climb-campaign.md); distinct from #289 tutorial
+and #109 Highland.
 
 ### Phase 7 — Game Modes
 Solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, and replay playback. Unbuilt;

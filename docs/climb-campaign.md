@@ -127,6 +127,8 @@ campaign probe style (`CampaignChainDriverProbe`) over a PLAY UI click script.
 
 ---
 
-## Implementation order (unchanged from #403)
+## Implementation order (#403)
 
-`#404` (this note) → `#405` scenarios → `#406` chain JSON (shipped) → `#407` menu/PLAY (shipped) → `#408` probe (shipped) → `#409` docs cross-link polish.
+`#404` → `#405` → `#406` → `#407` → `#408` → `#409` (this polish) — **all shipped.**
+Epic #403 is the tracked work for multi-echelon seat progression; closed #78 / #109
+and open #289 stay out of scope as listed above.

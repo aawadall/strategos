@@ -259,13 +259,19 @@ shipped `highland-campaign` opens at `PlayerEchelon = Regiment` with a directive
 
 ## Multi-echelon climb campaign (#403)
 
-Seat escalation inside **one** chain (Squad → Company → Battalion) is specified in
-[climb-campaign.md](climb-campaign.md) (#404 design note). Shipped as
-`CampaignSamples.ClimbName` / `Assets/Resources/Campaigns/climb-campaign.json`
-(#406) over `climb-squad` → `climb-company` → `climb-battalion` (#405). Third
-shipped campaign beside Valley and Highland — not a replacement for either, and
-not the #289 tutorial. Menu/PLAY entry is shipped (#407); carry-over climb
-probe is shipped (#408). Docs polish is #409.
+Seat escalation inside **one** chain (Squad → Company → Battalion). Spec:
+[climb-campaign.md](climb-campaign.md). Shipped end-to-end (#404–#409):
+
+| Piece | Where |
+|---|---|
+| Scenarios | `climb-squad` / `climb-company` / `climb-battalion` (#405) |
+| Chain | `CampaignSamples.ClimbName` / `climb-campaign.json` (#406) |
+| Menu / PLAY | START CLIMB beside Valley/Highland (#407) |
+| Probe | `ClimbCampaignProbe` — Squad → Company + `PlayerEchelon` on merge (#408) |
+
+Third shipped campaign beside Valley and Highland — not a replacement for either,
+and not the #289 tutorial. Climb win still promotes via the existing end-of-campaign
+path; Regiment remains Highland's seat.
 
 ## What is deliberately not here yet
 

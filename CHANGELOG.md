@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Climb campaign docs polish (#409): phases §6.3 / Phase 10 + ROADMAP + campaign-invariants
+  cross-link the shipped seat ladder; closes epic #403.
 - Climb campaign probe (#408): `ClimbCampaignProbe` — Squad → Company through
   `CampaignChainDriver`; asserts `PlayerEchelon` and company-HQ command scope.
 - Climb campaign menu/PLAY entry (#407): START CLIMB beside Valley/Highland on main menu
