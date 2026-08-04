@@ -251,6 +251,14 @@ shipped `highland-campaign` opens at `PlayerEchelon = Regiment` with a directive
 `From` is still `3 BDE` — the same higher HQ that addressed the valley seat. Probe:
 `Strategos > Probe Career Across Campaigns`.
 
+## Multi-echelon climb campaign (#403)
+
+Seat escalation inside **one** chain (Squad → Company → Battalion) is specified in
+[climb-campaign.md](climb-campaign.md) (#404 design note). It is a third shipped
+campaign beside Valley and Highland — not a replacement for either, and not the
+#289 tutorial. Implementers of #405–#408 must follow the Id-stability sketch and
+reuse rules there before writing JSON.
+
 ## What is deliberately not here yet
 
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the

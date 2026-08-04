@@ -180,8 +180,9 @@ fusion, doctrine authoring (#65).
 
 ### Phase 6 — Scenario & Campaign System — **partial**
 Scenario model + validation, objectives and victory, shipped samples, campaign chain + ORBAT
-carry-over + PLAY start/advance/save (#114 / #138–#140). Remaining: scenario editor,
-feature-placed objectives (#51), historical packs, full campaign arc (#78).
+carry-over + PLAY start/advance/save (#114 / #138–#140), career across campaigns (#109).
+Remaining: scenario editor, multi-echelon climb campaign (#403 / #404–#409), strategic map,
+inter-op resupply, procedural campaign sequencing.
 
 ### Phase 7 — Game Modes
 Solo vs AI, hotseat, online multiplayer, AI vs AI watch mode, and replay playback. Unbuilt;
