@@ -63,6 +63,14 @@ namespace Strategos.Editor
 
                 shell.ApplyFullscreen();
                 log.AppendLine("  ApplyFullscreen callable ok");
+
+                // #389: Settings GRAPHICS fullscreen uses the same AppShell methods.
+                if (Strategos.UI.Views.SettingsView.Categories[0] != "GRAPHICS")
+                {
+                    log.AppendLine("  FAIL SettingsView.Categories[0] should be GRAPHICS");
+                    bad++;
+                }
+                else log.AppendLine("  SettingsView GRAPHICS category present ok");
             }
             finally
             {

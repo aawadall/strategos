@@ -20,18 +20,21 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
-**Settings shell (#306 / #307).** `SettingsView` (`-view settings`) is a no-tab screen opened
-from menu Options. GRAPHICS / AUDIO / ACCESSIBILITY stay empty placeholders; GAMEPLAY has one
-persisted `ConfirmOrders` toggle via `IPreferenceStore` / `JsonPreferenceStore`
-(`persistentDataPath/preferences.json`). Tab strip stays hidden the same way as the menu.
-Preference round-trip is probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
+**Settings shell (#306 / #307 / #389).** `SettingsView` (`-view settings`) is a no-tab screen
+opened from menu Options. GRAPHICS has a **FULLSCREEN** toggle that calls
+`AppShell.ApplyFullscreen` / `ApplyWindowed` and persists `PlayerPreferences.Fullscreen`
+(same path as F11). AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted
+`ConfirmOrders`. Windowed size presets are #390; boot apply is #391. Tab strip stays
+hidden the same way as the menu. Preference round-trip is probed by `PreferenceStoreProbe`
+(#307); tutorial Validate is #311.
 
-**Display mode (#387 / #388 / #385).** F11 calls `AppShell.ToggleFullscreen`, which shares
-`ApplyWindowed` / `ApplyFullscreen` with Settings (wired in #389). Fullscreen is borderless
+**Display mode (#387 / #388 / #389 / #385).** F11 calls `AppShell.ToggleFullscreen`, which
+shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless
 `FullScreenWindow` at the current display size; windowed restores a remembered size
-(default 1600×900). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight`
-(#388); boot apply is #391; size presets UI is #390. `DisplayModeProbe` checks the AppShell
-API; `PreferenceStoreProbe` round-trips the display fields.
+(default 1600×900, or prefs WxH from Settings). `PlayerPreferences` carries `Fullscreen`,
+`WindowWidth`, `WindowHeight` (#388); boot apply is #391; size presets UI is #390.
+`DisplayModeProbe` checks the AppShell API + GRAPHICS category; `PreferenceStoreProbe`
+round-trips the display fields.
 
 **Esc precedence in PLAY (#371 / #129 / #308):** drills quick-ref closes first; then context
 help; then the pause overlay resumes; then an armed palette verb clears
