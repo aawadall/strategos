@@ -130,6 +130,10 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   battalion with 1.1x of zoom on the shipped 6.4 km sheet — the feature was dead in the only
   scenario that ships, and the probe passed because a collapsed range is still a range.
   `ClampedTo` preserves the band's *ratio*; `EchelonProbe` now fails under 2x.
+- **Shipped scenarios load from the CAMPAIGN card, not only on Build (#133).** `Build` still
+  defaults to skirmish so a cold start has a map; **SKIRMISH ONLY** and **PUSH NORTH** call
+  the same `LoadScenario(name)` path so every `Resources/Scenarios` sample is reachable
+  without editing code. A full gallery of generated maps is out of scope here.
 - **PLAY's command palette arms verbs from a table, not from click-handler branches (#127–#129 / #54).**
   `CommandPalette.Verbs` is the row list the rail iterates; `PaletteVerb.None` is select-only
   and is not a table row. MOVE / ENGAGE armed left-clicks issue via `PaletteVerbDef.Kind`
