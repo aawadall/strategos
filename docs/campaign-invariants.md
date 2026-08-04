@@ -235,19 +235,21 @@ returns every problem in one pass (empty means the chain may start), matching
 Probe: `Strategos > Probe Campaign Chain Validate` /
 `-executeMethod Strategos.Editor.CampaignChainValidateProbe.Run`.
 
+## Rank gates (#76)
+
+`RankAuthority` / `RankGate` in `Core/Units/`: career rank id → max command echelon.
+`AppSession.CareerRankId` defaults to `battalion` (shipped ORBATs). PLAY
+`LoadScenario` / `StartValleyCampaign` refuse when required ORBAT echelon exceeds
+authority. Winning the last campaign operation promotes one rung. Probe:
+`Strategos > Probe Rank Gates`. Multi-campaign persistence of rank is #109.
+
 ## What is deliberately not here yet
 
 - **Defeat-cost handling beyond a shorter rest** — the rest-hours-by-outcome pattern above is the
   entire "defeat cost" story so far. A resource penalty, forced starting posture, or anything else
   losing might cost the campaign is undecided and unimplemented.
-- **Wiring into PLAY/UI** — [#139](https://github.com/aawadall/strategos/issues/139): PLAY rail
-  CAMPAIGN section starts `valley-campaign` via `CampaignChainIO.Load` + `Validate` +
-  `CampaignChainDriver.StartNext`; `ShowOutcome` enables CONTINUE, which
-  `CampaignCarryOver.CarryOver`s into the next op. `AppSession` holds `ActiveChain` /
-  `ActiveOperationIndex`.
-- **Mid-campaign save (#140)** — `SaveRecord` carries `CampaignName`, `OperationIndex`, and
-  `CampaignChainJson` (the live mutated chain, not a fresh Resources load). PLAY SAVE/LOAD
-  quicksave restores session + `Simulation.Restore` with reaction/director picture rebuild.
+- **Career across campaigns (#109)** — rank gates inside one campaign ship (#76); persisting
+  rank and formation across campaign boundaries remains open.
 
 See `Artifacts/agents/campaign-chain-shape-out.md` for the chunk-1 handoff,
 `Artifacts/agents/campaign-carryover-out.md` for chunk 2's, `Artifacts/agents/campaign-merge-out.md`

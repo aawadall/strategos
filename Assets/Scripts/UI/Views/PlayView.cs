@@ -687,6 +687,14 @@ namespace Strategos.UI.Views
                 return;
             }
 
+            if (_session != null &&
+                !RankGate.Authorize(_session.CareerRankId, scenario, out var gateProblem))
+            {
+                Debug.LogWarning($"[PlayView] {gateProblem}");
+                _statusLabel.text = gateProblem.ToUpperInvariant();
+                return;
+            }
+
             var map = scenario.GenerateMap();
             var problems = scenario.Validate(UnitCatalogue.Default(), map);
             foreach (var p in problems) Debug.LogWarning($"[PlayView] {scenario.Name}: {p}");
@@ -712,6 +720,21 @@ namespace Strategos.UI.Views
             {
                 foreach (var p in problems) Debug.LogWarning($"[PlayView] campaign: {p}");
                 _statusLabel.text = $"CAMPAIGN INVALID  ·  {problems.Count} PROBLEM(S)";
+                return;
+            }
+
+            var first = ScenarioIO.Load(chain.Operations[0].ScenarioName);
+            if (first == null)
+            {
+                _statusLabel.text = "CAMPAIGN FIRST SCENARIO MISSING";
+                return;
+            }
+
+            if (_session != null &&
+                !RankGate.Authorize(_session.CareerRankId, first, out var gateProblem))
+            {
+                Debug.LogWarning($"[PlayView] {gateProblem}");
+                _statusLabel.text = gateProblem.ToUpperInvariant();
                 return;
             }
 
@@ -1606,9 +1629,31 @@ namespace Strategos.UI.Views
             string campaignNote = string.Empty;
             if (_session != null && _session.HasActiveCampaign)
             {
-                campaignNote = _session.HasNextOperation
-                    ? "   ·   CONTINUE FOR NEXT OPERATION"
-                    : "   ·   CAMPAIGN COMPLETE";
+                if (_session.HasNextOperation)
+                {
+                    campaignNote = "   ·   CONTINUE FOR NEXT OPERATION";
+                }
+                else
+                {
+                    campaignNote = "   ·   CAMPAIGN COMPLETE";
+                    // #224: one promotion when the player wins the last operation.
+                    bool playerWon = !outcome.IsDraw &&
+                                     _scenario != null &&
+                                     _scenario.PlayerSide.IsValid &&
+                                     outcome.Winner == _scenario.PlayerSide;
+                    if (playerWon)
+                    {
+                        string rank = _session.CareerRankId;
+                        if (RankGate.TryPromoteAfterCampaignWin(ref rank))
+                        {
+                            _session.CareerRankId = rank;
+                            var step = RankAuthorityIO.Current.Find(rank);
+                            campaignNote +=
+                                $"   ·   PROMOTED TO {(step?.Title ?? rank).ToUpperInvariant()}";
+                            Debug.Log($"[PlayView] career promoted to '{rank}'");
+                        }
+                    }
+                }
             }
 
             _clockLabel.text =

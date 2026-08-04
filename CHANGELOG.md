@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Rank gates (#76 / #222–#225): `RankAuthority` table (rank → max echelon), PLAY refuses
+  under-rank scenario/campaign start, promote one rung on campaign win; `RankGateProbe`.
 - US/NATO topographic map palette (#169 / #188–#192): `MapRenderMode.NatoTopo` with
   FM 3-25.26 / FM 21-31 five-colour ground colours; PLAY / SCENARIO / EXPLORE dropdowns;
   `MapPaletteProbe` + `MapContactSheet` coverage.

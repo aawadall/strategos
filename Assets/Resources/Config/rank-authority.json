@@ -1,0 +1,40 @@
+{
+  "Name": "US Army command authority",
+  "Steps": [
+    {
+      "Id": "platoon",
+      "Title": "Platoon leader",
+      "MaxEchelon": "Platoon"
+    },
+    {
+      "Id": "company",
+      "Title": "Company commander",
+      "MaxEchelon": "Company"
+    },
+    {
+      "Id": "battalion",
+      "Title": "Battalion commander",
+      "MaxEchelon": "Battalion"
+    },
+    {
+      "Id": "regiment",
+      "Title": "Regiment / group commander",
+      "MaxEchelon": "Regiment"
+    },
+    {
+      "Id": "brigade",
+      "Title": "Brigade commander",
+      "MaxEchelon": "Brigade"
+    },
+    {
+      "Id": "division",
+      "Title": "Division commander",
+      "MaxEchelon": "Division"
+    },
+    {
+      "Id": "corps",
+      "Title": "Corps commander",
+      "MaxEchelon": "Corps"
+    }
+  ]
+}

@@ -99,6 +99,12 @@ namespace Strategos.UI
         /// </summary>
         public CampaignChain ActiveChain { get; private set; }
 
+        /// <summary>
+        /// Career command rank id into <see cref="RankAuthorityIO"/> (#76). Defaults to
+        /// battalion so shipped BN-top ORBATs load; promotion climbs the authority table.
+        /// </summary>
+        public string CareerRankId { get; set; } = RankAuthorityDefaults.DefaultRankId;
+
         /// <summary>Index into <see cref="ActiveChain"/>.Operations, or -1 when no campaign.</summary>
         public int ActiveOperationIndex { get; private set; } = -1;
 
