@@ -123,6 +123,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 |---|---|
 | `Strategos.Editor.MapMeshProbe.Run` | Drape mesh counts, extent, UVs, skirt, no NaN |
 | `Strategos.Editor.ScenarioProbe.Run` | Round trip, and that it regenerates *the same ground* |
+| `Strategos.Editor.CommunityScenarioLoadProbe.Run` | Arbitrary community JSON via FromJson/LoadFromFile; no shipped-name allowlist |
 | `Strategos.Editor.CommandProbe.Run` | The four delivery rules, queues, A\*, replay divergence |
 | `Strategos.Editor.ReportProbe.Run` | Detection edges, report timing, replay of reports |
 | `Strategos.Editor.CombatProbe.Run` | The engagement matrix, terrain, simultaneity, replay |

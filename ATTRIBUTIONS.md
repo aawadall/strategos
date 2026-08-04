@@ -96,6 +96,15 @@ in the same change (steps below).
 | `Research/historical/belleau-wood-1st-marine-brigade.md` | Belleau Wood (1918) | Brigade / battalion |
 | `Research/historical/normandy-v-corps-breakout-context.md` | Normandy V Corps / First Army context (1944) | Corps / army |
 
+**Shipped historical scenarios (#333 / #345)** — player-visible provenance:
+
+| Resources scenario | Drawn from | Licence |
+|---|---|---|
+| `little-round-top-20th-maine` | `Research/historical/little-round-top-20th-maine.md` + CMH Gettysburg pubs | U.S. gov public domain |
+
+Map terrain is a procedural approximation (see each scenario `Description`); not real
+ground.
+
 ---
 
 ## How to Add a New Attribution

@@ -36,13 +36,12 @@ topo palette (#169), and rank gates (#76) are done. Player-as-node (#36), career
 campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn (#33), and dynamic world
 layer (#34), procedural scenario generation (#334), and A* replan (#35) are done.
 Feature-placed objectives (#51) and historical research into `Research/historical/` (#332)
-are done.
+are done. First historical Scenario JSON (Little Round Top, #333) is done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#333](https://github.com/aawadall/strategos/issues/333) | Epic: historical scenarios convert to Scenario JSON — children #341–#346 |
 | [#355](https://github.com/aawadall/strategos/issues/355) | Epic: local/API seam (store, content, identity) — children #361–#367 |
 
 ### Outstanding themes (open issues, grouped)
@@ -70,7 +69,8 @@ are done.
   viewer), #288 Steamworks SDK integration (App ID, Overlay, Achievements, Cloud), #289
   tutorial/contextual help/settings screen, #290 controller support (Steam Deck), #291 an
   AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
-- **Historical scenarios** — #332 research **closed** (#335–#340); still open: #333 convert (#341–#346)
+- **Historical scenarios** — #332 research **closed**; #333 convert **closed** (starter:
+  Little Round Top; more engagements remain optional follow-ons from the shortlist)
 - **Procedural scenarios** — #334 **closed** (#347–#352); distinct from §6.3 campaign sequencing
 
 ---

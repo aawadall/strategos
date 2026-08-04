@@ -443,6 +443,157 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Name of the Little Round Top historical scenario (#333 / #342).</summary>
+        public const string LittleRoundTopName = "little-round-top-20th-maine";
+
+        /// <summary>
+        /// Gettysburg — 20th Maine on Little Round Top (1863-07-02), converted from
+        /// <c>Research/historical/little-round-top-20th-maine.md</c> (#333).
+        ///
+        /// Map is a procedural Hills approximation of a rocky wooded spur — not the real
+        /// Gettysburg ground (Phase 1 has no SRTM/GeoTIFF ingestion). Crest binds via
+        /// <see cref="Objective.PlaceNearKind"/> SpotHeight (#51).
+        /// </summary>
+        public static Scenario LittleRoundTop()
+        {
+            var union = new Side(new SideId(1), "UNION", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var confederate = new Side(new SideId(2), "CONFEDERATE", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var hills = ReliefProfiles.For(ReliefProfile.Hills);
+            hills.Aridity = 0.12f;
+            hills.SettlementsPerKiloCell = 0.02f;
+
+            var s = new Scenario
+            {
+                Name = "Little Round Top — 20th Maine",
+                Description =
+                    "2 July 1863: the 20th Maine holds the left of Vincent's brigade on a " +
+                    "rocky wooded spur against Law's Alabamians. " +
+                    "TERRAIN CAVEAT: the map is a procedural Hills approximation chosen for " +
+                    "wooded-spur character (relief, forest, sparse culture) — not the real " +
+                    "Gettysburg ground. Real-terrain import is still Phase 1 deferred. " +
+                    "Research: Research/historical/little-round-top-20th-maine.md (CMH PD).",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Little Round Top (approx.)",
+                    Seed = 18630702,
+                    Width = 128,
+                    Height = 128,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Hills,
+                    EnableErosion = true,
+                    EnableCulture = false,
+                    ParameterOverride = hills,
+                },
+            };
+
+            s.Sides.Add(union);
+            s.Sides.Add(confederate);
+            s.PlayerSide = union.Id;
+            s.PlayerEchelon = Echelon.Regiment;
+
+            // Union — regiment HQ + 20th Maine company (+ attached infantry).
+            Add(s, union.Id, 10, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Regiment, new Vector2(88f, 64f), "20th Maine", "Vincent Bde",
+                UnitCatalogue.InfantryFoot);
+            Add(s, union.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(84f, 60f), "20 ME Co", "20th Maine",
+                UnitCatalogue.InfantryFoot, parent: 10);
+            Add(s, union.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Platoon, new Vector2(90f, 68f), "20 ME Det", "20th Maine",
+                UnitCatalogue.InfantryFoot, parent: 10);
+
+            // Confederate — abstracted Alabama attack (source lacks company-perfect IDs).
+            Add(s, confederate.Id, 20, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(40f, 64f), "Law Bde (-)", "Hood Div",
+                UnitCatalogue.InfantryFoot);
+            Add(s, confederate.Id, 3, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(36f, 58f), "AL Inf A", "Law Bde",
+                UnitCatalogue.InfantryFoot, parent: 20);
+            Add(s, confederate.Id, 4, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(38f, 70f), "AL Inf B", "Law Bde",
+                UnitCatalogue.InfantryFoot, parent: 20);
+
+            // Crest — historical objective; SpotHeight resolves after map gen.
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "LITTLE ROUND TOP",
+                Cell = new Vector2(80f, 64f),
+                RadiusCells = 8f,
+                InitialOwner = union.Id,
+                PlaceNearKind = MapPoiKind.SpotHeight,
+            });
+
+            // #344: defensive battle position on the spur; Confederate axis of advance uphill.
+            // Sources do not name APP-6D graphics; these are scenario briefing aids matching
+            // the research intent (hold crest / attack up the western slope).
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 1,
+                Kind = ControlMeasureKind.BattlePosition,
+                Name = "BP MAINE",
+                Owner = union.Id,
+                Points =
+                {
+                    new Vector2(76f, 56f),
+                    new Vector2(92f, 56f),
+                    new Vector2(92f, 72f),
+                    new Vector2(76f, 72f),
+                },
+            });
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 2,
+                Kind = ControlMeasureKind.AxisOfAdvance,
+                Name = "AXIS LAW",
+                Owner = confederate.Id,
+                AxisRole = AxisOfAdvanceRole.Main,
+                Points =
+                {
+                    new Vector2(40f, 64f),
+                    new Vector2(60f, 64f),
+                    new Vector2(78f, 64f),
+                },
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = union.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 900,
+                Description = "UNION held the crest.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = confederate.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 600,
+                Description = "CONFEDERATE seized the crest.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = union.Id, Priority = 5,
+                StrengthThresholdPercent = 35f,
+                Description = "CONFEDERATE attack broken.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = confederate.Id, Priority = 5,
+                StrengthThresholdPercent = 35f,
+                Description = "UNION rendered combat ineffective.",
+            });
+
+            // ~45 minutes of intense action (research: 1–2 hours within the larger day).
+            s.TimeLimitTicks = 2700;
+
+            return s;
+        }
+
         private static void Add(Scenario s, SideId side, int id, LandEntityCode entity,
             int variant, Echelon echelon, Vector2 cell, string designation,
             string higherFormation, string capabilityId, int strength = 100,

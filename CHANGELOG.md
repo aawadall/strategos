@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Historical scenario convert (#333 / #341–#346): `ScenarioSamples.LittleRoundTop` + shipped
+  JSON; Hills procedural terrain caveat; BattlePosition + Axis GCMs; ATTRIBUTIONS row;
+  `CommunityScenarioLoadProbe` (arbitrary JSON load, no name allowlist).
 - Historical research pack (#332 / #335–#340): `Research/historical/` digests (Little Round
   Top, Belleau Wood, Normandy corps context) + shortlist; `docs/historical-research.md`;
   ATTRIBUTIONS hook; gitignore allows committed notes while PDFs stay ignored.
