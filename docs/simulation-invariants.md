@@ -113,6 +113,12 @@ Tick++
   than re-publish the `DirectiveAcknowledged` report directly — only that method holds the
   idempotence guard over `_acknowledgedDirectives`, and re-publishing the report around it would
   leave a replayed run's guard empty even though its `ReportLog` matched.
+- **The player addresses only their echelon band (#36 / #268).** `Scenario.PlayerEchelon`
+  (or the ORBAT top when unset) is the seat; `CommandScope.CanAddress` and `Simulation.Issue`
+  refuse player-side addressees above it (`Seq` stays 0, nothing logged). PLAY hides the same
+  units from the order chrome. Opposing sides and reflexes are not gated — they share `Issue`
+  and must keep working. Mid-run FRAGO streams from higher stay deferred; plan cuts are
+  `CancelFrom`, and higher's voice is the one opening directive (#269 / #73).
 - **A destroyed unit becomes a wreck, and a wreck is not a contact.** It stays on the map on
   purpose — ground where a company was destroyed is information, and removing it deletes the
   only trace a fight happened there — but it stops being a *unit*: not commandable, not

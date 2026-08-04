@@ -32,20 +32,19 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 
 Command controls (#32), campaign in PLAY (#114 / #138–#140), mission types (#85), AI
 environment API (#99 / #100–#106), graphic control measures (#160 / #161–#166), US/NATO
-topo palette (#169), and rank gates (#76) are done.
+topo palette (#169), and rank gates (#76) are done. Player-as-node (#36) is done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#36](https://github.com/aawadall/strategos/issues/36) | Epic: player as a node in the chain — children #266–#269 |
 | [#109](https://github.com/aawadall/strategos/issues/109) | Epic: career across campaigns — children #212–#215 |
 
 ### Outstanding themes (open issues, grouped)
 
 - **Command UX / play** — #32 / #53 / #54 shipped; later: config-loaded verb table (#130)
-- **Campaign & progression** — #114 / #138–#140 / #76 shipped; still open: #78 (only #76 was left — close when checklist updated), #109
-- **C2 / C3 depth** — #36, #47, #62, #65 (#85 mission types shipped)
+- **Campaign & progression** — #114 / #138–#140 / #76 shipped; still open: #109
+- **C2 / C3 depth** — #36 closed (#266–#269); still open: #47, #62, #65 (#85 mission types shipped)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
 - **World & movement depth** — #33, #34, #35, #51
 - **AI as environment** — #99 closed (#100–#106 shipped)

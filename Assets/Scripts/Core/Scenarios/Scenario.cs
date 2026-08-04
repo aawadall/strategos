@@ -59,10 +59,22 @@ namespace Strategos.Scenarios
         /// <remarks>
         /// Until this existed the player could select and order *any* unit on the map,
         /// including the enemy's — not a bug so much as a concept that was never introduced,
-        /// and it meant a scenario had no adversary at all. #36 will extend this with the
-        /// echelon the player occupies, which decides what they can see and address.
+        /// and it meant a scenario had no adversary at all. The echelon they occupy is
+        /// <see cref="PlayerEchelon"/>.
         /// </remarks>
         public SideId PlayerSide;
+
+        /// <summary>
+        /// The echelon the player occupies as a node in the chain (#36 / #267).
+        /// <see cref="Echelon.None"/> means derive from the player side's ORBAT top
+        /// (<see cref="Units.RankGate.OrbatMaxEchelon"/>).
+        /// </summary>
+        /// <remarks>
+        /// Bounds zoom and who may be addressed (<see cref="Commands.CommandScope"/>).
+        /// Distinct from career rank (#76): rank authorizes the seat; this field is the seat.
+        /// Higher formations may still sit on the ORBAT for rollup; they are out of band.
+        /// </remarks>
+        public Echelon PlayerEchelon = Echelon.None;
 
         /// <summary>
         /// Ground worth taking. Definitions only — who holds what is runtime state and lives
@@ -104,9 +116,10 @@ namespace Strategos.Scenarios
         /// rather than cluttering every hand-authored file with an empty one.
         ///
         /// One directive, published once at simulation start
-        /// (<see cref="Strategos.Commands.Simulation"/>'s constructor) — not a list. #36 explicitly defers
-        /// a FRAGO stream and the AI that would author one past this issue; v1 is "one directive,
-        /// referencing the scenario's own objectives, published once near scenario start".
+        /// (<see cref="Strategos.Commands.Simulation"/>'s constructor) — not a list. Mid-run
+        /// FRAGO streams from higher stay deferred (#36 / #269); v1's plan cut is
+        /// <c>CancelFrom</c> on the command topic. v1 is "one directive, referencing the
+        /// scenario's own objectives, published once near scenario start".
         /// </remarks>
         public Directive? Directive;
 
@@ -262,6 +275,7 @@ namespace Strategos.Scenarios
             if (PlayerSide.IsValid && FindSide(PlayerSide) == null)
                 problems.Add($"Scenario is played as {PlayerSide}, which does not exist.");
 
+            ValidatePlayerEchelon(problems);
             ValidateVictory(problems);
             ValidateControlMeasures(problems);
             ValidateDirective(problems);
@@ -316,6 +330,32 @@ namespace Strategos.Scenarios
                         $"{LandcoverInfo.DisplayName(cover)}, which '{capabilityId}' cannot occupy.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Authored player seat must name a side and a unit at that echelon (#267).
+        /// </summary>
+        private void ValidatePlayerEchelon(List<string> problems)
+        {
+            if (PlayerEchelon == Echelon.None) return;
+
+            if (!PlayerSide.IsValid)
+            {
+                problems.Add("PlayerEchelon is set but PlayerSide is not — the player's " +
+                             "node needs a side.");
+                return;
+            }
+
+            bool anyAt = false;
+            foreach (var u in Units)
+            {
+                if (u == null || u.Side != PlayerSide) continue;
+                if (u.ToSidcCode().Echelon == PlayerEchelon) anyAt = true;
+            }
+
+            if (!anyAt)
+                problems.Add($"PlayerEchelon is {PlayerEchelon} but side {PlayerSide} has " +
+                             "no unit at that echelon.");
         }
 
         /// <summary>

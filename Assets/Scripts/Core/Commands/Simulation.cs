@@ -283,9 +283,20 @@ namespace Strategos.Commands
         /// Logging happens here rather than at delivery so the log records what was *ordered*
         /// even if it is later cancelled before it runs — which is the whole point of an
         /// append-only log.
+        ///
+        /// #268: refuses an addressee outside the player's echelon band
+        /// (<see cref="CommandScope.CanAddress"/>). The returned command keeps <c>Seq == 0</c>
+        /// and is neither logged nor published — the same shape a probe uses to assert refusal.
         /// </summary>
         public Command Issue(Command command)
         {
+            if (command.TargetUnit.IsValid)
+            {
+                var unit = Hierarchy.Find(command.TargetUnit) ?? UnitOf(command.TargetUnit);
+                if (unit != null && !CommandScope.CanAddress(Scenario, unit))
+                    return command;
+            }
+
             command.Tick = Tick;
             command = Log.Append(command);
             Bus.Publish(command);

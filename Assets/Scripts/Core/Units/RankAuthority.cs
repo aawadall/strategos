@@ -160,9 +160,21 @@ namespace Strategos.Units
     public static class RankGate
     {
         /// <summary>
-        /// Highest SIDC echelon on the player side's units (same rule as PlayView.CommandEchelon).
+        /// Echelon the career rank must cover: authored
+        /// <see cref="Scenario.PlayerEchelon"/> when set, else
+        /// <see cref="OrbatMaxEchelon"/>.
         /// </summary>
         public static Echelon RequiredEchelon(Scenario scenario)
+        {
+            if (scenario == null) return Echelon.None;
+            if (scenario.PlayerEchelon != Echelon.None) return scenario.PlayerEchelon;
+            return OrbatMaxEchelon(scenario);
+        }
+
+        /// <summary>
+        /// Highest SIDC echelon on the player side's units (or on the map in hot-seat).
+        /// </summary>
+        public static Echelon OrbatMaxEchelon(Scenario scenario)
         {
             if (scenario?.Units == null) return Echelon.None;
 
