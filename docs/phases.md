@@ -278,7 +278,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 ## Phase 8 — AI System
 **Goal:** An AI that can be trained, evolved, transferred, and shared.
-**Status:** Unbuilt as intelligence. Policy seam (#100) and environment epic (#99) filed.
+**Status:** Policy seam (#100) and observation encoding (#101) shipped; rest of environment
+epic (#99) and intelligence unbuilt.
 
 ### 8.1 Rule-Based AI (baseline)
 - [x] Reflex-level opposing intent (`SideDirector` / ROE) — not doctrine-driven planning
@@ -287,7 +288,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Exposes same action API as ML agent for compatibility (#102)
 
 ### 8.2 Reinforcement Learning (RL)
-- [ ] **Environment API**: observation (#101), action space (#102), reward (#103), lifecycle (#104)
+- [x] Observation encoding — `SideObservation` / encoder; fog-leak probe (#101)
+- [ ] **Environment API** (remaining): action space (#102), reward (#103), lifecycle (#104)
 - [ ] Headless throughput measurement and improvement (#105)
 - [ ] Trajectory export from CommandLog + ReportLog (#106)
 - [ ] Unity ML-Agents integration (C# environment, Python trainer)

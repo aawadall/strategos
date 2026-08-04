@@ -268,12 +268,18 @@ Tick++
   `SideKnowledge` — `Tick`, `IsOver`, `Units`, `Victory`, and a `QueueOf` lookup, the same five
   facts `SideDirector` always read off `Simulation` — is the only thing `Decide` is handed.
   **Not an observation encoding**: `Units`/`Victory` stay ground truth, same as before this
-  refactor; #101, if it lands, defines the belief-correct shape separately. `Simulation.Director`
-  stays typed as the concrete `SideDirector` (an `as` cast over the policy field) because
-  existing callers read `OrdersIssued` and the save/load retry memory off it specifically;
-  `Simulation.SetPolicy` is the general seam, and `DirectorProbe`'s
-  `NoSimulationStubPolicy` — a `SideId` field and nothing else — is plugged in through it as the
-  direct disproof of the issue's own stated failure mode.
+  refactor. Belief-correct knowledge is `SideObservation` (#101) — a fixed-shape float buffer
+  from `SideObservationEncoder`, with hostile contact slots rebuilt from `ReportLog` the same
+  way `ReactionController` rebuilds its pictures, never from an enemy `UnitInstance.Cell`.
+  `ObservationProbe` holds the fog-leak guard: two sims that differ only in an *unseen*
+  hostile's true cell must encode identically, and a deliberate naive ground-truth encoder on
+  the same pair must *not* (so the guard is shown live before the belief path is trusted).
+  `ISidePolicy.Decide` still takes `SideKnowledge`; wiring observation into the policy/env
+  lifecycle is #102–#104. `Simulation.Director` stays typed as the concrete `SideDirector`
+  (an `as` cast over the policy field) because existing callers read `OrdersIssued` and the
+  save/load retry memory off it specifically; `Simulation.SetPolicy` is the general seam, and
+  `DirectorProbe`'s `NoSimulationStubPolicy` — a `SideId` field and nothing else — is plugged
+  in through it as the direct disproof of the issue's own stated failure mode.
 - **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
   standing where it was, to be destroyed a few seconds later.
 - **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data

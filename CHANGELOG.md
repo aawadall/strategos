@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- `SideObservation` / `SideObservationEncoder` — fixed-shape side knowledge from report
+  belief (not enemy ground truth); `ObservationProbe` fog-leak guard (#101 / #99).
 - Pursue mission order: tight standoff MoveTo + Engage; PLAY PURSUE; `PursueProbe`
   (#153 / #85). Closes the #85 mission-type children.
 - Exploit mission order: MoveTo past threat + Engage; PLAY EXPLOIT; `ExploitProbe` (#152 / #85).
