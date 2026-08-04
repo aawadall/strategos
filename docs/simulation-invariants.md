@@ -282,13 +282,16 @@ Tick++
   +1/0/−1 on win/draw/loss, plus potential-based shaping
   `Φ = w_obj·owned + w_force·force_advantage` (deltas of `OwnerOf` / `RemainingFraction` —
   the same facts victory uses). Contact reports are deliberately not a reward input;
-  `RewardProbe` guards that. `ISidePolicy.Decide` still takes `SideKnowledge`; wiring
-  observation/actions/reward into the env lifecycle is #104. `Simulation.Director` stays
-  typed as the concrete `SideDirector` (an `as` cast over the policy field) because existing
-  callers read `OrdersIssued` and the save/load retry memory off it specifically;
-  `Simulation.SetPolicy` is the general seam, and `DirectorProbe`'s `NoSimulationStubPolicy` —
-  a `SideId` field and nothing else — is plugged in through it as the direct disproof of the
-  issue's own stated failure mode.
+  `RewardProbe` guards that. **Environment lifecycle (#104)** is `SideEnv`: `Reset` restores
+  a start `SimulationSnapshot` with a cached `MapData` (no per-episode `GenerateMap`),
+  `Step` issues only through `Simulation.Issue` then `Simulation.Step`, and returns
+  observation / `SideReward` / done. `EnvProbe` holds Reset signature stability and an
+  Issue-path parity check against a manual twin (#94). `ISidePolicy.Decide` still takes
+  `SideKnowledge`. `Simulation.Director` stays typed as the concrete `SideDirector`
+  (an `as` cast over the policy field) because existing callers read `OrdersIssued` and the
+  save/load retry memory off it specifically; `Simulation.SetPolicy` is the general seam, and
+  `DirectorProbe`'s `NoSimulationStubPolicy` — a `SideId` field and nothing else — is plugged
+  in through it as the direct disproof of the issue's own stated failure mode.
 - **Breaking contact withdraws; it does not merely cease fire.** An Abort alone left the unit
   standing where it was, to be destroyed a few seconds later.
 - **`VictoryEvaluator` is handed its objectives, never fetching them.** They are scenario data
