@@ -52,7 +52,7 @@ Later command polish: config-loaded verb table (#130).
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
-- **Scenario / map access** — #133 (PLAY picker — `push-north` ships but is unreachable)
+- **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 (standard US/NATO topo palette as a fifth render mode)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
 
