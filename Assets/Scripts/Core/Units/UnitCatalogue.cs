@@ -202,6 +202,7 @@ namespace Strategos.Units
                 EngagementRangeMetres = 18000f,
                 Firepower = 55f,
                 Protection = 1f,
+                CanDigIn = false,
                 Consumption = new ConsumptionRates
                 {
                     RationsPerHour = 0.5f, WaterPerHour = 1f,

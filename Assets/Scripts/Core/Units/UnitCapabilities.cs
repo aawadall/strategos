@@ -181,6 +181,14 @@ namespace Strategos.Units
         /// <summary>Damage absorbed. Higher means harder to hurt.</summary>
         public float Protection = 1f;
 
+        // ─── Special actions (#33) ────────────────────────────────────────────
+
+        /// <summary>
+        /// May dig in via <see cref="SpecialActions.ActionKind.DigIn"/> (Hold/Defend).
+        /// Artillery and similar fire-support types leave this false.
+        /// </summary>
+        public bool CanDigIn = true;
+
         // ─── Sustainment ──────────────────────────────────────────────────────
 
         public ConsumptionRates Consumption = new()

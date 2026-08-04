@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Special-action seam (#33 / #278–#282): `ActionKind` + `UnitCapabilities.CanDigIn`; DigIn
+  expands to Hold/Defend (same dig-in clock / half fire); PLAY **DIG IN** palette verb; HOLD
+  gated the same way; artillery ships without dig-in; `SpecialActionsProbe`.
 - AI difficulty ladder (#291 / #318–#322): `DifficultyParams` + Easy/Normal/Hard and
   Aggressive/Defensive/Balanced presets for `SideDirector`; PLAY **AI DIFFICULTY** /
   **AI PERSONALITY** dropdowns; `AiDifficultyProbe`; `docs/ai-difficulty.md`.

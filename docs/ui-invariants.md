@@ -148,8 +148,10 @@ Every view builds its UI imperatively from `UiFactory`. There is no prefab and n
   commits as N ordinary queued `MoveTo`s (Shift appends; otherwise Abort once then queue).
   Esc / SELECT clears the draft without issuing. Pending and draft legs draw through
   `MoveToExecutor.PlanCells` (same Find → Simplify → Smooth as the executor), not straight
-  lines. Keyboard arming reads `Shortcut` / `ClearShortcut` via `TryReadArmingKey` — do not
-  hard-code M/E/W/Esc in `PlayView.Update`. Space stays the clock; the probe fails if a verb
+  lines. DIG IN (#33) is a fourth table row (`CommandKind.Defend`); a confirming click
+  expands via `SpecialAction.TryCreate(DigIn)` into Hold/Defend when `CanDigIn`, same as the
+  HOLD button. Keyboard arming reads `Shortcut` / `ClearShortcut` via `TryReadArmingKey` — do not
+  hard-code M/E/W/D/Esc in `PlayView.Update`. Space stays the clock; the probe fails if a verb
   steals it. Right-click remains its own engage-or-march path and must not be redefined by
   the table (#53). Plan-card CANCEL uses `QueuedCommand.Ordinal` for CancelFrom (#57).
   Config-loading the table is #130 and must not block the in-code table.

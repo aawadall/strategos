@@ -525,6 +525,16 @@ namespace Strategos.UI.Views
                 return;
             }
 
+            if (def.Id == PaletteVerb.DigIn)
+            {
+                _armedLabel.text = $"ARMED  ·  {def.Label}" +
+                    (string.IsNullOrEmpty(def.ShortcutLabel)
+                        ? string.Empty
+                        : $"  ({def.ShortcutLabel})") +
+                    "  ·  left-click digs in (Hold/Defend)";
+                return;
+            }
+
             _armedLabel.text = $"ARMED  ·  {def.Label}" +
                 (string.IsNullOrEmpty(def.ShortcutLabel)
                     ? string.Empty
@@ -2057,6 +2067,12 @@ namespace Strategos.UI.Views
                 return;
             }
 
+            if (def.Id == PaletteVerb.DigIn)
+            {
+                IssueDigIn(unit, WantsQueue());
+                return;
+            }
+
             bool queue = WantsQueue();
 
             switch (def.Kind)
@@ -2569,7 +2585,27 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Hold(ActorId.ForSide(unit.Side), unit.Id));
+            IssueDigIn(unit, queue: false);
+        }
+
+        /// <summary>
+        /// DigIn special action (#33): capability-gated bridge to Hold/Defend.
+        /// </summary>
+        private void IssueDigIn(UnitInstance unit, bool queue)
+        {
+            if (_sim == null || unit == null) return;
+            var actor = ActorId.ForSide(unit.Side);
+            var cmd = SpecialActions.SpecialAction.TryCreate(
+                SpecialActions.ActionKind.DigIn, actor, unit, _sim.Catalogue);
+            if (!cmd.HasValue)
+            {
+                if (_statusLabel != null) _statusLabel.text = "CANNOT DIG IN";
+                Debug.Log($"[PlayView] DigIn refused for {unit.Designation} ({unit.CapabilityId})");
+                return;
+            }
+
+            if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
+            _sim.Issue(cmd.Value);
         }
 
         /// <summary>

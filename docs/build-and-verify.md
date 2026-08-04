@@ -136,6 +136,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.CasualtyProbe.Run` | A wreck is not a contact; losses recorded and in the signature |
 | `Strategos.Editor.EchelonProbe.Run` | Zoom bands contiguous, round-tripping, and usable on a small map |
 | `Strategos.Editor.DefendProbe.Run` | Defend never ends, digging in costs time and pays, Hold is not Abort |
+| `Strategos.Editor.SpecialActionsProbe.Run` | DigIn → Hold/Defend clock + fire cut; artillery CanDigIn refuse; DIG IN palette |
 | `Strategos.Editor.ScreenProbe.Run` | Screen never ends, does not dig in, detection reaches further than Halted |
 | `Strategos.Editor.GuardProbe.Run` | Guard never ends, digs in like Defend, modest detection once prepared |
 | `Strategos.Editor.CoverProbe.Run` | Cover digs in, no watch bonus, does not break contact while covering |

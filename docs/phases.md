@@ -114,7 +114,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] Operational movement vs. tactical movement speed distinction
 - [ ] Formation movement: line, column, wedge, echelon, bounding overwatch
 - [ ] Forced march (speed boost with readiness penalty) *(fatigue from marching exists; forced-march order does not)*
-- [ ] River crossing: bridge vs. ford vs. wet gap crossing *(bridges/fords generate; crossing as a special action is #33)*
+- [ ] River crossing: bridge vs. ford vs. wet gap crossing *(bridges/fords generate; DigIn seam #33 shipped — Bridge/Clear still reserved)*
+- [x] Special-action seam: `ActionKind` + DigIn → Hold/Defend (#33 / #278–#282)
 - [ ] A* as a living plan — replan when the situation changes (#35)
 
 ### 4.2 Combat
