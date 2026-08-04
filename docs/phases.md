@@ -17,10 +17,10 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [x] Basic main-menu / tab-shell scene with placeholder-then-real UI
 - [ ] In-game developer console (log, commands, unit spawning)
 - [ ] Unit test framework (Unity Test Framework) wired up *(package present; no EditMode assembly under `Assets/` yet — probes in Editor substitute)*
-- [ ] Steamworks partner account created; Steam App ID registered on Steamworks portal
-- [ ] `steam_appid.txt` added to Unity project root for development builds
-- [ ] Steamworks.NET (or Facepunch.Steamworks) Unity package integrated
-- [ ] Steam Overlay verified functional in development builds
+- [ ] Steamworks partner account created; Steam App ID registered on Steamworks portal (#288)
+- [ ] `steam_appid.txt` added to Unity project root for development builds (#288)
+- [ ] Steamworks.NET (or Facepunch.Steamworks) Unity package integrated (#288)
+- [ ] Steam Overlay verified functional in development builds (#288)
 
 **Milestone M0:** Clean local build, tab shell loads, Editor probes pass. *(CI activation still open.)*
 
@@ -238,17 +238,17 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 **Status:** Unbuilt. Deterministic command/report logs are the prerequisite and already ship.
 
 ### 7.1 Single Player vs AI
-- [ ] Player selects side, echelon scale, and scenario
+- [ ] Player selects side, echelon scale, and scenario (#287)
 - [x] Opposing side can run under `ISidePolicy` / `SideDirector` (reflex-level intent, not planning AI)
-- [ ] Difficulty: Recruit → Regular → Veteran → Elite → Legendary
-- [ ] Post-battle AAR (After-Action Review): map replay with analytics
+- [ ] Difficulty: Recruit → Regular → Veteran → Elite → Legendary (#291)
+- [ ] Post-battle AAR (After-Action Review): map replay with analytics (#287 — replay viewer child)
 
 ### 7.2 Hotseat Multiplayer
-- [ ] Simultaneous orders input, then resolution phase (WEGO)
+- [ ] Simultaneous orders input, then resolution phase (WEGO) (#287)
 - [ ] Hidden information: each player sees only their own intel
 - [ ] Screen-swap prompts between player turns
 - [ ] Local AI fill-in if player disconnects
-- [ ] Steam Remote Play Together: enable in Steamworks portal to allow internet hotseat at zero networking cost
+- [ ] Steam Remote Play Together: enable in Steamworks portal to allow internet hotseat at zero networking cost (#288, once #287's hotseat exists)
 
 ### 7.3 Online Multiplayer
 - [ ] Unity Netcode for GameObjects (primary) / Mirror (fallback)
@@ -286,7 +286,7 @@ intelligence / ML-Agents unbuilt.
 ### 8.1 Rule-Based AI (baseline)
 - [x] Reflex-level opposing intent (`SideDirector` / ROE) — not doctrine-driven planning
 - [ ] Doctrine-driven behaviour trees per mission type
-- [ ] Used for lowest difficulty levels and as RL environment baseline
+- [ ] Used for lowest difficulty levels and as RL environment baseline (#291)
 - [x] Exposes same action API as ML agent for compatibility (#102)
 
 ### 8.2 Reinforcement Learning (RL)
@@ -318,7 +318,7 @@ intelligence / ML-Agents unbuilt.
 - [ ] GA + RL hybrid: GA evolves high-level strategy; RL handles tactical execution
 
 ### 8.5 AI Difficulty & Personality
-- [ ] AI profiles: Aggressive, Defensive, Balanced, Feint-heavy, Attrition, Manoeuvre
+- [ ] AI profiles: Aggressive, Defensive, Balanced, Feint-heavy, Attrition, Manoeuvre (#291 — near-term as `SideDirector` presets, not trained personalities)
 - [ ] Personality parameters tune RL policy at inference time
 - [ ] Named commanders (personalities) with persistent stats across sessions
 
@@ -372,8 +372,8 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] Full UI skin — finished military map aesthetic
 - [ ] Colour-blind accessible symbol and map palettes
 - [ ] Keyboard shortcut remapping
-- [ ] Controller support (console stretch goal)
-- [ ] Comprehensive settings: graphics, audio, gameplay, accessibility
+- [ ] Controller support (console stretch goal) (#290)
+- [ ] Comprehensive settings: graphics, audio, gameplay, accessibility (#289)
 - [x] Explicit command palette / waypoints (#32, #53, #54) — verb table, arming, click-to-
   issue, keyboard shortcuts, and WAYPOINTS draft/commit (#127–#129, #54); config table (#130)
   still open
@@ -381,9 +381,9 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] In-game / web field-manual reference (#124)
 
 ### Tutorial & Onboarding
-- [ ] Interactive tutorial campaign: start at squad, walk through all systems
-- [ ] Context-sensitive in-game help overlay
-- [ ] Doctrinal reference wiki (in-game and web)
+- [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289)
+- [ ] Context-sensitive in-game help overlay (#289)
+- [ ] Doctrinal reference wiki (in-game and web) (#124)
 
 ### Performance & Stability
 - [ ] Unit stress tests: 10,000 simultaneous units at theater scale

@@ -55,6 +55,11 @@ topo palette (#169), and rank gates (#76) are done. Player-as-node (#36) is done
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
 - **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
+- **Steam-readiness gaps (filed 2026-08-04)** — six epics found to have zero prior tracking
+  during a backlog review: #287 game modes (mode select, hotseat, AI-vs-AI spectator, replay
+  viewer), #288 Steamworks SDK integration (App ID, Overlay, Achievements, Cloud), #289
+  tutorial/contextual help/settings screen, #290 controller support (Steam Deck), #291 an
+  AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
 
 ---
 

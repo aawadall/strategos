@@ -15,6 +15,8 @@ This document covers everything needed to ship Strategos on Steam as an indie ti
 
 ## Steamworks SDK Integration (Unity 6)
 
+Tracked as #288.
+
 ### Recommended Library
 
 Use **Steamworks.NET** (open source, MIT licensed, well-maintained Unity wrapper):
@@ -181,7 +183,7 @@ For a wargame with complex UI, **Playable** rating (controller works but not ful
 
 ## Steam Store Page Checklist
 
-Required before any public page or Early Access launch:
+Tracked as #293. Required before any public page or Early Access launch:
 
 - [ ] Capsule art: 460×215 (small), 231×87 (tiny), 616×353 (header)
 - [ ] Library capsule: 600×900
