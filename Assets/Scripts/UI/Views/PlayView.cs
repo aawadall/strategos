@@ -984,7 +984,9 @@ namespace Strategos.UI.Views
             {
                 if (_scenario?.ControlMeasures == null || _scenario.ControlMeasures.Count == 0)
                     return;
-                ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk);
+                // #186: hide opposing-owned GCMs; shared (Owner = None) still draw.
+                ControlMeasureDrawer.Draw(pixels, view, _scenario.ControlMeasures, SideInk,
+                    _scenario.PlayerSide);
             });
             _card.SetMarginaliaFor(_map, _scenario.Map.Seed);
             LayOutMarkers();

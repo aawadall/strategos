@@ -337,7 +337,8 @@
       },
       "RadiusCells": 4.0,
       "Points": [],
-      "Echelon": "None"
+      "Echelon": "None",
+      "AxisRole": "Main"
     },
     {
       "Id": 2,
@@ -365,7 +366,8 @@
           "y": 132.0
         }
       ],
-      "Echelon": "None"
+      "Echelon": "None",
+      "AxisRole": "Main"
     },
     {
       "Id": 3,
@@ -393,7 +395,111 @@
           "y": 85.0
         }
       ],
-      "Echelon": "Brigade"
+      "Echelon": "Brigade",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 4,
+      "Kind": "AxisOfAdvance",
+      "Name": "AXIS BLUE",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 55.0,
+          "y": 70.0
+        },
+        {
+          "x": 90.0,
+          "y": 95.0
+        },
+        {
+          "x": 115.0,
+          "y": 110.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 5,
+      "Kind": "DirectionOfAttack",
+      "Name": "DOA NORTH",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 100.0,
+          "y": 70.0
+        },
+        {
+          "x": 118.0,
+          "y": 100.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 6,
+      "Kind": "EngagementArea",
+      "Name": "EA ANVIL",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 108.0,
+          "y": 104.0
+        },
+        {
+          "x": 130.0,
+          "y": 104.0
+        },
+        {
+          "x": 130.0,
+          "y": 124.0
+        },
+        {
+          "x": 108.0,
+          "y": 124.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    },
+    {
+      "Id": 7,
+      "Kind": "Checkpoint",
+      "Name": "CP RED",
+      "Owner": {
+        "Value": 2
+      },
+      "Cell": {
+        "x": 170.0,
+        "y": 170.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [],
+      "Echelon": "None",
+      "AxisRole": "Main"
     }
   ],
   "Victory": [

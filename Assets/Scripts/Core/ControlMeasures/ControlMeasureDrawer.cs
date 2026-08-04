@@ -1,9 +1,9 @@
-// ControlMeasureDrawer.cs
-// #162 / #163: paint authored control measures into a MapRasterizer pixel buffer.
+﻿// ControlMeasureDrawer.cs
+// #162–#165: paint authored control measures into a MapRasterizer pixel buffer.
 //
 // Separate from MapRasterizer on purpose — MapData is generator terrain; these are scenario
-// plan graphics. Call after RenderPixels (MapSheetCard afterPixels hook / PlayView). Epic
-// child #166 may move the call site; the draw rules live here either way.
+// plan graphics. Call after RenderPixels (MapSheetCard afterPixels hook / PlayView).
+// Visually distinct from OrderTrackLayer (UI overlays for live plans).
 
 using System;
 using System.Collections.Generic;
@@ -19,14 +19,18 @@ namespace Strategos.ControlMeasures
         static readonly Color32 FallbackInk = new Color32(40, 40, 40, 220);
 
         /// <summary>
-        /// Draw every supported measure into <paramref name="pixels"/> in viewport space.
-        /// Unknown / future kinds are skipped silently.
+        /// Draw measures into <paramref name="pixels"/> in viewport space.
         /// </summary>
+        /// <param name="sideColour">Side → ink. Null / unowned → dark grey.</param>
+        /// <param name="viewer">
+        /// When valid (#186), skip measures owned by another side. Shared (Owner = None) stay.
+        /// </param>
         public static void Draw(
             Color32[] pixels,
             MapViewport view,
             IReadOnlyList<ControlMeasure> measures,
-            Func<SideId, Color32> sideColour = null)
+            Func<SideId, Color32> sideColour = null,
+            SideId viewer = default)
         {
             if (pixels == null || measures == null || measures.Count == 0)
                 return;
@@ -35,6 +39,8 @@ namespace Strategos.ControlMeasures
             {
                 var m = measures[i];
                 if (m == null) continue;
+                if (viewer.IsValid && m.Owner.IsValid && m.Owner != viewer) continue;
+
                 var ink = ResolveInk(m.Owner, sideColour);
 
                 switch (m.Kind)
@@ -47,6 +53,30 @@ namespace Strategos.ControlMeasures
                         break;
                     case ControlMeasureKind.Boundary:
                         DrawBoundary(pixels, view, m, ink);
+                        break;
+                    case ControlMeasureKind.AxisOfAdvance:
+                        DrawAxis(pixels, view, m, ink);
+                        break;
+                    case ControlMeasureKind.DirectionOfAttack:
+                        DrawArrow(pixels, view, m, ink,
+                            thick: 0.5f, dash: false, filledHead: true, headCells: 3.2f);
+                        break;
+                    case ControlMeasureKind.Retirement:
+                        DrawArrow(pixels, view, m, ink,
+                            thick: 0.45f, dash: true, filledHead: false, headCells: 2.8f);
+                        break;
+                    case ControlMeasureKind.Counterattack:
+                        DrawArrow(pixels, view, m, ink,
+                            thick: 0.6f, dash: false, filledHead: false, headCells: 3.4f);
+                        break;
+                    case ControlMeasureKind.BattlePosition:
+                        DrawArea(pixels, view, m, ink, hatchStep: 0);
+                        break;
+                    case ControlMeasureKind.EngagementArea:
+                        DrawArea(pixels, view, m, ink, hatchStep: 10);
+                        break;
+                    case ControlMeasureKind.KillZone:
+                        DrawArea(pixels, view, m, ink, hatchStep: 6);
                         break;
                 }
             }
@@ -95,14 +125,118 @@ namespace Strategos.ControlMeasures
             int th = Mathf.Max(2, Mathf.RoundToInt(view.PixelsPerCell * 0.55f));
             ProceduralDrawUtil.DrawPolyline(px, view.Width, view.Height, verts, ink, th);
 
-            // Echelon ticks at both ends — adapted from AmplifierDecorator.DrawEchelon geometry
-            // but placed in map pixel space at the polyline endpoints.
             if (m.Echelon != Echelon.None)
             {
                 DrawEchelonTick(px, view, verts[0], verts[1], m.Echelon, ink);
                 int last = verts.Count - 1;
                 DrawEchelonTick(px, view, verts[last], verts[last - 1], m.Echelon, ink);
             }
+        }
+
+        // #164 — main: fat solid + filled head; supporting: dashed; deception: lighter open head.
+        private static void DrawAxis(Color32[] px, MapViewport view, ControlMeasure m, Color32 ink)
+        {
+            var verts = PolyPixels(view, m);
+            if (verts.Count < 2) return;
+
+            bool dashed = m.AxisRole != AxisOfAdvanceRole.Main;
+            bool filled = m.AxisRole != AxisOfAdvanceRole.Deception;
+            float thickMul = m.AxisRole == AxisOfAdvanceRole.Main ? 0.85f : 0.55f;
+            Color32 stroke = m.AxisRole == AxisOfAdvanceRole.Deception
+                ? new Color32(ink.r, ink.g, ink.b, (byte)Mathf.Max(100, ink.a * 2 / 3))
+                : ink;
+
+            int th = Mathf.Max(2, Mathf.RoundToInt(view.PixelsPerCell * thickMul));
+            if (dashed)
+            {
+                float on = Mathf.Max(5f, view.PixelsPerCell * 2.8f);
+                float gap = Mathf.Max(3f, view.PixelsPerCell * 1.4f);
+                ProceduralDrawUtil.DrawDashedPolyline(px, view.Width, view.Height,
+                    verts, stroke, th, on, gap);
+            }
+            else
+            {
+                ProceduralDrawUtil.DrawPolyline(px, view.Width, view.Height, verts, stroke, th);
+            }
+
+            float head = Mathf.Max(8f, view.PixelsPerCell * 4.5f);
+            DrawHead(px, view, verts, stroke, head, filled);
+        }
+
+        private static void DrawArrow(
+            Color32[] px, MapViewport view, ControlMeasure m, Color32 ink,
+            float thick, bool dash, bool filledHead, float headCells)
+        {
+            var verts = PolyPixels(view, m);
+            if (verts.Count < 2) return;
+
+            int th = Mathf.Max(1, Mathf.RoundToInt(view.PixelsPerCell * thick));
+            if (dash)
+            {
+                float d = Mathf.Max(4f, view.PixelsPerCell * 2.2f);
+                float g = Mathf.Max(3f, view.PixelsPerCell * 1.2f);
+                ProceduralDrawUtil.DrawDashedPolyline(px, view.Width, view.Height, verts, ink, th, d, g);
+            }
+            else
+            {
+                ProceduralDrawUtil.DrawPolyline(px, view.Width, view.Height, verts, ink, th);
+            }
+
+            float head = Mathf.Max(7f, view.PixelsPerCell * headCells);
+            DrawHead(px, view, verts, ink, head, filledHead);
+        }
+
+        // #165 — closed outline; EA/KZ add diagonal hatch (step in px; 0 = outline only).
+        private static void DrawArea(
+            Color32[] px, MapViewport view, ControlMeasure m, Color32 ink, int hatchStep)
+        {
+            var verts = PolyPixels(view, m);
+            if (verts.Count < 3) return;
+
+            int th = Mathf.Max(1, Mathf.RoundToInt(view.PixelsPerCell * 0.45f));
+            // Close the ring for DrawPolyline.
+            var ring = new List<Vector2>(verts.Count + 1);
+            ring.AddRange(verts);
+            ring.Add(verts[0]);
+            ProceduralDrawUtil.DrawPolyline(px, view.Width, view.Height, ring, ink, th);
+
+            if (hatchStep > 0)
+                DrawHatch(px, view, verts, ink, hatchStep);
+        }
+
+        private static void DrawHatch(
+            Color32[] px, MapViewport view, List<Vector2> poly, Color32 ink, int step)
+        {
+            float minX = poly[0].x, maxX = poly[0].x, minY = poly[0].y, maxY = poly[0].y;
+            for (int i = 1; i < poly.Count; i++)
+            {
+                minX = Mathf.Min(minX, poly[i].x);
+                maxX = Mathf.Max(maxX, poly[i].x);
+                minY = Mathf.Min(minY, poly[i].y);
+                maxY = Mathf.Max(maxY, poly[i].y);
+            }
+
+            var hatchInk = new Color32(ink.r, ink.g, ink.b, (byte)Mathf.Max(70, ink.a * 2 / 3));
+            float span = maxY - minY;
+            for (float s = minX - span; s < maxX + span; s += step)
+            {
+                ProceduralDrawUtil.DrawLine(px, view.Width, view.Height,
+                    Mathf.RoundToInt(s), Mathf.RoundToInt(minY),
+                    Mathf.RoundToInt(s + span), Mathf.RoundToInt(maxY),
+                    hatchInk, 1);
+            }
+        }
+
+        private static void DrawHead(
+            Color32[] px, MapViewport view, List<Vector2> verts, Color32 ink,
+            float size, bool filled)
+        {
+            Vector2 tip = verts[verts.Count - 1];
+            Vector2 prev = verts[verts.Count - 2];
+            Vector2 dir = tip - prev;
+            if (dir.sqrMagnitude < 0.01f) return;
+            ProceduralDrawUtil.DrawArrowhead(px, view.Width, view.Height,
+                tip, dir, size, ink, thickness: 2, filled: filled);
         }
 
         private static List<Vector2> PolyPixels(MapViewport view, ControlMeasure m)
@@ -114,16 +248,11 @@ namespace Strategos.ControlMeasures
                 for (int i = 0; i < pts.Count; i++)
                     verts.Add(view.CellToPixel(pts[i]));
             }
-            // Allow a degenerate single-point line authored as Cell + one Point, or Cell alone.
             if (verts.Count == 0 && m.Cell.sqrMagnitude > 0f)
                 verts.Add(view.CellToPixel(m.Cell));
             return verts;
         }
 
-        /// <summary>
-        /// Company–corps style marks (bars / Xs) at a line endpoint, perpendicular to the
-        /// segment toward <paramref name="toward"/>.
-        /// </summary>
         private static void DrawEchelonTick(Color32[] px, MapViewport view, Vector2 at, Vector2 toward,
             Echelon echelon, Color32 ink)
         {
@@ -177,7 +306,6 @@ namespace Strategos.ControlMeasures
                         Mathf.RoundToInt(cy + dir.y * s * 1.6f), s * 2.2f, th, ink);
                     break;
                 default:
-                    // Corps and above — three Xs is visually dense at map scale; two + a bar.
                     DrawX(px, view, cx, cy, s * 2.4f, th, ink);
                     DrawBars(px, view, Mathf.RoundToInt(cx + dir.x * s * 2f),
                         Mathf.RoundToInt(cy + dir.y * s * 2f), perp, 1, s, th, ink);
