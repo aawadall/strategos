@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Squad tutorial scenario skeleton (#309): `ScenarioSamples.Tutorial` /
+  `tutorial-squad.json`, `PlayerEchelon` Squad; menu + PLAY load; ScenarioProbe fixture.
 - Context help for MOVE (#308): `ContextHelp` + `ContextHelpOverlay`; PLAY rail HELP;
   Esc closes help before clearing the palette; `ContextHelpProbe`.
 - Preference store stub (#307): `PlayerPreferences` + `IPreferenceStore` /

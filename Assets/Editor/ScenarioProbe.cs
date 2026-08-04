@@ -45,6 +45,10 @@ namespace Strategos.Editor
             ScenarioIO.SaveToFile(ScenarioSamples.LittleRoundTop(), lrtPath);
             Debug.Log($"[ScenarioProbe] wrote {lrtPath}");
 
+            var tutPath = Path.Combine(ResourceDir, ScenarioSamples.TutorialName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.Tutorial(), tutPath);
+            Debug.Log($"[ScenarioProbe] wrote {tutPath}");
+
             AssetDatabase.Refresh();
         }
 
@@ -250,6 +254,10 @@ namespace Strategos.Editor
             // #333 / #342: historical sample must match its committed JSON too.
             bad += CheckNamedShippedFixture(ScenarioSamples.LittleRoundTopName,
                 ScenarioSamples.LittleRoundTop(), log);
+
+            // #309: squad tutorial skeleton.
+            bad += CheckNamedShippedFixture(ScenarioSamples.TutorialName,
+                ScenarioSamples.Tutorial(), log);
 
             return bad;
         }
