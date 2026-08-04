@@ -41,7 +41,7 @@ layer (#34), procedural scenario generation (#334), and A* replan (#35) are done
 | Issue | Title |
 |---|---|
 | [#332](https://github.com/aawadall/strategos/issues/332) | Epic: historical research — children #335–#340 (#333 convert after) |
-| [#51](https://github.com/aawadall/strategos/issues/51) | Epic: place objectives by map feature — children #235–#238 |
+| [#51](https://github.com/aawadall/strategos/issues/51) | Epic: place objectives by map feature — children #235–#238, #358–#359 |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -50,7 +50,7 @@ layer (#34), procedural scenario generation (#334), and A* replan (#35) are done
 - **C2 / C3 depth** — #36 closed (#266–#269); still open: #47, #62, #65 (#85 mission types shipped)
 - **Steam readiness** — #287 / #291 **closed**; still open: #288–#290, #293 (children #300+)
 - **Graphic control measures** — #160 **closed** (#161–#166 via #174 / #283)
-- **World & movement depth** — #33 / #34 / #35 **closed**; still open: #51
+- **World & movement depth** — #33 / #34 / #35 **closed**; still open: #51 (#235–#238, #358–#359)
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
   #334 **closed** (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66 (local store choice); mid-campaign save is #140
