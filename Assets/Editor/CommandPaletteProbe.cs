@@ -51,7 +51,7 @@ namespace Strategos.Editor
                 return false;
             }
 
-            bool sawMove = false, sawEngage = false, sawWaypoints = false;
+            bool sawMove = false, sawEngage = false, sawWaypoints = false, sawDigIn = false;
             var seenKeys = new HashSet<KeyCode> { CommandPalette.ClearShortcut };
 
             for (int i = 0; i < verbs.Length; i++)
@@ -125,13 +125,25 @@ namespace Strategos.Editor
                     }
                 }
 
+                if (v.Id == PaletteVerb.DigIn)
+                {
+                    sawDigIn = true;
+                    if (v.Kind != CommandKind.Defend)
+                    {
+                        log.AppendLine("  palette: FAILED, DigIn must map to Defend " +
+                                       "(Hold/Defend dig-in path, #33)");
+                        return false;
+                    }
+                }
+
                 log.AppendLine($"    {v.Id,-10} '{v.Label}' → {v.Kind}  [{v.ShortcutLabel}]");
             }
 
-            if (!sawMove || !sawEngage || !sawWaypoints)
+            if (!sawMove || !sawEngage || !sawWaypoints || !sawDigIn)
             {
                 log.AppendLine(
-                    $"  palette: FAILED, MoveTo={sawMove} Engage={sawEngage} Waypoints={sawWaypoints}");
+                    $"  palette: FAILED, MoveTo={sawMove} Engage={sawEngage} " +
+                    $"Waypoints={sawWaypoints} DigIn={sawDigIn}");
                 return false;
             }
 

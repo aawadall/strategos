@@ -143,6 +143,12 @@ Tick++
   reflex sends the unit to `Halted` while it returns fire and the posture has to come back.
   **`Hold` moved from the control range into the world range** to make this possible, which is
   what stopped it being a byte-for-byte copy of `Abort`.
+- **Special actions (#33) are capability-gated bridges into existing world commands**, not a
+  second dig-in model. `ActionKind.DigIn` / `UnitCapabilities.CanDigIn` expand to
+  `Command.Hold` → Defend → the same `DigInTicks` / half-fire path. Bridge and Clear are
+  reserved kinds with no expansion yet. PLAY exposes DigIn as a palette verb and HOLD still
+  goes through the same gate. Artillery ships with `CanDigIn = false`.
+  `SpecialActionsProbe` asserts prep time, fire reduction, and refuse.
 - **`Screen` is the other never-ending hold, and it buys reach rather than protection.** Same
   queue shape as Defend, but posture is `Posture.Screening` — combat exposure matches Halted
   (`PostureFactor` 1.0), and `ContactTracker` multiplies detection by

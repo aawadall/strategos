@@ -20,6 +20,7 @@ namespace Strategos.UI
         MoveTo = 1,
         Engage = 2,
         Waypoints = 3,
+        DigIn = 4,
     }
 
     /// <summary>One armable verb — chrome, shortcuts, and Kind for the confirming click.</summary>
@@ -60,6 +61,7 @@ namespace Strategos.UI
             new(PaletteVerb.MoveTo, "MOVE", CommandKind.MoveTo, KeyCode.M, "M"),
             new(PaletteVerb.Engage, "ENGAGE", CommandKind.Engage, KeyCode.E, "E"),
             new(PaletteVerb.Waypoints, "WAYPOINTS", CommandKind.MoveTo, KeyCode.W, "W"),
+            new(PaletteVerb.DigIn, "DIG IN", CommandKind.Defend, KeyCode.D, "D"),
         };
 
         public static bool TryGet(PaletteVerb id, out PaletteVerbDef def)
