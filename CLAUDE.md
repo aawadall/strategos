@@ -98,11 +98,13 @@ intelligence: nothing plans or manoeuvres, which is Phase 8.
 | `Assets/Scripts/Core/Trajectories/` | `Trajectory` / exporter — CommandLog+ReportLog demos |
 | `Assets/Scripts/Core/ControlMeasures/` | Authored GCMs — checkpoints, phase lines, boundaries |
 | `Assets/Scripts/Core/Preferences/` | `PlayerPreferences` + `IPreferenceStore` (#307) |
+| `Assets/Scripts/Core/Audio/` | `AudioService` — music beds + one-shots; volume prefs (#40) |
 | `Assets/Scripts/Persistence/` | `FileGameStore`, `JsonPreferenceStore` (bytes outside Core) |
 | `Assets/Scripts/UI/` | Shell, widget kit, shared cards; `Views/` holds the views |
 | `Assets/Scripts/Demo/` | `SymbolBuilderPanel` (the BUILDER view) and `SymbolDemoSpawner` |
 | `Assets/Resources/Shaders/` | `StrategosMapDrape.shader` |
 | `Assets/Resources/Scenarios/` | Shipped scenario JSON |
+| `Assets/Resources/Audio/` | Menu loop + PLAY ambient beds (`AudioService`) |
 | `Assets/Resources/Doctrine/` | Shipped doctrine packs — drills as JSON |
 | `Assets/Editor/` | Build pipeline, symbol editor window, TMP importer, contact sheets, probes |
 | `docs/` | Reference docs; `phases.md` is the task breakdown |
@@ -171,6 +173,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/symbol-invariants.md](docs/symbol-invariants.md) | Touching `Core/NatoSymbols` — SIDC layout, echelon marks, frame rules |
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
 | [docs/ui-invariants.md](docs/ui-invariants.md) | Touching `Assets/Scripts/UI` or `Demo` — view shell, layout, glyph coverage |
+| [docs/audio.md](docs/audio.md) | Touching `Core/Audio` or soundtrack beds — mixer stub, Resources clips, volume prefs |
 | [docs/unity-gotchas.md](docs/unity-gotchas.md) | Adding an asset, a package, or a serialised type |
 | [docs/local-api-seam.md](docs/local-api-seam.md) | Touching `IGameStore`, `IContentSource`, `IPlayerIdentity` (#355 vs #66) |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |

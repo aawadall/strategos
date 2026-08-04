@@ -163,18 +163,18 @@ ffmpeg -i track.wav -c:a libvorbis -q:a 6 track.ogg
 Target file sizes: ambient tracks ~3–5 MB, intense tracks ~2–3 MB.
 
 ### Asset Location
+Shipped beds load by name via `Resources.Load` (`AudioService`):
+
 ```
-Assets/Audio/Music/
-├── MainTheme.ogg
-├── TacticalOperations.ogg
-├── Contact.ogg
-├── Encirclement.ogg
-├── VictoryMarch.ogg
-├── Defeat.ogg
-├── StrategicMap.ogg
-└── NightOperations.ogg
+Assets/Resources/Audio/
+├── menu-loop.ogg      # #253 — main menu / tools / settings
+└── play-ambient.ogg   # #254 — PLAY session bed
 ```
 
+Staging takes (Suno MP3s, VO drafts) stay under `Research/audio/` and are **not**
+shipped. Convert with ffmpeg (`libvorbis`, q≈4) before promoting into `Resources/Audio/`.
+Broader catalogue targets (combat intensity, victory/defeat) remain future content under
+`#43` / `#398`–`#399` leftovers.
 ---
 
 ## Sound Effects

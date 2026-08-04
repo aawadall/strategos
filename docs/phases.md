@@ -366,8 +366,9 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] Ambient terrain soundscapes (forest, urban, desert, arctic)
 - [ ] Unit movement and combat SFX (#44)
 - [ ] Radio chatter / commander voice lines (localisation-ready) (#42, #45, #46)
-- [ ] Dynamic music system: tension ramps with combat intensity (#43)
-- [ ] Audio wiring and sourcing plan (#40, #41)
+- [ ] Dynamic music system: tension ramps with combat intensity (#43 remainder)
+- [x] Audio wiring: `AudioService` + volume prefs + probe (#40 / #262–#265)
+- [x] Soundtrack beds: menu loop + PLAY ambient via `Resources/Audio/` (#253 / #254)
 
 ### UI / UX
 - [x] Tab-shell military map aesthetic (working UI, not final skin)
@@ -381,7 +382,7 @@ rank insignia ships; audio issues filed (#40–#46).
 - [ ] Controller support (console stretch goal) (#290)
 - [ ] Comprehensive settings: graphics, audio, gameplay, accessibility (#289) —
   shell (#306); preference store + ConfirmOrders (#307); graphics resolution/fullscreen
-  (#385); more controls / #311 still open
+  (#385); AUDIO master/music/SFX (#264); more controls / #311 still open
 - [x] Explicit command palette / waypoints (#32, #53, #54) — verb table, arming, click-to-
   issue, keyboard shortcuts, and WAYPOINTS draft/commit (#127–#129, #54); config table (#130)
   still open

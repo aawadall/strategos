@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Audio wiring + soundtrack beds (#40 / #253 / #254 / #262–#265): `AudioService` on AppShell
+  (menu loop / PLAY ambient from `Resources/Audio/`), MASTER/MUSIC/SFX prefs in Settings,
+  silence-safe `AudioProbe`. Master bus stub is `AudioListener.volume`.
 - Climb campaign docs polish (#409): phases §6.3 / Phase 10 + ROADMAP + campaign-invariants
   cross-link the shipped seat ladder; closes epic #403.
 - Climb campaign probe (#408): `ClimbCampaignProbe` — Squad → Company through

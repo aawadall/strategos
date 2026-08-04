@@ -29,5 +29,17 @@ namespace Strategos.Preferences
 
         /// <summary>Windowed height in pixels (default matches AppShell remembered size).</summary>
         public int WindowHeight = 900;
+
+        /// <summary>
+        /// AUDIO (#264): master bus gain 0–1. Drives <c>AudioListener.volume</c>
+        /// (<see cref="Strategos.Audio.AudioService.ApplyPreferences"/>).
+        /// </summary>
+        public float MasterVolume = 1f;
+
+        /// <summary>Music bed gain 0–1 (menu loop / PLAY ambient).</summary>
+        public float MusicVolume = 0.7f;
+
+        /// <summary>One-shot SFX gain 0–1.</summary>
+        public float SfxVolume = 1f;
     }
 }

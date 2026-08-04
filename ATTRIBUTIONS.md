@@ -34,7 +34,8 @@ Items marked **[DOCS ONLY]** require no in-game credit but are tracked here for 
 ### Music
 | Track | Source | License | Attribution |
 |---|---|---|---|
-| *(Add tracks here as generated)* | Suno | Suno Pro commercial licence | — |
+| `menu-loop` (Resources/Audio/menu-loop.ogg) | Suno (from `Research/audio/253.mp3`) | Suno Pro commercial licence | Instrumental military ambient menu bed — see `Research/audio/suno-prompts.md` |
+| `play-ambient` (Resources/Audio/play-ambient.ogg) | Suno (from `Research/audio/254.mp3`) | Suno Pro commercial licence | PLAY ambient bed — same prompt family |
 
 ### Sound Effects
 | Asset | Author | Source | License | Attribution |

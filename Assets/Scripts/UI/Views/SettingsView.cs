@@ -7,6 +7,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Audio;
 using Strategos.Persistence.Files;
 using Strategos.Preferences;
 
@@ -29,6 +30,9 @@ namespace Strategos.UI.Views
         private Toggle _confirmOrders;
         private Toggle _fullscreen;
         private TMP_Dropdown _windowedSize;
+        private Slider _masterVol;
+        private Slider _musicVol;
+        private Slider _sfxVol;
         private PlayerPreferences _prefs;
 
         /// <summary>Category section labels in display order (#306).</summary>
@@ -90,7 +94,7 @@ namespace Strategos.UI.Views
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
 
             var sub = CreateTmp("Sub", col,
-                "Fullscreen + windowed size + confirm-orders persist",
+                "Fullscreen · windowed size · audio · confirm-orders",
                 14, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
@@ -113,6 +117,7 @@ namespace Strategos.UI.Views
                 _confirmOrders.SetIsOnWithoutNotify(_prefs.ConfirmOrders);
             SyncFullscreenToggle();
             SyncWindowedSizeDrop();
+            SyncAudioSliders();
         }
 
         public void OnHidden() => HideDropdownsIn(transform);
@@ -151,6 +156,18 @@ namespace Strategos.UI.Views
                 hint.color = Theme.InkMuted;
                 hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
 
+                Spacer(parent, 6);
+                return;
+            }
+
+            if (label == "AUDIO")
+            {
+                (_masterVol, _) = AddSlider(parent, "MASTER", 0f, 100f,
+                    _prefs.MasterVolume * 100f, PersistAudioVolumes);
+                (_musicVol, _) = AddSlider(parent, "MUSIC", 0f, 100f,
+                    _prefs.MusicVolume * 100f, PersistAudioVolumes);
+                (_sfxVol, _) = AddSlider(parent, "SFX", 0f, 100f,
+                    _prefs.SfxVolume * 100f, PersistAudioVolumes);
                 Spacer(parent, 6);
                 return;
             }
@@ -221,6 +238,28 @@ namespace Strategos.UI.Views
             _prefs ??= new PlayerPreferences();
             _prefs.ConfirmOrders = _confirmOrders.isOn;
             Store.Save(_prefs);
+        }
+
+        private void SyncAudioSliders()
+        {
+            if (_prefs == null) return;
+            if (_masterVol != null)
+                SetSliderValue(_masterVol, _prefs.MasterVolume * 100f);
+            if (_musicVol != null)
+                SetSliderValue(_musicVol, _prefs.MusicVolume * 100f);
+            if (_sfxVol != null)
+                SetSliderValue(_sfxVol, _prefs.SfxVolume * 100f);
+        }
+
+        private void PersistAudioVolumes()
+        {
+            if (Store == null) return;
+            _prefs ??= new PlayerPreferences();
+            if (_masterVol != null) _prefs.MasterVolume = Mathf.Clamp01(_masterVol.value / 100f);
+            if (_musicVol != null) _prefs.MusicVolume = Mathf.Clamp01(_musicVol.value / 100f);
+            if (_sfxVol != null) _prefs.SfxVolume = Mathf.Clamp01(_sfxVol.value / 100f);
+            Store.Save(_prefs);
+            AudioService.Instance?.ApplyPreferences(_prefs);
         }
 
         private void EnsureWindowedDefaults()
