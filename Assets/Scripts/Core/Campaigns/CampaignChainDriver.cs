@@ -68,8 +68,9 @@ namespace Strategos.Campaigns
         /// <see cref="Scenario"/> has no existing Clone/copy path (checked — ScenarioIO only
         /// round-trips through JSON, which is a heavier and lossier way to get a copy than this
         /// needs), so this builds a new <see cref="Scenario"/> sharing every field it does not
-        /// touch (Map, Sides, Objectives, Victory, Directive — none of which this function
-        /// reads or writes) and a new <see cref="Scenario.Units"/> list of cloned, merged
+        /// touch (Map, Sides, Objectives, Victory, Directive, PlayerEchelon,
+        /// ControlMeasures — none of which this function reads or writes) and a new
+        /// <see cref="Scenario.Units"/> list of cloned, merged
         /// <see cref="UnitInstance"/>s.
         /// </remarks>
         /// <exception cref="ArgumentNullException">
@@ -144,7 +145,9 @@ namespace Strategos.Campaigns
                 Sides = nextScenario.Sides,
                 Units = mergedUnits,
                 PlayerSide = nextScenario.PlayerSide,
+                PlayerEchelon = nextScenario.PlayerEchelon,
                 Objectives = nextScenario.Objectives,
+                ControlMeasures = nextScenario.ControlMeasures,
                 Victory = nextScenario.Victory,
                 TimeLimitTicks = nextScenario.TimeLimitTicks,
                 Directive = nextScenario.Directive,

@@ -13,8 +13,14 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Climb campaign probe (#408): `ClimbCampaignProbe` — Squad → Company through
+  `CampaignChainDriver`; asserts `PlayerEchelon` and company-HQ command scope.
 - Climb campaign menu/PLAY entry (#407): START CLIMB beside Valley/Highland on main menu
   and PLAY CAMPAIGN rail; `AppShell.StartClimbFromMenu` → `PlayView.StartClimbCampaign`.
+
+### Fixed
+- `CampaignChainDriver.MergeCarriedOver` preserves `PlayerEchelon` and `ControlMeasures`
+  on the next scenario (#408) — climb seat escalation was dropped to `None` after carry-over.
 - Climb campaign chain (#406): `climb-campaign.json` + `CampaignSamples.ClimbName`;
   CampaignSaveLoadProbe loads/Validates the shipped climb fixture.
 - Climb campaign scenarios (#405): `climb-squad` / `climb-company` / `climb-battalion` with
