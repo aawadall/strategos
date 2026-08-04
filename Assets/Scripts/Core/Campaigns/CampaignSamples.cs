@@ -14,5 +14,10 @@ namespace Strategos.Campaigns
         /// One-op highland chain at regiment seat — #109 second theatre after valley promotion.
         /// </summary>
         public const string HighlandName = "highland-campaign";
+
+        /// <summary>
+        /// Three-op climb chain (Squad → Company → Battalion). The #403 / #406 fixture.
+        /// </summary>
+        public const string ClimbName = "climb-campaign";
     }
 }
