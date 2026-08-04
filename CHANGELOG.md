@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Historical research pack (#332 / #335–#340): `Research/historical/` digests (Little Round
+  Top, Belleau Wood, Normandy corps context) + shortlist; `docs/historical-research.md`;
+  ATTRIBUTIONS hook; gitignore allows committed notes while PDFs stay ignored.
 - Feature-placed objectives (#51 / #235–#238, #358–#359): `Objective.PlaceNearKind` /
   `PlaceNearName`; `ObjectivePlacement.Apply` from `GenerateMap`; Validate on missing POI;
   PushNorth SpotHeight sample; ScenarioGenerator PlaceNear with stub fallback;

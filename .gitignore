@@ -79,5 +79,9 @@ Artifacts/
 # root (-logFile sheet.log, -logFile map-sheet.log).
 *.log
 
-# Research — reference PDFs (NATO APP-6D standard is copyright-restricted)
-Research/
+# Research — third-party reference PDFs stay gitignored; authored notes may ship.
+# Use Research/* (not Research/) so un-ignore rules can re-include children.
+Research/*
+!Research/README.md
+!Research/historical/
+!Research/historical/**

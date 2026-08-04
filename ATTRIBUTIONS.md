@@ -78,6 +78,24 @@ Items marked **[DOCS ONLY]** require no in-game credit but are tracked here for 
 | Combined Arms Research Library (CARL) | Public Domain | After-Action Reports, tactical studies |
 | Project Gutenberg military texts | Public Domain | Historical reference |
 
+**Research hook (#332 / #335):** Authored engagement digests live under
+`Research/historical/` (committed markdown). Third-party PDFs stay in `Research/` and
+remain gitignored. Conventions:
+[`docs/historical-research.md`](docs/historical-research.md). Shortlist:
+[`Research/historical/SHORTLIST.md`](Research/historical/SHORTLIST.md).
+
+When a digest cites a source already in the table above, the engagement note's Source
+block is enough. When it introduces a **new** publisher or licence class, add a row here
+in the same change (steps below).
+
+**Digests gathered under #332** (licence: CMH / CARL public-domain U.S. gov works):
+
+| Note | Engagement | Echelon band |
+|---|---|---|
+| `Research/historical/little-round-top-20th-maine.md` | 20th Maine, Little Round Top (1863) | Regiment / company–battalion |
+| `Research/historical/belleau-wood-1st-marine-brigade.md` | Belleau Wood (1918) | Brigade / battalion |
+| `Research/historical/normandy-v-corps-breakout-context.md` | Normandy V Corps / First Army context (1944) | Corps / army |
+
 ---
 
 ## How to Add a New Attribution
