@@ -33,6 +33,7 @@ using Strategos.NatoSymbols;
 using Strategos.Objectives;
 using Strategos.Persistence;
 using Strategos.Persistence.Files;
+using Strategos.Identity;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -657,11 +658,15 @@ namespace Strategos.UI.Views
         private TMP_Text _campaignLabel;
         private Button _continueCampaignButton;
         private IGameStore _store;
+        private IPlayerIdentity _identity;
 
         private const string QuickSaveId = "quicksave";
 
         private IGameStore Store =>
             _store ??= new FileGameStore(FileGameStore.DefaultDirectory);
+
+        private IPlayerIdentity Identity =>
+            _identity ??= LocalAnonymousIdentity.Shared;
 
         /// <summary>
         /// CAMPAIGN rail (#139 / #140) and mode-select (#287 / #295): pick how to play, then
@@ -1037,11 +1042,19 @@ namespace Strategos.UI.Views
 
             try
             {
-                Store.Save(record);
+                var saveResult = Store.SaveAsync(record).GetAwaiter().GetResult();
+                if (!saveResult.Ok)
+                {
+                    Debug.LogError($"[PlayView] save failed: {saveResult.Message}");
+                    _statusLabel.text = "SAVE FAILED";
+                    return;
+                }
+
                 _statusLabel.text = _session != null && _session.HasActiveCampaign
                     ? $"SAVED  ·  {record.CampaignName}  OP {record.OperationIndex + 1}  T+{record.Tick}"
                     : $"SAVED  ·  {_scenario.Name.ToUpperInvariant()}  T+{record.Tick}";
-                Debug.Log($"[PlayView] saved '{QuickSaveId}' at tick {_sim.Tick}");
+                Debug.Log($"[PlayView] saved '{QuickSaveId}' at tick {_sim.Tick} " +
+                          $"(player={Identity.PlayerId})");
             }
             catch (Exception ex)
             {
@@ -1053,15 +1066,21 @@ namespace Strategos.UI.Views
         /// <summary>Load the quicksave — restores campaign context when the record carries it.</summary>
         private void QuickLoad()
         {
-            SaveRecord record;
-            try { record = Store.Load(QuickSaveId); }
-            catch (SaveVersionMismatchException ex)
+            var loadResult = Store.LoadAsync(QuickSaveId).GetAwaiter().GetResult();
+            if (loadResult.Status == StoreStatus.VersionMismatch)
             {
-                Debug.LogError($"[PlayView] {ex.Message}");
+                Debug.LogError($"[PlayView] {loadResult.Message}");
                 _statusLabel.text = "SAVE VERSION MISMATCH";
                 return;
             }
 
+            if (loadResult.Status == StoreStatus.NotFound || !loadResult.Ok)
+            {
+                _statusLabel.text = "NO QUICKSAVE";
+                return;
+            }
+
+            var record = loadResult.Value;
             if (record?.Snapshot == null)
             {
                 _statusLabel.text = "NO QUICKSAVE";
@@ -1110,20 +1129,21 @@ namespace Strategos.UI.Views
                 }
             }
 
-            SaveRecord record;
-            try { record = Store.Load(QuickSaveId); }
-            catch (SaveVersionMismatchException ex)
+            var loadResult = Store.LoadAsync(QuickSaveId).GetAwaiter().GetResult();
+            if (loadResult.Status == StoreStatus.VersionMismatch)
             {
-                Debug.LogError($"[PlayView] {ex.Message}");
+                Debug.LogError($"[PlayView] {loadResult.Message}");
                 _statusLabel.text = "SAVE VERSION MISMATCH";
                 return;
             }
 
-            if (record?.Snapshot == null)
+            if (!loadResult.Ok || loadResult.Value?.Snapshot == null)
             {
                 _statusLabel.text = "NO QUICKSAVE TO REPLAY";
                 return;
             }
+
+            var record = loadResult.Value;
 
             _session?.ClearCampaign();
 

@@ -100,14 +100,15 @@ namespace Strategos.Doctrine
             File.Exists(path) ? FromJson(File.ReadAllText(path)) : null;
 
         /// <summary>
-        /// Loads a shipped pack by name. Resources, not StreamingAssets, for the reason
-        /// ScenarioIO records: it is one code path on every build target including WebGL.
+        /// Loads a shipped pack by name. Thin-wraps
+        /// <see cref="Strategos.Content.Resources.ResourcesDoctrinePackSource"/> (#355 / #366).
         /// </summary>
-        public static DoctrinePack Load(string name)
-        {
-            var asset = Resources.Load<TextAsset>($"{ResourceFolder}/{name}");
-            return asset == null ? null : FromJson(asset.text);
-        }
+        public static DoctrinePack Load(string name) =>
+            DefaultContentSource.Load(name);
+
+        /// <summary>Default Resources-backed content source (#355 / #366).</summary>
+        public static Strategos.Content.IContentSource<DoctrinePack> DefaultContentSource { get; } =
+            new Strategos.Content.Resources.ResourcesDoctrinePackSource();
     }
 
     /// <summary>The drills available at runtime.</summary>

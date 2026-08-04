@@ -4,14 +4,17 @@
 // because WebGL cannot take a native SQLite plugin and desktop and WebGL must not diverge later
 // over a decision made after the fact.
 //
+// #355: methods are async-capable and return StoreResult so a later API-backed store can report
+// Offline / Failed without blocking the main thread forever. FileGameStore still completes
+// synchronously via Task.FromResult — the shape is what travels, not a thread pool.
+//
 // NOTHING IN CORE KNOWS WHERE THE BYTES GO. This file defines the contract and the records it
 // carries — plain data, same as everything else Core exposes. It does not read or write
 // anything. The first implementation (Assets/Scripts/Persistence/FileGameStore.cs) lives
 // outside Core on purpose: Core knows how to turn a Simulation into a SimulationSnapshot and
 // back (Simulation.Snapshot() / Simulation.Restore()), and knows nothing about files, SQLite,
-// or IndexedDB. When the embedded-database implementation lands (a follow-up — #74 scopes this
-// change to the seam and the file-backed one only) it is a second class implementing this same
-// interface, not a change to Core.
+// or IndexedDB. When the embedded-database implementation lands (#66's local *choice*, distinct
+// from this seam) it is a second class implementing this same interface, not a change to Core.
 //
 // STRUCTURED COLUMNS BESIDE A JSON PAYLOAD, per #66/#74. SaveRecord's own fields — SaveId,
 // ScenarioName, Tick, SavedAtUtc — are what a query filters on; Snapshot is the document. A
@@ -19,6 +22,7 @@
 // without changing this shape at all, which is the point of settling it now.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Strategos.Persistence
 {
@@ -106,31 +110,28 @@ namespace Strategos.Persistence
     /// </summary>
     public interface IGameStore
     {
-        /// <summary>Writes a save, replacing any existing one with the same <see cref="SaveRecord.SaveId"/>.</summary>
-        void Save(SaveRecord record);
+        /// <summary>Writes a save, replacing any existing one with the same SaveId.</summary>
+        Task<StoreResult> SaveAsync(SaveRecord record);
 
         /// <summary>
-        /// Reads a save back, or null if <paramref name="saveId"/> does not exist.
+        /// Reads a save back. <see cref="StoreStatus.NotFound"/> when missing;
+        /// <see cref="StoreStatus.VersionMismatch"/> when the format is unreadable (#74).
         /// </summary>
-        /// <exception cref="SaveVersionMismatchException">
-        /// The record's <see cref="SaveRecord.FormatVersion"/> does not match
-        /// <see cref="SaveRecord.CurrentFormatVersion"/>. Refusing here is the whole point —
-        /// #74 requires a save to state its version and refuse rather than misload across an
-        /// incompatible one, so this is thrown before any of the payload is trusted, not
-        /// discovered later as a field that silently deserialised to its default.
-        /// </exception>
-        SaveRecord Load(string saveId);
+        Task<StoreResult<SaveRecord>> LoadAsync(string saveId);
 
         /// <summary>Every save this store holds, newest first. Cheap: summaries only.</summary>
-        IReadOnlyList<SaveSummary> ListSaves();
+        Task<StoreResult<IReadOnlyList<SaveSummary>>> ListSavesAsync();
 
-        /// <summary>True if a save existed and was removed.</summary>
-        bool Delete(string saveId);
+        /// <summary>
+        /// Removes a save. <see cref="StoreResult{T}.Value"/> is true when one existed.
+        /// </summary>
+        Task<StoreResult<bool>> DeleteAsync(string saveId);
     }
 
     /// <summary>
-    /// A save's format version does not match what this build can read. See
-    /// <see cref="IGameStore.Load"/>.
+    /// A save's format version does not match what this build can read. Prefer
+    /// <see cref="StoreStatus.VersionMismatch"/> from <see cref="IGameStore.LoadAsync"/>;
+    /// this exception remains for any sync helper that still throws.
     /// </summary>
     public sealed class SaveVersionMismatchException : System.Exception
     {

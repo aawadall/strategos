@@ -76,17 +76,14 @@ namespace Strategos.Scenarios
 
         /// <summary>
         /// Loads a shipped scenario by name, e.g. <c>Load("skirmish")</c>.
-        ///
-        /// Resources rather than StreamingAssets because it works on every build target
-        /// including WebGL, where StreamingAssets needs UnityWebRequest rather than plain
-        /// file IO. A few kilobytes of JSON shipping unconditionally is an acceptable price
-        /// for one code path.
+        /// Thin-wraps <see cref="Strategos.Content.Resources.ResourcesScenarioSource"/> (#355).
         /// </summary>
-        public static Scenario Load(string name)
-        {
-            var asset = Resources.Load<TextAsset>($"{ResourceFolder}/{name}");
-            return asset == null ? null : FromJson(asset.text);
-        }
+        public static Scenario Load(string name) =>
+            DefaultContentSource.Load(name);
+
+        /// <summary>Default Resources-backed content source (#355 / #365).</summary>
+        public static Strategos.Content.IContentSource<Scenario> DefaultContentSource { get; } =
+            new Strategos.Content.Resources.ResourcesScenarioSource();
     }
 
     /// <summary>

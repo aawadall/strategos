@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Local/API seam (#355 / #361–#367): `StoreResult` + async `IGameStore` (`FileGameStore`);
+  `IContentSource` + Resources Scenario/Campaign/Doctrine adapters; `IPlayerIdentity` +
+  `LocalAnonymousIdentity`; `docs/local-api-seam.md`; `GameStoreSeamProbe`.
 - Historical scenario convert (#333 / #341–#346): `ScenarioSamples.LittleRoundTop` + shipped
   JSON; Hills procedural terrain caveat; BattlePosition + Axis GCMs; ATTRIBUTIONS row;
   `CommunityScenarioLoadProbe` (arbitrary JSON load, no name allowlist).

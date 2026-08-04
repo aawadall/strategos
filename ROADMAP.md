@@ -36,13 +36,14 @@ topo palette (#169), and rank gates (#76) are done. Player-as-node (#36), career
 campaigns (#109), game modes (#287), AI difficulty (#291), special-action DigIn (#33), and dynamic world
 layer (#34), procedural scenario generation (#334), and A* replan (#35) are done.
 Feature-placed objectives (#51) and historical research into `Research/historical/` (#332)
-are done. First historical Scenario JSON (Little Round Top, #333) is done.
+are done. First historical Scenario JSON (Little Round Top, #333) is done. Local/API seam
+(#355) is done.
 
 **Recommended next** (player-facing, ~5m children ready):
 
 | Issue | Title |
 |---|---|
-| [#355](https://github.com/aawadall/strategos/issues/355) | Epic: local/API seam (store, content, identity) — children #361–#367 |
+| [#371](https://github.com/aawadall/strategos/issues/371) | Epic: UI revamp — outside menu, pause menu, in-session reference |
 
 ### Outstanding themes (open issues, grouped)
 
@@ -55,7 +56,7 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done.
 - **AI as environment** — #99 closed (#100–#106 shipped); episode-generation bottleneck
   #334 **closed** (procedural scenarios — OOB/objectives/victory, not just terrain)
 - **Persistence beyond run saves** — #66 (local store choice); mid-campaign save is #140
-  (shipped); the local/API seam question is #355, not #66
+  (shipped); local/API seam #355 **closed** (#361–#367)
 - **Audio (Phase 10 early)** — #40–#46
 - **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
