@@ -169,7 +169,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.GameStoreSeamProbe.Run` | `IGameStore` async + `StoreResult`; `IContentSource`; anonymous `IPlayerIdentity` |
 | `Strategos.Editor.TutorialFirstBeatProbe.Run` | Tutorial select→MoveTo phase machine (#310) |
 | `Strategos.Editor.ContextHelpProbe.Run` | MOVE context help text; ContextHelpOverlay Open/Close |
-| `Strategos.Editor.PreferenceStoreProbe.Run` | `JsonPreferenceStore` ConfirmOrders write/read round-trip |
+| `Strategos.Editor.PreferenceStoreProbe.Run` | `JsonPreferenceStore` ConfirmOrders + display fields write/read; legacy JSON defaults |
 | `Strategos.Editor.DisplayModeProbe.Run` | AppShell display-mode API (remembered windowed size; ToggleFullscreen callable) |
 | `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView categories / PauseOverlay keys and Build/Open/Close |
 | `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
