@@ -188,6 +188,7 @@ namespace Strategos.UI.Views
 
         private PauseOverlay _pause;
         private ContextHelpOverlay _contextHelp;
+        private TutorialFirstBeat _tutorialBeat;
         private bool _runningBeforePause = true;
 
         // ─── IAppView ─────────────────────────────────────────────────────────
@@ -210,6 +211,7 @@ namespace Strategos.UI.Views
 
         public void OnHidden()
         {
+            _tutorialBeat?.Reset();
             _contextHelp?.Close();
             _pause?.Close();
             HideDropdownsIn(transform);
@@ -337,6 +339,9 @@ namespace Strategos.UI.Views
 
             _contextHelp = host.gameObject.AddComponent<ContextHelpOverlay>();
             _contextHelp.Build(host);
+
+            _tutorialBeat = host.gameObject.AddComponent<TutorialFirstBeat>();
+            _tutorialBeat.Build(host);
         }
 
         private void BuildStage(Transform root)
@@ -1073,8 +1078,19 @@ namespace Strategos.UI.Views
             ClearSelection();
             PublishCommandContext();
             RefreshCampaignChrome();
+            SyncTutorialBeat();
 
             Debug.Log($"[PlayView] {_scenario} — {problems.Count} validation problem(s)");
+        }
+
+        /// <summary>#310: start or clear the select→MoveTo checklist for the tutorial scenario.</summary>
+        private void SyncTutorialBeat()
+        {
+            if (_tutorialBeat == null) return;
+            if (ScenarioSamples.IsTutorial(_scenario))
+                _tutorialBeat.Begin();
+            else
+                _tutorialBeat.Reset();
         }
 
         /// <summary>#287 / #291: directors, hotseat seat, and difficulty follow AppSession.</summary>
@@ -2282,6 +2298,7 @@ namespace Strategos.UI.Views
             var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
+            _tutorialBeat?.OnMoveIssued();
         }
 
         private void IssueEngage(UnitInstance unit, UnitInstance target, bool queue)
@@ -2854,6 +2871,12 @@ namespace Strategos.UI.Views
             if (id.IsValid) _selection.Add(id);
             RefreshSelection();
             RefreshVerbChrome();
+
+            if (_tutorialBeat != null && id.IsValid && _scenario != null)
+            {
+                var unit = _scenario.FindUnit(id);
+                _tutorialBeat.OnUnitSelected(unit != null && IsPlayerCommanded(unit));
+            }
         }
 
         private void ClearSelection()

@@ -446,6 +446,14 @@ namespace Strategos.Scenarios
         /// <summary>Name of the squad tutorial under Resources/Scenarios (#309).</summary>
         public const string TutorialName = "tutorial-squad";
 
+        /// <summary>Display name authored on <see cref="Tutorial"/> — used by PLAY to detect the beat (#310).</summary>
+        public const string TutorialDisplayName = "Squad Tutorial";
+
+        /// <summary>True when <paramref name="scenario"/> is the #309 squad tutorial.</summary>
+        public static bool IsTutorial(Scenario scenario) =>
+            scenario != null &&
+            string.Equals(scenario.Name, TutorialDisplayName, System.StringComparison.Ordinal);
+
         /// <summary>
         /// #309: squad-echelon skeleton for the interactive tutorial (#289). One friendly
         /// squad is the player's seat (ROADMAP: at squad you *are* the unit); one distant
@@ -466,7 +474,7 @@ namespace Strategos.Scenarios
 
             var s = new Scenario
             {
-                Name = "Squad Tutorial",
+                Name = TutorialDisplayName,
                 Description =
                     "Learn select and move at squad echelon — you are the unit. " +
                     "A quiet patch of ground before the full command problem.",

@@ -35,6 +35,10 @@ the clock toggle and must not open pause.
 Only **MOVE** has authored copy today — other verbs get a stub pointing at MOVE / #124.
 Distinct from the field manual (#124).
 
+**Tutorial first beat (#310).** Loading `tutorial-squad` shows a non-blocking banner:
+select a player-commanded unit, then issue MoveTo through the normal `IssueMoveTo` path.
+Not a scripted fake order.
+
 **Pause overlay** is built under PlayView's host (one Canvas — no second EventSystem). Save /
 Load call the same quicksave path as the rail; Exit returns to the main menu without
 destroying the session (Resume / Continue can re-enter).

@@ -388,7 +388,7 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289) —
-  scenario skeleton (#309); first beat (#310) still open
+  scenario skeleton (#309); first select→MoveTo beat (#310); more beats open
 - [ ] Context-sensitive in-game help overlay (#289) — MOVE help shipped (#308); more controls open
 - [ ] Doctrinal reference wiki (in-game and web) (#124)
 
