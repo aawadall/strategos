@@ -174,6 +174,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
 | [docs/ui-invariants.md](docs/ui-invariants.md) | Touching `Assets/Scripts/UI` or `Demo` — view shell, layout, glyph coverage |
 | [docs/audio.md](docs/audio.md) | Touching `Core/Audio` or soundtrack beds — mixer stub, Resources clips, volume prefs |
+| [docs/sfx-inventory.md](docs/sfx-inventory.md) | Adding or wiring a one-shot SFX (#44) — cue list and resource ids |
 | [docs/unity-gotchas.md](docs/unity-gotchas.md) | Adding an asset, a package, or a serialised type |
 | [docs/local-api-seam.md](docs/local-api-seam.md) | Touching `IGameStore`, `IContentSource`, `IPlayerIdentity` (#355 vs #66) |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
