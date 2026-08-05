@@ -364,8 +364,8 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### Audio
 - [ ] Ambient terrain soundscapes (forest, urban, desert, arctic)
-- [ ] Unit movement and combat SFX (#44) — inventory shipped (#249);
-  stubs #250–#252 open
+- [ ] Unit movement and combat SFX (#44) — inventory (#249) + UI click/select stub (#250);
+  order/combat stubs #251–#252 open
 - [ ] Radio chatter / commander voice lines (localisation-ready) (#42, #45, #46)
 - [ ] Dynamic music system: tension ramps with combat intensity (#43 remainder)
 - [x] Audio wiring: `AudioService` + volume prefs + probe (#40 / #262–#265)

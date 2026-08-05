@@ -23,6 +23,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Strategos.Audio;
 
 namespace Strategos.UI
 {
@@ -413,7 +414,11 @@ namespace Strategos.UI
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.colors = AccentButtonColors(UiTheme.Accent);
-            btn.onClick.AddListener(() => onClick?.Invoke());
+            btn.onClick.AddListener(() =>
+            {
+                AudioService.Instance?.PlayUiClick();
+                onClick?.Invoke();
+            });
 
             var tmp = CreateTmp("T", rt, label, 14, FontStyles.Bold, withLayout: false);
             Stretch(tmp.rectTransform);
@@ -505,7 +510,11 @@ namespace Strategos.UI
             colors.selectedColor = Color.white;
             colors.fadeDuration = 0.06f;
             btn.colors = colors;
-            btn.onClick.AddListener(() => onClick?.Invoke());
+            btn.onClick.AddListener(() =>
+            {
+                AudioService.Instance?.PlayUiClick();
+                onClick?.Invoke();
+            });
 
             var tmp = CreateTmp("T", rt, label, 12, FontStyles.Bold, withLayout: false);
             Stretch(tmp.rectTransform);
