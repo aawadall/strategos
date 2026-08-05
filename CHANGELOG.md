@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Pause **ALPHA LIMITS** + deeper player-facing known-gaps (#469): same
+  `AlphaHelpOverlay` in-session; wrecks and suppression stall called out; Esc closes
+  nested limits before resume.
 - Bar-medals design (#467): post-battle ribbon categories + procedural renderer —
   `docs/bar-medals.md` (backlog; distinct from Steam Achievements and #421 AAR).
 - Tiered-releases design (#465): Free / Base / Scenario Pass unlocks scenarios —

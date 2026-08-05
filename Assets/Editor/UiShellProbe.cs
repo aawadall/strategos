@@ -105,6 +105,10 @@ namespace Strategos.Editor
                          AlphaHelpOverlay.HowToBody.IndexOf("Artillery",
                              System.StringComparison.OrdinalIgnoreCase) < 0 ||
                          AlphaHelpOverlay.HowToBody.IndexOf("MOVE",
+                             System.StringComparison.OrdinalIgnoreCase) < 0 ||
+                         AlphaHelpOverlay.HowToBody.IndexOf("wrecks",
+                             System.StringComparison.OrdinalIgnoreCase) < 0 ||
+                         AlphaHelpOverlay.HowToBody.IndexOf("suppression",
                              System.StringComparison.OrdinalIgnoreCase) < 0)
                 {
                     log.AppendLine("  FAIL AlphaHelpOverlay body missing how-to / limits");
@@ -225,6 +229,32 @@ namespace Strategos.Editor
                 pause.Build(host, () => { }, () => { }, () => { }, () => { });
                 pause.Open();
                 if (!pause.IsOpen) { log.AppendLine("  FAIL PauseOverlay.Open"); bad++; }
+                // #469: nested ALPHA LIMITS reuses AlphaHelpOverlay under pause.
+                var alphaUnderPause = hostGo.GetComponentInChildren<AlphaHelpOverlay>(true);
+                if (alphaUnderPause == null)
+                {
+                    log.AppendLine("  FAIL PauseOverlay missing AlphaHelpOverlay child");
+                    bad++;
+                }
+                else
+                {
+                    alphaUnderPause.Open();
+                    if (!pause.AlphaHelpOpen)
+                    {
+                        log.AppendLine("  FAIL PauseOverlay.AlphaHelpOpen after Open");
+                        bad++;
+                    }
+                    else
+                    {
+                        pause.CloseAlphaHelpOnly();
+                        if (pause.AlphaHelpOpen)
+                        {
+                            log.AppendLine("  FAIL CloseAlphaHelpOnly left overlay open");
+                            bad++;
+                        }
+                        else log.AppendLine("  PauseOverlay ALPHA LIMITS nested ok");
+                    }
+                }
                 pause.Close();
                 if (pause.IsOpen) { log.AppendLine("  FAIL PauseOverlay.Close"); bad++; }
                 log.AppendLine("  PauseOverlay Build/Open/Close ok");

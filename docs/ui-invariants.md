@@ -25,7 +25,8 @@ scaled button rows — **no ScrollRect**. **OPTIONS / AUDIO / EXIT** stay in a `
 the bottom (#427 / #428 / #429). EXIT calls `MainMenuView.QuitApplication`
 (`Application.Quit` / Editor stop Play). **HELP** opens `AlphaHelpOverlay` — how-to-play
 (select → MOVE / ENGAGE → pause) plus the free-alpha limits (thin fog on small maps,
-artillery as direct fire, no ZoC / facing / collision). Distinct from PLAY
+artillery as direct fire, no ZoC / facing / collision, wrecks on the map, suppression
+stall). The same overlay opens from pause **ALPHA LIMITS** (#469). Distinct from PLAY
 `ContextHelpOverlay` (#308) and the field manual (#124).
 
 **Version chrome (#218).** The AppShell top bar shows `AppShell.VersionLabel`
@@ -56,10 +57,11 @@ size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (
 store round-trip plus Settings/F11 sharing `ApplyWindowed` / `ApplyFullscreen` /
 `ToggleFullscreen` / `ApplyDisplayPreferences`.
 
-**Esc precedence in PLAY (#371 / #129 / #308 / #206 / #462):** historical-note panel closes
-first; then field-manual browser; then drills quick-ref; then context help; then the pause
-overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else Esc
-opens pause and stops the clock. Space remains the clock toggle and must not open pause.
+**Esc precedence in PLAY (#371 / #129 / #308 / #206 / #462 / #469):** historical-note panel
+closes first; then alpha-limits (`AlphaHelpOverlay` nested under pause); then field-manual
+browser; then drills quick-ref; then context help; then the pause overlay resumes; then an
+armed palette verb clears (`CommandPalette.ClearShortcut`); else Esc opens pause and stops
+the clock. Space remains the clock toggle and must not open pause.
 
 **Context help (#308 / #442 / #445 / #447).** PLAY rail **HELP** opens `ContextHelpOverlay`
 for the armed verb. **MOVE**, **ENGAGE**, **WAYPOINTS**, and **DIG IN** have authored copy;
@@ -80,6 +82,8 @@ not optional quests. Full binder remains the DRILLS tab; issuing drills stays on
 alpha glossary — read-only list → detail; drill cross-links are #207.
 **HISTORICAL NOTE** opens `HistoricalNotePanel` (#462) when the scenario carries
 `HistoricalNotes` (LRT / Belleau / Remagen).
+**ALPHA LIMITS** (#469) opens the same `AlphaHelpOverlay` as menu HELP (how-to + known
+limits) so players mid-fight can read the honesty bar without exiting to the menu.
 
 - **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
   them multiplies exposure to the silent-layout-truncation failure mode and pays every

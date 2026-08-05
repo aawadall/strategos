@@ -11,16 +11,20 @@ chasing anything that looks like a bug in generation, detection, combat balance 
 
 Recorded so they are not re-investigated. None are fixed.
 
-### Player-facing (free alpha)
+### Player-facing (free alpha / $10 honesty)
 
-Shown in-menu under **HELP** (`AlphaHelpOverlay`) so strangers downloading the build are
-not surprised. Longer engineering notes follow.
+Shown under main-menu **HELP** and pause **ALPHA LIMITS** (`AlphaHelpOverlay`, #469) so
+strangers — in or out of a fight — are not surprised. Longer engineering notes follow.
 
 - **Little fog of war on the shipped small maps.** Detection ranges are large enough that
   Meeting Engagement contacts OPFOR almost immediately — see the detection bullet below.
 - **Artillery is the best *direct-fire* weapon in the model, which is wrong.** Indirect fire
   is not built; until it is, treat artillery engage orders as provisional.
 - **No zone of control, facing, or unit collision.** Units pass through each other.
+- **Destroyed units stay on the map as wrecks.** They are not commandable and not contacts;
+  reconstitution is still missing (engineering note below).
+- **Head-on equal firefights can stall under suppression.** Flanking, cover, and digging in
+  break the stalemate — see the suppression-equilibrium note below.
 
 ### Engineering
 

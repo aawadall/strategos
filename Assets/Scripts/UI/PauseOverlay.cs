@@ -1,6 +1,6 @@
 // PauseOverlay.cs
-// #371 / #206 / #462: pause — Save / Load / Drills / Field manual / Historical note /
-// Resume / Exit.
+// #371 / #206 / #462 / #469: pause — Save / Load / Drills / Field manual / Historical note /
+// Alpha limits / Resume / Exit.
 
 using System;
 using TMPro;
@@ -19,6 +19,7 @@ namespace Strategos.UI
         private DrillQuickRefPanel _drills;
         private FieldManualBrowserPanel _manual;
         private HistoricalNotePanel _history;
+        private AlphaHelpOverlay _alphaHelp;
         private Button _historyButton;
         private Action _onResume;
         private Action _onSave;
@@ -29,6 +30,7 @@ namespace Strategos.UI
         public bool DrillsOpen => _drills != null && _drills.IsOpen;
         public bool ManualOpen => _manual != null && _manual.IsOpen;
         public bool HistoryOpen => _history != null && _history.IsOpen;
+        public bool AlphaHelpOpen => _alphaHelp != null && _alphaHelp.IsOpen;
 
         public void Build(RectTransform host, Action onResume, Action onSave, Action onLoad,
             Action onExitMenu)
@@ -49,7 +51,7 @@ namespace Strategos.UI
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(420, 540);
+            card.sizeDelta = new Vector2(420, 600);
             card.gameObject.AddComponent<Image>().color = Theme.CardBg;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -78,6 +80,7 @@ namespace Strategos.UI
             AddButton(card, "DRILLS  (quick ref)", OpenDrills);
             AddButton(card, "FIELD MANUAL", OpenManual);
             _historyButton = AddButton(card, "HISTORICAL NOTE", OpenHistory);
+            AddButton(card, "ALPHA LIMITS", OpenAlphaHelp);
             AddButton(card, "EXIT TO MENU", () => _onExitMenu?.Invoke());
 
             _drills = root.gameObject.AddComponent<DrillQuickRefPanel>();
@@ -86,6 +89,8 @@ namespace Strategos.UI
             _manual.Build(root);
             _history = root.gameObject.AddComponent<HistoricalNotePanel>();
             _history.Build(root);
+            _alphaHelp = root.gameObject.AddComponent<AlphaHelpOverlay>();
+            _alphaHelp.Build(root);
 
             _panel = root.gameObject;
             _panel.SetActive(false);
@@ -104,6 +109,7 @@ namespace Strategos.UI
             _drills?.Close();
             _manual?.Close();
             _history?.Close();
+            _alphaHelp?.Close();
             if (_historyButton != null)
                 _historyButton.interactable = _history != null && _history.HasNotes;
             _panel.SetActive(true);
@@ -115,17 +121,20 @@ namespace Strategos.UI
             _drills?.Close();
             _manual?.Close();
             _history?.Close();
+            _alphaHelp?.Close();
             if (_panel != null) _panel.SetActive(false);
         }
 
         public void CloseDrillsOnly() => _drills?.Close();
         public void CloseManualOnly() => _manual?.Close();
         public void CloseHistoryOnly() => _history?.Close();
+        public void CloseAlphaHelpOnly() => _alphaHelp?.Close();
 
         private void OpenDrills()
         {
             _manual?.Close();
             _history?.Close();
+            _alphaHelp?.Close();
             _drills?.Open();
         }
 
@@ -133,6 +142,7 @@ namespace Strategos.UI
         {
             _drills?.Close();
             _history?.Close();
+            _alphaHelp?.Close();
             _manual?.Open();
         }
 
@@ -140,7 +150,16 @@ namespace Strategos.UI
         {
             _drills?.Close();
             _manual?.Close();
+            _alphaHelp?.Close();
             _history?.Open();
+        }
+
+        private void OpenAlphaHelp()
+        {
+            _drills?.Close();
+            _manual?.Close();
+            _history?.Close();
+            _alphaHelp?.Open();
         }
     }
 }
