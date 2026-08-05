@@ -161,6 +161,10 @@ This effectively gives Strategos free cross-internet hotseat from day one of Ear
 
 ## Steam Achievements
 
+In-game **bar medals** (local ribbon rack, categories + procedural renderer) are designed
+separately in [bar-medals.md](bar-medals.md) (#467). Catalogue entries may reserve a
+`SteamAchievementId` for later sync; local awards must work without an App ID.
+
 Aim for 20–30 achievements. Suggested categories:
 
 ### Progression (echelon milestones)

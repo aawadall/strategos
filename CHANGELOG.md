@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Bar-medals design (#467): post-battle ribbon categories + procedural renderer —
+  `docs/bar-medals.md` (backlog; distinct from Steam Achievements and #421 AAR).
 - Tiered-releases design (#465): Free / Base / Scenario Pass unlocks scenarios —
   `docs/tiered-releases.md` (alpha stays ungated until SKUs exist).
 
