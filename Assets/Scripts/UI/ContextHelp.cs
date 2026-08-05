@@ -1,11 +1,12 @@
 // ContextHelp.cs
-// #308 / #442 / #445: in-PLAY contextual copy for palette controls
-// (MOVE, ENGAGE, WAYPOINTS). Not the field manual (#124).
+// #308 / #442 / #445 / #447: in-PLAY contextual copy for palette controls
+// (MOVE, ENGAGE, WAYPOINTS, DIG IN). Not the field manual (#124).
 
 namespace Strategos.UI
 {
     /// <summary>
-    /// Authored blurbs keyed by armed palette verb (#308 MOVE, #442 ENGAGE, #445 WAYPOINTS).
+    /// Authored blurbs keyed by armed palette verb
+    /// (#308 MOVE, #442 ENGAGE, #445 WAYPOINTS, #447 DIG IN).
     /// </summary>
     public static class ContextHelp
     {
@@ -33,6 +34,14 @@ namespace Strategos.UI
             "Esc clears the draft and the armed verb. Path preview uses the same A* costs as MOVE. " +
             "This is in-session help — the glossary is #124.";
 
+        public const string DigInTitle = "DIG IN";
+
+        public const string DigInBody =
+            "Arm DIG IN (D), select a friendly unit that can dig in, then left-click to issue. " +
+            "Bridges to Hold/Defend: the unit digs in over about two minutes and then takes " +
+            "half the incoming fire. Units without the dig-in capability are refused (CANNOT DIG IN). " +
+            "Esc clears the armed verb. This is in-session help — the glossary is #124.";
+
         /// <summary>True when <paramref name="verb"/> has authored context help.</summary>
         public static bool TryGet(PaletteVerb verb, out string title, out string body)
         {
@@ -54,6 +63,13 @@ namespace Strategos.UI
             {
                 title = WaypointsTitle;
                 body = WaypointsBody;
+                return true;
+            }
+
+            if (verb == PaletteVerb.DigIn)
+            {
+                title = DigInTitle;
+                body = DigInBody;
                 return true;
             }
 
