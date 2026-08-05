@@ -9,7 +9,8 @@ Local and (selectively) committed research material for Strategos.
 | `Research/*.pdf` (and other third-party binaries) | **No** — gitignored | Copyrighted or bulky sources (e.g. APP-6D PDF) |
 | `Research/historical/*.md` | **Yes** — notes only | Authored engagement digests for Phase 6.2 (#332) |
 | `Research/historical/SHORTLIST.md` | **Yes** | Candidate engagements across echelons |
-| `Research/audio/*.md` | **Yes** — scripts/prompts only | VO scripts (#42) and Suno prompts (#43) — no generated audio committed here |
+| `Research/audio/*.md` | **Yes** | VO scripts (#42) and Suno prompts (#43) |
+| `Research/audio/*.mp3` | **Yes** — draft takes | Candidate ElevenLabs/Suno generations from the scripts/prompts above, staged here pending #401 (OGG Vorbis conversion) and provenance logging in `ATTRIBUTIONS.md`; not the final shipped format or location (`Assets/Audio/`, per `docs/assets.md`) |
 
 Do **not** commit source PDFs, scraped HTML dumps, or copyrighted reproductions.
 Summarise into markdown; cite the public-domain (or otherwise cleared) source and licence
