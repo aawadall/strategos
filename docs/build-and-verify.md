@@ -23,6 +23,9 @@ zip to a GitHub Release; notes live in [CHANGELOG.md](../CHANGELOG.md).
 set — human checklist: [ci-unity-licence.md](ci-unity-licence.md). Local `build.ps1` does
 not need those secrets.
 
+**itch.io (#221).** Windows Release zip can go to itch via browser, the itch app, or
+`scripts/itch-push.ps1` — checklist: [itch-publish.md](itch-publish.md).
+
 **`build.ps1` waits for the editor; do not "simplify" it back to the call operator.**
 `Unity.exe` is a GUI-subsystem binary and PowerShell does not wait for those, so
 `& $UnityExe …` returns in about 0.1 s with the build still running — measured 0.1 s
