@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Audio sourcing inventory (#259 / #41): `docs/audio-inventory.md` — music / SFX / VO /
+  Morse by status and tool (Suno / ElevenLabs / procedural); cross-links from assets,
+  sfx-inventory, audio.md, CLAUDE.md.
 - Free-alpha HELP: `AlphaHelpOverlay` on the main menu — how-to-play (select → MOVE /
   ENGAGE → pause) plus fog / artillery-as-DF / no-ZoC limits; README how-to section;
   player-facing note at the top of `docs/known-gaps.md`.

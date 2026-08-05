@@ -1,8 +1,10 @@
 # SFX inventory (#249 / #44)
 
-Checklist of one-shot cues Strategos needs. **No assets yet** — this page is the
-shopping list for #250–#252 (procedural stubs first) and later sourced clips under
-`#41`. Runtime entry point is `AudioService.PlayOneShot` / `PlayOneShotResource`
+Checklist of one-shot cues Strategos needs. Procedural stubs (#250–#252) shipped;
+sourced OGG drop-ins remain `#41` / `#401`. For the **full** audio catalogue (music,
+VO, Morse, staging takes) see [audio-inventory.md](audio-inventory.md) (#259).
+
+Runtime entry point is `AudioService.PlayOneShot` / `PlayOneShotResource`
 ([audio.md](audio.md)).
 
 Sourcing / licence rules: [assets.md](assets.md) (freesound CC0, Sonniss GDC).

@@ -13,7 +13,9 @@ This document defines where every asset type comes from, how it is licensed, how
 | Road & Settlement Data | OpenStreetMap | ODbL | OSM XML → GeoJSON → runtime overlay |
 | Procedural Maps | Custom generator | N/A (owned) | Unity Terrain API |
 | Music | Suno (user-generated) | Commercial use (Suno Pro) | WAV/MP3 → OGG → Unity AudioClip |
-| Sound Effects | freesound.org, Sonniss GDC | CC0 / royalty-free | WAV → OGG → Unity AudioClip |
+| Sound Effects | procedural stubs → freesound / Sonniss | CC0 / royalty-free | WAV → OGG → Unity AudioClip |
+| Voice / narration | ElevenLabs (planned) | *(confirm tier — #260)* | Script → API → OGG → Resources |
+| Morse / radio FX | Procedural + staging takes | *(audit staging — #260)* | Code / DSP; rare Suno textures |
 | Historical Scenarios | Public domain / custom | CC0 / owned | JSON → scenario loader |
 | UI Fonts | Google Fonts | SIL OFL | TTF → Unity TextMeshPro |
 | Unit Emblems & Flags | Wikipedia Commons / custom | CC0 / public domain | PNG → Sprite |
@@ -220,6 +222,7 @@ Assets/Resources/Audio/Sfx/
 ```
 
 Full cue checklist and priority: [sfx-inventory.md](sfx-inventory.md) (#249 / #44).
+**Full audio catalogue (music / SFX / VO / Morse):** [audio-inventory.md](audio-inventory.md) (#259 / #41).
 Procedural stubs (#250–#252) may skip files and synthesise in memory first.
 
 Broader category folders (weapons / vehicles / ambience) stay a sourcing guide only
