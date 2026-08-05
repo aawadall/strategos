@@ -2089,6 +2089,10 @@ namespace Strategos.UI.Views
             if (_feed.Count > FeedLines) _feed.RemoveRange(FeedLines, _feed.Count - FeedLines);
             RefreshFeed();
 
+            // Opening fire is reported once per engagement (#252) — not per combat tick.
+            if (report.Kind == Strategos.Reports.ReportKind.Engaged)
+                AudioService.Instance?.PlayCombatFire();
+
             // The DIRECTIVE card's acknowledged state is read off this same stream, never set
             // directly by the click handler — see _directiveAcknowledged's own note. Matched by
             // AboutDirective against the standing directive's Seq, not merely "any
@@ -2303,11 +2307,26 @@ namespace Strategos.UI.Views
         private static bool WantsQueue() =>
             Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
+        /// <summary>
+        /// Player-issued order with issued/rejected SFX (#251).
+        /// <see cref="Simulation.Issue"/> leaves <c>Seq == 0</c> on scope refusal.
+        /// Abort preambles stay on bare Issue so a MoveTo does not double-beep.
+        /// </summary>
+        private Command IssuePlayer(Command command)
+        {
+            var stamped = _sim.Issue(command);
+            if (stamped.Seq == 0)
+                AudioService.Instance?.PlayOrderRejected();
+            else
+                AudioService.Instance?.PlayOrderIssued();
+            return stamped;
+        }
+
         private void IssueMoveTo(UnitInstance unit, Vector2 cell, bool queue)
         {
             var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
-            _sim.Issue(Command.MoveTo(actor, unit.Id, cell));
+            IssuePlayer(Command.MoveTo(actor, unit.Id, cell));
             _tutorialBeat?.OnMoveIssued();
         }
 
@@ -2315,7 +2334,7 @@ namespace Strategos.UI.Views
         {
             var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
-            _sim.Issue(Command.Engage(actor, unit.Id, target.Id));
+            IssuePlayer(Command.Engage(actor, unit.Id, target.Id));
         }
 
         /// <summary>
@@ -2724,7 +2743,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         /// <summary>
@@ -2761,11 +2780,12 @@ namespace Strategos.UI.Views
             {
                 if (_statusLabel != null) _statusLabel.text = "CANNOT DIG IN";
                 Debug.Log($"[PlayView] DigIn refused for {unit.Designation} ({unit.CapabilityId})");
+                AudioService.Instance?.PlayOrderRejected();
                 return;
             }
 
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
-            _sim.Issue(cmd.Value);
+            IssuePlayer(cmd.Value);
         }
 
         /// <summary>
@@ -2776,7 +2796,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Screen(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Screen(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         /// <summary>
@@ -2787,7 +2807,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Guard(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Guard(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         /// <summary>
@@ -2798,7 +2818,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Cover(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Cover(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void WithdrawSelected()
@@ -2806,7 +2826,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Withdraw(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Withdraw(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void DelaySelected()
@@ -2814,7 +2834,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Delay(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Delay(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void AttackSelected()
@@ -2822,7 +2842,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Attack(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Attack(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void ReconSelected()
@@ -2830,7 +2850,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Recon(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Recon(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void ExploitSelected()
@@ -2838,7 +2858,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Exploit(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Exploit(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         private void PursueSelected()
@@ -2846,7 +2866,7 @@ namespace Strategos.UI.Views
             if (_sim == null || _selection.Count == 0) return;
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
-            _sim.Issue(Command.Pursue(ActorId.ForSide(unit.Side), unit.Id));
+            IssuePlayer(Command.Pursue(ActorId.ForSide(unit.Side), unit.Id));
         }
 
         /// <summary>
@@ -2871,7 +2891,7 @@ namespace Strategos.UI.Views
             int i = Mathf.Clamp(_drillDrop.value, 0, drills.Count - 1);
             if (drills.Count == 0) return;
 
-            _sim.Issue(Command.Drill(ActorId.ForSide(unit.Side), unit.Id, drills[i].Code));
+            IssuePlayer(Command.Drill(ActorId.ForSide(unit.Side), unit.Id, drills[i].Code));
         }
 
         private void Select(UnitId id)
@@ -3256,7 +3276,7 @@ namespace Strategos.UI.Views
             if (plan == null || liveIndex < 0 || liveIndex >= plan.Count) return;
 
             var actor = ActorId.ForSide(unit.Side);
-            _sim.Issue(liveIndex <= 0
+            IssuePlayer(liveIndex <= 0
                 ? Command.Abort(actor, unit.Id)
                 : Command.CancelFrom(actor, unit.Id, plan[liveIndex].Ordinal));
 

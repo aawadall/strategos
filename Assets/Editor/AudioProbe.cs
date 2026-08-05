@@ -24,7 +24,7 @@ namespace Strategos.Editor
 
             bad += CheckServiceSilenceSafe(log);
             bad += CheckOneShotApi(log);
-            bad += CheckProceduralUi(log);
+            bad += CheckProceduralSfx(log);
             bad += CheckShippedBeds(log);
             bad += CheckVolumePrefs(log);
 
@@ -79,33 +79,43 @@ namespace Strategos.Editor
             }
         }
 
-        private static int CheckProceduralUi(StringBuilder log)
+        private static int CheckProceduralSfx(StringBuilder log)
         {
-            var go = new GameObject("audio-probe-ui");
-            AudioClip click = null;
-            AudioClip select = null;
+            var go = new GameObject("audio-probe-sfx");
+            var clips = new AudioClip[5];
             try
             {
                 var svc = AudioService.Ensure(go);
                 svc.PlayUiClick();
                 svc.PlayUiSelect();
-                click = ProceduralSfx.Click();
-                select = ProceduralSfx.Select();
-                if (click.samples < 10 || select.samples < 10)
+                svc.PlayOrderIssued();
+                svc.PlayOrderRejected();
+                svc.PlayCombatFire();
+
+                clips[0] = ProceduralSfx.Click();
+                clips[1] = ProceduralSfx.Select();
+                clips[2] = ProceduralSfx.OrderIssued();
+                clips[3] = ProceduralSfx.OrderRejected();
+                clips[4] = ProceduralSfx.CombatFire();
+                for (int i = 0; i < clips.Length; i++)
                 {
-                    log.AppendLine("  FAIL ProceduralSfx produced empty clip");
-                    return 1;
+                    if (clips[i] == null || clips[i].samples < 10)
+                    {
+                        log.AppendLine($"  FAIL ProceduralSfx clip[{i}] empty");
+                        return 1;
+                    }
                 }
 
                 log.AppendLine(
-                    $"  procedural UI click/select  ok " +
-                    $"(click {click.samples} smp, select {select.samples} smp)");
+                    $"  procedural SFX  ok " +
+                    $"(issued {clips[2].samples}, rejected {clips[3].samples}, " +
+                    $"fire {clips[4].samples} smp)");
                 return 0;
             }
             finally
             {
-                if (click != null) Object.DestroyImmediate(click);
-                if (select != null) Object.DestroyImmediate(select);
+                for (int i = 0; i < clips.Length; i++)
+                    if (clips[i] != null) Object.DestroyImmediate(clips[i]);
                 Object.DestroyImmediate(go);
             }
         }

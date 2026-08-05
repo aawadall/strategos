@@ -29,6 +29,9 @@ namespace Strategos.Audio
         private string _currentMusicResource;
         private AudioClip _uiClick;
         private AudioClip _uiSelect;
+        private AudioClip _orderIssued;
+        private AudioClip _orderRejected;
+        private AudioClip _combatFire;
 
         /// <summary>Attach to <paramref name="host"/> if missing; returns the service.</summary>
         public static AudioService Ensure(GameObject host)
@@ -71,6 +74,9 @@ namespace Strategos.Audio
             if (Instance == this) Instance = null;
             if (_uiClick != null) { Destroy(_uiClick); _uiClick = null; }
             if (_uiSelect != null) { Destroy(_uiSelect); _uiSelect = null; }
+            if (_orderIssued != null) { Destroy(_orderIssued); _orderIssued = null; }
+            if (_orderRejected != null) { Destroy(_orderRejected); _orderRejected = null; }
+            if (_combatFire != null) { Destroy(_combatFire); _combatFire = null; }
         }
 
         /// <summary>Procedural UI click (#250) — buttons / tabs.</summary>
@@ -85,6 +91,27 @@ namespace Strategos.Audio
         {
             _uiSelect ??= ProceduralSfx.Select();
             PlayOneShot(_uiSelect, volumeScale);
+        }
+
+        /// <summary>Accepted player order (#251) — Seq stamped by Simulation.Issue.</summary>
+        public void PlayOrderIssued(float volumeScale = 1f)
+        {
+            _orderIssued ??= ProceduralSfx.OrderIssued();
+            PlayOneShot(_orderIssued, volumeScale);
+        }
+
+        /// <summary>Refused order (#251) — scope reject or capability gate.</summary>
+        public void PlayOrderRejected(float volumeScale = 1f)
+        {
+            _orderRejected ??= ProceduralSfx.OrderRejected();
+            PlayOneShot(_orderRejected, volumeScale);
+        }
+
+        /// <summary>Opening fire (#252) — once per Engaged report, not per tick.</summary>
+        public void PlayCombatFire(float volumeScale = 1f)
+        {
+            _combatFire ??= ProceduralSfx.CombatFire();
+            PlayOneShot(_combatFire, volumeScale);
         }
 
         /// <summary>

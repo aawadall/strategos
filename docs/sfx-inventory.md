@@ -36,8 +36,8 @@ keep these ids stable so a later OGG drop-in does not rename call sites.
 |---|---|---|---|
 | Click / press | Button / tab / toggle | **P0 — #250** | Procedural sine via `AudioService.PlayUiClick` |
 | Unit select | Map / ORBAT select | P0 | `PlayUiSelect` — distinct pitch from click |
-| Order issued | `Simulation.Issue` accepted | **P1 — #251** | Soft confirmation |
-| Order rejected | Scope / illegal / confirm-cancel | **P1 — #251** | Slightly sharper than issued |
+| Order issued | `Simulation.Issue` accepted (Seq ≠ 0) | **P1 — #251** | `PlayOrderIssued` via PlayView.IssuePlayer |
+| Order rejected | Scope refuse / DigIn gate | **P1 — #251** | `PlayOrderRejected` |
 | Alert / contact | Situation feed observation | P2 | Duck under music; debounce at high compression |
 | Menu navigate | Main menu ↔ settings | P3 | Optional; music bed already covers presence |
 
@@ -50,7 +50,7 @@ chimes — add only when those UIs need them.
 
 | Cue | Trigger (intended) | Priority | Notes |
 |---|---|---|---|
-| Direct fire | Engagement tick / shot resolved | **P1 — #252** | One shared cue first; per-weapon later |
+| Direct fire | `ReportKind.Engaged` (once per engagement) | **P1 — #252** | `PlayCombatFire` — not per combat tick |
 | Hit / damage | Strength drop on target | P2 | Can share fire cue initially |
 | Destroyed / wreck | Unit becomes wreck | P2 | Longer tail ok; rare |
 | Incoming / under fire | Reflex return-fire start | P3 | Easy to spam — hysteresis required |
@@ -79,9 +79,8 @@ not `PlayOneShot`.
 ## Implementation order (unchanged from #44)
 
 1. **#249** — inventory (shipped)  
-2. **#250** — procedural click/select stub via `AudioService` (shipped: `ProceduralSfx` + UiFactory / PlayView)  
-3. **#251** — order issued / rejected  
-4. **#252** — one combat cue (fire or hit)
+2. **#250** — procedural click/select stub via `AudioService` (shipped)  
+3. **#251** — order issued / rejected (shipped: `IssuePlayer` + DigIn gate)  
+4. **#252** — one combat cue (shipped: `Engaged` report → `PlayCombatFire`)
 
-After stubs feel right in PLAY, replace with sourced OGG under the resource ids
-above (#41 / #401).
+Epic **#44** is closed once these four ship. Sourced OGG drop-ins remain `#41` / `#401`.
