@@ -7,6 +7,7 @@ NATO APP-6D symbology. The long arc is command from fireteam to theatre; today i
 **playable free alpha** (solo / hotseat / spectator / replay, campaigns, combat).
 
 - **Play:** [v0.3.0-alpha.1 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)
+  · itch: follow [docs/itch-publish.md](docs/itch-publish.md) then add the live URL here
 - **Site:** [aawadall.github.io/strategos](https://aawadall.github.io/strategos/)
 - **Status:** [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
 

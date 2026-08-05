@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- itch.io publish handoff (#221 / #83): `docs/itch-publish.md` + `scripts/itch-push.ps1`
+  (browser / app / butler); Pages CTA already live — first upload remains human.
 - Unity CI licence ops checklist (#216 / #83): `docs/ci-unity-licence.md` — secret names,
   how to export `.ulf`, verify Steps; linked from known-gaps, build-and-verify, phases.
 - Tutorial queue/abort beat (#449 / #289): after ENGAGE, Shift-queue a MoveTo then ABORT PLAN;

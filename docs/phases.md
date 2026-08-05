@@ -428,8 +428,8 @@ rank insignia ships; audio issues filed (#40–#46).
 
 ### Release Checklist
 - [ ] Release engineering: versioning, notes, GitHub Releases, Pages and itch.io (#83)
-  — first tagged Release + version stamp/chrome (#217–#219); CI licence (#216),
-  WebGL (#220), Pages/itch (#221) still open.
+  — first tagged Release + version stamp/chrome (#217–#219); CI licence checklist (#216);
+  itch publish handoff (#221); WebGL (#220) still open.
 - [ ] Legal review: NATO symbol usage, any trademarked unit names
 - [ ] ESRB/PEGI rating (expected: T/12+)
 - [ ] Steam page approved, trailer published, press kit sent
