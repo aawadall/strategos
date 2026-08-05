@@ -3,7 +3,8 @@
 Provenance rules for generated and staged audio. Catalogue: [audio-inventory.md](audio-inventory.md).
 Runtime: [audio.md](audio.md). Credits: [ATTRIBUTIONS.md](../ATTRIBUTIONS.md).
 
-Folder / `.meta` conventions stay **#261**. API / ffmpeg scripts stay **#400** / **#401**.
+Folder / `.meta` conventions: [audio-resources.md](audio-resources.md) (**#261**).
+API / ffmpeg scripts stay **#400** / **#401**.
 
 ---
 
@@ -87,6 +88,6 @@ Music beds: q≈6. SFX: q≈4–6. Drop into `Resources/Audio/` (or `…/Sfx/`) 
 ## Suggested next (#41)
 
 1. ~~#259 inventory~~  
-2. **#260** — this page  
-3. **#261** — Resources conventions  
+2. ~~#260 licence~~  
+3. ~~#261 Resources conventions~~  
 4. Fill ElevenLabs commercial gate → then **#400** / **#401**

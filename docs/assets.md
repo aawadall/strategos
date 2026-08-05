@@ -175,6 +175,7 @@ Assets/Resources/Audio/
 
 Staging takes (Suno MP3s, VO drafts) stay under `Research/audio/` and are **not**
 shipped. Convert with ffmpeg (`libvorbis`, q≈4) before promoting into `Resources/Audio/`.
+Folder and `.meta` rules: [audio-resources.md](audio-resources.md) (#261).
 Broader catalogue targets (combat intensity, victory/defeat) remain future content under
 `#43` / `#398`–`#399` leftovers.
 ---

@@ -17,9 +17,11 @@ serialised type.**
 - **`Assets/TextMesh Pro/` is committed on purpose — do not re-ignore it.** See below.
 - **Everything under `Assets/Resources/` ships in every build, unconditionally.** Only things
   that must be *loadable by name at runtime on every target* belong there: the drape shader
-  (`Shader.Find` does not work in a player) and the scenario fixtures
-  (`Resources` works on WebGL where `StreamingAssets` needs `UnityWebRequest`). It is not a
-  general dumping ground — anything that can be a normal asset reference should be one.
+  (`Shader.Find` does not work in a player), scenario fixtures
+  (`Resources` works on WebGL where `StreamingAssets` needs `UnityWebRequest`), and audio
+  beds/SFX that `AudioService` loads by path (see [audio-resources.md](audio-resources.md)).
+  It is not a general dumping ground — anything that can be a normal asset reference should
+  be one. Staging audio stays in `Research/audio/`.
 - **Scenario JSON goes through Newtonsoft, not `JsonUtility`** (`com.unity.nuget.newtonsoft-json`,
   auto-referenced, no asmdef entry needed). `JsonUtility` cannot serialise `Nullable<T>` and
   `MapGenerationSettings.ParameterOverride` is a `ReliefParameters?`. **Newtonsoft serialises

@@ -1,9 +1,9 @@
 # Audio inventory (#259 / #41)
 
 Master catalogue of audio **by category** — owners, tools, and where each clip lives.
-Extends the one-shot SFX list from [#44](sfx-inventory.md). Licence / provenance prose:
-[audio-licence.md](audio-licence.md) (**#260**). Resources folder `.meta` rules are
-**#261**. Conversion scripts are **#400** (ElevenLabs) and **#401** (OGG).
+Extends the one-shot SFX list from [#44](sfx-inventory.md). Licence / provenance prose: [audio-licence.md](audio-licence.md) (**#260**).
+Resources folder `.meta` rules: [audio-resources.md](audio-resources.md) (**#261**).
+Conversion scripts are **#400** (ElevenLabs) and **#401** (OGG).
 
 Runtime wiring: [audio.md](audio.md). Attribution for anything shipped:
 [ATTRIBUTIONS.md](../ATTRIBUTIONS.md).
@@ -111,10 +111,11 @@ Assets/Resources/Audio/         # shipped beds
 
 ## Suggested work order (#41)
 
-1. **#259** — this inventory (shipped)  
-2. **#260** — licence / provenance notes (Suno Pro, ElevenLabs TBD, staging audits)  
-3. **#261** — Resources conventions + `.meta` expectations  
+1. ~~#259~~ inventory  
+2. ~~#260~~ licence  
+3. ~~#261~~ Resources conventions (see [audio-resources.md](audio-resources.md))  
 4. **#400** / **#401** — ElevenLabs script + OGG conversion once Voice terms are decided  
 
 Cross-links: [assets.md](assets.md) · [sfx-inventory.md](sfx-inventory.md) ·
-[audio.md](audio.md) · `Research/audio/`.
+[audio.md](audio.md) · [audio-licence.md](audio-licence.md) · [audio-resources.md](audio-resources.md) ·
+`Research/audio/`.
