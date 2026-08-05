@@ -39,12 +39,23 @@ namespace Strategos.Editor
                 }
                 else log.AppendLine("  MainMenuView Scroll ok");
 
-                if (!FindNamed(menuGo.transform, "BTN_EXIT"))
+                if (!FindNamed(menuGo.transform, "Footer") ||
+                    !FindNamed(menuGo.transform, "BTN_EXIT"))
                 {
-                    log.AppendLine("  FAIL MainMenuView missing EXIT (#428)");
+                    log.AppendLine("  FAIL MainMenuView missing Footer EXIT (#427/#428)");
                     bad++;
                 }
-                else log.AppendLine("  MainMenuView EXIT ok");
+                else log.AppendLine("  MainMenuView Footer EXIT ok");
+
+                // EXIT must live under Footer, not only deep in the scroll column.
+                var exit = FindTransform(menuGo.transform, "BTN_EXIT");
+                var footer = FindTransform(menuGo.transform, "Footer");
+                if (exit == null || footer == null || !IsUnder(exit, footer))
+                {
+                    log.AppendLine("  FAIL EXIT not under Footer (still buried in scroll?)");
+                    bad++;
+                }
+                else log.AppendLine("  EXIT pinned under Footer ok");
 
                 if (!FindNamed(menuGo.transform, "BTN_AUDIO"))
                 {
@@ -174,9 +185,28 @@ namespace Strategos.Editor
 
         private static bool FindNamed(Transform root, string name)
         {
-            if (root.name == name) return true;
+            return FindTransform(root, name) != null;
+        }
+
+        private static Transform FindTransform(Transform root, string name)
+        {
+            if (root.name == name) return root;
             for (int i = 0; i < root.childCount; i++)
-                if (FindNamed(root.GetChild(i), name)) return true;
+            {
+                var hit = FindTransform(root.GetChild(i), name);
+                if (hit != null) return hit;
+            }
+            return null;
+        }
+
+        private static bool IsUnder(Transform node, Transform ancestor)
+        {
+            var t = node;
+            while (t != null)
+            {
+                if (t == ancestor) return true;
+                t = t.parent;
+            }
             return false;
         }
     }

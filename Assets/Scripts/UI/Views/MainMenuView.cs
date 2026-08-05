@@ -3,7 +3,8 @@
 // Options (#306 settings shell), Help stub (#124), Server disabled (online / App ID),
 // Tools tabs.
 //
-// #426 / #427: scrollable column so the stack fits the viewport (no bleed).
+// #426 / #427: scrollable campaign/tools stack; footer pins OPTIONS / AUDIO / EXIT so they
+// stay on-screen without scrolling (wheel failed when the viewport had no raycast Graphic).
 // #428: EXIT quits the player (Editor stops Play mode).
 // #429: AUDIO opens Settings (MASTER / MUSIC / SFX already live there).
 //
@@ -23,6 +24,9 @@ namespace Strategos.UI.Views
 {
     public sealed class MainMenuView : MonoBehaviour, IAppView
     {
+        /// <summary>Footer height reserved for OPTIONS / AUDIO / EXIT (#427 fix).</summary>
+        public const float FooterHeight = 168f;
+
         public string Title => "MENU";
         public string Key => "menu";
 
@@ -51,20 +55,37 @@ namespace Strategos.UI.Views
             var raw = paper.gameObject.AddComponent<RawImage>();
             raw.texture = _paperTex;
             raw.color = Color.white;
+            raw.raycastTarget = false;
 
-            // #427: scroll the button stack so EXIT / OPTIONS stay reachable.
-            var scrollRt = CreateRect("Scroll", paper);
-            Stretch(scrollRt);
-            scrollRt.offsetMin = new Vector2(40, 32);
-            scrollRt.offsetMax = new Vector2(-40, -32);
+            // Body: scroll (flex) + sticky footer so EXIT is always visible.
+            var body = CreateRect("Body", paper);
+            Stretch(body);
+            body.offsetMin = new Vector2(40, 28);
+            body.offsetMax = new Vector2(-40, -28);
+            var bodyV = body.gameObject.AddComponent<VerticalLayoutGroup>();
+            bodyV.spacing = 8;
+            bodyV.childAlignment = TextAnchor.UpperCenter;
+            bodyV.childControlWidth = true;
+            bodyV.childControlHeight = true;
+            bodyV.childForceExpandWidth = true;
+            bodyV.childForceExpandHeight = false;
+
+            var scrollRt = CreateRect("Scroll", body);
+            var scrollLe = scrollRt.gameObject.AddComponent<LayoutElement>();
+            scrollLe.flexibleHeight = 1f;
+            scrollLe.minHeight = 120f;
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 40f;
+            scroll.scrollSensitivity = 55f;
 
             var viewport = CreateRect("Viewport", scrollRt);
             Stretch(viewport);
+            // ScrollRect only receives wheel/drag on a Graphic — RectMask2D alone is not enough.
+            var vpImg = viewport.gameObject.AddComponent<Image>();
+            vpImg.color = new Color(0, 0, 0, 0.01f);
+            vpImg.raycastTarget = true;
             viewport.gameObject.AddComponent<RectMask2D>();
             scroll.viewport = viewport;
 
@@ -81,7 +102,7 @@ namespace Strategos.UI.Views
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
-            v.padding = new RectOffset(24, 24, 16, 24);
+            v.padding = new RectOffset(16, 16, 8, 16);
             var fitter = col.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -131,17 +152,33 @@ namespace Strategos.UI.Views
 
             Spacer(col, 8);
             Section(col, "ALSO");
-            AddButton(col, "OPTIONS", () => Shell?.OpenSettings());
-            // #429: Settings AUDIO (master/music/SFX) is one click from the front door.
-            _audioBtn = AddButton(col, "AUDIO", () => Shell?.OpenSettings());
             var help = AddButton(col, "HELP  ·  see #124", () => { });
             help.interactable = false;
             var server = AddButton(col, "SERVER  ·  needs online", () => { });
             server.interactable = false;
 
-            Spacer(col, 8);
-            // #428: leave the process (Editor: stop Play mode).
-            _exitBtn = AddButton(col, "EXIT", QuitApplication);
+            // Sticky footer — always on screen; do not require scroll to quit (#427 / #428).
+            var footer = CreateRect("Footer", body);
+            var footerLe = footer.gameObject.AddComponent<LayoutElement>();
+            footerLe.preferredHeight = FooterHeight;
+            footerLe.minHeight = FooterHeight;
+            footerLe.flexibleHeight = 0f;
+            var fv = footer.gameObject.AddComponent<VerticalLayoutGroup>();
+            fv.spacing = 8;
+            fv.childAlignment = TextAnchor.UpperCenter;
+            fv.childControlWidth = true;
+            fv.childControlHeight = true;
+            fv.childForceExpandWidth = true;
+            fv.childForceExpandHeight = false;
+            fv.padding = new RectOffset(16, 16, 4, 4);
+
+            AddButton(footer, "OPTIONS", () => Shell?.OpenSettings());
+            _audioBtn = AddButton(footer, "AUDIO", () => Shell?.OpenSettings());
+            _exitBtn = AddButton(footer, "EXIT", QuitApplication);
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(col);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(body);
 
             RefreshSessionButtons();
         }
