@@ -27,6 +27,8 @@ namespace Strategos.Audio
         private float _musicVolume = 1f;
         private float _sfxVolume = 1f;
         private string _currentMusicResource;
+        private AudioClip _uiClick;
+        private AudioClip _uiSelect;
 
         /// <summary>Attach to <paramref name="host"/> if missing; returns the service.</summary>
         public static AudioService Ensure(GameObject host)
@@ -67,6 +69,22 @@ namespace Strategos.Audio
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (_uiClick != null) { Destroy(_uiClick); _uiClick = null; }
+            if (_uiSelect != null) { Destroy(_uiSelect); _uiSelect = null; }
+        }
+
+        /// <summary>Procedural UI click (#250) — buttons / tabs.</summary>
+        public void PlayUiClick(float volumeScale = 1f)
+        {
+            _uiClick ??= ProceduralSfx.Click();
+            PlayOneShot(_uiClick, volumeScale);
+        }
+
+        /// <summary>Procedural unit-select blip (#250).</summary>
+        public void PlayUiSelect(float volumeScale = 1f)
+        {
+            _uiSelect ??= ProceduralSfx.Select();
+            PlayOneShot(_uiSelect, volumeScale);
         }
 
         /// <summary>

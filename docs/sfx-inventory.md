@@ -34,8 +34,8 @@ keep these ids stable so a later OGG drop-in does not rename call sites.
 
 | Cue | Trigger (intended) | Priority | Notes |
 |---|---|---|---|
-| Click / press | Button / tab / toggle | **P0 — #250** | Short, quiet; must not fatigue under ×300 |
-| Unit select | Map / ORBAT select | P0 | Distinct from click if cheap; else share stub |
+| Click / press | Button / tab / toggle | **P0 — #250** | Procedural sine via `AudioService.PlayUiClick` |
+| Unit select | Map / ORBAT select | P0 | `PlayUiSelect` — distinct pitch from click |
 | Order issued | `Simulation.Issue` accepted | **P1 — #251** | Soft confirmation |
 | Order rejected | Scope / illegal / confirm-cancel | **P1 — #251** | Slightly sharper than issued |
 | Alert / contact | Situation feed observation | P2 | Duck under music; debounce at high compression |
@@ -78,8 +78,8 @@ not `PlayOneShot`.
 
 ## Implementation order (unchanged from #44)
 
-1. **#249** — this inventory  
-2. **#250** — procedural click/select stub via `AudioService`  
+1. **#249** — inventory (shipped)  
+2. **#250** — procedural click/select stub via `AudioService` (shipped: `ProceduralSfx` + UiFactory / PlayView)  
 3. **#251** — order issued / rejected  
 4. **#252** — one combat cue (fire or hit)
 

@@ -34,6 +34,7 @@ using Strategos.Objectives;
 using Strategos.Persistence;
 using Strategos.Persistence.Files;
 using Strategos.Identity;
+using Strategos.Audio;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -2877,7 +2878,11 @@ namespace Strategos.UI.Views
         {
             ClearWaypointDraft();
             _selection.Clear();
-            if (id.IsValid) _selection.Add(id);
+            if (id.IsValid)
+            {
+                _selection.Add(id);
+                AudioService.Instance?.PlayUiSelect();
+            }
             RefreshSelection();
             RefreshVerbChrome();
 

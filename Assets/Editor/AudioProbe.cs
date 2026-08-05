@@ -24,6 +24,7 @@ namespace Strategos.Editor
 
             bad += CheckServiceSilenceSafe(log);
             bad += CheckOneShotApi(log);
+            bad += CheckProceduralUi(log);
             bad += CheckShippedBeds(log);
             bad += CheckVolumePrefs(log);
 
@@ -74,6 +75,37 @@ namespace Strategos.Editor
             finally
             {
                 if (clip != null) Object.DestroyImmediate(clip);
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        private static int CheckProceduralUi(StringBuilder log)
+        {
+            var go = new GameObject("audio-probe-ui");
+            AudioClip click = null;
+            AudioClip select = null;
+            try
+            {
+                var svc = AudioService.Ensure(go);
+                svc.PlayUiClick();
+                svc.PlayUiSelect();
+                click = ProceduralSfx.Click();
+                select = ProceduralSfx.Select();
+                if (click.samples < 10 || select.samples < 10)
+                {
+                    log.AppendLine("  FAIL ProceduralSfx produced empty clip");
+                    return 1;
+                }
+
+                log.AppendLine(
+                    $"  procedural UI click/select  ok " +
+                    $"(click {click.samples} smp, select {select.samples} smp)");
+                return 0;
+            }
+            finally
+            {
+                if (click != null) Object.DestroyImmediate(click);
+                if (select != null) Object.DestroyImmediate(select);
                 Object.DestroyImmediate(go);
             }
         }

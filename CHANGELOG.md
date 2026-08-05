@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Procedural UI click/select SFX (#250): `ProceduralSfx` + `AudioService.PlayUiClick` /
+  `PlayUiSelect`; wired on `UiFactory` buttons/tabs and PLAY unit select.
 - SFX inventory (#249 / #44): `docs/sfx-inventory.md` — UI / combat / world cue checklist,
   `Resources/Audio/Sfx/` ids, procedural stub order (#250–#252).
 - Audio wiring + soundtrack beds (#40 / #253 / #254 / #262–#265): `AudioService` on AppShell
