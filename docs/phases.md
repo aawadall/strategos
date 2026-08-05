@@ -242,7 +242,7 @@ multiplayer (§7.3) still open.
 - [x] Player selects mode + scenario (#287 / #294–#295) — echelon picker still open
 - [x] Opposing side can run under `ISidePolicy` / `SideDirector` (reflex-level intent, not planning AI)
 - [x] Difficulty ladder Easy / Normal / Hard via `DifficultyParams` (#291 / #318–#320) — Recruit→Legendary rename still open
-- [x] Post-battle AAR (After-Action Review): map replay with analytics (#287 — `REPLAY SAVE` / Replayer; analytics still open)
+- [x] Post-battle AAR (After-Action Review): map replay with analytics (#287 — `REPLAY SAVE` / Replayer; analytics is #421)
 
 ### 7.2 Hotseat Multiplayer
 - [x] Side switch + per-side GCM fog (#287 / #297) — WEGO simultaneous orders still open

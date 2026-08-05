@@ -76,6 +76,8 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
   AI difficulty ladder from tunable `SideDirector` parameters, #293 Steam store page assets
 - **Historical scenarios** — #332 research **closed**; #333 convert **closed** (starter:
   Little Round Top; more engagements remain optional follow-ons from the shortlist)
+- **Teach tactics during gameplay** — #421 (AAR critique over #298's replay viewer, plus
+  historical-scenario commentary drawing on `Research/historical/`)
 - **Procedural scenarios** — #334 **closed** (#347–#352); distinct from §6.3 campaign sequencing
 
 ---
