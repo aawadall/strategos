@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Price ladder milestone epics (#471): one epic per `$0`→`$30` rung (#472–#478);
+  `docs/price-ladder.md`. Next open: `$15` Drill school (#475).
 - Pause **ALPHA LIMITS** + deeper player-facing known-gaps (#469): same
   `AlphaHelpOverlay` in-session; wrecks and suppression stall called out; Esc closes
   nested limits before resume.

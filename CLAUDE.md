@@ -187,6 +187,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/local-api-seam.md](docs/local-api-seam.md) | Touching `IGameStore`, `IContentSource`, `IPlayerIdentity` (#355 vs #66) |
 | [docs/tiered-releases.md](docs/tiered-releases.md) | Free / Base / Scenario Pass unlock design (#465) |
 | [docs/bar-medals.md](docs/bar-medals.md) | Post-battle ribbon bars — categories + procedural renderer (#467) |
+| [docs/price-ladder.md](docs/price-ladder.md) | $0–$30 milestone epics (#471–#478) |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
 | [docs/climb-campaign.md](docs/climb-campaign.md) | Multi-echelon climb campaign (#403) — seat ladder and scenario Id rules |
 | [docs/game-modes.md](docs/game-modes.md) | Touching PLAY mode-select, spectator, hotseat, replay (#287) |
