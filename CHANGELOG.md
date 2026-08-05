@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Audio licence / provenance notes (#260 / #41): `docs/audio-licence.md` — Suno Pro OK,
+  ElevenLabs commercial gate, staging audit for chatter/numberstation; cross-links from
+  inventory, assets, audio.md, CLAUDE.md.
 - Audio sourcing inventory (#259 / #41): `docs/audio-inventory.md` — music / SFX / VO /
   Morse by status and tool (Suno / ElevenLabs / procedural); cross-links from assets,
   sfx-inventory, audio.md, CLAUDE.md.
