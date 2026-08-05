@@ -12,6 +12,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Changed
+- Point Play links at the live itch page [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
+  (README, Pages header, itch-publish / itch-push defaults).
+
 ### Added
 - Field-manual glossary pack (#205 / #124): `GlossaryPack` / `GlossaryTerm`,
   `Resources/FieldManual/alpha-glossary.json` (6 terms), `GlossaryProbe`;

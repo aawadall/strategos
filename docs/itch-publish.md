@@ -3,8 +3,8 @@
 Desktop Windows channel already exists as a GitHub Release
 ([v0.3.0-alpha.1](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)).
 Pages download CTA is live on [aawadall.github.io/strategos](https://aawadall.github.io/strategos/).
-This page is the itch handoff: create the project, push the same zip (or folder), and
-point players at the itch URL.
+**Live itch page:** [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
+(`user/game` = `aawadall/strategos`).
 
 WebGL playable embed is **#220** — not required for a Windows itch channel.
 
@@ -29,8 +29,8 @@ App GUI: [pushing builds in the itch app](https://itch.io/updates/pushing-builds
 ## One-time project setup
 
 1. Log into itch.io → **Create new project**.
-2. Suggested URL / slug: `strategos` → `https://<you>.itch.io/strategos`
-   (store the `user/game` pair; script default is `STRATEGOS_ITCH_TARGET`).
+2. Project URL: [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
+   (`STRATEGOS_ITCH_TARGET=aawadall/strategos` for `itch-push.ps1`).
 3. Classification: **Game**. Kind: downloadable (Windows). Price: **Free** or tip jar.
 4. Short description: reuse README / site blurb; link GitHub Release notes and alpha limits
    (fog / artillery DF / no ZoC).
@@ -69,7 +69,7 @@ butler login
 # from repo root — zip path or unzipped Windows build dir
 .\scripts\itch-push.ps1 -Source path\to\Strategos-0.3.0-alpha.1-windows.zip
 # or
-$env:STRATEGOS_ITCH_TARGET = 'yourname/strategos'
+$env:STRATEGOS_ITCH_TARGET = 'aawadall/strategos'
 .\scripts\itch-push.ps1 -Source .\Artifacts\Windows -Channel windows-alpha
 ```
 
@@ -80,11 +80,11 @@ $env:STRATEGOS_ITCH_TARGET = 'yourname/strategos'
 
 ## Human checklist (#221)
 
-- [ ] Create itch project; note `user/game`.
-- [ ] Upload Windows Release zip (browser, app, or script).
+- [x] Create itch project; note `user/game` → `aawadall/strategos`.
+- [x] Upload Windows Release zip (browser, app, or script).
 - [ ] Smoke-download on a clean machine / second account: unzip → `Strategos.exe` boots.
-- [ ] Add itch URL to [README.md](../README.md) Play line (same PR or follow-up).
-- [ ] Optionally mirror the link on the Pages site header CTA.
+- [x] Add itch URL to [README.md](../README.md) Play line.
+- [x] Mirror the link on the Pages site header CTA.
 
 Closing #221 when this page + `itch-push.ps1` ship is the **ops handoff** (same shape as
 #216). The first live push is a human step with your itch credentials.
