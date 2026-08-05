@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- SFX epic wrap (#44 / #251 / #252): procedural order issued/rejected (`PlayView.IssuePlayer`)
+  and combat fire on `ReportKind.Engaged`; closes the sound-effects stub track.
 - Procedural UI click/select SFX (#250): `ProceduralSfx` + `AudioService.PlayUiClick` /
   `PlayUiSelect`; wired on `UiFactory` buttons/tabs and PLAY unit select.
 - SFX inventory (#249 / #44): `docs/sfx-inventory.md` — UI / combat / world cue checklist,

@@ -41,8 +41,6 @@ silence-safe missing clip, procedural one-shot, shipped beds load, volume →
 
 ## Not here yet
 
-Terrain ambients, combat SFX beyond the [#44 inventory](sfx-inventory.md), VO (#42),
-intensity crossfade, a real mixer with duck groups. Staging MP3s under
-`Research/audio/` are not auto-imported.
-
-SFX shopping list and priority: [sfx-inventory.md](sfx-inventory.md) (#249).
+Terrain ambients beyond one-shots, VO (#42), intensity crossfade, a real mixer with duck
+groups. Staging MP3s under `Research/audio/` are not auto-imported. SFX epic #44
+(procedural stubs) is shipped — see [sfx-inventory.md](sfx-inventory.md).
