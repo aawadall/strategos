@@ -12,6 +12,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Changed
+- 52-week roadmap (#483): every weekly release requires an **addon** (help, glossary,
+  doctrine, scenario note, or storefront artifact) — see `docs/value-roadmap-52w.md`.
+
 ### Added
 - 52-week value-add roadmap (#483): weekly player-visible value from 2026-08-10 through
   2027-08-02 aligned to `$15`–`$30` ladder — `docs/value-roadmap-52w.md`.
