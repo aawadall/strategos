@@ -79,6 +79,10 @@ Artifacts/
 # root (-logFile sheet.log, -logFile map-sheet.log).
 *.log
 
+# Steam — local App ID for Steamworks.NET (see steam_appid.txt.example / docs/steam.md).
+# Never commit a partner App ID.
+steam_appid.txt
+
 # Research — third-party reference PDFs stay gitignored; authored notes may ship.
 # Use Research/* (not Research/) so un-ignore rules can re-include children.
 Research/*

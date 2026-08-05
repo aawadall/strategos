@@ -17,10 +17,11 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [x] Basic main-menu / tab-shell scene with placeholder-then-real UI
 - [ ] In-game developer console (log, commands, unit spawning)
 - [ ] Unit test framework (Unity Test Framework) wired up *(package present; no EditMode assembly under `Assets/` yet — probes in Editor substitute)*
-- [ ] Steamworks partner account created; Steam App ID registered on Steamworks portal (#288)
-- [ ] `steam_appid.txt` added to Unity project root for development builds (#288)
-- [ ] Steamworks.NET (or Facepunch.Steamworks) Unity package integrated (#288)
-- [ ] Steam Overlay verified functional in development builds (#288)
+- [ ] Steamworks partner account created; Steam App ID registered on Steamworks portal (#288 / #300) — business gate; checklist in `docs/steam.md`
+- [x] `steam_appid.txt.example` + gitignored `steam_appid.txt`; `SteamClientHost` Init/Shutdown at boot (#302)
+- [x] Steamworks.NET chosen; `Strategos.Steam` asmdef + `ISteamClient` / `NullSteamClient` stub (#301) — native package not linked until App ID
+- [x] Overlay smoke control in Settings (no-ops without Steam); real Overlay verify still needs App ID (#303)
+- [x] Achievement + Cloud stubs on `ISteamClient`; `SteamProbe` CI-safe without App ID (#304 / #305)
 - [ ] SteamPipe depot/build scripts to push a build to Steam (#424 — separate from the
   in-game SDK work above; blocked only on the App ID)
 

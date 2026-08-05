@@ -19,7 +19,7 @@ selected unit T/P/U. See [CHANGELOG.md](CHANGELOG.md) for what landed recently.
 
 | Area | State |
 |---|---|
-| Phase 0 — Foundation | **Done** for a local buildable project. CI is scaffolded but Unity license secrets are unset (green CI ≠ coverage). No EditMode test assembly yet. Steamworks not started. |
+| Phase 0 — Foundation | **Done** for a local buildable project. CI is scaffolded but Unity license secrets are unset (green CI ≠ coverage). No EditMode test assembly yet. Steamworks stub seam shipped (#288: `Strategos.Steam` / NullSteamClient); real App ID + Steamworks.NET package still a partner gate. |
 | Phase 1 — Map | **Largely built.** Procedural generation + 2D sheet (schematic / topographic / hybrid / terrain / NatoTopo) + 3D drape preview. Still missing: terrain LOS, real fog of war, weather, day/night, satellite mode, basin-breaching for lake-heavy maps. |
 | Phase 2 — Symbols | **Complete** for land units (composer, baker, library, BUILDER). Gaps: symbol LOD, non-land sets, four land entity icons (`FRAME ONLY`), animated states. |
 | Phase 3 — Units / ORBAT | **Built.** Hierarchy, roll-up, fatigue, training, capabilities, sides, command-rank ladders (#38). Still missing: commander entities, OPCON/TACON attach-detach, national doctrine profiles. |

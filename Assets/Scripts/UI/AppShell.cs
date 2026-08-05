@@ -17,6 +17,7 @@ using Strategos.Demo;
 using Strategos.NatoSymbols;
 using Strategos.Persistence.Files;
 using Strategos.Preferences;
+using Strategos.Steam;
 using Strategos.UI.Views;
 using Strategos.Units;
 
@@ -49,6 +50,9 @@ namespace Strategos.UI
 
         private void Start()
         {
+            // #302: SteamAPI.Init seam — NullSteamClient no-ops without App ID / package.
+            SteamClientHost.Bootstrap();
+
             PreferenceStore ??= new JsonPreferenceStore();
             var prefs = PreferenceStore.Load();
             ApplyDisplayPreferences(prefs);
@@ -228,6 +232,11 @@ namespace Strategos.UI
                 _windowed = new Vector2Int(Screen.width, Screen.height);
             var display = Screen.currentResolution;
             Screen.SetResolution(display.width, display.height, FullScreenMode.FullScreenWindow);
+        }
+
+        private void OnApplicationQuit()
+        {
+            SteamClientHost.Shutdown();
         }
 
         private void Update()

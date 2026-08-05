@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using Strategos.Audio;
 using Strategos.Persistence.Files;
 using Strategos.Preferences;
+using Strategos.Steam;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -175,6 +176,9 @@ namespace Strategos.UI.Views
             if (label == "GAMEPLAY")
             {
                 _confirmOrders = AddToggle(parent, "CONFIRM ORDERS", _prefs.ConfirmOrders, PersistConfirm);
+                // #303: Overlay smoke — no-ops when Steam / App ID absent (NullSteamClient).
+                AddButton(parent, "STEAM OVERLAY", () =>
+                    SteamClientHost.Client.ActivateOverlay("Friends"));
                 Spacer(parent, 6);
                 return;
             }

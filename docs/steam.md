@@ -4,43 +4,75 @@ This document covers everything needed to ship Strategos on Steam as an indie ti
 
 ---
 
+## App ID gate (#300 / #288)
+
+**Nothing Steamworks talks to a real client without a registered Steam App ID.** That is a
+partner/business step, not a code step: register at [partner.steamgames.com](https://partner.steamgames.com)
+($100 one-time fee, recouped after $1,000 in sales), create a **Game** app, note the App ID.
+
+Until that exists, the repo ships a **stub seam** so CI and local builds stay green:
+
+| Piece | Where |
+|---|---|
+| Chosen package | **Steamworks.NET** (below) — not linked until App ID |
+| Asmdef + interface | `Assets/Scripts/Steam/` (`Strategos.Steam`, `ISteamClient`) |
+| Default impl | `NullSteamClient` — `Init` returns false; Overlay / Achievement / Cloud no-op |
+| Boot lifecycle | `SteamClientHost.Bootstrap` / `Shutdown` from `AppShell` (#302) |
+| Dev App ID file | `steam_appid.txt.example` → copy to gitignored `steam_appid.txt` |
+| Overlay smoke | Settings → GAMEPLAY → **STEAM OVERLAY** (#303) |
+| Probe | `Strategos > Probe Steam` / `SteamProbe.Run` (#305) |
+
+### Partner checklist (do before linking the native package)
+
+- [ ] Steamworks partner account created
+- [ ] App created (type **Game**); App ID noted
+- [ ] `steam_appid.txt` at project root with that App ID (from the example)
+- [ ] Steam client installed and logged in on the machine that will smoke-test Overlay
+- [ ] Steamworks.NET added via UPM (Git URL below) and a real `ISteamClient` wired behind `SteamClientHost.SetClient`
+- [ ] Overlay verified in a development player build (Settings → STEAM OVERLAY)
+- [ ] One test Achievement defined in the Steamworks portal; Cloud quota noted for save sync (#304)
+
+Cross-link: Phase 0 bullets in [phases.md](phases.md); epic #288.
+
+---
+
 ## Steam Account & App Setup
 
 1. Register a Steamworks partner account at [partner.steamgames.com](https://partner.steamgames.com) ($100 one-time fee, recouped after $1,000 in sales)
 2. Create a new App — select **Game**, not Software or DLC
-3. Note your **Steam App ID** — embed it in `steam_appid.txt` at the Unity project root for development builds
+3. Note your **Steam App ID** — copy `steam_appid.txt.example` to `steam_appid.txt` at the Unity project root and replace the placeholder
 4. Set up your Steamworks SDK configuration: supported platforms (Windows, macOS, Linux), depots, and build branches (`default`, `beta`, `dev`)
 
 ---
 
 ## Steamworks SDK Integration (Unity 6)
 
-Tracked as #288.
+Tracked as #288. Stub seam: #301–#305 (shipped as `Strategos.Steam`).
 
-### Recommended Library
+### Chosen library (#301)
 
-Use **Steamworks.NET** (open source, MIT licensed, well-maintained Unity wrapper):
+**Steamworks.NET** (open source, MIT licensed, well-maintained Unity wrapper):
 
 - Package: `https://github.com/rlabrecque/Steamworks.NET`
-- Add via Unity Package Manager as a Git URL dependency
+- Add via Unity Package Manager as a Git URL dependency when an App ID exists
+- Wrap `SteamAPI.Init` / `Shutdown` / Overlay / UserStats / RemoteStorage behind `ISteamClient`
 
-Alternative: **Facepunch.Steamworks** (more ergonomic C# API, also MIT):
-
-- Package: `https://github.com/Facepunch/Facepunch.Steamworks`
+Alternative (not chosen): **Facepunch.Steamworks** — more ergonomic C# API, also MIT
+(`https://github.com/Facepunch/Facepunch.Steamworks`). Prefer one package; do not dual-link.
 
 ### Required Steamworks Features by Phase
 
-| Feature | Steamworks API | Phase |
-|---|---|---|
-| Steam Overlay | `SteamFriends.ActivateGameOverlay` | Phase 0 |
-| Steam Remote Play Together | Automatic (enabled per-app in Steamworks portal) | Phase 7 |
-| Steam Lobbies | `SteamMatchmaking` | Phase 7 |
-| Steam Friends invite | `SteamFriends.InviteUserToGame` | Phase 7 |
-| Steam Workshop | `SteamUGC` | Phase 6 |
-| Steam Leaderboards | `SteamUserStats.FindLeaderboard` | Phase 9 |
-| Steam Achievements | `SteamUserStats.SetAchievement` | Phase 10 |
-| Steam Cloud | `SteamRemoteStorage` | Phase 10 |
-| Steam Rich Presence | `SteamFriends.SetRichPresence` | Phase 9 |
+| Feature | Steamworks API | Phase | Repo status |
+|---|---|---|---|
+| Steam Overlay | `SteamFriends.ActivateGameOverlay` | Phase 0 | Stub + Settings control (#303) |
+| Steam Remote Play Together | Automatic (enabled per-app in Steamworks portal) | Phase 7 | Portal only |
+| Steam Lobbies | `SteamMatchmaking` | Phase 7 | Not started |
+| Steam Friends invite | `SteamFriends.InviteUserToGame` | Phase 7 | Not started |
+| Steam Workshop | `SteamUGC` | Phase 6 | Not started |
+| Steam Leaderboards | `SteamUserStats.FindLeaderboard` | Phase 9 | Not started |
+| Steam Achievements | `SteamUserStats.SetAchievement` | Phase 10 | Stub method (#304) |
+| Steam Cloud | `SteamRemoteStorage` | Phase 10 | Stub write/read (#304) |
+| Steam Rich Presence | `SteamFriends.SetRichPresence` | Phase 9 | Not started |
 
 ---
 
@@ -203,6 +235,7 @@ Tracked as #293. Required before any public page or Early Access launch:
 | Event | Timing | Prerequisite |
 |---|---|---|
 | Steamworks account + App ID | Phase 0 | — |
+| Stub seam + probe (no App ID) | Phase 0 | #301–#305 |
 | Remote Play Together enabled | Phase 7 | App ID live |
 | Steam Workshop live | Phase 6 completion | App ID + UGC configured |
 | Early Access launch (v0.5) | Phases 0–7 complete | Store page approved |
@@ -212,4 +245,4 @@ Tracked as #293. Required before any public page or Early Access launch:
 
 ---
 
-*Last updated: 2026-07-29 | Co-Authored-By: Oz <oz-agent@warp.dev>*
+*Last updated: 2026-08-04*
