@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Strategos — a tactical command simulation, in pre-production</title>
-<meta name="description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
+<title>Strategos — playable alpha (v0.3.0-alpha.1)</title>
+<meta name="description" content="Strategos is a Unity 6 tactical command simulation on topographic maps and NATO APP-6D symbology. Download the free Windows alpha (v0.3.0-alpha.1) or browse what's built.">
 <link rel="canonical" href="https://aawadall.github.io/strategos/">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://aawadall.github.io/strategos/">
-<meta property="og:title" content="Strategos — a tactical command simulation, in pre-production">
-<meta property="og:description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
+<meta property="og:title" content="Strategos — playable alpha (v0.3.0-alpha.1)">
+<meta property="og:description" content="Unity 6 tactical command simulation. Free Windows alpha with campaigns, combat, and NATO symbology — download from GitHub Releases.">
 <meta property="og:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
-<meta property="og:image:alt" content="The PLAY view at scenario start: topographic map with blue and red NATO APP-6D unit symbols, a directive/campaign panel, and an armed command palette in the order-of-battle rail.">
+<meta property="og:image:alt" content="PLAY view, Meeting Engagement: topographic map with blue and red NATO APP-6D units around Objective Anvil, version v0.3.0-alpha.1 in the top bar.">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Strategos — a tactical command simulation, in pre-production">
-<meta name="twitter:description" content="Strategos is a Unity 6 tactical command simulation built on topographic maps, NATO APP-6D symbology and multi-echelon command. Pre-production; here is what stands today.">
+<meta name="twitter:title" content="Strategos — playable alpha (v0.3.0-alpha.1)">
+<meta name="twitter:description" content="Unity 6 tactical command simulation. Free Windows alpha with campaigns, combat, and NATO symbology — download from GitHub Releases.">
 <meta name="twitter:image" content="https://aawadall.github.io/strategos/images/play-meeting-engagement.png">
 
 <link rel="stylesheet" href="style.css">
@@ -34,17 +34,18 @@
       <a class="page" href="index.html" aria-current="page">What's built</a>
       <a class="page" href="roadmap.html">Roadmap</a>
       <a class="page" href="concepts.html">Concepts</a>
-      <a class="cta" href="https://github.com/aawadall/strategos">View source on GitHub</a>
+      <a class="page" href="https://github.com/aawadall/strategos">Source</a>
+      <a class="cta" href="https://github.com/aawadall/strategos/releases/download/v0.3.0-alpha.1/Strategos-0.3.0-alpha.1-windows.zip">Download Windows alpha</a>
     </nav>
   </div>
 </header>
 
 <div class="status-strip">
   <div class="wrap">
-    <strong>Status: pre-production — playable sandbox.</strong> Phases 0–3 built; Phase 4–5 core
-    path ships, including all remaining mission-type orders and a command palette with armed
-    verbs. Phase 6 campaign play now runs inside PLAY (start, continue, mid-campaign save).
-    Unity 6 (6000.0.75f1).
+    <strong>Status: pre-production — playable sandbox.</strong>
+    <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">v0.3.0-alpha.1</a>
+    Windows player is free to download. Phases 0–3 built; Phase 4–5 core path ships
+    (mission orders, armed palette); Phase 6 campaigns run from PLAY. Unity 6 (6000.0.75f1).
   </div>
 </div>
 
@@ -63,21 +64,34 @@
         finished, one is actively in progress, and most of the roadmap hasn't started. That's
         stated plainly below, section by section. See <a href="roadmap.html">what's planned</a>
         for what comes next, or <a href="concepts.html">concepts</a> for the design principles
-        the code actually follows.
+        the code actually follows. To try the sandbox yourself,
+        <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">download the Windows alpha</a>
+        (unzip and run <code>Strategos.exe</code>).
       </p>
+    </section>
+
+    <section id="screenshot-menu">
+      <figure>
+        <img src="images/menu-front-door.png"
+             alt="Main menu for Strategos v0.3.0-alpha.1: two-column campaign and tools layout, OPTIONS / AUDIO / EXIT in the footer, version label in the top bar.">
+        <figcaption>
+          <span class="cap-label">MENU — front door, v0.3.0-alpha.1.</span>
+          Campaigns (Valley / Highland / Climb), skirmish and historical scenarios, Tools, and
+          a sticky footer with Options, Audio, and Exit. Captured from the tagged Windows build.
+        </figcaption>
+      </figure>
     </section>
 
     <section id="screenshot-play">
       <figure>
         <img src="images/play-meeting-engagement.png"
-             alt="The PLAY view at scenario start: a topographic map with blue and red NATO APP-6D unit symbols around Objective Anvil, a directive-and-campaign panel, and an armed command palette (SELECT / MOVE / ENGAGE, WAYPOINTS) in the order-of-battle rail on the right.">
+             alt="The PLAY view at scenario start: a topographic map with blue and red NATO APP-6D unit symbols around Objective Anvil, directive and campaign rail on the right, version v0.3.0-alpha.1 in the top bar.">
         <figcaption>
-          <span class="cap-label">PLAY, "Meeting Engagement," T+0012.</span>
+          <span class="cap-label">PLAY, "Meeting Engagement," T+0009.</span>
           Two sides on generated terrain around <em>Objective Anvil</em>. The right-hand rail
-          carries the side's directive from higher (with ACKNOWLEDGE), campaign controls
-          (start / skirmish-only / save / load), and the armed command palette that issues
-          MOVE or ENGAGE on a confirming click. Three contact reports already logged at T+0012.
-          Captured from a local build against this repository's current branch.
+          carries the directive from higher, campaign start controls, AI difficulty, and the
+          armed command palette (MOVE / ENGAGE / WAYPOINTS). Captured from
+          <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">v0.3.0-alpha.1</a>.
         </figcaption>
       </figure>
     </section>
@@ -133,11 +147,14 @@
         <a href="https://github.com/aawadall/strategos/blob/master/CHANGELOG.md">CHANGELOG.md</a>.
       </p>
       <ul class="plain">
-        <li><strong>Latest</strong> — the remaining mission-type orders shipped complete (Screen,
-          Guard, Cover, Withdraw, Delay, Attack, Recon, Exploit, Pursue); campaign play now starts,
-          continues and mid-campaign-saves from inside PLAY, not only in scenario data; waypoints
-          let a march be plotted as a series of points; the command palette arms MOVE/ENGAGE from
-          a table, with left-click issuing the armed verb and keyboard shortcuts to arm it.</li>
+        <li><strong>2026-08-05 — v0.3.0-alpha.1</strong> — first
+          <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">tagged GitHub Release</a>
+          with a Windows player zip; version stamped into the build and shown in the top bar;
+          front-door menu (splash, fit-height two-column layout, EXIT). Climb campaign seat ladder
+          and Steamworks stub seam also landed.</li>
+        <li><strong>Earlier</strong> — mission-type orders complete (Screen through Pursue);
+          campaign play starts / continues / mid-campaign-saves from PLAY; waypoints; armed
+          MOVE/ENGAGE palette; audio beds and procedural SFX; display prefs; tutorial first beat.</li>
         <li><strong>2026-08-03</strong> — Command-rank shoulder insignia; drill dropdown T/P/U;
           Pages OG meta and GitHub CTA; cancel/pause command fixes.</li>
         <li><strong>2026-08-02</strong> — Save/load a run; campaign chain carry-over (data);
@@ -156,7 +173,8 @@
           Every unit type against every echelon, generated by the same composer that draws
           symbols on the map: frame, fill, icon, echelon mark and modifiers, each a decorator
           layer over a data-only symbol description, baked to a sprite only at the end. See
-          <a href="concepts.html">concepts</a> for why it's built that way.
+          <a href="concepts.html">concepts</a> for why it's built that way. Captured from
+          <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">v0.3.0-alpha.1</a>.
         </figcaption>
       </figure>
     </section>
@@ -185,8 +203,10 @@
   <div class="wrap">
     <p>
       <a href="https://github.com/aawadall/strategos">github.com/aawadall/strategos</a> —
-      Unity 6 (6000.0.75f1) / URP. Source is public and readable today; there is no build or
-      playable demo distributed from this page yet.
+      Unity 6 (6000.0.75f1) / URP.
+      <a href="https://github.com/aawadall/strategos/releases/download/v0.3.0-alpha.1/Strategos-0.3.0-alpha.1-windows.zip">Download the Windows alpha</a>
+      or read the
+      <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1">v0.3.0-alpha.1 release notes</a>.
     </p>
     <p class="license">
       Licensed under the Strategos License (MIT terms with a non-military-use restriction) —
