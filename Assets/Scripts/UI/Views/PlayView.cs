@@ -590,7 +590,7 @@ namespace Strategos.UI.Views
             {
                 title = "HELP";
                 body = "Context help for this control is not authored yet. " +
-                       "Arm MOVE (M) or ENGAGE (E) and open HELP again. " +
+                       "Arm MOVE (M), ENGAGE (E), or WAYPOINTS (W) and open HELP again. " +
                        "Glossary / field manual remains #124.";
             }
             _contextHelp.Open(title, body);
