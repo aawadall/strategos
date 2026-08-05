@@ -1,5 +1,5 @@
 // GlossaryProbe.cs
-// #205: alpha glossary pack loads ≥5 terms with Id/Title/Body; optional DrillRefs.
+// #205 / #206: glossary pack load + FieldManualBrowserPanel Build/Open/Close.
 // Batch: -executeMethod Strategos.Editor.GlossaryProbe.Run
 
 #if UNITY_EDITOR
@@ -8,6 +8,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Strategos.FieldManual;
+using Strategos.UI;
 
 namespace Strategos.Editor
 {
@@ -83,6 +84,34 @@ namespace Strategos.Editor
                 }
                 else log.AppendLine("  DrillRefs present on ≥1 term ok");
             }
+
+            var hostGo = new GameObject("probe-field-manual", typeof(RectTransform));
+            var host = hostGo.GetComponent<RectTransform>();
+            var browser = hostGo.AddComponent<FieldManualBrowserPanel>();
+            try
+            {
+                browser.Build(host);
+                browser.Open();
+                if (!browser.IsOpen)
+                {
+                    log.AppendLine("  FAIL FieldManualBrowserPanel.Open (#206)");
+                    bad++;
+                }
+                else log.AppendLine("  FieldManualBrowserPanel Open ok");
+                browser.Close();
+                if (browser.IsOpen)
+                {
+                    log.AppendLine("  FAIL FieldManualBrowserPanel.Close (#206)");
+                    bad++;
+                }
+                else log.AppendLine("  FieldManualBrowserPanel Close ok");
+            }
+            catch (Exception ex)
+            {
+                log.AppendLine("  FAIL FieldManualBrowserPanel: " + ex.Message);
+                bad++;
+            }
+            finally { UnityEngine.Object.DestroyImmediate(hostGo); }
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : ("PROBE FAILED with " + bad + " problem(s)"));
             if (bad == 0) Debug.Log("[GlossaryProbe]\n" + log);

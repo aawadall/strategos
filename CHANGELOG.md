@@ -21,6 +21,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   (README, Pages header, itch-publish / itch-push defaults).
 
 ### Added
+- Field-manual in-app browser (#206 / #124): pause → FIELD MANUAL list/detail over
+  `alpha-glossary`; Esc closes manual before pause; `GlossaryProbe` covers the panel.
 - Field-manual glossary pack (#205 / #124): `GlossaryPack` / `GlossaryTerm`,
   `Resources/FieldManual/alpha-glossary.json` (6 terms), `GlossaryProbe`;
   [docs/field-manual.md](docs/field-manual.md).

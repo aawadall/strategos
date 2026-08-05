@@ -248,12 +248,18 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Esc layering (#371 / #129 / #308): drills → context help → pause resume →
-        /// armed verb clear → open pause.
+        /// Esc layering (#371 / #129 / #308 / #206): field manual → drills → context help →
+        /// pause resume → armed verb clear → open pause.
         /// </summary>
         private bool HandlePauseKeys()
         {
             if (!Input.GetKeyDown(KeyCode.Escape)) return false;
+
+            if (_pause != null && _pause.ManualOpen)
+            {
+                _pause.CloseManualOnly();
+                return true;
+            }
 
             if (_pause != null && _pause.DrillsOpen)
             {

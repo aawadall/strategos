@@ -1,6 +1,5 @@
 // PauseOverlay.cs
-// #371: in-session pause panel — Save / Load / Drills quick-ref / Resume / Exit to menu.
-// Owned by PlayView; Esc opens when the palette is idle.
+// #371 / #206: in-session pause — Save / Load / Drills / Field manual / Resume / Exit.
 
 using System;
 using TMPro;
@@ -16,6 +15,7 @@ namespace Strategos.UI
     {
         private GameObject _panel;
         private DrillQuickRefPanel _drills;
+        private FieldManualBrowserPanel _manual;
         private Action _onResume;
         private Action _onSave;
         private Action _onLoad;
@@ -23,6 +23,7 @@ namespace Strategos.UI
 
         public bool IsOpen => _panel != null && _panel.activeSelf;
         public bool DrillsOpen => _drills != null && _drills.IsOpen;
+        public bool ManualOpen => _manual != null && _manual.IsOpen;
 
         public void Build(RectTransform host, Action onResume, Action onSave, Action onLoad,
             Action onExitMenu)
@@ -43,7 +44,7 @@ namespace Strategos.UI
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(420, 420);
+            card.sizeDelta = new Vector2(420, 480);
             card.gameObject.AddComponent<Image>().color = Theme.CardBg;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -70,10 +71,13 @@ namespace Strategos.UI
             AddButton(card, "SAVE", () => _onSave?.Invoke());
             AddButton(card, "LOAD", () => _onLoad?.Invoke());
             AddButton(card, "DRILLS  (quick ref)", OpenDrills);
+            AddButton(card, "FIELD MANUAL", OpenManual);
             AddButton(card, "EXIT TO MENU", () => _onExitMenu?.Invoke());
 
             _drills = root.gameObject.AddComponent<DrillQuickRefPanel>();
             _drills.Build(root);
+            _manual = root.gameObject.AddComponent<FieldManualBrowserPanel>();
+            _manual.Build(root);
 
             _panel = root.gameObject;
             _panel.SetActive(false);
@@ -83,6 +87,7 @@ namespace Strategos.UI
         {
             if (_panel == null) return;
             _drills?.Close();
+            _manual?.Close();
             _panel.SetActive(true);
             _panel.transform.SetAsLastSibling();
         }
@@ -90,11 +95,24 @@ namespace Strategos.UI
         public void Close()
         {
             _drills?.Close();
+            _manual?.Close();
             if (_panel != null) _panel.SetActive(false);
         }
 
         public void CloseDrillsOnly() => _drills?.Close();
 
-        private void OpenDrills() => _drills?.Open();
+        public void CloseManualOnly() => _manual?.Close();
+
+        private void OpenDrills()
+        {
+            _manual?.Close();
+            _drills?.Open();
+        }
+
+        private void OpenManual()
+        {
+            _drills?.Close();
+            _manual?.Open();
+        }
     }
 }
