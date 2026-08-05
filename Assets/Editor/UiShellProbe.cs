@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Strategos.UI;
 using Strategos.UI.Views;
+using Object = UnityEngine.Object;
 
 namespace Strategos.Editor
 {
@@ -81,6 +82,36 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  MainMenuView AUDIO ok");
+
+                // Free alpha: HELP opens how-to + alpha limits overlay.
+                var helpBtn = FindTransform(menuGo.transform, "BTN_HELP")
+                    ?.GetComponent<Button>();
+                if (helpBtn == null || !helpBtn.interactable)
+                {
+                    log.AppendLine("  FAIL MainMenuView HELP missing or disabled");
+                    bad++;
+                }
+                else log.AppendLine("  MainMenuView HELP interactable ok");
+
+                menu.OpenHelp();
+                var helpOverlay = menuGo.GetComponentInChildren<AlphaHelpOverlay>(true);
+                if (helpOverlay == null || !helpOverlay.IsOpen)
+                {
+                    log.AppendLine("  FAIL AlphaHelpOverlay did not open");
+                    bad++;
+                }
+                else if (AlphaHelpOverlay.HowToBody.IndexOf("zone of control",
+                             System.StringComparison.OrdinalIgnoreCase) < 0 ||
+                         AlphaHelpOverlay.HowToBody.IndexOf("Artillery",
+                             System.StringComparison.OrdinalIgnoreCase) < 0 ||
+                         AlphaHelpOverlay.HowToBody.IndexOf("MOVE",
+                             System.StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    log.AppendLine("  FAIL AlphaHelpOverlay body missing how-to / limits");
+                    bad++;
+                }
+                else log.AppendLine("  AlphaHelpOverlay how-to + alpha limits ok");
+                helpOverlay?.Close();
             }
             catch (System.Exception ex)
             {

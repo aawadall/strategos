@@ -1,12 +1,13 @@
 // MainMenuView.cs
 // #371: front door outside the tab shell — Play, campaign/scenario starts, Load/Save,
-// Options (#306 settings shell), Help stub (#124), Server disabled (online / App ID),
+// Options (#306 settings shell), Help (how-to + alpha limits), Server disabled (online),
 // Tools tabs.
 //
 // #427: fit the full menu to the host height — no ScrollRect. Compact rows + two-column
 // blocks, then scale button heights so EXIT stays on-screen.
 // #428: EXIT quits the player (Editor stops Play mode).
 // #429: AUDIO opens Settings (MASTER / MUSIC / SFX already live there).
+// Free alpha: HELP opens AlphaHelpOverlay (how-to-play + fog / artillery DF / no ZoC).
 //
 // Aged-paper aesthetic (UiTheme + PaperTexture Clean for the button stack). Not a dark
 // glass game-menu skin.
@@ -37,16 +38,20 @@ namespace Strategos.UI.Views
 
         private Texture2D _paperTex;
         private RectTransform _column;
+        private RectTransform _host;
         private Button _saveBtn;
         private Button _loadBtn;
         private Button _continueBtn;
         private Button _exitBtn;
         private Button _audioBtn;
+        private Button _helpBtn;
+        private AlphaHelpOverlay _help;
         private readonly List<LayoutElement> _scalableButtons = new List<LayoutElement>();
 
         public void Build(RectTransform host)
         {
             _scalableButtons.Clear();
+            _host = host;
 
             var root = CreateRect("Root", host);
             Stretch(root);
@@ -83,7 +88,7 @@ namespace Strategos.UI.Views
             brand.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
 
             var sub = CreateTmp("Sub", _column,
-                "Tactical command · enter a session or open tools",
+                "Playable alpha · HELP for how-to and known limits",
                 13, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
@@ -121,8 +126,7 @@ namespace Strategos.UI.Views
 
             Section(_column, "ALSO");
             var also = TwoCol(_column);
-            var help = MenuButton(also.left, "HELP  ·  see #124", () => { });
-            help.interactable = false;
+            _helpBtn = MenuButton(also.left, "HELP", OpenHelp);
             var server = MenuButton(also.right, "SERVER  ·  needs online", () => { });
             server.interactable = false;
 
@@ -142,6 +146,9 @@ namespace Strategos.UI.Views
             _audioBtn = MenuButton(footer, "AUDIO", () => Shell?.OpenSettings());
             _exitBtn = MenuButton(footer, "EXIT", QuitApplication);
 
+            _help = host.gameObject.AddComponent<AlphaHelpOverlay>();
+            _help.Build(host);
+
             Canvas.ForceUpdateCanvases();
             FitToHostHeight();
             RefreshSessionButtons();
@@ -153,7 +160,20 @@ namespace Strategos.UI.Views
             RefreshSessionButtons();
         }
 
-        public void OnHidden() { }
+        public void OnHidden()
+        {
+            _help?.Close();
+        }
+
+        public void OpenHelp()
+        {
+            if (_help == null && _host != null)
+            {
+                _help = _host.gameObject.AddComponent<AlphaHelpOverlay>();
+                _help.Build(_host);
+            }
+            _help?.Open();
+        }
 
         /// <summary>
         /// Scale menu button heights so the column fits the paper rect — no scroll.

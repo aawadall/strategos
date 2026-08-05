@@ -11,6 +11,19 @@ chasing anything that looks like a bug in generation, detection, combat balance 
 
 Recorded so they are not re-investigated. None are fixed.
 
+### Player-facing (free alpha)
+
+Shown in-menu under **HELP** (`AlphaHelpOverlay`) so strangers downloading the build are
+not surprised. Longer engineering notes follow.
+
+- **Little fog of war on the shipped small maps.** Detection ranges are large enough that
+  Meeting Engagement contacts OPFOR almost immediately — see the detection bullet below.
+- **Artillery is the best *direct-fire* weapon in the model, which is wrong.** Indirect fire
+  is not built; until it is, treat artillery engage orders as provisional.
+- **No zone of control, facing, or unit collision.** Units pass through each other.
+
+### Engineering
+
 - **Artillery is the best direct-fire weapon in the model, which is wrong.** The matrix has
   it killing infantry in the open in 2.0 minutes against armour's 2.7. Its `Firepower` of 30
   represents an indirect-fire battery, and #12 resolves direct fire only — so the number is

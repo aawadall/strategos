@@ -23,7 +23,10 @@ main menu; a **MENU** tab returns from Tools/PLAY.
 **#426 front door.** `MainMenuView` fits the host height with compact two-column blocks and
 scaled button rows — **no ScrollRect**. **OPTIONS / AUDIO / EXIT** stay in a `Footer` at
 the bottom (#427 / #428 / #429). EXIT calls `MainMenuView.QuitApplication`
-(`Application.Quit` / Editor stop Play).
+(`Application.Quit` / Editor stop Play). **HELP** opens `AlphaHelpOverlay` — how-to-play
+(select → MOVE / ENGAGE → pause) plus the free-alpha limits (thin fog on small maps,
+artillery as direct fire, no ZoC / facing / collision). Distinct from PLAY
+`ContextHelpOverlay` (#308) and the field manual (#124).
 
 **Version chrome (#218).** The AppShell top bar shows `AppShell.VersionLabel`
 (`v` + `Application.version`) after the brand so a screenshot names the build.
