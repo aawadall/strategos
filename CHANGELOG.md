@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Field-manual glossary pack (#205 / #124): `GlossaryPack` / `GlossaryTerm`,
+  `Resources/FieldManual/alpha-glossary.json` (6 terms), `GlossaryProbe`;
+  [docs/field-manual.md](docs/field-manual.md).
 - itch.io publish handoff (#221 / #83): `docs/itch-publish.md` + `scripts/itch-push.ps1`
   (browser / app / butler); Pages CTA already live — first upload remains human.
 - Unity CI licence ops checklist (#216 / #83): `docs/ci-unity-licence.md` — secret names,

@@ -1,5 +1,5 @@
 // IContentSource.cs
-// #355 / #365: load-by-name seam for Scenario / CampaignChain / DoctrinePack.
+// #355 / #365: load-by-name seam for Scenario / CampaignChain / DoctrinePack / GlossaryPack.
 //
 // Static ScenarioIO / CampaignChainIO / TtpIO remain the JSON helpers; Resources-backed
 // adapters implement this interface so a Workshop / remote source can replace them later
