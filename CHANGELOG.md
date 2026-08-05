@@ -1,9 +1,9 @@
 # Changelog
 
 All notable changes to Strategos are recorded here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project is still
-pre-versioned (pre-production / playable sandbox). Issue numbers refer to
-[github.com/aawadall/strategos](https://github.com/aawadall/strategos).
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow the
+ROADMAP alpha ladder (`0.1` map+symbols → `0.3` movement+combat). Issue numbers
+refer to [github.com/aawadall/strategos](https://github.com/aawadall/strategos).
 
 For the living task list see [ROADMAP.md](ROADMAP.md) and [docs/phases.md](docs/phases.md).
 Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/known-gaps.md).
@@ -11,6 +11,13 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ---
 
 ## [Unreleased]
+
+---
+
+## [0.3.0-alpha.1] - 2026-08-05
+
+First tagged GitHub Release (#219 / #83). Windows desktop player attached;
+`Application.version` is stamped at build (#217) and shown in the top bar (#218).
 
 ### Added
 - SFX epic wrap (#44 / #251 / #252): procedural order issued/rejected (`PlayView.IssuePlayer`)
@@ -158,6 +165,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 - GitHub Pages landing: Open Graph / Twitter Card meta and a header "View source" CTA
   (#120 — site GIF still open).
 - Roadmap and phase checkboxes reconciled against the playable sandbox (2026-08-03 pass).
+- Front-door menu fit (#426–#435): splash boot, two-column compact menu, Footer EXIT /
+  OPTIONS / AUDIO, no ScrollRect; `UiShellProbe` height + footer asserts.
+- Release engineering slice (#217 / #218 / #219): `build.ps1 -Version` →
+  `-bundleVersion` stamp; top-bar `Version` label; first GitHub Release artefact.
 
 ### Fixed
 - Plan-card CANCEL FROM addresses `QueuedCommand.Ordinal` rather than the live list index
@@ -203,4 +214,4 @@ abort, in-progress order drawing (#4–#15, #39, #48, #52).
 
 ---
 
-*Started 2026-08-03. Earlier history lives in the git log and closed issues.*
+*First tagged release 2026-08-05 (`v0.3.0-alpha.1`). Earlier history lives in the git log and closed issues.*

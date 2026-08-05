@@ -128,6 +128,15 @@ namespace Strategos.Editor
             }
             else log.AppendLine("  ShouldShowSplash skipped in batch/probe ok");
 
+            // #218: version label is Application.version with a leading v.
+            string ver = AppShell.VersionLabel;
+            if (string.IsNullOrEmpty(ver) || ver[0] != 'v' || ver.Length < 2)
+            {
+                log.AppendLine("  FAIL AppShell.VersionLabel='" + ver + "'");
+                bad++;
+            }
+            else log.AppendLine("  AppShell.VersionLabel=" + ver + " ok");
+
             var settingsGo = new GameObject("probe-settings", typeof(RectTransform));
             var settings = settingsGo.AddComponent<SettingsView>();
             if (settings.Key != "settings" || settings.Title != "OPTIONS")
