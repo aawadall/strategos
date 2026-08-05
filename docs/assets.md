@@ -205,23 +205,25 @@ Sonniss releases a free professional SFX bundle every year at GDC:
 Encode all SFX to **OGG Vorbis** (q=4 for ambient, q=6 for combat SFX).
 
 ### Asset Location
+
+One-shots that must load by name ship under Resources (same rule as music beds):
+
 ```
-Assets/Audio/SFX/
-├── Weapons/
-│   ├── SmallArms/
-│   ├── Artillery/
-│   └── Aviation/
-├── Vehicles/
-│   ├── Wheeled/
-│   ├── Tracked/
-│   └── Naval/
-├── Explosions/
-├── Radio/
-├── Ambience/
-│   ├── Terrain/     # Wind, rain, forest, urban
-│   └── Combat/      # Distant battle, artillery rumble
-└── UI/
+Assets/Resources/Audio/Sfx/
+├── ui-click.ogg
+├── ui-select.ogg
+├── order-issued.ogg
+├── order-rejected.ogg
+├── combat-fire.ogg
+├── combat-hit.ogg
+└── unit-destroyed.ogg
 ```
+
+Full cue checklist and priority: [sfx-inventory.md](sfx-inventory.md) (#249 / #44).
+Procedural stubs (#250–#252) may skip files and synthesise in memory first.
+
+Broader category folders (weapons / vehicles / ambience) stay a sourcing guide only
+until a scenario event needs them — do not pre-create empty trees under Resources.
 
 ---
 

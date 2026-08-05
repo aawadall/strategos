@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- SFX inventory (#249 / #44): `docs/sfx-inventory.md` — UI / combat / world cue checklist,
+  `Resources/Audio/Sfx/` ids, procedural stub order (#250–#252).
 - Audio wiring + soundtrack beds (#40 / #253 / #254 / #262–#265): `AudioService` on AppShell
   (menu loop / PLAY ambient from `Resources/Audio/`), MASTER/MUSIC/SFX prefs in Settings,
   silence-safe `AudioProbe`. Master bus stub is `AudioListener.volume`.
