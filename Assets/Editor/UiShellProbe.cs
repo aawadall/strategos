@@ -6,6 +6,7 @@
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Strategos.UI;
 using Strategos.UI.Views;
 
@@ -32,30 +33,47 @@ namespace Strategos.Editor
             {
                 menu.Build(menuGo.GetComponent<RectTransform>());
                 // #427 / #428 / #429: scroll + EXIT + AUDIO on the front door.
-                if (!FindNamed(menuGo.transform, "Scroll"))
+                // No ScrollRect — menu must fit the host height (#427).
+                if (FindNamed(menuGo.transform, "Scroll"))
                 {
-                    log.AppendLine("  FAIL MainMenuView missing Scroll (#427)");
+                    log.AppendLine("  FAIL MainMenuView still has Scroll (should fit height)");
                     bad++;
                 }
-                else log.AppendLine("  MainMenuView Scroll ok");
+                else log.AppendLine("  MainMenuView no Scroll ok");
 
                 if (!FindNamed(menuGo.transform, "Footer") ||
                     !FindNamed(menuGo.transform, "BTN_EXIT"))
                 {
-                    log.AppendLine("  FAIL MainMenuView missing Footer EXIT (#427/#428)");
+                    log.AppendLine("  FAIL MainMenuView missing Footer EXIT");
                     bad++;
                 }
                 else log.AppendLine("  MainMenuView Footer EXIT ok");
 
-                // EXIT must live under Footer, not only deep in the scroll column.
                 var exit = FindTransform(menuGo.transform, "BTN_EXIT");
                 var footer = FindTransform(menuGo.transform, "Footer");
                 if (exit == null || footer == null || !IsUnder(exit, footer))
                 {
-                    log.AppendLine("  FAIL EXIT not under Footer (still buried in scroll?)");
+                    log.AppendLine("  FAIL EXIT not under Footer");
                     bad++;
                 }
-                else log.AppendLine("  EXIT pinned under Footer ok");
+                else log.AppendLine("  EXIT under Footer ok");
+
+                // Give the column a known height and ensure fit keeps preferred content
+                // within that height (no overflow at min button size).
+                var col = FindTransform(menuGo.transform, "Column") as RectTransform;
+                if (col != null)
+                {
+                    col.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 720f);
+                    menu.FitToHostHeight();
+                    float preferred = LayoutUtility.GetPreferredHeight(col);
+                    if (preferred > 720f + 2f)
+                    {
+                        log.AppendLine(
+                            $"  FAIL menu preferred height {preferred:0} exceeds 720 fit");
+                        bad++;
+                    }
+                    else log.AppendLine($"  FitToHostHeight ≤720 ok (preferred={preferred:0})");
+                }
 
                 if (!FindNamed(menuGo.transform, "BTN_AUDIO"))
                 {

@@ -20,10 +20,10 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
-**#426 front door.** `MainMenuView` scrolls campaign/tools in a `ScrollRect` (viewport has a
-raycast Graphic so wheel/drag work). **OPTIONS / AUDIO / EXIT** sit in a sticky `Footer`
-outside the scroll so EXIT stays on-screen without scrolling (#427 / #428 / #429). EXIT
-calls `MainMenuView.QuitApplication` (`Application.Quit` / Editor stop Play).
+**#426 front door.** `MainMenuView` fits the host height with compact two-column blocks and
+scaled button rows — **no ScrollRect**. **OPTIONS / AUDIO / EXIT** stay in a `Footer` at
+the bottom (#427 / #428 / #429). EXIT calls `MainMenuView.QuitApplication`
+(`Application.Quit` / Editor stop Play).
 
 **Splash (#430).** Normal boots open `SplashView` (`-view splash`) — paper brand hold,
 click / any key / ~2.25s → menu. Skipped when `-view` is set or under batchmode /
