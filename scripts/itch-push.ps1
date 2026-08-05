@@ -5,7 +5,7 @@
 .DESCRIPTION
     Thin wrapper around `butler push`. Does not create the itch project for you —
     see docs/itch-publish.md. Resolves butler from PATH or the itch desktop app broth
-    cache. Target defaults to STRATEGOS_ITCH_TARGET (e.g. yourname/strategos).
+    cache. Target defaults to STRATEGOS_ITCH_TARGET (e.g. aawadall/strategos).
 
 .PARAMETER Source
     Folder containing Strategos.exe, or a .zip of that build / Release asset.
@@ -20,7 +20,7 @@
     Pass --dry-run to butler (list files; no upload).
 
 .EXAMPLE
-    $env:STRATEGOS_ITCH_TARGET = 'yourname/strategos'
+    $env:STRATEGOS_ITCH_TARGET = 'aawadall/strategos'
     .\scripts\itch-push.ps1 -Source .\Artifacts\Windows
     .\scripts\itch-push.ps1 -Source .\Strategos-0.3.0-alpha.1-windows.zip -Channel windows
 #>
@@ -33,7 +33,7 @@ param(
 
     [string]$Channel = 'windows-alpha',
 
-    [string]$Target = $env:STRATEGOS_ITCH_TARGET,
+    [string]$Target = $(if ($env:STRATEGOS_ITCH_TARGET) { $env:STRATEGOS_ITCH_TARGET } else { 'aawadall/strategos' }),
 
     [switch]$DryRun
 )
@@ -54,14 +54,6 @@ function Resolve-Butler {
     }
 
     return $null
-}
-
-if ([string]::IsNullOrWhiteSpace($Target)) {
-    Write-Error @"
-STRATEGOS_ITCH_TARGET is unset and -Target was not passed.
-Set it to your itch user/game (e.g. `$env:STRATEGOS_ITCH_TARGET = 'yourname/strategos').
-See docs/itch-publish.md.
-"@
 }
 
 if (-not (Test-Path -LiteralPath $Source)) {
