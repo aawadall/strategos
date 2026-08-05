@@ -13,6 +13,11 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Tutorial second beat (#441 / #289): after MOVE, checklist advances to ENGAGE; `PlayView`
+  calls `OnEngageIssued` from the live Engage path; `TutorialFirstBeatProbe` covers the
+  three-step advance.
+- Context help for ENGAGE (#442 / #289): `ContextHelp.Engage*` + probe; PLAY HELP fallback
+  copy mentions MOVE or ENGAGE.
 - Audio licence / provenance notes (#260 / #41): `docs/audio-licence.md` — Suno Pro OK,
   ElevenLabs commercial gate, staging audit for chatter/numberstation; cross-links from
   inventory, assets, audio.md, CLAUDE.md.

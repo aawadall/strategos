@@ -1,5 +1,5 @@
 // ContextHelpProbe.cs
-// #308: MOVE has authored context help; overlay Build/Open/Close.
+// #308 / #442: MOVE and ENGAGE have authored context help; overlay Build/Open/Close.
 // Batch: -executeMethod Strategos.Editor.ContextHelpProbe.Run
 
 #if UNITY_EDITOR
@@ -29,12 +29,15 @@ namespace Strategos.Editor
             }
             else log.AppendLine("  ContextHelp.MoveTo ok");
 
-            if (ContextHelp.TryGet(PaletteVerb.Engage, out _, out _))
+            if (!ContextHelp.TryGet(PaletteVerb.Engage, out var eTitle, out var eBody) ||
+                eTitle != ContextHelp.EngageTitle ||
+                string.IsNullOrEmpty(eBody) ||
+                eBody.IndexOf("contact", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                log.AppendLine("  FAIL Engage should not have authored help yet (#308 is MOVE only)");
+                log.AppendLine("  FAIL ContextHelp.Engage missing or incomplete (#442)");
                 bad++;
             }
-            else log.AppendLine("  Engage has no help yet ok");
+            else log.AppendLine("  ContextHelp.Engage ok");
 
             var hostGo = new GameObject("probe-ctx-help", typeof(RectTransform));
             var host = hostGo.GetComponent<RectTransform>();
