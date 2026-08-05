@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- itch marketing checklist (#480): cover / screenshots / copy / tags / first devlog —
+  `docs/itch-publish.md` (storefront polish; distinct from butler #221 and Steam #293).
 - Price ladder milestone epics (#471): one epic per `$0`→`$30` rung (#472–#478);
   `docs/price-ladder.md`. Next open: `$15` Drill school (#475).
 - Pause **ALPHA LIMITS** + deeper player-facing known-gaps (#469): same
