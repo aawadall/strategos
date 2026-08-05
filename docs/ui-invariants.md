@@ -61,9 +61,10 @@ help; then the pause overlay resumes; then an armed palette verb clears
 (`CommandPalette.ClearShortcut`); else Esc opens pause and stops the clock. Space remains
 the clock toggle and must not open pause.
 
-**Context help (#308 / #442).** PLAY rail **HELP** opens `ContextHelpOverlay` for the armed
-verb. **MOVE** and **ENGAGE** have authored copy; other verbs get a stub pointing at those
-and #124. Distinct from the field manual (#124) and the main-menu `AlphaHelpOverlay`.
+**Context help (#308 / #442 / #445).** PLAY rail **HELP** opens `ContextHelpOverlay` for the
+armed verb. **MOVE**, **ENGAGE**, and **WAYPOINTS** have authored copy; other verbs get a
+stub pointing at those and #124. Distinct from the field manual (#124) and the main-menu
+`AlphaHelpOverlay`.
 
 **Tutorial beats (#310 / #441).** Loading `tutorial-squad` shows a non-blocking banner:
 select a player-commanded unit → issue MoveTo → issue Engage through the normal

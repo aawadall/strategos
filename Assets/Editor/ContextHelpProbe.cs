@@ -1,5 +1,5 @@
 // ContextHelpProbe.cs
-// #308 / #442: MOVE and ENGAGE have authored context help; overlay Build/Open/Close.
+// #308 / #442 / #445: MOVE, ENGAGE, WAYPOINTS authored help; overlay Build/Open/Close.
 // Batch: -executeMethod Strategos.Editor.ContextHelpProbe.Run
 
 #if UNITY_EDITOR
@@ -38,6 +38,23 @@ namespace Strategos.Editor
                 bad++;
             }
             else log.AppendLine("  ContextHelp.Engage ok");
+
+            if (!ContextHelp.TryGet(PaletteVerb.Waypoints, out var wTitle, out var wBody) ||
+                wTitle != ContextHelp.WaypointsTitle ||
+                string.IsNullOrEmpty(wBody) ||
+                wBody.IndexOf("CONFIRM ROUTE", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                log.AppendLine("  FAIL ContextHelp.Waypoints missing or incomplete (#445)");
+                bad++;
+            }
+            else log.AppendLine("  ContextHelp.Waypoints ok");
+
+            if (ContextHelp.TryGet(PaletteVerb.DigIn, out _, out _))
+            {
+                log.AppendLine("  FAIL DigIn should not have authored help yet");
+                bad++;
+            }
+            else log.AppendLine("  DigIn has no help yet ok");
 
             var hostGo = new GameObject("probe-ctx-help", typeof(RectTransform));
             var host = hostGo.GetComponent<RectTransform>();
