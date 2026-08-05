@@ -87,6 +87,7 @@ $env:STRATEGOS_ITCH_TARGET = 'aawadall/strategos'
 - [ ] Smoke-download on a clean machine / second account: unzip → `Strategos.exe` boots.
 - [x] Add itch URL to [README.md](../README.md) Play line.
 - [x] Mirror the link on the Pages site header CTA.
+- [x] itch embed widget on Pages (`site/index.html`); README uses badges (GitHub strips iframes).
 
 Closing #221 when this page + `itch-push.ps1` ship is the **ops handoff** (same shape as
 #216). The first live push is a human step with your itch credentials.

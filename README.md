@@ -9,6 +9,12 @@ itch is **pay-what-you-want** with a **$2** suggested default
 ([aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)); the GitHub Release zip
 remains a free download.
 
+[![Strategos on itch.io](https://img.shields.io/badge/itch.io-PWYW_%242_default-fa5c5c?logo=itchdotio&logoColor=white)](https://aawadall.itch.io/strategos)
+[![GitHub Release](https://img.shields.io/badge/GitHub-v0.3.0--alpha.1_zip-2c5a38)](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)
+
+> GitHub README cannot host the itch iframe widget — use the badges above, or the embed on
+> [aawadall.github.io/strategos](https://aawadall.github.io/strategos/).
+
 - **Play:** [itch.io (PWYW · $2 default)](https://aawadall.itch.io/strategos) ·
   [v0.3.0-alpha.1 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)
 - **Site:** [aawadall.github.io/strategos](https://aawadall.github.io/strategos/)
