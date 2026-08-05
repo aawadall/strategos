@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- 52-week value-add roadmap (#483): weekly player-visible value from 2026-08-10 through
+  2027-08-02 aligned to `$15`–`$30` ladder — `docs/value-roadmap-52w.md`.
 - itch marketing checklist (#480): cover / screenshots / copy / tags / first devlog —
   `docs/itch-publish.md` (storefront polish; distinct from butler #221 and Steam #293).
 - Price ladder milestone epics (#471): one epic per `$0`→`$30` rung (#472–#478);
