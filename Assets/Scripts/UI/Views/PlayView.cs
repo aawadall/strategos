@@ -2326,7 +2326,8 @@ namespace Strategos.UI.Views
             var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             IssuePlayer(Command.MoveTo(actor, unit.Id, cell));
-            _tutorialBeat?.OnMoveIssued();
+            if (queue) _tutorialBeat?.OnQueuedMoveIssued();
+            else _tutorialBeat?.OnMoveIssued();
         }
 
         private void IssueEngage(UnitInstance unit, UnitInstance target, bool queue)
@@ -2744,6 +2745,7 @@ namespace Strategos.UI.Views
             var unit = _scenario.FindUnit(_selection[0]);
             if (unit == null || !IsPlayerCommanded(unit)) return;
             IssuePlayer(Command.Abort(ActorId.ForSide(unit.Side), unit.Id));
+            _tutorialBeat?.OnAbortIssued();
         }
 
         /// <summary>

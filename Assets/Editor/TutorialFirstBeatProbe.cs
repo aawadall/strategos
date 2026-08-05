@@ -1,5 +1,5 @@
 // TutorialFirstBeatProbe.cs
-// #310 / #441: select → MoveTo → Engage phase advances (real path hooks are PlayView).
+// #310 / #441 / #449: select → MoveTo → Engage → queue → abort phase advances.
 // Batch: -executeMethod Strategos.Editor.TutorialFirstBeatProbe.Run
 
 #if UNITY_EDITOR
@@ -62,12 +62,28 @@ namespace Strategos.Editor
                 else log.AppendLine("  IssueMove → IssueEngage ok");
 
                 beat.OnEngageIssued();
-                if (beat.Phase != TutorialBeatPhase.Complete || beat.IsActive)
+                if (beat.Phase != TutorialBeatPhase.IssueQueue || !beat.IsActive)
                 {
-                    log.AppendLine("  FAIL IssueEngage → Complete");
+                    log.AppendLine("  FAIL IssueEngage → IssueQueue (#449)");
                     bad++;
                 }
-                else log.AppendLine("  IssueEngage → Complete ok");
+                else log.AppendLine("  IssueEngage → IssueQueue ok");
+
+                beat.OnQueuedMoveIssued();
+                if (beat.Phase != TutorialBeatPhase.IssueAbort || !beat.IsActive)
+                {
+                    log.AppendLine("  FAIL IssueQueue → IssueAbort (#449)");
+                    bad++;
+                }
+                else log.AppendLine("  IssueQueue → IssueAbort ok");
+
+                beat.OnAbortIssued();
+                if (beat.Phase != TutorialBeatPhase.Complete || beat.IsActive)
+                {
+                    log.AppendLine("  FAIL IssueAbort → Complete (#449)");
+                    bad++;
+                }
+                else log.AppendLine("  IssueAbort → Complete ok");
 
                 beat.Reset();
                 if (beat.Phase != TutorialBeatPhase.Inactive)
