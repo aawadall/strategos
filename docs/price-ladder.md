@@ -33,3 +33,8 @@ order type. C2 *foundations* already ship under $0–$10.
 
 Close a child epic when its canvas gate tasks are `done`. Update this table in the
 same change.
+
+## Cadence
+
+Weekly value-add plan (52 weeks): [value-roadmap-52w.md](value-roadmap-52w.md) (#483).
+$15 → W01–W12; $20 → W14–W26; $25 → W27–W39; $30 → W40–W52.
