@@ -4,9 +4,12 @@
 
 **Strategos** is a Unity 6 tactical command simulation built on topographic maps and
 NATO APP-6D symbology. The long arc is command from fireteam to theatre; today it is a
-**playable free alpha** (solo / hotseat / spectator / replay, campaigns, combat).
+**playable alpha** (solo / hotseat / spectator / replay, campaigns, combat).
+itch is **pay-what-you-want** with a **$2** suggested default
+([aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)); the GitHub Release zip
+remains a free download.
 
-- **Play:** [itch.io](https://aawadall.itch.io/strategos) ·
+- **Play:** [itch.io (PWYW · $2 default)](https://aawadall.itch.io/strategos) ·
   [v0.3.0-alpha.1 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)
 - **Site:** [aawadall.github.io/strategos](https://aawadall.github.io/strategos/)
 - **Status:** [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
