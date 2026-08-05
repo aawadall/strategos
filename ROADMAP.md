@@ -68,7 +68,8 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
   Options → #306 settings shell + #307 preference store; rest of #289 still open)
 - **Scenario / map access** — #133 closed (PLAY **PUSH NORTH** / **SKIRMISH ONLY**)
 - **Map palette** — #169 **closed** (`NatoTopo` fifth mode; FM 3-25.26 / FM 21-31 colours)
-- **Release / site** — #83; #120 (site GIF only — meta + CTA shipped)
+- **Release / site** — #83; #120 (site GIF only — meta + CTA shipped); #424 (SteamPipe
+  depot/build scripts — the actual upload mechanism, blocked only on the App ID, #288/#300)
 - **Steam-readiness gaps (filed 2026-08-04)** — six epics found to have zero prior tracking
   during a backlog review: #287 game modes (mode select, hotseat, AI-vs-AI spectator, replay
   viewer), #288 Steamworks SDK integration (App ID, Overlay, Achievements, Cloud), #289

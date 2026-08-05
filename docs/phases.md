@@ -21,6 +21,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [ ] `steam_appid.txt` added to Unity project root for development builds (#288)
 - [ ] Steamworks.NET (or Facepunch.Steamworks) Unity package integrated (#288)
 - [ ] Steam Overlay verified functional in development builds (#288)
+- [ ] SteamPipe depot/build scripts to push a build to Steam (#424 — separate from the
+  in-game SDK work above; blocked only on the App ID)
 
 **Milestone M0:** Clean local build, tab shell loads, Editor probes pass. *(CI activation still open.)*
 
