@@ -19,14 +19,46 @@ namespace Strategos.Editor
             var log = new StringBuilder();
             int bad = 0;
 
-            var menu = new GameObject("probe-menu").AddComponent<MainMenuView>();
+            var menuGo = new GameObject("probe-menu", typeof(RectTransform));
+            var menu = menuGo.AddComponent<MainMenuView>();
             if (menu.Key != "menu" || menu.Title != "MENU")
             {
                 log.AppendLine("  FAIL MainMenuView key/title");
                 bad++;
             }
             else log.AppendLine("  MainMenuView key=menu ok");
-            Object.DestroyImmediate(menu.gameObject);
+
+            try
+            {
+                menu.Build(menuGo.GetComponent<RectTransform>());
+                // #427 / #428 / #429: scroll + EXIT + AUDIO on the front door.
+                if (!FindNamed(menuGo.transform, "Scroll"))
+                {
+                    log.AppendLine("  FAIL MainMenuView missing Scroll (#427)");
+                    bad++;
+                }
+                else log.AppendLine("  MainMenuView Scroll ok");
+
+                if (!FindNamed(menuGo.transform, "BTN_EXIT"))
+                {
+                    log.AppendLine("  FAIL MainMenuView missing EXIT (#428)");
+                    bad++;
+                }
+                else log.AppendLine("  MainMenuView EXIT ok");
+
+                if (!FindNamed(menuGo.transform, "BTN_AUDIO"))
+                {
+                    log.AppendLine("  FAIL MainMenuView missing AUDIO (#429)");
+                    bad++;
+                }
+                else log.AppendLine("  MainMenuView AUDIO ok");
+            }
+            catch (System.Exception ex)
+            {
+                log.AppendLine("  FAIL MainMenuView.Build: " + ex.Message);
+                bad++;
+            }
+            finally { Object.DestroyImmediate(menuGo); }
 
             var settingsGo = new GameObject("probe-settings", typeof(RectTransform));
             var settings = settingsGo.AddComponent<SettingsView>();
@@ -99,6 +131,14 @@ namespace Strategos.Editor
             log.AppendLine(bad == 0 ? "PROBE PASSED" : ("PROBE FAILED with " + bad + " problem(s)"));
             if (bad == 0) Debug.Log("[UiShellProbe]\n" + log);
             else Debug.LogError("[UiShellProbe]\n" + log);
+        }
+
+        private static bool FindNamed(Transform root, string name)
+        {
+            if (root.name == name) return true;
+            for (int i = 0; i < root.childCount; i++)
+                if (FindNamed(root.GetChild(i), name)) return true;
+            return false;
         }
     }
 }
