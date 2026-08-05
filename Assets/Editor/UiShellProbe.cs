@@ -60,6 +60,45 @@ namespace Strategos.Editor
             }
             finally { Object.DestroyImmediate(menuGo); }
 
+            var splashGo = new GameObject("probe-splash", typeof(RectTransform));
+            var splash = splashGo.AddComponent<SplashView>();
+            if (splash.Key != "splash" || splash.Title != "SPLASH")
+            {
+                log.AppendLine("  FAIL SplashView key/title");
+                bad++;
+            }
+            else log.AppendLine("  SplashView key=splash ok");
+
+            try
+            {
+                splash.Build(splashGo.GetComponent<RectTransform>());
+                if (!FindNamed(splashGo.transform, "Brand"))
+                {
+                    log.AppendLine("  FAIL SplashView missing Brand");
+                    bad++;
+                }
+                else log.AppendLine("  SplashView.Build Brand ok");
+
+                // Dismiss without Shell is a no-op navigate; must not throw (#430).
+                splash.HoldSeconds = 0f;
+                splash.OnShown();
+                splash.Dismiss();
+                log.AppendLine("  SplashView Dismiss ok");
+            }
+            catch (System.Exception ex)
+            {
+                log.AppendLine("  FAIL SplashView: " + ex.Message);
+                bad++;
+            }
+            finally { Object.DestroyImmediate(splashGo); }
+
+            if (AppShell.ShouldShowSplash() && Application.isBatchMode)
+            {
+                log.AppendLine("  FAIL ShouldShowSplash true under batchmode");
+                bad++;
+            }
+            else log.AppendLine("  ShouldShowSplash skipped in batch/probe ok");
+
             var settingsGo = new GameObject("probe-settings", typeof(RectTransform));
             var settings = settingsGo.AddComponent<SettingsView>();
             if (settings.Key != "settings" || settings.Title != "OPTIONS")

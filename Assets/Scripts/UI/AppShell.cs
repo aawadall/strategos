@@ -68,6 +68,10 @@ namespace Strategos.UI
             _tabStripGo = tabStrip.gameObject;
             _views = new ViewHost(contentHost, tabStrip);
 
+            _views.Add<SplashView>(v =>
+            {
+                ((SplashView)v).Shell = this;
+            }, showTab: false);
             _views.Add<MainMenuView>(v =>
             {
                 var m = (MainMenuView)v;
@@ -96,10 +100,29 @@ namespace Strategos.UI
 
             var requested = RequestedViewKey();
             if (requested != null && _views.Has(requested)) Navigate(requested);
+            else if (ShouldShowSplash()) Navigate("splash");
             else Navigate("menu");
 
             Debug.Log($"[AppShell] {_views.Count} view(s), showing '{_views.Current?.Key}' " +
                       $"at {Screen.width}x{Screen.height}, F11 toggles full screen");
+        }
+
+        /// <summary>
+        /// #430: splash on a normal boot. Skip when <c>-view</c> is set, or under
+        /// batchmode / nographics so probes and captures stay deterministic.
+        /// </summary>
+        public static bool ShouldShowSplash()
+        {
+            if (RequestedView != null) return false;
+            if (Application.isBatchMode) return false;
+            foreach (var a in Environment.GetCommandLineArgs())
+            {
+                if (string.Equals(a, "-nographics", StringComparison.OrdinalIgnoreCase))
+                    return false;
+                if (string.Equals(a, "-batchmode", StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+            return true;
         }
 
         public void Navigate(string key)
@@ -126,6 +149,7 @@ namespace Strategos.UI
         }
 
         private static bool IsChromeHiddenView(string key) =>
+            string.Equals(key, "splash", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(key, "menu", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(key, "settings", StringComparison.OrdinalIgnoreCase);
 
