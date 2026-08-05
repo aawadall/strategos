@@ -25,6 +25,11 @@ scaled button rows — **no ScrollRect**. **OPTIONS / AUDIO / EXIT** stay in a `
 the bottom (#427 / #428 / #429). EXIT calls `MainMenuView.QuitApplication`
 (`Application.Quit` / Editor stop Play).
 
+**Version chrome (#218).** The AppShell top bar shows `AppShell.VersionLabel`
+(`v` + `Application.version`) after the brand so a screenshot names the build.
+`GameBuild` stamps `PlayerSettings.bundleVersion` from `-bundleVersion` /
+`STRATEGOS_VERSION` (#217); `build.ps1 -Version` passes it through.
+
 **Splash (#430).** Normal boots open `SplashView` (`-view splash`) — paper brand hold,
 click / any key / ~2.25s → menu. Skipped when `-view` is set or under batchmode /
 `-nographics` (`AppShell.ShouldShowSplash`) so probes and captures stay deterministic.

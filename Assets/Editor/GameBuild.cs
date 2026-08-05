@@ -74,6 +74,8 @@ namespace Strategos.Editor
                 return;
             }
 
+            ApplyBundleVersion();
+
             string output    = ResolveOutputPath(target);
             bool   isDev     = HasArg("-development");
             var    scenes    = GetEnabledScenes();
@@ -106,6 +108,31 @@ namespace Strategos.Editor
                 Fail($"Build FAILED for {target} (errors: {summary.totalErrors})");
             else if (IsBatchMode())
                 EditorApplication.Exit(0);
+        }
+
+        // -------------------------------------------------------------------------
+        // Version (#217 / #219) — stamp PlayerSettings from -bundleVersion or env
+        // -------------------------------------------------------------------------
+
+        /// <summary>
+        /// Sets <see cref="PlayerSettings.bundleVersion"/> from <c>-bundleVersion</c>,
+        /// else <c>STRATEGOS_VERSION</c>. Leading <c>v</c> is stripped. No-op when unset
+        /// so editor menu builds keep the asset value.
+        /// </summary>
+        private static void ApplyBundleVersion()
+        {
+            string raw = GetArg("-bundleVersion");
+            if (string.IsNullOrEmpty(raw))
+                raw = Environment.GetEnvironmentVariable("STRATEGOS_VERSION");
+            if (string.IsNullOrEmpty(raw)) return;
+
+            string v = raw.Trim();
+            if (v.Length > 0 && (v[0] == 'v' || v[0] == 'V'))
+                v = v.Substring(1).Trim();
+            if (string.IsNullOrEmpty(v)) return;
+
+            PlayerSettings.bundleVersion = v;
+            Debug.Log($"[GameBuild] bundleVersion → {PlayerSettings.bundleVersion}");
         }
 
         // -------------------------------------------------------------------------

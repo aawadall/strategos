@@ -10,8 +10,14 @@ How to build, run and prove a change in Strategos.
 
 ```powershell
 .\scripts\build.ps1 -Target Windows64      # Windows64 | Linux64 | macOS | WebGL | All
+.\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.1   # stamp bundleVersion (#217)
 .\scripts\capture.ps1 -View scenario       # launch player on one view, screenshot, close
 ```
+
+**Release builds (#217 / #219).** Pass `-Version` (or set `STRATEGOS_VERSION`, or build
+from an exact git tag on HEAD). `build.ps1` forwards `-bundleVersion` to `GameBuild`,
+which writes `PlayerSettings.bundleVersion` before packaging. Attach the Windows folder
+zip to a GitHub Release; notes live in [CHANGELOG.md](../CHANGELOG.md).
 
 **`build.ps1` waits for the editor; do not "simplify" it back to the call operator.**
 `Unity.exe` is a GUI-subsystem binary and PowerShell does not wait for those, so
@@ -172,7 +178,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.PreferenceStoreProbe.Run` | `JsonPreferenceStore` ConfirmOrders + display fields write/read; legacy JSON defaults |
 | `Strategos.Editor.DisplayModeProbe.Run` | AppShell display-mode API (remembered windowed size; ToggleFullscreen callable) |
 | `Strategos.Editor.DisplayPrefsProbe.Run` | Display prefs round-trip + Settings/F11 share AppShell Apply* (#392) |
-| `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView categories / PauseOverlay keys and Build/Open/Close |
+| `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView / Splash / PauseOverlay; VersionLabel (#218); fit-height Footer EXIT |
 | `Strategos.Editor.SteamProbe.Run` | `SteamClientHost` Init no-ops without Steamworks; Overlay / Achievement / Cloud stubs guarded (#305) |
 | `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
 | `Strategos.Editor.CampaignCarryOverProbe.Run` | `CampaignCarryOver.CarryOver` — wreck exclusion (red-then-green), exact readiness-recovery arithmetic unclamped and at the clamp, outcome mapping for Won/Lost/Drew, both undecided-simulation caller-error paths — #75 chunk 2, carry-over logic only |

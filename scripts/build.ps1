@@ -23,11 +23,17 @@
 .PARAMETER Clean
     Delete the Library/ cache before building (forces a full reimport).
 
+.PARAMETER Version
+    Bundle version stamped into PlayerSettings before the build (#217).
+    Leading 'v' is optional. Defaults to STRATEGOS_VERSION, else the exact
+    git tag on HEAD when present.
+
 .EXAMPLE
     .\scripts\build.ps1
     .\scripts\build.ps1 -Target Linux64 -Test
     .\scripts\build.ps1 -Target Windows64 -OutputDir Builds\release -Development
     .\scripts\build.ps1 -Target All -Clean
+    .\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.1
 #>
 
 #Requires -Version 5.1
@@ -37,6 +43,8 @@ param (
     [string]$Target = "Windows64",
 
     [string]$OutputDir = "Artifacts",
+
+    [string]$Version = "",
 
     [switch]$Test,
     [switch]$Development,
@@ -60,11 +68,23 @@ if (-not (Test-Path $VersionFile)) {
 $VersionLine  = Get-Content $VersionFile | Where-Object { $_ -match "^m_EditorVersion:" }
 $UnityVersion = ($VersionLine -replace "m_EditorVersion:\s*", "").Trim()
 
+# ─── Resolve bundle version (#217) ───────────────────────────────────────────
+if (-not $Version) { $Version = $env:STRATEGOS_VERSION }
+if (-not $Version) {
+    Push-Location $ProjectRoot
+    try {
+        $exact = (& git describe --tags --exact-match HEAD 2>$null | Out-String).Trim()
+        if ($LASTEXITCODE -eq 0 -and $exact) { $Version = $exact }
+    } finally { Pop-Location }
+}
+if ($Version -match '^[vV](.+)$') { $Version = $Matches[1] }
+
 Write-Host "── Strategos Build Script ────────────────────────────────────"
 Write-Host "   Project : $ProjectRoot"
 Write-Host "   Unity   : $UnityVersion"
 Write-Host "   Target  : $Target"
 Write-Host "   Output  : $ArtifactsDir"
+if ($Version) { Write-Host "   Version : $Version" }
 Write-Host "──────────────────────────────────────────────────────────────"
 
 # ─── Locate Unity executable ─────────────────────────────────────────────────
@@ -179,6 +199,10 @@ function Build-Target {
     )
 
     if ($Development) { $Args += "-development" }
+    if ($Version) {
+        $Args += "-bundleVersion"
+        $Args += $Version
+    }
 
     Invoke-Unity -Arguments $Args -LogFile $BuildLog
 

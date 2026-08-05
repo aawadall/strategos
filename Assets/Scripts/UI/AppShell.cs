@@ -6,6 +6,7 @@
 // #306: SettingsView is a no-tab screen reached from menu Options.
 // #387: F11 fullscreen/windowed goes through ToggleFullscreen / ApplyWindowed / ApplyFullscreen.
 // #391: Start loads PlayerPreferences and applies fullscreen / windowed size.
+// #218: top-bar version label from Application.version (stamped at build — #217).
 
 using System;
 using TMPro;
@@ -35,6 +36,17 @@ namespace Strategos.UI
         private GameObject _tabStripGo;
 
         public AppSession Session => _session;
+
+        /// <summary>#218 — identifiable in screenshots; leading <c>v</c> plus bundleVersion.</summary>
+        public static string VersionLabel
+        {
+            get
+            {
+                string v = Application.version;
+                if (string.IsNullOrEmpty(v)) return "v?";
+                return v[0] == 'v' || v[0] == 'V' ? v : "v" + v;
+            }
+        }
 
         /// <summary>Injected for probes; defaults to <see cref="JsonPreferenceStore"/>.</summary>
         public IPreferenceStore PreferenceStore { get; set; }
@@ -308,12 +320,25 @@ namespace Strategos.UI
             brand.color = UiTheme.AccentText;
             brand.characterSpacing = 8f;
 
+            // #218: version sits after the brand so a capture names the build.
+            var version = UiFactory.CreateTmp("Version", bar, VersionLabel, 12,
+                FontStyles.Normal, withLayout: false);
+            version.rectTransform.anchorMin = new Vector2(0, 0);
+            version.rectTransform.anchorMax = new Vector2(0, 1);
+            version.rectTransform.pivot = new Vector2(0, 0.5f);
+            version.rectTransform.sizeDelta = new Vector2(160, 0);
+            version.rectTransform.anchoredPosition = new Vector2(150, 0);
+            version.alignment = TextAlignmentOptions.MidlineLeft;
+            version.color = new Color(UiTheme.AccentText.r, UiTheme.AccentText.g,
+                UiTheme.AccentText.b, 0.72f);
+            version.raycastTarget = false;
+
             _insignia = UiFactory.CreateRect("RankInsignia", bar);
             _insignia.anchorMin = new Vector2(0, 0.5f);
             _insignia.anchorMax = new Vector2(0, 0.5f);
             _insignia.pivot = new Vector2(0, 0.5f);
             _insignia.sizeDelta = new Vector2(RankInsignia.Width * 0.7f, RankInsignia.Height * 0.7f);
-            _insignia.anchoredPosition = new Vector2(158, 0);
+            _insignia.anchoredPosition = new Vector2(320, 0);
             _insigniaImage = _insignia.gameObject.AddComponent<Image>();
             _insigniaImage.preserveAspect = true;
             _insigniaImage.raycastTarget = false;
