@@ -1,7 +1,7 @@
 // AlphaHelpOverlay.cs
-// Free-alpha front door: how-to-play + honest known-limitations (fog / artillery DF / no ZoC).
-// Opened from MainMenuView HELP. Distinct from PLAY ContextHelpOverlay (#308) and the
-// field manual (#124).
+// Free-alpha how-to-play + honest known-limitations (fog / artillery DF / no ZoC / wrecks /
+// firefight stall). Opened from MainMenuView HELP and pause ALPHA LIMITS (#469).
+// Distinct from PLAY ContextHelpOverlay (#308) and the field manual (#124).
 
 using TMPro;
 using UnityEngine;
@@ -30,8 +30,10 @@ namespace Strategos.UI
             "• Little fog of war on small maps — detection ranges are long.\n" +
             "• Artillery fights as direct fire; true indirect fire is not built.\n" +
             "• No zone of control, facing, or unit collision — units pass through.\n" +
+            "• Destroyed units stay on the map as wrecks (not commandable).\n" +
+            "• Head-on equal firefights can stall under suppression — flank or dig in.\n" +
             "\n" +
-            "Full list: docs/known-gaps.md · Field manual: #124.";
+            "Full list: docs/known-gaps.md · Pause → FIELD MANUAL for glossary terms.";
 
         private GameObject _panel;
 
@@ -50,7 +52,7 @@ namespace Strategos.UI
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(560, 420);
+            card.sizeDelta = new Vector2(560, 460);
             card.gameObject.AddComponent<Image>().color = Theme.CardBg;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -80,7 +82,7 @@ namespace Strategos.UI
             body.enableWordWrapping = true;
             var bodyLe = body.gameObject.AddComponent<LayoutElement>();
             bodyLe.flexibleHeight = 1f;
-            bodyLe.preferredHeight = 280;
+            bodyLe.preferredHeight = 320;
 
             AddButton(card, "CLOSE", Close);
 

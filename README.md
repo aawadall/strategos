@@ -37,11 +37,14 @@ In the player, **HELP** on the main menu repeats this and lists alpha limits.
 
 ## Alpha limits (not bugs)
 
-Honest gaps strangers hit first — full engineering list in [docs/known-gaps.md](docs/known-gaps.md):
+Honest gaps strangers hit first — full engineering list in [docs/known-gaps.md](docs/known-gaps.md).
+In the player: main-menu **HELP** or pause **ALPHA LIMITS**.
 
 - **Little fog of war** on the small shipped maps (detection ranges are long).
 - **Artillery fights as direct fire**; true indirect fire is not built yet.
 - **No zone of control, facing, or unit collision** — units pass through each other.
+- **Destroyed units stay as wrecks** on the map (not commandable).
+- **Head-on equal firefights can stall** under suppression — flank or dig in.
 
 ---
 
