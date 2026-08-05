@@ -31,7 +31,9 @@ App GUI: [pushing builds in the itch app](https://itch.io/updates/pushing-builds
 1. Log into itch.io → **Create new project**.
 2. Project URL: [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
    (`STRATEGOS_ITCH_TARGET=aawadall/strategos` for `itch-push.ps1`).
-3. Classification: **Game**. Kind: downloadable (Windows). Price: **Free** or tip jar.
+3. Classification: **Game**. Kind: downloadable (Windows). Price: **pay-what-you-want**
+   with a **$2** suggested default (live on aawadall.itch.io/strategos). GitHub Release zip
+   stays a free mirror.
 4. Short description: reuse README / site blurb; link GitHub Release notes and alpha limits
    (fog / artillery DF / no ZoC).
 5. After first upload, set channel tags if needed (Windows executable). HTML5 channel waits
