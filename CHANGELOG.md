@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Unity CI licence ops checklist (#216 / #83): `docs/ci-unity-licence.md` — secret names,
+  how to export `.ulf`, verify Steps; linked from known-gaps, build-and-verify, phases.
 - Tutorial queue/abort beat (#449 / #289): after ENGAGE, Shift-queue a MoveTo then ABORT PLAN;
   `TutorialFirstBeatProbe` covers five advances.
 - Context help for DIG IN (#447 / #289): Hold/Defend dig-in clock and half-fire copy;

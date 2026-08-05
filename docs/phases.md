@@ -12,7 +12,8 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 
 - [x] Unity 6 (6000.x LTS) project initialisation with Universal Render Pipeline (URP)
 - [x] Git repository structure, `.gitignore` (Unity), and branch strategy (`main` protected)
-- [ ] GitHub Actions: automated Unity build check on every PR *(workflow exists; `UNITY_*` secrets unset — green CI currently means nothing ran)*
+- [ ] GitHub Actions: automated Unity build check on every PR *(workflow exists; secrets
+  unset — green CI currently means nothing ran; ops checklist [ci-unity-licence.md](ci-unity-licence.md) #216)*
 - [x] Folder architecture inside `Assets/` *(adapted: `Scripts/Core/*`, `Scripts/UI`, `Scripts/Demo`, `Resources/`, `Editor/` — not the original flat `Units`/`AI`/`Terrain` layout)*
 - [x] Basic main-menu / tab-shell scene with placeholder-then-real UI
 - [ ] In-game developer console (log, commands, unit spawning)
