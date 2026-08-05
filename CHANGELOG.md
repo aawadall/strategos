@@ -13,6 +13,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Audio Resources conventions (#261 / #41): `docs/audio-resources.md` — Research vs
+  `Resources/Audio` layout, OGG / `.meta` rules, promote checklist; cross-links from
+  audio.md, licence, inventory, assets, CLAUDE.md.
 - Tutorial second beat (#441 / #289): after MOVE, checklist advances to ENGAGE; `PlayView`
   calls `OnEngageIssued` from the live Engage path; `TutorialFirstBeatProbe` covers the
   three-step advance.
