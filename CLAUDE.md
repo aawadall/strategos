@@ -176,6 +176,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/ui-invariants.md](docs/ui-invariants.md) | Touching `Assets/Scripts/UI` or `Demo` — view shell, layout, glyph coverage |
 | [docs/audio.md](docs/audio.md) | Touching `Core/Audio` or soundtrack beds — mixer stub, Resources clips, volume prefs |
 | [docs/audio-inventory.md](docs/audio-inventory.md) | Sourcing catalogue (#41 / #259) — music, SFX, VO, Morse; owners and paths |
+| [docs/audio-licence.md](docs/audio-licence.md) | Tooling + licence / provenance rules (#260) — Suno Pro, ElevenLabs gate, staging audit |
 | [docs/steam.md](docs/steam.md) | Touching `Scripts/Steam` or Steam publishing — App ID gate, package choice, Overlay / Achievements / Cloud |
 | [docs/sfx-inventory.md](docs/sfx-inventory.md) | Adding or wiring a one-shot SFX (#44) — cue list and resource ids |
 | [docs/unity-gotchas.md](docs/unity-gotchas.md) | Adding an asset, a package, or a serialised type |

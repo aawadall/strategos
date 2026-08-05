@@ -14,8 +14,8 @@ This document defines where every asset type comes from, how it is licensed, how
 | Procedural Maps | Custom generator | N/A (owned) | Unity Terrain API |
 | Music | Suno (user-generated) | Commercial use (Suno Pro) | WAV/MP3 → OGG → Unity AudioClip |
 | Sound Effects | procedural stubs → freesound / Sonniss | CC0 / royalty-free | WAV → OGG → Unity AudioClip |
-| Voice / narration | ElevenLabs (planned) | *(confirm tier — #260)* | Script → API → OGG → Resources |
-| Morse / radio FX | Procedural + staging takes | *(audit staging — #260)* | Code / DSP; rare Suno textures |
+| Voice / narration | ElevenLabs (planned) | **Blocked** until commercial tier confirmed — [audio-licence.md](audio-licence.md) | Script → API → OGG → Resources |
+| Morse / radio FX | Procedural + staging takes | Staging audits in [audio-licence.md](audio-licence.md) | Code / DSP; rare Suno textures |
 | Historical Scenarios | Public domain / custom | CC0 / owned | JSON → scenario loader |
 | UI Fonts | Google Fonts | SIL OFL | TTF → Unity TextMeshPro |
 | Unit Emblems & Flags | Wikipedia Commons / custom | CC0 / public domain | PNG → Sprite |
@@ -371,4 +371,4 @@ All third-party assets with attribution requirements are tracked in [`ATTRIBUTIO
 
 ---
 
-*Last updated: 2026-07-29 | Co-Authored-By: Oz <oz-agent@warp.dev>*
+*Last updated: 2026-08-05*
