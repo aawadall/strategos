@@ -114,6 +114,10 @@ namespace Strategos.UI.Views
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.TutorialName));
             MenuButton(camp.right, "LITTLE ROUND TOP",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.LittleRoundTopName));
+            MenuButton(camp.right, "BELLEAU WOOD",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.BelleauWoodName));
+            MenuButton(camp.right, "REMAGEN BRIDGE",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.RemagenName));
 
             Section(_column, "SESSION / TOOLS");
             var mid = TwoCol(_column);

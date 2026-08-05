@@ -56,10 +56,10 @@ size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (
 store round-trip plus Settings/F11 sharing `ApplyWindowed` / `ApplyFullscreen` /
 `ToggleFullscreen` / `ApplyDisplayPreferences`.
 
-**Esc precedence in PLAY (#371 / #129 / #308 / #206):** field-manual browser closes first;
-then drills quick-ref; then context help; then the pause overlay resumes; then an armed
-palette verb clears (`CommandPalette.ClearShortcut`); else Esc opens pause and stops the
-clock. Space remains the clock toggle and must not open pause.
+**Esc precedence in PLAY (#371 / #129 / #308 / #206 / #462):** historical-note panel closes
+first; then field-manual browser; then drills quick-ref; then context help; then the pause
+overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else Esc
+opens pause and stops the clock. Space remains the clock toggle and must not open pause.
 
 **Context help (#308 / #442 / #445 / #447).** PLAY rail **HELP** opens `ContextHelpOverlay`
 for the armed verb. **MOVE**, **ENGAGE**, **WAYPOINTS**, and **DIG IN** have authored copy;
@@ -78,6 +78,8 @@ destroying the session (Resume / Continue can re-enter).
 not optional quests. Full binder remains the DRILLS tab; issuing drills stays on PLAY's rail.
 **FIELD MANUAL** on the same pause card opens `FieldManualBrowserPanel` (#206) over the
 alpha glossary — read-only list → detail; drill cross-links are #207.
+**HISTORICAL NOTE** opens `HistoricalNotePanel` (#462) when the scenario carries
+`HistoricalNotes` (LRT / Belleau / Remagen).
 
 - **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
   them multiplies exposure to the silent-layout-truncation failure mode and pays every

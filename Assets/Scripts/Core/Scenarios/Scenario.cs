@@ -123,6 +123,12 @@ namespace Strategos.Scenarios
         /// </remarks>
         public Directive? Directive;
 
+        /// <summary>
+        /// Optional historical commentary (#462 / #421). Empty for sandboxes. Briefing notes
+        /// surface from pause; Outcome notes are available the same way in v1 (full AAR later).
+        /// </summary>
+        public System.Collections.Generic.List<HistoricalNote> HistoricalNotes = new();
+
         // ─── Lookup ───────────────────────────────────────────────────────────
 
         public Side FindSide(SideId id)

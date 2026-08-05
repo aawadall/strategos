@@ -1,10 +1,10 @@
 {
   "FormatVersion": 1,
-  "Name": "Climb — Battalion Seat",
-  "Description": "Climb campaign op 3: take the battalion seat. Company 11 falls under battalion HQ 7; formation orders now decompose one echelon per step.",
+  "Name": "Remagen — Ludendorff Bridge",
+  "Description": "7 March 1945: a US combat command seizes the Ludendorff Bridge at Remagen before German demolition succeeds. TERRAIN CAVEAT: procedural Rolling map with culture bridges — not the real Rhine gorge. Research: Research/historical/remagen-ludendorff-bridge.md.",
   "Map": {
-    "Name": "Climb Battalion Ground",
-    "Seed": 20260807,
+    "Name": "Remagen (approx.)",
+    "Seed": 19450307,
     "Width": 128,
     "Height": 128,
     "MetresPerCell": 25.0,
@@ -16,14 +16,31 @@
       "Northing": 5600000.0
     },
     "EnableErosion": true,
-    "EnableCulture": false
+    "EnableCulture": true,
+    "ParameterOverride": {
+      "BaseElevationMetres": 120.0,
+      "ReliefMetres": 240.0,
+      "RidgedWeight": 0.18,
+      "WarpStrength": 0.5,
+      "Octaves": 6,
+      "FeatureScaleCells": 200.0,
+      "ErosionDropletsPerKiloCell": 55.0,
+      "TalusAngleDegrees": 34.0,
+      "SeaLevelFraction": 0.0,
+      "Aridity": 0.15,
+      "TreelineFraction": 1.5,
+      "SnowlineFraction": 2.0,
+      "ContourIntervalMetres": 10.0,
+      "SettlementsPerKiloCell": 0.08,
+      "RiverThresholdFraction": 0.001
+    }
   },
   "Sides": [
     {
       "Id": {
         "Value": 1
       },
-      "Name": "BLUFOR",
+      "Name": "US ARMY",
       "Affiliation": "Friend",
       "Colour": {
         "r": 0.502,
@@ -37,7 +54,7 @@
       "Id": {
         "Value": 2
       },
-      "Name": "OPFOR",
+      "Name": "GERMAN",
       "Affiliation": "Hostile",
       "Colour": {
         "r": 1.0,
@@ -51,7 +68,7 @@
   "Units": [
     {
       "Id": {
-        "Value": 7
+        "Value": 10
       },
       "Side": {
         "Value": 1
@@ -59,12 +76,12 @@
       "ParentId": {
         "Value": 0
       },
-      "Sidc": "10031000161211000000",
-      "Designation": "1 BN",
-      "HigherFormation": "3 BDE",
-      "CapabilityId": "inf-foot",
+      "Sidc": "10031000161611000000",
+      "Designation": "CCB (-)",
+      "HigherFormation": "9th Armd Div",
+      "CapabilityId": "armor",
       "Cell": {
-        "x": 36.0,
+        "x": 32.0,
         "y": 64.0
       },
       "Strength": 100.0,
@@ -83,21 +100,53 @@
     },
     {
       "Id": {
-        "Value": 11
+        "Value": 1
       },
       "Side": {
         "Value": 1
       },
       "ParentId": {
-        "Value": 7
+        "Value": 10
+      },
+      "Sidc": "10031000151611000000",
+      "Designation": "A/27 Arm",
+      "HigherFormation": "CCB",
+      "CapabilityId": "armor",
+      "Cell": {
+        "x": 28.0,
+        "y": 60.0
+      },
+      "Strength": 100.0,
+      "DestroyedAtTick": -1,
+      "Readiness": 100.0,
+      "Suppression": 0.0,
+      "Training": 100.0,
+      "Posture": "Halted",
+      "Roe": "ReturnFire",
+      "Supply": {
+        "Rations": 100.0,
+        "Water": 100.0,
+        "Ammunition": 100.0,
+        "Fuel": 100.0
+      }
+    },
+    {
+      "Id": {
+        "Value": 2
+      },
+      "Side": {
+        "Value": 1
+      },
+      "ParentId": {
+        "Value": 10
       },
       "Sidc": "10031000151211000000",
-      "Designation": "A CO",
-      "HigherFormation": "1 BN",
-      "CapabilityId": "inf-foot",
+      "Designation": "A/47 Inf",
+      "HigherFormation": "CCB",
+      "CapabilityId": "inf-mech",
       "Cell": {
-        "x": 40.0,
-        "y": 64.0
+        "x": 30.0,
+        "y": 68.0
       },
       "Strength": 100.0,
       "DestroyedAtTick": -1,
@@ -115,21 +164,21 @@
     },
     {
       "Id": {
-        "Value": 1
+        "Value": 20
       },
       "Side": {
-        "Value": 1
+        "Value": 2
       },
       "ParentId": {
-        "Value": 11
+        "Value": 0
       },
-      "Sidc": "10031000121211000000",
-      "Designation": "1 SQD / A",
-      "HigherFormation": "A CO",
+      "Sidc": "10061000151211000000",
+      "Designation": "Bridge Guard",
+      "HigherFormation": "LXVII Corps",
       "CapabilityId": "inf-foot",
       "Cell": {
-        "x": 42.0,
-        "y": 60.0
+        "x": 96.0,
+        "y": 64.0
       },
       "Strength": 100.0,
       "DestroyedAtTick": -1,
@@ -150,146 +199,18 @@
         "Value": 3
       },
       "Side": {
-        "Value": 1
-      },
-      "ParentId": {
-        "Value": 11
-      },
-      "Sidc": "10031000121211000000",
-      "Designation": "2 SQD / A",
-      "HigherFormation": "A CO",
-      "CapabilityId": "inf-foot",
-      "Cell": {
-        "x": 42.0,
-        "y": 68.0
-      },
-      "Strength": 100.0,
-      "DestroyedAtTick": -1,
-      "Readiness": 100.0,
-      "Suppression": 0.0,
-      "Training": 100.0,
-      "Posture": "Halted",
-      "Roe": "ReturnFire",
-      "Supply": {
-        "Rations": 100.0,
-        "Water": 100.0,
-        "Ammunition": 100.0,
-        "Fuel": 100.0
-      }
-    },
-    {
-      "Id": {
-        "Value": 8
-      },
-      "Side": {
         "Value": 2
       },
       "ParentId": {
-        "Value": 0
+        "Value": 20
       },
-      "Sidc": "10061000161211000000",
-      "Designation": "OPFOR BN",
-      "HigherFormation": "OPFOR BDE",
+      "Sidc": "10061000141211000000",
+      "Designation": "Demo Det",
+      "HigherFormation": "Bridge Guard",
       "CapabilityId": "inf-foot",
       "Cell": {
         "x": 92.0,
-        "y": 64.0
-      },
-      "Strength": 100.0,
-      "DestroyedAtTick": -1,
-      "Readiness": 100.0,
-      "Suppression": 0.0,
-      "Training": 100.0,
-      "Posture": "Halted",
-      "Roe": "ReturnFire",
-      "Supply": {
-        "Rations": 100.0,
-        "Water": 100.0,
-        "Ammunition": 100.0,
-        "Fuel": 100.0
-      }
-    },
-    {
-      "Id": {
-        "Value": 12
-      },
-      "Side": {
-        "Value": 2
-      },
-      "ParentId": {
-        "Value": 8
-      },
-      "Sidc": "10061000151211000000",
-      "Designation": "OPFOR CO",
-      "HigherFormation": "OPFOR BN",
-      "CapabilityId": "inf-foot",
-      "Cell": {
-        "x": 88.0,
-        "y": 64.0
-      },
-      "Strength": 100.0,
-      "DestroyedAtTick": -1,
-      "Readiness": 100.0,
-      "Suppression": 0.0,
-      "Training": 100.0,
-      "Posture": "Halted",
-      "Roe": "ReturnFire",
-      "Supply": {
-        "Rations": 100.0,
-        "Water": 100.0,
-        "Ammunition": 100.0,
-        "Fuel": 100.0
-      }
-    },
-    {
-      "Id": {
-        "Value": 2
-      },
-      "Side": {
-        "Value": 2
-      },
-      "ParentId": {
-        "Value": 12
-      },
-      "Sidc": "10061000121211000000",
-      "Designation": "OPFOR SQD 1",
-      "HigherFormation": "OPFOR CO",
-      "CapabilityId": "inf-foot",
-      "Cell": {
-        "x": 86.0,
-        "y": 60.0
-      },
-      "Strength": 100.0,
-      "DestroyedAtTick": -1,
-      "Readiness": 100.0,
-      "Suppression": 0.0,
-      "Training": 70.0,
-      "Posture": "Halted",
-      "Roe": "ReturnFire",
-      "Supply": {
-        "Rations": 100.0,
-        "Water": 100.0,
-        "Ammunition": 100.0,
-        "Fuel": 100.0
-      }
-    },
-    {
-      "Id": {
-        "Value": 4
-      },
-      "Side": {
-        "Value": 2
-      },
-      "ParentId": {
-        "Value": 12
-      },
-      "Sidc": "10061000121211000000",
-      "Designation": "OPFOR SQD 2",
-      "HigherFormation": "OPFOR CO",
-      "CapabilityId": "inf-foot",
-      "Cell": {
-        "x": 86.0,
-        "y": 68.0
+        "y": 58.0
       },
       "Strength": 100.0,
       "DestroyedAtTick": -1,
@@ -309,37 +230,67 @@
   "PlayerSide": {
     "Value": 1
   },
-  "PlayerEchelon": "Battalion",
+  "PlayerEchelon": "Company",
   "Objectives": [
     {
       "Id": 1,
-      "Name": "RALLY POINT",
+      "Name": "LUDENDORFF BRIDGE",
       "Cell": {
-        "x": 64.0,
+        "x": 72.0,
         "y": 64.0
       },
-      "RadiusCells": 8.0,
+      "RadiusCells": 6.0,
       "InitialOwner": {
-        "Value": 0
+        "Value": 2
       },
-      "PlaceNearKind": "SpotHeight",
+      "PlaceNearKind": "Bridge",
       "PlaceNearName": ""
     }
   ],
-  "ControlMeasures": [],
+  "ControlMeasures": [
+    {
+      "Id": 1,
+      "Kind": "AxisOfAdvance",
+      "Name": "AXIS BRIDGE",
+      "Owner": {
+        "Value": 1
+      },
+      "Cell": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "RadiusCells": 3.0,
+      "Points": [
+        {
+          "x": 32.0,
+          "y": 64.0
+        },
+        {
+          "x": 52.0,
+          "y": 64.0
+        },
+        {
+          "x": 72.0,
+          "y": 64.0
+        }
+      ],
+      "Echelon": "None",
+      "AxisRole": "Main"
+    }
+  ],
   "Victory": [
     {
       "Kind": "HoldObjectives",
       "Side": {
         "Value": 1
       },
-      "Description": "BLUFOR held the rally point.",
+      "Description": "US ARMY seized and held the bridge.",
       "Priority": 10,
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [
         1
       ],
-      "HoldTicks": 300,
+      "HoldTicks": 450,
       "DeadlineTick": 0,
       "DirectiveId": 0
     },
@@ -348,13 +299,13 @@
       "Side": {
         "Value": 2
       },
-      "Description": "OPFOR held the rally point.",
+      "Description": "GERMAN held or denied the crossing.",
       "Priority": 10,
       "StrengthThresholdPercent": 25.0,
       "ObjectiveIds": [
         1
       ],
-      "HoldTicks": 300,
+      "HoldTicks": 900,
       "DeadlineTick": 0,
       "DirectiveId": 0
     },
@@ -363,22 +314,9 @@
       "Side": {
         "Value": 1
       },
-      "Description": "OPFOR rendered combat ineffective.",
+      "Description": "GERMAN bridge guard broken.",
       "Priority": 5,
-      "StrengthThresholdPercent": 40.0,
-      "ObjectiveIds": [],
-      "HoldTicks": 0,
-      "DeadlineTick": 0,
-      "DirectiveId": 0
-    },
-    {
-      "Kind": "DestroyEnemy",
-      "Side": {
-        "Value": 2
-      },
-      "Description": "BLUFOR rendered combat ineffective.",
-      "Priority": 5,
-      "StrengthThresholdPercent": 40.0,
+      "StrengthThresholdPercent": 35.0,
       "ObjectiveIds": [],
       "HoldTicks": 0,
       "DeadlineTick": 0,
@@ -386,5 +324,10 @@
     }
   ],
   "TimeLimitTicks": 2400,
-  "HistoricalNotes": []
+  "HistoricalNotes": [
+    {
+      "When": "Briefing",
+      "Text": "On 7 March 1945 US armor found the Ludendorff Bridge still standing and rushed a coup de main before demolition charges finished the job. Speed to the objective matters more than a set-piece clearance. Source: Research/historical/remagen-ludendorff-bridge.md (CMH PD)."
+    }
+  ]
 }
