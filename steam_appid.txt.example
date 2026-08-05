@@ -1,0 +1,13 @@
+# steam_appid.txt — development App ID for the Steam client
+#
+# Copy this file to steam_appid.txt at the Unity project root (same folder as Assets/)
+# and replace the number below with your registered Steam App ID from
+# https://partner.steamgames.com — see docs/steam.md (#300 / #302).
+#
+# steam_appid.txt is gitignored. Do not commit a real App ID file.
+#
+# Spacewar (480) is Valve's public test App ID — useful only after Steamworks.NET
+# is linked and the Steam client is running. Until then NullSteamClient stays
+# unavailable even if this file exists (#301 / #305).
+
+480

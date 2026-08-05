@@ -3,6 +3,7 @@
     "rootNamespace": "Strategos.Editor",
     "references": [
         "Strategos.Runtime",
+        "Strategos.Steam",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [

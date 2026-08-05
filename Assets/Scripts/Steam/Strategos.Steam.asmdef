@@ -1,12 +1,7 @@
 {
-    "name": "Strategos.Runtime",
-    "rootNamespace": "Strategos",
-    "references": [
-        "Unity.TextMeshPro",
-        "Unity.InputSystem",
-        "Unity.RenderPipelines.Universal.Runtime",
-        "Strategos.Steam"
-    ],
+    "name": "Strategos.Steam",
+    "rootNamespace": "Strategos.Steam",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
