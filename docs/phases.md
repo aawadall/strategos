@@ -349,6 +349,7 @@ intelligence / ML-Agents unbuilt.
 - [ ] Tiered releases: Free / Base / Scenario Pass unlocks authored fights (#465 — design in `docs/tiered-releases.md`; live SKUs gate on $25 epic #477)
 - [ ] Scenario server: host/serve scenarios beyond Resources (#464 — backlog; $30 gate on #478)
 - [ ] Price ladder milestone epics $0→$30 (#471 meta; children #472–#478 — see `docs/price-ladder.md`)
+- [ ] 52-week value-add roadmap (#483 — `docs/value-roadmap-52w.md`; weekly cadence on #475–#478)
 - [ ] User accounts: registration, login, OAuth (Google/Discord) (builds on #355 identity; Steam via #288 likely first)
 - [ ] Embedded store for player data when accounts exist (#66)
 - [ ] Player profile: rank, win/loss, favourite doctrine, commander history
