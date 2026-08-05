@@ -3,8 +3,8 @@
 // Options (#306 settings shell), Help stub (#124), Server disabled (online / App ID),
 // Tools tabs.
 //
-// #426 / #427: scrollable campaign/tools stack; footer pins OPTIONS / AUDIO / EXIT so they
-// stay on-screen without scrolling (wheel failed when the viewport had no raycast Graphic).
+// #427: fit the full menu to the host height — no ScrollRect. Compact rows + two-column
+// blocks, then scale button heights so EXIT stays on-screen.
 // #428: EXIT quits the player (Editor stops Play mode).
 // #429: AUDIO opens Settings (MASTER / MUSIC / SFX already live there).
 //
@@ -12,6 +12,7 @@
 // glass game-menu skin.
 
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,8 +25,9 @@ namespace Strategos.UI.Views
 {
     public sealed class MainMenuView : MonoBehaviour, IAppView
     {
-        /// <summary>Footer height reserved for OPTIONS / AUDIO / EXIT (#427 fix).</summary>
-        public const float FooterHeight = 168f;
+        private const float MinButtonHeight = 22f;
+        private const float MaxButtonHeight = 36f;
+        private const float SectionHeight = 16f;
 
         public string Title => "MENU";
         public string Key => "menu";
@@ -34,14 +36,18 @@ namespace Strategos.UI.Views
         public AppShell Shell { get; set; }
 
         private Texture2D _paperTex;
+        private RectTransform _column;
         private Button _saveBtn;
         private Button _loadBtn;
         private Button _continueBtn;
         private Button _exitBtn;
         private Button _audioBtn;
+        private readonly List<LayoutElement> _scalableButtons = new List<LayoutElement>();
 
         public void Build(RectTransform host)
         {
+            _scalableButtons.Clear();
+
             var root = CreateRect("Root", host);
             Stretch(root);
             root.gameObject.AddComponent<Image>().color = Theme.StageBg;
@@ -50,142 +56,135 @@ namespace Strategos.UI.Views
                 PaperOptions.Clean);
             var paper = CreateRect("Paper", root);
             Stretch(paper);
-            paper.offsetMin = new Vector2(48, 24);
-            paper.offsetMax = new Vector2(-48, -24);
+            paper.offsetMin = new Vector2(40, 16);
+            paper.offsetMax = new Vector2(-40, -16);
             var raw = paper.gameObject.AddComponent<RawImage>();
             raw.texture = _paperTex;
             raw.color = Color.white;
             raw.raycastTarget = false;
 
-            // Body: scroll (flex) + sticky footer so EXIT is always visible.
-            var body = CreateRect("Body", paper);
-            Stretch(body);
-            body.offsetMin = new Vector2(40, 28);
-            body.offsetMax = new Vector2(-40, -28);
-            var bodyV = body.gameObject.AddComponent<VerticalLayoutGroup>();
-            bodyV.spacing = 8;
-            bodyV.childAlignment = TextAnchor.UpperCenter;
-            bodyV.childControlWidth = true;
-            bodyV.childControlHeight = true;
-            bodyV.childForceExpandWidth = true;
-            bodyV.childForceExpandHeight = false;
-
-            var scrollRt = CreateRect("Scroll", body);
-            var scrollLe = scrollRt.gameObject.AddComponent<LayoutElement>();
-            scrollLe.flexibleHeight = 1f;
-            scrollLe.minHeight = 120f;
-            var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 55f;
-
-            var viewport = CreateRect("Viewport", scrollRt);
-            Stretch(viewport);
-            // ScrollRect only receives wheel/drag on a Graphic — RectMask2D alone is not enough.
-            var vpImg = viewport.gameObject.AddComponent<Image>();
-            vpImg.color = new Color(0, 0, 0, 0.01f);
-            vpImg.raycastTarget = true;
-            viewport.gameObject.AddComponent<RectMask2D>();
-            scroll.viewport = viewport;
-
-            var col = CreateRect("Column", viewport);
-            col.anchorMin = new Vector2(0, 1);
-            col.anchorMax = new Vector2(1, 1);
-            col.pivot = new Vector2(0.5f, 1);
-            col.anchoredPosition = Vector2.zero;
-            col.sizeDelta = new Vector2(0, 0);
-            var v = col.gameObject.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 8;
+            _column = CreateRect("Column", paper);
+            Stretch(_column);
+            _column.offsetMin = new Vector2(28, 12);
+            _column.offsetMax = new Vector2(-28, -12);
+            var v = _column.gameObject.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 4;
             v.childAlignment = TextAnchor.UpperCenter;
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
-            v.padding = new RectOffset(16, 16, 8, 16);
-            var fitter = col.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scroll.content = col;
+            v.padding = new RectOffset(8, 8, 4, 4);
 
-            var brand = CreateTmp("Brand", col, "STRATEGOS", 42, FontStyles.Bold);
+            var brand = CreateTmp("Brand", _column, "STRATEGOS", 32, FontStyles.Bold);
             brand.alignment = TextAlignmentOptions.Center;
             brand.color = Theme.Ink;
-            brand.characterSpacing = 12f;
-            brand.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
+            brand.characterSpacing = 10f;
+            brand.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
 
-            var sub = CreateTmp("Sub", col,
+            var sub = CreateTmp("Sub", _column,
                 "Tactical command · enter a session or open tools",
-                15, FontStyles.Normal);
+                13, FontStyles.Normal);
             sub.alignment = TextAlignmentOptions.Center;
             sub.color = Theme.InkMuted;
-            sub.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
+            sub.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
 
-            Spacer(col, 12);
+            MenuButton(_column, "PLAY / CONTINUE", () => Shell?.EnterPlaySession());
+            _continueBtn = MenuButton(_column, "RESUME LAST SESSION",
+                () => Shell?.EnterPlaySession());
 
-            AddButton(col, "PLAY / CONTINUE", () => Shell?.EnterPlaySession());
-            _continueBtn = AddButton(col, "RESUME LAST SESSION", () => Shell?.EnterPlaySession());
-
-            Spacer(col, 8);
-            Section(col, "CAMPAIGN / SCENARIO");
-            AddButton(col, "START VALLEY CAMPAIGN", () => Shell?.StartValleyFromMenu());
-            AddButton(col, "START HIGHLAND CAMPAIGN", () => Shell?.StartHighlandFromMenu());
-            AddButton(col, "START CLIMB CAMPAIGN", () => Shell?.StartClimbFromMenu());
-            AddButton(col, "SKIRMISH ONLY", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.SkirmishName));
-            AddButton(col, "PUSH NORTH", () => Shell?.LoadScenarioFromMenu(ScenarioSamples.PushNorthName));
-            AddButton(col, "SQUAD TUTORIAL",
+            Section(_column, "CAMPAIGN / SCENARIO");
+            var camp = TwoCol(_column);
+            MenuButton(camp.left, "START VALLEY CAMPAIGN",
+                () => Shell?.StartValleyFromMenu());
+            MenuButton(camp.left, "START HIGHLAND CAMPAIGN",
+                () => Shell?.StartHighlandFromMenu());
+            MenuButton(camp.left, "START CLIMB CAMPAIGN",
+                () => Shell?.StartClimbFromMenu());
+            MenuButton(camp.left, "SKIRMISH ONLY",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.SkirmishName));
+            MenuButton(camp.right, "PUSH NORTH",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.PushNorthName));
+            MenuButton(camp.right, "SQUAD TUTORIAL",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.TutorialName));
-            AddButton(col, "LITTLE ROUND TOP",
+            MenuButton(camp.right, "LITTLE ROUND TOP",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.LittleRoundTopName));
 
-            Spacer(col, 8);
-            Section(col, "SESSION");
-            _saveBtn = AddButton(col, "SAVE", () => Shell?.QuickSaveFromMenu());
-            _loadBtn = AddButton(col, "LOAD", () => Shell?.QuickLoadFromMenu());
+            Section(_column, "SESSION / TOOLS");
+            var mid = TwoCol(_column);
+            _saveBtn = MenuButton(mid.left, "SAVE", () => Shell?.QuickSaveFromMenu());
+            _loadBtn = MenuButton(mid.left, "LOAD", () => Shell?.QuickLoadFromMenu());
+            MenuButton(mid.right, "EXPLORE", () => Shell?.EnterTools("explore"));
+            MenuButton(mid.right, "SCENARIO", () => Shell?.EnterTools("scenario"));
+            MenuButton(mid.right, "DRILLS", () => Shell?.EnterTools("ttp"));
+            MenuButton(mid.right, "BUILDER", () => Shell?.EnterTools("builder"));
 
-            Spacer(col, 8);
-            Section(col, "TOOLS");
-            AddButton(col, "EXPLORE", () => Shell?.EnterTools("explore"));
-            AddButton(col, "SCENARIO", () => Shell?.EnterTools("scenario"));
-            AddButton(col, "DRILLS", () => Shell?.EnterTools("ttp"));
-            AddButton(col, "BUILDER", () => Shell?.EnterTools("builder"));
-
-            Spacer(col, 8);
-            Section(col, "ALSO");
-            var help = AddButton(col, "HELP  ·  see #124", () => { });
+            Section(_column, "ALSO");
+            var also = TwoCol(_column);
+            var help = MenuButton(also.left, "HELP  ·  see #124", () => { });
             help.interactable = false;
-            var server = AddButton(col, "SERVER  ·  needs online", () => { });
+            var server = MenuButton(also.right, "SERVER  ·  needs online", () => { });
             server.interactable = false;
 
-            // Sticky footer — always on screen; do not require scroll to quit (#427 / #428).
-            var footer = CreateRect("Footer", body);
-            var footerLe = footer.gameObject.AddComponent<LayoutElement>();
-            footerLe.preferredHeight = FooterHeight;
-            footerLe.minHeight = FooterHeight;
-            footerLe.flexibleHeight = 0f;
+            var footer = CreateRect("Footer", _column);
             var fv = footer.gameObject.AddComponent<VerticalLayoutGroup>();
-            fv.spacing = 8;
+            fv.spacing = 4;
             fv.childAlignment = TextAnchor.UpperCenter;
             fv.childControlWidth = true;
             fv.childControlHeight = true;
             fv.childForceExpandWidth = true;
             fv.childForceExpandHeight = false;
-            fv.padding = new RectOffset(16, 16, 4, 4);
+            var footFit = footer.gameObject.AddComponent<ContentSizeFitter>();
+            footFit.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            footFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            AddButton(footer, "OPTIONS", () => Shell?.OpenSettings());
-            _audioBtn = AddButton(footer, "AUDIO", () => Shell?.OpenSettings());
-            _exitBtn = AddButton(footer, "EXIT", QuitApplication);
+            MenuButton(footer, "OPTIONS", () => Shell?.OpenSettings());
+            _audioBtn = MenuButton(footer, "AUDIO", () => Shell?.OpenSettings());
+            _exitBtn = MenuButton(footer, "EXIT", QuitApplication);
 
             Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(col);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(body);
-
+            FitToHostHeight();
             RefreshSessionButtons();
         }
 
-        public void OnShown() => RefreshSessionButtons();
+        public void OnShown()
+        {
+            FitToHostHeight();
+            RefreshSessionButtons();
+        }
 
         public void OnHidden() { }
+
+        /// <summary>
+        /// Scale menu button heights so the column fits the paper rect — no scroll.
+        /// </summary>
+        public void FitToHostHeight()
+        {
+            if (_column == null || _scalableButtons.Count == 0) return;
+
+            Canvas.ForceUpdateCanvases();
+            float available = _column.rect.height;
+            if (available < 80f) return;
+
+            SetButtonHeights(MinButtonHeight);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_column);
+            float atMin = LayoutUtility.GetPreferredHeight(_column);
+            float overhead = atMin - _scalableButtons.Count * MinButtonHeight;
+            float forButtons = Mathf.Max(0f, available - overhead);
+            float h = Mathf.Clamp(forButtons / _scalableButtons.Count,
+                MinButtonHeight, MaxButtonHeight);
+            SetButtonHeights(h);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_column);
+        }
+
+        private void SetButtonHeights(float h)
+        {
+            for (int i = 0; i < _scalableButtons.Count; i++)
+            {
+                _scalableButtons[i].preferredHeight = h;
+                _scalableButtons[i].minHeight = h;
+            }
+        }
 
         /// <summary>
         /// #428 — player builds quit; Editor stops Play mode so probes never hang.
@@ -218,18 +217,63 @@ namespace Strategos.UI.Views
             if (_continueBtn != null) _continueBtn.interactable = hasSim;
         }
 
-        private static void Section(Transform parent, string label)
+        private Button MenuButton(Transform parent, string label, Action onClick)
         {
-            var t = CreateTmp("Sec", parent, label, 12, FontStyles.Bold);
-            t.color = Theme.InkMuted;
-            t.characterSpacing = 4f;
-            t.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            var btn = AddButton(parent, label, onClick);
+            var le = btn.GetComponent<LayoutElement>();
+            if (le != null)
+            {
+                le.preferredHeight = MaxButtonHeight;
+                le.minHeight = MinButtonHeight;
+                _scalableButtons.Add(le);
+            }
+            // Slightly smaller type so compact rows still read.
+            var tmp = btn.GetComponentInChildren<TMP_Text>();
+            if (tmp != null) tmp.fontSize = 12f;
+            return btn;
         }
 
-        private static void Spacer(Transform parent, float h)
+        private static (Transform left, Transform right) TwoCol(Transform parent)
         {
-            var s = CreateRect("Sp", parent);
-            s.gameObject.AddComponent<LayoutElement>().preferredHeight = h;
+            var row = CreateRect("Row", parent);
+            var h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 8;
+            h.childAlignment = TextAnchor.UpperCenter;
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = true;
+            h.childForceExpandHeight = false;
+            var rowFit = row.gameObject.AddComponent<ContentSizeFitter>();
+            rowFit.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            rowFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var left = CreateRect("Left", row);
+            left.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            var lv = left.gameObject.AddComponent<VerticalLayoutGroup>();
+            lv.spacing = 4;
+            lv.childControlWidth = true;
+            lv.childControlHeight = true;
+            lv.childForceExpandWidth = true;
+            lv.childForceExpandHeight = false;
+
+            var right = CreateRect("Right", row);
+            right.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            var rv = right.gameObject.AddComponent<VerticalLayoutGroup>();
+            rv.spacing = 4;
+            rv.childControlWidth = true;
+            rv.childControlHeight = true;
+            rv.childForceExpandWidth = true;
+            rv.childForceExpandHeight = false;
+
+            return (left, right);
+        }
+
+        private static void Section(Transform parent, string label)
+        {
+            var t = CreateTmp("Sec", parent, label, 11, FontStyles.Bold);
+            t.color = Theme.InkMuted;
+            t.characterSpacing = 3f;
+            t.gameObject.AddComponent<LayoutElement>().preferredHeight = SectionHeight;
         }
     }
 }
