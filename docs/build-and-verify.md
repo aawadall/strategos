@@ -19,6 +19,10 @@ from an exact git tag on HEAD). `build.ps1` forwards `-bundleVersion` to `GameBu
 which writes `PlayerSettings.bundleVersion` before packaging. Attach the Windows folder
 zip to a GitHub Release; notes live in [CHANGELOG.md](../CHANGELOG.md).
 
+**Hosted CI (#216).** GitHub Actions Unity jobs stay skipped until licence secrets are
+set — human checklist: [ci-unity-licence.md](ci-unity-licence.md). Local `build.ps1` does
+not need those secrets.
+
 **`build.ps1` waits for the editor; do not "simplify" it back to the call operator.**
 `Unity.exe` is a GUI-subsystem binary and PowerShell does not wait for those, so
 `& $UnityExe …` returns in about 0.1 s with the build still running — measured 0.1 s

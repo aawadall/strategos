@@ -170,6 +170,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | Page | Read it before |
 |---|---|
 | [docs/build-and-verify.md](docs/build-and-verify.md) | Running anything — builds, captures, probes, contact sheets |
+| [docs/ci-unity-licence.md](docs/ci-unity-licence.md) | Hosted CI Unity secrets checklist (#216) |
 | [docs/simulation-invariants.md](docs/simulation-invariants.md) | Touching `Core/Commands`, `Reports`, `Combat`, `Reactions`, `Direction`, `Objectives`, `Movement`, `Messaging` |
 | [docs/symbol-invariants.md](docs/symbol-invariants.md) | Touching `Core/NatoSymbols` — SIDC layout, echelon marks, frame rules |
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
