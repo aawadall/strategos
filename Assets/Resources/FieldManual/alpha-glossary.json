@@ -1,0 +1,42 @@
+{
+  "Name": "Alpha Glossary",
+  "Source": "Strategos alpha — command vocabulary for PLAY",
+  "Terms": [
+    {
+      "Id": "move-to",
+      "Title": "MoveTo",
+      "Body": "Order a unit to march to a map cell. Paths use terrain-cost A*. Arm MOVE (M) or right-click empty ground. Hold Shift to append behind the live plan instead of replacing it.",
+      "DrillRefs": [ "T1" ]
+    },
+    {
+      "Id": "engage",
+      "Title": "Engage",
+      "Body": "Direct-fire order against a hostile contact. Arm ENGAGE (E) or right-click a red contact. Range and line of sight still matter; this is not artillery.",
+      "DrillRefs": []
+    },
+    {
+      "Id": "hold-dig-in",
+      "Title": "Hold / Dig in",
+      "Body": "Stay put and prepare. Dig-in takes about two minutes; once prepared, the unit takes half the incoming fire. DIG IN on the palette bridges to the same Hold/Defend path when the unit can dig in.",
+      "DrillRefs": []
+    },
+    {
+      "Id": "abort-plan",
+      "Title": "Abort plan",
+      "Body": "Clear the selected unit's queued orders. Issued as a logged Abort command so replay can reconstruct the cut. Distinct from Hold — Abort means stop and do nothing.",
+      "DrillRefs": []
+    },
+    {
+      "Id": "orbat",
+      "Title": "ORBAT",
+      "Body": "Order of battle: the side's unit tree. Formations own subordinates; an order to a formation decomposes one echelon per step. Select from the map or the ORBAT list.",
+      "DrillRefs": []
+    },
+    {
+      "Id": "ttp",
+      "Title": "TTP / drill",
+      "Body": "Tactics, techniques, and procedures — coded drills in the DRILLS binder. Readiness gates which drills you may issue. Glossary terms may cite drill codes such as T1.",
+      "DrillRefs": [ "T1" ]
+    }
+  ]
+}
