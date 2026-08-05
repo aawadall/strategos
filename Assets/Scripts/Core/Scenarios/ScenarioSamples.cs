@@ -898,6 +898,286 @@ namespace Strategos.Scenarios
             // ~45 minutes of intense action (research: 1–2 hours within the larger day).
             s.TimeLimitTicks = 2700;
 
+            s.HistoricalNotes.Add(new HistoricalNote
+            {
+                When = HistoricalNoteWhen.Briefing,
+                Text =
+                    "Historically the 20th Maine held the extreme left of Vincent's brigade. " +
+                    "Late in the fight, low on ammunition, Chamberlain ordered a bayonet charge " +
+                    "down the slope rather than withdraw. This scenario's mechanics already model " +
+                    "Depleted and Withdraw vs Attack — watch what you choose when the line thins. " +
+                    "Source: Research/historical/little-round-top-20th-maine.md (CMH PD).",
+            });
+
+            return s;
+        }
+
+        /// <summary>Name of the Belleau Wood historical scenario (#460 / #459).</summary>
+        public const string BelleauWoodName = "belleau-wood-1st-marine-brigade";
+
+        /// <summary>
+        /// Belleau Wood — Marine battalion attack day (1918-06), from
+        /// <c>Research/historical/belleau-wood-1st-marine-brigade.md</c> (#460).
+        /// Procedural Rolling approximation — dense timber + village POI, not the real
+        /// Aisne-Marne ground.
+        /// </summary>
+        public static Scenario BelleauWood()
+        {
+            var us = new Side(new SideId(1), "US MARINES", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var german = new Side(new SideId(2), "GERMAN", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var rolling = ReliefProfiles.For(ReliefProfile.Rolling);
+            rolling.Aridity = 0.08f;
+            rolling.SettlementsPerKiloCell = 0.06f;
+
+            var s = new Scenario
+            {
+                Name = "Belleau Wood — Marine battalion",
+                Description =
+                    "6 June 1918 (attack day slice): a Marine battalion clears a wooded " +
+                    "strongpoint and anchors on the village of Bouresches. " +
+                    "TERRAIN CAVEAT: procedural Rolling map with humid timber — not the real " +
+                    "Belleau Wood / Lucy-le-Bocage ground. " +
+                    "Research: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD).",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Belleau Wood (approx.)",
+                    Seed = 19180606,
+                    Width = 128,
+                    Height = 128,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Rolling,
+                    EnableErosion = true,
+                    EnableCulture = true,
+                    ParameterOverride = rolling,
+                },
+            };
+
+            s.Sides.Add(us);
+            s.Sides.Add(german);
+            s.PlayerSide = us.Id;
+            s.PlayerEchelon = Echelon.Battalion;
+
+            Add(s, us.Id, 10, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(36f, 64f), "5th Mar Bn (-)", "4th Mar Bde",
+                UnitCatalogue.InfantryFoot);
+            Add(s, us.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(32f, 58f), "Co A", "5th Mar Bn",
+                UnitCatalogue.InfantryFoot, parent: 10);
+            Add(s, us.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(34f, 70f), "Co B", "5th Mar Bn",
+                UnitCatalogue.InfantryFoot, parent: 10);
+            Add(s, us.Id, 3, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Platoon, new Vector2(40f, 64f), "MG Det", "5th Mar Bn",
+                UnitCatalogue.InfantryFoot, parent: 10, training: 90f);
+
+            Add(s, german.Id, 20, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(92f, 64f), "Wood Garrison", "Reserve Div",
+                UnitCatalogue.InfantryFoot);
+            Add(s, german.Id, 4, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(88f, 56f), "MG Nest N", "Wood Garrison",
+                UnitCatalogue.InfantryFoot, parent: 20);
+            Add(s, german.Id, 5, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(90f, 72f), "MG Nest S", "Wood Garrison",
+                UnitCatalogue.InfantryFoot, parent: 20);
+
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "BELLEAU WOOD",
+                Cell = new Vector2(80f, 64f),
+                RadiusCells = 10f,
+                InitialOwner = german.Id,
+                PlaceNearKind = MapPoiKind.SpotHeight,
+            });
+            s.Objectives.Add(new Objective
+            {
+                Id = 2,
+                Name = "BOURESCHES",
+                Cell = new Vector2(96f, 48f),
+                RadiusCells = 6f,
+                InitialOwner = german.Id,
+                PlaceNearKind = MapPoiKind.Village,
+            });
+
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 1,
+                Kind = ControlMeasureKind.AxisOfAdvance,
+                Name = "AXIS WOOD",
+                Owner = us.Id,
+                AxisRole = AxisOfAdvanceRole.Main,
+                Points =
+                {
+                    new Vector2(36f, 64f),
+                    new Vector2(60f, 64f),
+                    new Vector2(80f, 64f),
+                },
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = us.Id, Priority = 10,
+                ObjectiveIds = new[] { 1, 2 }, HoldTicks = 600,
+                Description = "US MARINES cleared the wood and held Bouresches.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = german.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 900,
+                Description = "GERMAN held the wood.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = us.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "GERMAN garrison broken.",
+            });
+
+            s.TimeLimitTicks = 3600;
+
+            s.HistoricalNotes.Add(new HistoricalNote
+            {
+                When = HistoricalNoteWhen.Briefing,
+                Text =
+                    "Belleau Wood was cleared over roughly three weeks; this fight is one " +
+                    "attack day at battalion scale. Approaches cross open ground into timber " +
+                    "and machine-gun fire from the wood edge. " +
+                    "Source: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD).",
+            });
+
+            return s;
+        }
+
+        /// <summary>Name of the Remagen bridge historical scenario (#461 / #459).</summary>
+        public const string RemagenName = "remagen-ludendorff-bridge";
+
+        /// <summary>
+        /// Remagen — Ludendorff Bridge coup (1945-03-07), company/battalion slice (#461).
+        /// Digest: <c>Research/historical/remagen-ludendorff-bridge.md</c>.
+        /// </summary>
+        public static Scenario Remagen()
+        {
+            var us = new Side(new SideId(1), "US ARMY", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var german = new Side(new SideId(2), "GERMAN", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var rolling = ReliefProfiles.For(ReliefProfile.Rolling);
+            rolling.Aridity = 0.15f;
+            rolling.SettlementsPerKiloCell = 0.08f;
+            rolling.RiverThresholdFraction = 0.0010f;
+
+            var s = new Scenario
+            {
+                Name = "Remagen — Ludendorff Bridge",
+                Description =
+                    "7 March 1945: a US combat command seizes the Ludendorff Bridge at Remagen " +
+                    "before German demolition succeeds. " +
+                    "TERRAIN CAVEAT: procedural Rolling map with culture bridges — not the real " +
+                    "Rhine gorge. Research: Research/historical/remagen-ludendorff-bridge.md.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Remagen (approx.)",
+                    Seed = 19450307,
+                    Width = 128,
+                    Height = 128,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Rolling,
+                    EnableErosion = true,
+                    EnableCulture = true,
+                    ParameterOverride = rolling,
+                },
+            };
+
+            s.Sides.Add(us);
+            s.Sides.Add(german);
+            s.PlayerSide = us.Id;
+            s.PlayerEchelon = Echelon.Company;
+
+            Add(s, us.Id, 10, LandEntityCode.Armor, IconDecorator.VarStandard,
+                Echelon.Battalion, new Vector2(32f, 64f), "CCB (-)", "9th Armd Div",
+                UnitCatalogue.Armor);
+            Add(s, us.Id, 1, LandEntityCode.Armor, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(28f, 60f), "A/27 Arm", "CCB",
+                UnitCatalogue.Armor, parent: 10);
+            Add(s, us.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(30f, 68f), "A/47 Inf", "CCB",
+                UnitCatalogue.InfantryMech, parent: 10);
+
+            Add(s, german.Id, 20, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Company, new Vector2(96f, 64f), "Bridge Guard", "LXVII Corps",
+                UnitCatalogue.InfantryFoot);
+            Add(s, german.Id, 3, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Platoon, new Vector2(92f, 58f), "Demo Det", "Bridge Guard",
+                UnitCatalogue.InfantryFoot, parent: 20, training: 70f);
+
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "LUDENDORFF BRIDGE",
+                Cell = new Vector2(72f, 64f),
+                RadiusCells = 6f,
+                InitialOwner = german.Id,
+                PlaceNearKind = MapPoiKind.Bridge,
+            });
+
+            s.ControlMeasures.Add(new ControlMeasure
+            {
+                Id = 1,
+                Kind = ControlMeasureKind.AxisOfAdvance,
+                Name = "AXIS BRIDGE",
+                Owner = us.Id,
+                AxisRole = AxisOfAdvanceRole.Main,
+                Points =
+                {
+                    new Vector2(32f, 64f),
+                    new Vector2(52f, 64f),
+                    new Vector2(72f, 64f),
+                },
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = us.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 450,
+                Description = "US ARMY seized and held the bridge.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = german.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 900,
+                Description = "GERMAN held or denied the crossing.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = us.Id, Priority = 5,
+                StrengthThresholdPercent = 35f,
+                Description = "GERMAN bridge guard broken.",
+            });
+
+            s.TimeLimitTicks = 2400;
+
+            s.HistoricalNotes.Add(new HistoricalNote
+            {
+                When = HistoricalNoteWhen.Briefing,
+                Text =
+                    "On 7 March 1945 US armor found the Ludendorff Bridge still standing and " +
+                    "rushed a coup de main before demolition charges finished the job. Speed " +
+                    "to the objective matters more than a set-piece clearance. " +
+                    "Source: Research/historical/remagen-ludendorff-bridge.md (CMH PD).",
+            });
+
             return s;
         }
 

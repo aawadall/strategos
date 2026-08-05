@@ -1,10 +1,12 @@
 // PauseOverlay.cs
-// #371 / #206: in-session pause — Save / Load / Drills / Field manual / Resume / Exit.
+// #371 / #206 / #462: pause — Save / Load / Drills / Field manual / Historical note /
+// Resume / Exit.
 
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Scenarios;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -16,6 +18,8 @@ namespace Strategos.UI
         private GameObject _panel;
         private DrillQuickRefPanel _drills;
         private FieldManualBrowserPanel _manual;
+        private HistoricalNotePanel _history;
+        private Button _historyButton;
         private Action _onResume;
         private Action _onSave;
         private Action _onLoad;
@@ -24,6 +28,7 @@ namespace Strategos.UI
         public bool IsOpen => _panel != null && _panel.activeSelf;
         public bool DrillsOpen => _drills != null && _drills.IsOpen;
         public bool ManualOpen => _manual != null && _manual.IsOpen;
+        public bool HistoryOpen => _history != null && _history.IsOpen;
 
         public void Build(RectTransform host, Action onResume, Action onSave, Action onLoad,
             Action onExitMenu)
@@ -44,7 +49,7 @@ namespace Strategos.UI
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(420, 480);
+            card.sizeDelta = new Vector2(420, 540);
             card.gameObject.AddComponent<Image>().color = Theme.CardBg;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -72,15 +77,25 @@ namespace Strategos.UI
             AddButton(card, "LOAD", () => _onLoad?.Invoke());
             AddButton(card, "DRILLS  (quick ref)", OpenDrills);
             AddButton(card, "FIELD MANUAL", OpenManual);
+            _historyButton = AddButton(card, "HISTORICAL NOTE", OpenHistory);
             AddButton(card, "EXIT TO MENU", () => _onExitMenu?.Invoke());
 
             _drills = root.gameObject.AddComponent<DrillQuickRefPanel>();
             _drills.Build(root);
             _manual = root.gameObject.AddComponent<FieldManualBrowserPanel>();
             _manual.Build(root);
+            _history = root.gameObject.AddComponent<HistoricalNotePanel>();
+            _history.Build(root);
 
             _panel = root.gameObject;
             _panel.SetActive(false);
+        }
+
+        public void BindScenario(Scenario scenario)
+        {
+            _history?.Bind(scenario);
+            if (_historyButton != null)
+                _historyButton.interactable = _history != null && _history.HasNotes;
         }
 
         public void Open()
@@ -88,6 +103,9 @@ namespace Strategos.UI
             if (_panel == null) return;
             _drills?.Close();
             _manual?.Close();
+            _history?.Close();
+            if (_historyButton != null)
+                _historyButton.interactable = _history != null && _history.HasNotes;
             _panel.SetActive(true);
             _panel.transform.SetAsLastSibling();
         }
@@ -96,23 +114,33 @@ namespace Strategos.UI
         {
             _drills?.Close();
             _manual?.Close();
+            _history?.Close();
             if (_panel != null) _panel.SetActive(false);
         }
 
         public void CloseDrillsOnly() => _drills?.Close();
-
         public void CloseManualOnly() => _manual?.Close();
+        public void CloseHistoryOnly() => _history?.Close();
 
         private void OpenDrills()
         {
             _manual?.Close();
+            _history?.Close();
             _drills?.Open();
         }
 
         private void OpenManual()
         {
             _drills?.Close();
+            _history?.Close();
             _manual?.Open();
+        }
+
+        private void OpenHistory()
+        {
+            _drills?.Close();
+            _manual?.Close();
+            _history?.Open();
         }
     }
 }

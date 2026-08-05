@@ -45,6 +45,16 @@ namespace Strategos.Editor
             ScenarioIO.SaveToFile(ScenarioSamples.LittleRoundTop(), lrtPath);
             Debug.Log($"[ScenarioProbe] wrote {lrtPath}");
 
+            // #460 / #459: Belleau Wood.
+            var belleauPath = Path.Combine(ResourceDir, ScenarioSamples.BelleauWoodName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.BelleauWood(), belleauPath);
+            Debug.Log($"[ScenarioProbe] wrote {belleauPath}");
+
+            // #461 / #459: Remagen.
+            var remagenPath = Path.Combine(ResourceDir, ScenarioSamples.RemagenName + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.Remagen(), remagenPath);
+            Debug.Log($"[ScenarioProbe] wrote {remagenPath}");
+
             var tutPath = Path.Combine(ResourceDir, ScenarioSamples.TutorialName + ".json");
             ScenarioIO.SaveToFile(ScenarioSamples.Tutorial(), tutPath);
             Debug.Log($"[ScenarioProbe] wrote {tutPath}");
@@ -266,6 +276,12 @@ namespace Strategos.Editor
             // #333 / #342: historical sample must match its committed JSON too.
             bad += CheckNamedShippedFixture(ScenarioSamples.LittleRoundTopName,
                 ScenarioSamples.LittleRoundTop(), log);
+
+            // #460 / #461: further historical converts.
+            bad += CheckNamedShippedFixture(ScenarioSamples.BelleauWoodName,
+                ScenarioSamples.BelleauWood(), log);
+            bad += CheckNamedShippedFixture(ScenarioSamples.RemagenName,
+                ScenarioSamples.Remagen(), log);
 
             // #309: squad tutorial skeleton.
             bad += CheckNamedShippedFixture(ScenarioSamples.TutorialName,

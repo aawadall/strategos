@@ -21,6 +21,9 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   (README, Pages header, itch-publish / itch-push defaults).
 
 ### Added
+- Authored historical fights (#459 / #460 / #461): Belleau Wood and Remagen on the main
+  menu; Remagen digest; `HistoricalNotes` on Scenario + pause **HISTORICAL NOTE** (#462);
+  LRT/Belleau/Remagen briefing copy from digests.
 - Field-manual in-app browser (#206 / #124): pause → FIELD MANUAL list/detail over
   `alpha-glossary`; Esc closes manual before pause; `GlossaryProbe` covers the panel.
 - Field-manual glossary pack (#205 / #124): `GlossaryPack` / `GlossaryTerm`,

@@ -248,12 +248,18 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Esc layering (#371 / #129 / #308 / #206): field manual → drills → context help →
-        /// pause resume → armed verb clear → open pause.
+        /// Esc layering (#371 / #129 / #308 / #206 / #462): historical note → field manual →
+        /// drills → context help → pause resume → armed verb clear → open pause.
         /// </summary>
         private bool HandlePauseKeys()
         {
             if (!Input.GetKeyDown(KeyCode.Escape)) return false;
+
+            if (_pause != null && _pause.HistoryOpen)
+            {
+                _pause.CloseHistoryOnly();
+                return true;
+            }
 
             if (_pause != null && _pause.ManualOpen)
             {
@@ -1044,6 +1050,7 @@ namespace Strategos.UI.Views
             _sim = sim;
             _scenario = sim.Scenario;
             _map = sim.Map;
+            _pause?.BindScenario(_scenario);
 
             _headerLabel.text = HeaderForCurrent();
 

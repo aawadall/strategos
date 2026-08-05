@@ -401,5 +401,11 @@
       "DirectiveId": 0
     }
   ],
-  "TimeLimitTicks": 2700
+  "TimeLimitTicks": 2700,
+  "HistoricalNotes": [
+    {
+      "When": "Briefing",
+      "Text": "Historically the 20th Maine held the extreme left of Vincent's brigade. Late in the fight, low on ammunition, Chamberlain ordered a bayonet charge down the slope rather than withdraw. This scenario's mechanics already model Depleted and Withdraw vs Attack — watch what you choose when the line thins. Source: Research/historical/little-round-top-20th-maine.md (CMH PD)."
+    }
+  ]
 }

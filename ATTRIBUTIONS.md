@@ -96,12 +96,15 @@ in the same change (steps below).
 | `Research/historical/little-round-top-20th-maine.md` | 20th Maine, Little Round Top (1863) | Regiment / company–battalion |
 | `Research/historical/belleau-wood-1st-marine-brigade.md` | Belleau Wood (1918) | Brigade / battalion |
 | `Research/historical/normandy-v-corps-breakout-context.md` | Normandy V Corps / First Army context (1944) | Corps / army |
+| `Research/historical/remagen-ludendorff-bridge.md` | Remagen / Ludendorff Bridge (1945) | Company / battalion |
 
-**Shipped historical scenarios (#333 / #345)** — player-visible provenance:
+**Shipped historical scenarios (#333 / #345 / #459–#461)** — player-visible provenance:
 
 | Resources scenario | Drawn from | Licence |
 |---|---|---|
 | `little-round-top-20th-maine` | `Research/historical/little-round-top-20th-maine.md` + CMH Gettysburg pubs | U.S. gov public domain |
+| `belleau-wood-1st-marine-brigade` | `Research/historical/belleau-wood-1st-marine-brigade.md` | U.S. gov public domain |
+| `remagen-ludendorff-bridge` | `Research/historical/remagen-ludendorff-bridge.md` + CMH *The Last Offensive* | U.S. gov public domain |
 
 Map terrain is a procedural approximation (see each scenario `Description`); not real
 ground.
