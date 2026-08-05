@@ -15,6 +15,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ### Changed
 - itch pricing: pay-what-you-want with **$2** suggested default — README, Pages, and
   itch-publish note the live page; GitHub Release zip remains free.
+- Pages hosts the itch embed widget; README adds itch / Release badges (iframes are
+  stripped on GitHub).
 - Point Play links at the live itch page [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
   (README, Pages header, itch-publish / itch-push defaults).
 
