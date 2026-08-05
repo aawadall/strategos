@@ -117,6 +117,11 @@ Publish a public-facing version of [ROADMAP.md](../ROADMAP.md) on the Steam stor
 | 1.0 Launch | $29.99 | Price increase on full release is expected and accepted |
 | Post-launch DLC | $4.99–9.99 | Historical scenario packs, doctrine packs |
 
+**Product shape:** Free / Base / Scenario Pass — what stays free, what the base game
+includes, and what a purchase pass unlocks — is designed in
+[tiered-releases.md](tiered-releases.md) (#465). Workshop (below) remains a separate
+*community* channel and is never gated by the Pass.
+
 ---
 
 ## Steam Workshop Integration

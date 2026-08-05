@@ -30,6 +30,9 @@ not this epic.
 
 Server, Workshop, OAuth UI, Steamworks package, SQLite/#66 choice. Player *options*
 (`IPreferenceStore` / #307) are a separate thin JSON prefs file, not this seam.
+**Product tiers** (Free / Base / Scenario Pass) are [#465](https://github.com/aawadall/strategos/issues/465)
+/ [tiered-releases.md](tiered-releases.md) — they will hang an `IEntitlementStore` off
+identity, not replace `IContentSource`.
 
 ## Probe
 

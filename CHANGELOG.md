@@ -12,6 +12,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Added
+- Tiered-releases design (#465): Free / Base / Scenario Pass unlocks scenarios —
+  `docs/tiered-releases.md` (alpha stays ungated until SKUs exist).
+
 ### Changed
 - itch pricing: pay-what-you-want with **$2** suggested default — README, Pages, and
   itch-publish note the live page; GitHub Release zip remains free.
