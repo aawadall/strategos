@@ -12,6 +12,11 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Added
+- Free-alpha HELP: `AlphaHelpOverlay` on the main menu — how-to-play (select → MOVE /
+  ENGAGE → pause) plus fog / artillery-as-DF / no-ZoC limits; README how-to section;
+  player-facing note at the top of `docs/known-gaps.md`.
+
 ---
 
 ## [0.3.0-alpha.1] - 2026-08-05

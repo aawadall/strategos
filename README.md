@@ -2,50 +2,51 @@
 
 > *From Greek: στρατηγός — a general, a commander of armies.*
 
-**Strategos** is an open-source tactical command simulation game built with **Unity 6**, spanning every echelon of military command — from a four-soldier fireteam all the way to a multi-theater combatant command.
+**Strategos** is a Unity 6 tactical command simulation built on topographic maps and
+NATO APP-6D symbology. The long arc is command from fireteam to theatre; today it is a
+**playable free alpha** (solo / hotseat / spectator / replay, campaigns, combat).
+
+- **Play:** [v0.3.0-alpha.1 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.1)
+- **Site:** [aawadall.github.io/strategos](https://aawadall.github.io/strategos/)
+- **Status:** [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
-## Features
+## How to play
 
-- **NATO APP-6D Symbology** — Full implementation of NATO standardised military symbols for land, sea, air, space, and cyber dimensions
-- **Topographic Maps** — Height-map-driven terrain with contour overlays, terrain types, LOS calculations, and weather effects
-- **Full Echelon Progression** — Command units from Fireteam (○) through Squad, Platoon, Company, Battalion, Brigade, Division, Corps, Army, Army Group, all the way to Theater/Combatant Command (XXXXXX)
-- **Multiple Game Modes** — Single player vs AI, Hotseat, Online Multiplayer, AI vs AI (spectator), and Battle Replay
-- **Adaptive AI** — Agents that learn through Reinforcement Learning, improve via Transfer Learning from historical battles, and evolve strategies with Genetic Algorithms
-- **Scenario Editor** — Build custom operations with full ORBAT (Order of Battle) design
-- **Cross-Platform** — Windows, macOS, Linux (WebGL stretch goal)
+1. Unzip the Windows release and run `Strategos.exe` (or open the Unity project and Play).
+2. From the menu, start **SQUAD TUTORIAL** or **SKIRMISH ONLY**.
+3. **Left-click** a friendly (blue) unit to select it.
+4. Arm **MOVE** (button or `M`), then left-click empty ground — or **right-click** ground to march.
+5. Arm **ENGAGE** (button or `E`), then left-click an enemy — or right-click a contact to fire.
+6. **Space** pauses / resumes. **Esc** opens pause (Save / Load / return to menu).
 
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Engine | Unity 6 (6000.x LTS) |
-| Rendering | Universal Render Pipeline (URP) |
-| Networking | Unity Netcode for GameObjects / Mirror |
-| AI / ML | Unity ML-Agents + custom RL pipeline |
-| Map Data | Heightmap terrain + procedural topographic overlay |
-| Symbols | NATO APP-6D SVG sprite library |
-| Data | ScriptableObjects + JSON scenario files |
-| Version Control | Git / GitHub |
+In the player, **HELP** on the main menu repeats this and lists alpha limits.
 
 ---
 
-## Game Modes
+## Alpha limits (not bugs)
 
-| Mode | Description |
-|---|---|
-| Solo vs AI | Player commands one side; AI commands the other |
-| Hotseat | Two players share the same machine, alternating turns |
-| Online | Networked multiplayer across any echelon size |
-| AI vs AI | Watch two AI commanders battle; no player input required |
-| Replay | Load and play back any previously recorded battle |
+Honest gaps strangers hit first — full engineering list in [docs/known-gaps.md](docs/known-gaps.md):
+
+- **Little fog of war** on the small shipped maps (detection ranges are long).
+- **Artillery fights as direct fire**; true indirect fire is not built yet.
+- **No zone of control, facing, or unit collision** — units pass through each other.
 
 ---
 
-## Echelon Scale
+## What's playable today
+
+- NATO APP-6D symbol composer + topographic map generation / 2D sheet / 3D drape preview
+- PLAY: orders, A\*, direct fire, ROE reflexes, victory, save/load, campaign chains
+- Modes: solo, hotseat, spectator, replay · Climb / Valley / Highland campaigns
+- Front door: splash, fit-height menu, Options / Audio / Exit, version in the top bar
+
+Not yet: planning AI, online multiplayer, scenario editor, Steam store build, WebGL demo.
+
+---
+
+## Echelon scale
 
 ```
 ○        Fireteam / Crew          (2–4 personnel)
@@ -64,35 +65,30 @@ XXXXXX   Theater / Combatant Cmd  (multiple Army Groups)
 
 ---
 
-## Getting Started
-
-> ⚠️ **Project is under active development.** See [ROADMAP.md](ROADMAP.md) for current status.
+## Building from source
 
 ### Prerequisites
 
-- Unity 6 (6000.x LTS) with Universal Render Pipeline
-- .NET 8 SDK (for tooling)
-- Git
+- Unity 6 (`6000.0.75f1`) with URP
+- Git (LFS for some ProjectSettings)
 
 ### Setup
 
 ```bash
 git clone https://github.com/aawadall/strategos.git
 cd strategos
-# Open the Unity project from the root folder in Unity Hub
+# Open the project root in Unity Hub, or:
+#   .\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.1
 ```
+
+See [docs/build-and-verify.md](docs/build-and-verify.md) for capture, probes, and contact sheets.
 
 ---
 
 ## Contributing
 
-Contributions are welcome — whether it's new NATO symbols, historical scenarios, AI improvements, or bug fixes. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and open a PR against `master`.
-
----
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for the full phased development plan.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and open a PR against `master`. Small known-gap
+fixes and size:5m issues are the best first contributions.
 
 ---
 
@@ -110,7 +106,3 @@ Because that is a restriction on the field of use, this is **not** an OSI-approv
 open-source licence, and GitHub will report the repository as "Other" rather than
 MIT. The source remains public and freely readable, modifiable and redistributable
 within the terms above.
-
----
-
-*Co-Authored-By: Oz <oz-agent@warp.dev>*
