@@ -584,14 +584,13 @@ namespace Strategos.UI.Views
         private void OpenContextHelp()
         {
             if (_contextHelp == null) return;
-            // #308 ships authored copy for MOVE only — arm it if the player asks for help
-            // while another verb (or SELECT) is active so the one control still explains itself.
+            // Prefer authored help for the armed verb; fall back to MOVE then ENGAGE.
             var verb = _armedVerb == PaletteVerb.None ? PaletteVerb.MoveTo : _armedVerb;
             if (!ContextHelp.TryGet(verb, out var title, out var body))
             {
                 title = "HELP";
                 body = "Context help for this control is not authored yet. " +
-                       "Arm MOVE (M) and open HELP again — MOVE is the #308 example. " +
+                       "Arm MOVE (M) or ENGAGE (E) and open HELP again. " +
                        "Glossary / field manual remains #124.";
             }
             _contextHelp.Open(title, body);
@@ -2335,6 +2334,7 @@ namespace Strategos.UI.Views
             var actor = ActorId.ForSide(unit.Side);
             if (!queue) _sim.Issue(Command.Abort(actor, unit.Id));
             IssuePlayer(Command.Engage(actor, unit.Id, target.Id));
+            _tutorialBeat?.OnEngageIssued();
         }
 
         /// <summary>

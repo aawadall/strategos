@@ -1,6 +1,7 @@
 // TutorialFirstBeat.cs
-// #310: first tutorial beat — select your squad, then MoveTo on the real command path.
-// Non-blocking banner (map clicks still work). Driven by PlayView Select / IssueMoveTo.
+// #310 / #441: tutorial checklist — select → MoveTo → Engage on the real command path.
+// Non-blocking banner (map clicks still work). Driven by PlayView Select / IssueMoveTo /
+// IssueEngage.
 
 using TMPro;
 using UnityEngine;
@@ -16,10 +17,13 @@ namespace Strategos.UI
         Inactive = 0,
         SelectUnit = 1,
         IssueMove = 2,
-        Complete = 3,
+        IssueEngage = 3,
+        Complete = 4,
     }
 
-    /// <summary>Checklist for the squad tutorial's first select → MOVE beat (#310).</summary>
+    /// <summary>
+    /// Checklist for the squad tutorial: select → MOVE (#310) → ENGAGE (#441).
+    /// </summary>
     public sealed class TutorialFirstBeat : MonoBehaviour
     {
         private GameObject _root;
@@ -29,7 +33,9 @@ namespace Strategos.UI
         public TutorialBeatPhase Phase { get; private set; } = TutorialBeatPhase.Inactive;
 
         public bool IsActive =>
-            Phase == TutorialBeatPhase.SelectUnit || Phase == TutorialBeatPhase.IssueMove;
+            Phase == TutorialBeatPhase.SelectUnit ||
+            Phase == TutorialBeatPhase.IssueMove ||
+            Phase == TutorialBeatPhase.IssueEngage;
 
         public void Build(RectTransform host)
         {
@@ -70,11 +76,11 @@ namespace Strategos.UI
             _root.SetActive(false);
         }
 
-        /// <summary>Starts the select → MoveTo checklist (tutorial scenario load).</summary>
+        /// <summary>Starts the select → MoveTo → Engage checklist (tutorial scenario load).</summary>
         public void Begin()
         {
             Phase = TutorialBeatPhase.SelectUnit;
-            Show("1 / 2  ·  SELECT",
+            Show("1 / 3  ·  SELECT",
                 "Left-click your squad on the map (or the ORBAT). Real selection — same as any scenario.");
         }
 
@@ -91,17 +97,26 @@ namespace Strategos.UI
         {
             if (Phase != TutorialBeatPhase.SelectUnit || !playerCommanded) return;
             Phase = TutorialBeatPhase.IssueMove;
-            Show("2 / 2  ·  MOVE",
+            Show("2 / 3  ·  MOVE",
                 "Arm MOVE (M or the MOVE button), then left-click a destination. Issues a real MoveTo order.");
         }
 
-        /// <summary>Completes when PlayView issues MoveTo through the normal command path.</summary>
+        /// <summary>Advances to ENGAGE when PlayView issues MoveTo through the normal path.</summary>
         public void OnMoveIssued()
         {
             if (Phase != TutorialBeatPhase.IssueMove) return;
+            Phase = TutorialBeatPhase.IssueEngage;
+            Show("3 / 3  ·  ENGAGE",
+                "Arm ENGAGE (E or the ENGAGE button), then left-click a red contact. Issues a real Engage order.");
+        }
+
+        /// <summary>Completes when PlayView issues Engage through the normal command path (#441).</summary>
+        public void OnEngageIssued()
+        {
+            if (Phase != TutorialBeatPhase.IssueEngage) return;
             Phase = TutorialBeatPhase.Complete;
             Show("BEAT COMPLETE",
-                "Select and MoveTo used the live command path. More beats land with later #289 work.");
+                "Select, MoveTo, and Engage used the live command path. More beats land with later #289 work.");
         }
 
         private void Show(string title, string body)
