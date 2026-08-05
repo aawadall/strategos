@@ -20,14 +20,19 @@ EXPLORE's `SYMBOLS`/`MAP` sub-tabs.
 BUILDER are Tools reachable from the menu or the tab strip. The tab strip is hidden on the
 main menu; a **MENU** tab returns from Tools/PLAY.
 
+**#426 front door.** `MainMenuView` scrolls its button column (`ScrollRect`) so ACTIONS
+stay in view (#427). **EXIT** calls `MainMenuView.QuitApplication` — `Application.Quit` in
+players, stop Play mode in the Editor (#428). **AUDIO** opens Settings (same path as
+OPTIONS) so MASTER / MUSIC / SFX are one click from the landing (#429). Splash remains #430.
+
 **Settings shell (#306 / #307 / #389 / #390 / #391).** `SettingsView` (`-view settings`) is a
-no-tab screen opened from menu Options. GRAPHICS has **FULLSCREEN** (shared with F11 via
+no-tab screen opened from menu Options / Audio. GRAPHICS has **FULLSCREEN** (shared with F11 via
 `AppShell.ApplyFullscreen` / `ApplyWindowed`) and **WINDOWED SIZE** presets
 (1280×720 / 1600×900 / 1920×1080) — copy states these are windowed only; borderless
 fullscreen matches the display. Prefs are applied again on `AppShell` boot (#391).
-AUDIO / ACCESSIBILITY stay empty; GAMEPLAY has persisted `ConfirmOrders`. Tab strip stays
-hidden the same way as the menu. Preference round-trip is probed by `PreferenceStoreProbe`
-(#307); tutorial Validate is #311.
+AUDIO has MASTER / MUSIC / SFX (#264); GAMEPLAY has persisted `ConfirmOrders`; ACCESSIBILITY
+is still empty. Tab strip stays hidden the same way as the menu. Preference round-trip is
+probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
 
 **Display mode (#387 / #388 / #389 / #390 / #391 / #385).** F11 calls `AppShell.ToggleFullscreen`,
 which shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless

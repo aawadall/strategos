@@ -1,6 +1,11 @@
 // MainMenuView.cs
 // #371: front door outside the tab shell — Play, campaign/scenario starts, Load/Save,
-// Options (#306 settings shell), Help stub (#124), Server disabled (#288), Tools tabs.
+// Options (#306 settings shell), Help stub (#124), Server disabled (online / App ID),
+// Tools tabs.
+//
+// #426 / #427: scrollable column so the stack fits the viewport (no bleed).
+// #428: EXIT quits the player (Editor stops Play mode).
+// #429: AUDIO opens Settings (MASTER / MUSIC / SFX already live there).
 //
 // Aged-paper aesthetic (UiTheme + PaperTexture Clean for the button stack). Not a dark
 // glass game-menu skin.
@@ -28,6 +33,8 @@ namespace Strategos.UI.Views
         private Button _saveBtn;
         private Button _loadBtn;
         private Button _continueBtn;
+        private Button _exitBtn;
+        private Button _audioBtn;
 
         public void Build(RectTransform host)
         {
@@ -39,24 +46,46 @@ namespace Strategos.UI.Views
                 PaperOptions.Clean);
             var paper = CreateRect("Paper", root);
             Stretch(paper);
-            paper.offsetMin = new Vector2(80, 40);
-            paper.offsetMax = new Vector2(-80, -40);
+            paper.offsetMin = new Vector2(48, 24);
+            paper.offsetMax = new Vector2(-48, -24);
             var raw = paper.gameObject.AddComponent<RawImage>();
             raw.texture = _paperTex;
             raw.color = Color.white;
 
-            var col = CreateRect("Column", paper);
-            Stretch(col);
-            col.offsetMin = new Vector2(120, 80);
-            col.offsetMax = new Vector2(-120, -80);
+            // #427: scroll the button stack so EXIT / OPTIONS stay reachable.
+            var scrollRt = CreateRect("Scroll", paper);
+            Stretch(scrollRt);
+            scrollRt.offsetMin = new Vector2(40, 32);
+            scrollRt.offsetMax = new Vector2(-40, -32);
+            var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 40f;
+
+            var viewport = CreateRect("Viewport", scrollRt);
+            Stretch(viewport);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            scroll.viewport = viewport;
+
+            var col = CreateRect("Column", viewport);
+            col.anchorMin = new Vector2(0, 1);
+            col.anchorMax = new Vector2(1, 1);
+            col.pivot = new Vector2(0.5f, 1);
+            col.anchoredPosition = Vector2.zero;
+            col.sizeDelta = new Vector2(0, 0);
             var v = col.gameObject.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 10;
+            v.spacing = 8;
             v.childAlignment = TextAnchor.UpperCenter;
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
-            v.padding = new RectOffset(24, 24, 24, 24);
+            v.padding = new RectOffset(24, 24, 16, 24);
+            var fitter = col.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scroll.content = col;
 
             var brand = CreateTmp("Brand", col, "STRATEGOS", 42, FontStyles.Bold);
             brand.alignment = TextAlignmentOptions.Center;
@@ -103,10 +132,16 @@ namespace Strategos.UI.Views
             Spacer(col, 8);
             Section(col, "ALSO");
             AddButton(col, "OPTIONS", () => Shell?.OpenSettings());
+            // #429: Settings AUDIO (master/music/SFX) is one click from the front door.
+            _audioBtn = AddButton(col, "AUDIO", () => Shell?.OpenSettings());
             var help = AddButton(col, "HELP  ·  see #124", () => { });
             help.interactable = false;
-            var server = AddButton(col, "SERVER  ·  needs #288", () => { });
+            var server = AddButton(col, "SERVER  ·  needs online", () => { });
             server.interactable = false;
+
+            Spacer(col, 8);
+            // #428: leave the process (Editor: stop Play mode).
+            _exitBtn = AddButton(col, "EXIT", QuitApplication);
 
             RefreshSessionButtons();
         }
@@ -114,6 +149,20 @@ namespace Strategos.UI.Views
         public void OnShown() => RefreshSessionButtons();
 
         public void OnHidden() { }
+
+        /// <summary>
+        /// #428 — player builds quit; Editor stops Play mode so probes never hang.
+        /// Reflection avoids a UnityEditor asmdef reference from Strategos.Runtime.
+        /// </summary>
+        public static void QuitApplication()
+        {
+#if UNITY_EDITOR
+            var editorApp = Type.GetType("UnityEditor.EditorApplication,UnityEditor");
+            editorApp?.GetProperty("isPlaying")?.SetValue(null, false);
+#else
+            Application.Quit();
+#endif
+        }
 
         private void OnDestroy()
         {
