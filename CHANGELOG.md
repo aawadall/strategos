@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Context help for DIG IN (#447 / #289): Hold/Defend dig-in clock and half-fire copy;
+  `ContextHelpProbe` covers all four authored verbs.
 - Context help for WAYPOINTS (#445 / #289): draft legs → CONFIRM ROUTE copy; DigIn still
   stub; `ContextHelpProbe` extended.
 - Audio Resources conventions (#261 / #41): `docs/audio-resources.md` — Research vs
