@@ -3,7 +3,8 @@
 Runtime audio for Strategos. **Read before adding a clip or changing volume behaviour.**
 
 [CLAUDE.md](../CLAUDE.md) is the index. Sourcing / licences: [assets.md](assets.md),
-[ATTRIBUTIONS.md](../ATTRIBUTIONS.md). Research drafts: `Research/audio/`.
+[ATTRIBUTIONS.md](../ATTRIBUTIONS.md). Full catalogue by category:
+[audio-inventory.md](audio-inventory.md) (#259). Research drafts: `Research/audio/`.
 
 ---
 
