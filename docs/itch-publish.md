@@ -94,9 +94,23 @@ Closing #221 when this page + `itch-push.ps1` ship is the **ops handoff** (same 
 
 ---
 
+## Marketing checklist (#480)
+
+Storefront polish on [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos) —
+distinct from butler push (#221) and from Steam assets (#293).
+
+- [ ] Cover image + 3–5 gameplay screenshots (map, symbols, combat, menu).
+- [ ] Short + long page copy: how-to, alpha limits, links to Pages / GitHub Release.
+- [ ] Tags / genre / Windows platform; PWYW **$2** default still visible.
+- [ ] First itch **devlog** (or status post) for the current alpha.
+- [ ] Optional: motion capture if Pages GIF (#210) is ready to reuse.
+
+---
+
 ## Cross-links
 
 - Release zip / version stamp: [build-and-verify.md](build-and-verify.md), #217–#219
 - Pages CTA: #211 / #437 (done)
 - WebGL verify: #220
+- itch marketing: #480
 - Release epic: #83
