@@ -1,7 +1,7 @@
 // PreferenceStoreProbe.cs
 // #307: JsonPreferenceStore write/read round-trip for ConfirmOrders.
 // #388: same path for Fullscreen + windowed WxH.
-// #311 will extend with tutorial scenario Validate when that skeleton lands.
+// #311: tutorial scenario Validates (skeleton already shipped).
 // Batch: -executeMethod Strategos.Editor.PreferenceStoreProbe.Run
 
 #if UNITY_EDITOR
@@ -11,6 +11,7 @@ using UnityEditor;
 using UnityEngine;
 using Strategos.Persistence.Files;
 using Strategos.Preferences;
+using Strategos.Scenarios;
 
 namespace Strategos.Editor
 {
@@ -110,9 +111,40 @@ namespace Strategos.Editor
                 if (File.Exists(path)) File.Delete(path);
             }
 
+            bad += CheckTutorialScenarioValidates(log);
+
             log.AppendLine(bad == 0 ? "PROBE PASSED" : ("PROBE FAILED with " + bad + " problem(s)"));
             if (bad == 0) Debug.Log("[PreferenceStoreProbe]\n" + log);
             else Debug.LogError("[PreferenceStoreProbe]\n" + log);
+        }
+
+        /// <summary>#311 — squad tutorial scenario is a valid Scenario sample.</summary>
+        private static int CheckTutorialScenarioValidates(StringBuilder log)
+        {
+            try
+            {
+                var scenario = ScenarioSamples.Tutorial();
+                if (scenario == null || !ScenarioSamples.IsTutorial(scenario))
+                {
+                    log.AppendLine("  FAIL Tutorial sample missing or not IsTutorial");
+                    return 1;
+                }
+
+                var problems = scenario.Validate();
+                if (problems != null && problems.Count > 0)
+                {
+                    log.AppendLine("  FAIL Tutorial Validate: " + string.Join("; ", problems));
+                    return 1;
+                }
+
+                log.AppendLine("  Tutorial scenario Validate ok (#311)");
+                return 0;
+            }
+            catch (System.Exception ex)
+            {
+                log.AppendLine("  FAIL Tutorial Validate threw: " + ex.Message);
+                return 1;
+            }
         }
     }
 }

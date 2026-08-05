@@ -23,7 +23,11 @@ main menu; a **MENU** tab returns from Tools/PLAY.
 **#426 front door.** `MainMenuView` scrolls its button column (`ScrollRect`) so ACTIONS
 stay in view (#427). **EXIT** calls `MainMenuView.QuitApplication` — `Application.Quit` in
 players, stop Play mode in the Editor (#428). **AUDIO** opens Settings (same path as
-OPTIONS) so MASTER / MUSIC / SFX are one click from the landing (#429). Splash remains #430.
+OPTIONS) so MASTER / MUSIC / SFX are one click from the landing (#429).
+
+**Splash (#430).** Normal boots open `SplashView` (`-view splash`) — paper brand hold,
+click / any key / ~2.25s → menu. Skipped when `-view` is set or under batchmode /
+`-nographics` (`AppShell.ShouldShowSplash`) so probes and captures stay deterministic.
 
 **Settings shell (#306 / #307 / #389 / #390 / #391).** `SettingsView` (`-view settings`) is a
 no-tab screen opened from menu Options / Audio. GRAPHICS has **FULLSCREEN** (shared with F11 via
@@ -32,7 +36,7 @@ no-tab screen opened from menu Options / Audio. GRAPHICS has **FULLSCREEN** (sha
 fullscreen matches the display. Prefs are applied again on `AppShell` boot (#391).
 AUDIO has MASTER / MUSIC / SFX (#264); GAMEPLAY has persisted `ConfirmOrders`; ACCESSIBILITY
 is still empty. Tab strip stays hidden the same way as the menu. Preference round-trip is
-probed by `PreferenceStoreProbe` (#307); tutorial Validate is #311.
+probed by `PreferenceStoreProbe` (#307 / #311 tutorial Validate); tutorial Validate is #311.
 
 **Display mode (#387 / #388 / #389 / #390 / #391 / #385).** F11 calls `AppShell.ToggleFullscreen`,
 which shares `ApplyWindowed` / `ApplyFullscreen` with Settings. Fullscreen is borderless
