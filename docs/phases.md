@@ -346,8 +346,9 @@ intelligence / ML-Agents unbuilt.
 **Status:** Unbuilt.
 
 - [x] Local/API seam for saves, content, and player identity (#355 / #361–#367) — see `docs/local-api-seam.md`
-- [ ] Tiered releases: Free / Base / Scenario Pass unlocks authored fights (#465 — design in `docs/tiered-releases.md`)
-- [ ] Scenario server: host/serve scenarios beyond Resources (#464 — backlog; distinct from unlock)
+- [ ] Tiered releases: Free / Base / Scenario Pass unlocks authored fights (#465 — design in `docs/tiered-releases.md`; live SKUs gate on $25 epic #477)
+- [ ] Scenario server: host/serve scenarios beyond Resources (#464 — backlog; $30 gate on #478)
+- [ ] Price ladder milestone epics $0→$30 (#471 meta; children #472–#478 — see `docs/price-ladder.md`)
 - [ ] User accounts: registration, login, OAuth (Google/Discord) (builds on #355 identity; Steam via #288 likely first)
 - [ ] Embedded store for player data when accounts exist (#66)
 - [ ] Player profile: rank, win/loss, favourite doctrine, commander history
