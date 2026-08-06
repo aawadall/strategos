@@ -83,6 +83,18 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  DrillRefs present on ≥1 term ok");
+
+                var forT1 = GlossaryIO.TermsForDrill(pack, "T1");
+                if (forT1 == null || forT1.Length == 0)
+                {
+                    log.AppendLine("  FAIL TermsForDrill(T1) empty (#207)");
+                    bad++;
+                }
+                else
+                {
+                    log.AppendLine("  TermsForDrill(T1) → " + forT1.Length +
+                        " term(s) ok (#207)");
+                }
             }
 
             var hostGo = new GameObject("probe-field-manual", typeof(RectTransform));
@@ -98,6 +110,15 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  FieldManualBrowserPanel Open ok");
+
+                browser.OpenOnDrill("T1");
+                if (!browser.IsOpen)
+                {
+                    log.AppendLine("  FAIL OpenOnDrill(T1) closed panel (#207)");
+                    bad++;
+                }
+                else log.AppendLine("  OpenOnDrill(T1) ok (#207)");
+
                 browser.Close();
                 if (browser.IsOpen)
                 {

@@ -24,6 +24,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Doctrine;
+using Strategos.FieldManual;
 using Strategos.NatoSymbols;
 
 using Theme = Strategos.UI.UiTheme;
@@ -581,6 +582,27 @@ namespace Strategos.UI.Views
                 spacingAfter: 12);
 
             AddLine(drill.Summary, 14, FontStyles.Normal, Theme.Ink, 24, spacingAfter: 4);
+
+            // Binder → glossary (#207): terms that cite this drill code.
+            var glossary = GlossaryIO.Load(GlossaryIO.DefaultPackName);
+            var linked = GlossaryIO.TermsForDrill(glossary, drill.Code);
+            if (linked != null && linked.Length > 0)
+            {
+                var titles = new System.Text.StringBuilder("FIELD MANUAL: ");
+                for (int i = 0; i < linked.Length; i++)
+                {
+                    if (i > 0) titles.Append(" · ");
+                    titles.Append(string.IsNullOrEmpty(linked[i].Title)
+                        ? linked[i].Id
+                        : linked[i].Title);
+                }
+                AddLine(titles.ToString(), 12, FontStyles.Bold, Theme.Accent, 20,
+                    spacingAfter: 2);
+                // One body is enough for the first link — keeps the page from ballooning.
+                var body = linked[0].Body ?? "";
+                if (body.Length > 160) body = body.Substring(0, 157) + "...";
+                AddLine(body, 12, FontStyles.Italic, Theme.InkMuted, 36, spacingAfter: 10);
+            }
 
             // Hyphens and middots only — the atlas renders an en dash as nothing at all.
             AddLine($"NOT WHEN:  {drill.NotWhen}", 12, FontStyles.Italic, Theme.Alert, 22,

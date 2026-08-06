@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Doctrine;
+using Strategos.FieldManual;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -117,12 +118,25 @@ namespace Strategos.UI
             }
 
             var sb = new System.Text.StringBuilder();
+            var glossary = GlossaryIO.Load(GlossaryIO.DefaultPackName);
             for (int i = 0; i < drills.Count; i++)
             {
                 var d = drills[i];
                 sb.Append(d.Code).Append("  —  ").Append(d.Name);
                 if (!string.IsNullOrEmpty(d.Summary))
                     sb.Append('\n').Append("    ").Append(d.Summary);
+                var linked = GlossaryIO.TermsForDrill(glossary, d.Code);
+                if (linked != null && linked.Length > 0)
+                {
+                    sb.Append('\n').Append("    Field manual: ");
+                    for (int t = 0; t < linked.Length; t++)
+                    {
+                        if (t > 0) sb.Append(", ");
+                        sb.Append(string.IsNullOrEmpty(linked[t].Title)
+                            ? linked[t].Id
+                            : linked[t].Title);
+                    }
+                }
                 sb.Append("\n\n");
             }
             _body.text = sb.ToString();

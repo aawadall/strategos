@@ -22,7 +22,8 @@ namespace Strategos.FieldManual
 
         /// <summary>
         /// Optional drill codes from the doctrine pack (e.g. <c>T1</c>). Empty when the term
-        /// is not drill-tied. Cross-link UI is #207.
+        /// is not drill-tied. Binder and field-manual UI resolve these via
+        /// <see cref="GlossaryIO.TermsForDrill"/> (#207).
         /// </summary>
         public string[] DrillRefs = System.Array.Empty<string>();
     }
@@ -77,5 +78,30 @@ namespace Strategos.FieldManual
 
         public static Strategos.Content.IContentSource<GlossaryPack> DefaultContentSource { get; } =
             new Strategos.Content.Resources.ResourcesGlossaryPackSource();
+
+        /// <summary>
+        /// Terms that cite <paramref name="drillCode"/> in <see cref="GlossaryTerm.DrillRefs"/>
+        /// (#207 — binder → glossary).
+        /// </summary>
+        public static GlossaryTerm[] TermsForDrill(GlossaryPack pack, string drillCode)
+        {
+            if (pack?.Terms == null || string.IsNullOrWhiteSpace(drillCode))
+                return System.Array.Empty<GlossaryTerm>();
+
+            var list = new System.Collections.Generic.List<GlossaryTerm>();
+            foreach (var t in pack.Terms)
+            {
+                if (t?.DrillRefs == null) continue;
+                foreach (var r in t.DrillRefs)
+                {
+                    if (string.Equals(r, drillCode, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(t);
+                        break;
+                    }
+                }
+            }
+            return list.ToArray();
+        }
     }
 }

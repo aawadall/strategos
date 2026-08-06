@@ -399,8 +399,8 @@ rank insignia ships; audio issues filed (#40–#46).
   issue, keyboard shortcuts, and WAYPOINTS draft/commit (#127–#129, #54); config table (#130)
   still open
 - [ ] Site motion capture / GIF for the landing page (#120 remainder)
-- [ ] In-game / web field-manual reference (#124) — glossary pack (#205) + pause browser
-  (#206); see [field-manual.md](field-manual.md); drill links #207 / Pages #208 still open
+- [x] In-game / web field-manual reference (#124) — glossary pack (#205) + pause browser
+  (#206) + drill cross-link (#207); see [field-manual.md](field-manual.md); Pages #208 still open
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289) —

@@ -1,8 +1,9 @@
 // FieldManualBrowserPanel.cs
-// #206 / #124: in-session read-only glossary browser (pause nested).
-// Loads alpha-glossary via GlossaryIO; DrillRefs display is #207.
+// #206 / #207 / #124: in-session read-only glossary browser (pause nested).
+// Loads alpha-glossary via GlossaryIO; shows DrillRefs on the detail pane.
 
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -53,7 +54,7 @@ namespace Strategos.UI
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 32;
 
             var note = CreateTmp("Note", card,
-                "Read-only · alpha glossary · drill cross-links are #207 · full binder is DRILLS",
+                "Read-only · alpha glossary · related drills listed on each term · full binder is DRILLS",
                 12, FontStyles.Normal);
             note.color = Theme.InkMuted;
             note.alignment = TextAlignmentOptions.Center;
@@ -162,6 +163,26 @@ namespace Strategos.UI
             _root.transform.SetAsLastSibling();
         }
 
+        /// <summary>Open and select the first term that cites <paramref name="drillCode"/> (#207).</summary>
+        public void OpenOnDrill(string drillCode)
+        {
+            Open();
+            if (_terms == null || string.IsNullOrWhiteSpace(drillCode)) return;
+            for (int i = 0; i < _terms.Length; i++)
+            {
+                var refs = _terms[i].DrillRefs;
+                if (refs == null) continue;
+                foreach (var r in refs)
+                {
+                    if (string.Equals(r, drillCode, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        Select(i);
+                        return;
+                    }
+                }
+            }
+        }
+
         public void Close()
         {
             if (_root != null) _root.SetActive(false);
@@ -211,7 +232,22 @@ namespace Strategos.UI
             _selected = index;
             var term = _terms[index];
             _detailTitle.text = string.IsNullOrEmpty(term.Title) ? term.Id : term.Title;
-            _detailBody.text = term.Body ?? "";
+
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(term.Body))
+                sb.Append(term.Body);
+            if (term.DrillRefs != null && term.DrillRefs.Length > 0)
+            {
+                if (sb.Length > 0) sb.Append("\n\n");
+                sb.Append("Related drills: ");
+                for (int i = 0; i < term.DrillRefs.Length; i++)
+                {
+                    if (i > 0) sb.Append(", ");
+                    sb.Append(term.DrillRefs[i]);
+                }
+                sb.Append("\n(Open the DRILLS tab binder for the full page.)");
+            }
+            _detailBody.text = sb.ToString();
 
             for (int i = 0; i < _termButtons.Count; i++)
             {

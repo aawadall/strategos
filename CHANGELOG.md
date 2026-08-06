@@ -20,6 +20,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- Field manual ↔ drill cross-link (#207): DRILLS binder and pause quick-ref show glossary
+  terms for cited codes (T1); field-manual detail lists `DrillRefs`; `GlossaryIO.TermsForDrill`.
 - itch marketing pack (#480): paste-ready page copy + staged cover/screenshots —
   `docs/itch-page-copy.md`, `Research/store/itch/`.
 - itch discoverability checklist (#496): trailer, theme, quality guidelines, indexing,
