@@ -1,38 +1,58 @@
 # Visual preferences (#519)
 
-Player options for **unit marks**, **map style**, and **map layers** — persisted in
-`PlayerPreferences`, edited from Settings (and optionally PLAY), applied when baking
-the topographic sheet.
+Player options for **unit marks**, **map style**, **map layers**, and **chrome theme
+(Light / Dark / CRT)** — persisted in `PlayerPreferences`, edited from Settings (and
+optionally PLAY).
 
 GitHub: [#519](https://github.com/aawadall/strategos/issues/519).
 
 | Concern | Epic / issue | Notes |
 |---|---|---|
 | Window / fullscreen | #385 (done) | GRAPHICS size — not this page |
-| Dark UI chrome | #132 | Shell colours — not map sheet |
 | Fog of war physics | #476 | Sensor model — not layer toggles |
-| **Visual prefs** | **#519** | Units + map style + layers |
+| itch page theme | #498 | Storefront — not in-game |
+| **Visual prefs** | **#519** | Units + map + layers + **Light/Dark/CRT** |
+| Dark slice (legacy) | #132 | Children #193–#197; owned by #519 section D |
+
+## Themes (Light / Dark / CRT)
+
+| Kind | Intent |
+|---|---|
+| **Light** | Current paper `UiTheme` (default) |
+| **Dark** | Operations-map / low-light shell (#194) |
+| **CRT** | Phosphor green/amber on near-black + mild scanline/vignette (#529) |
+
+Selector lives in Settings VISUAL / APPEARANCE (#530). Prefs: `UiThemeKind` (#528).
+Requires palette indirection (#193) so views stop hard-coding `UiTheme` statics.
+
+Theme changes **shell chrome** first. Map bake palettes (`MapRenderMode` / NatoTopo)
+stay independent unless a later child explicitly ties CRT phosphor to the sheet.
 
 ## Already in the engine
 
-- `MapRenderMode` (Schematic / Topographic / Hybrid / Terrain / NatoTopo) — dropdowns on
-  PLAY / EXPLORE / SCENARIO today are **session-only** (reset on restart).
-- `MapRenderOptions.DrawHillshade` / `DrawContours` / `DrawAreas` / `DrawLines` /
-  `DrawPois` / `DrawLabels` / `DrawGrid` — rasterizer flags; not yet prefs.
-- PLAY `afterPixels` overlays: GCMs, world objects, order tracks — always on when present.
+- Light `UiTheme` paper palette
+- `MapRenderMode` dropdowns — **session-only** today
+- `MapRenderOptions.Draw*` layer flags — not yet prefs
+- PLAY `afterPixels` overlays — always on when present
 
-## Children (#520–#525)
+## Children
 
-1. Prefs fields + round-trip  
-2. Settings **VISUAL** section  
-3. Views honor prefs on bake  
-4. Unit symbol scale + wreck visibility  
-5. Overlay toggles (GCM / world / tracks)  
-6. Probe + invariants note  
+| # | Task |
+|---|---|
+| #520 | Prefs: map mode + layers |
+| #521 | Settings VISUAL (map) |
+| #522 | Views honor map prefs |
+| #523 | Unit scale + wrecks |
+| #524 | Overlay toggles |
+| #525 | Probe + invariants |
+| #528 | Prefs: Light / Dark / Crt |
+| #529 | CRT colours + scanline |
+| #530 | Settings theme selector |
+| #193–#197 | Dark theme plumbing (under #132) |
 
 ## Rule
 
-Defaults must match today’s look (`MapRenderOptions.Default`, Topographic, overlays on)
-so a fresh install does not surprise. Changing prefs must not mutate `MapData`.
+Default **Light** + today’s map look (`MapRenderOptions.Default`). Changing prefs must
+not mutate `MapData`. CRT must remain readable (contrast), not a novelty-only filter.
 
 Update this page when a child ships.
