@@ -13,6 +13,7 @@ Local and (selectively) committed research material for Strategos.
 | `Research/audio/*.mp3` | **Yes** — draft takes | Candidate ElevenLabs/Suno generations from the scripts/prompts above, staged here pending #401 (OGG Vorbis conversion) and provenance logging in `ATTRIBUTIONS.md`; not the final shipped format or location (`Assets/Audio/`, per `docs/assets.md`) |
 | `Research/maps/schemas/`, `fixtures/` | **Yes** — small JSON | Converted elevation/features for real-map import (#493) |
 | `Research/maps/raw/` | **No** — gitignored | Downloaded GeoTIFF / HGT / OSM / PBF |
+| `Research/store/itch/` | **Yes** — screenshots | itch cover + page shots (#480) |
 
 Do **not** commit source PDFs, scraped HTML dumps, or copyrighted reproductions.
 Summarise into markdown; cite the public-domain (or otherwise cleared) source and licence

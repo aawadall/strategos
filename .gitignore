@@ -96,3 +96,5 @@ Research/*
 # Raw DEM/OSM downloads stay local (see docs/map-import-tools.md).
 Research/maps/raw/
 Research/maps/raw/**
+!Research/store/
+!Research/store/**
