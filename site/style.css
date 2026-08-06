@@ -270,6 +270,31 @@ pre code {
 
 .concept h3 { margin-top: 0; }
 
+/* ---- Field manual glossary (#208) ----------------------------------------*/
+
+.glossary-term {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.glossary-term h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  color: var(--green-dark);
+}
+
+.glossary-term p { margin: 0 0 0.55rem; }
+
+.glossary-term p:last-child { margin-bottom: 0; }
+
+.glossary-term .term-meta {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
 /* ---- Subpage nav (roadmap / concepts cross-links) ------------------------*/
 
 .subnav {

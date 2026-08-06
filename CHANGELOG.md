@@ -26,6 +26,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   dark UI epic #132 folded under #519 section D.
 
 ### Added
+- Field manual Pages stub (#208): `site/field-manual.html` mirrors the alpha glossary
+  pack; Field manual nav link on all Pages; `docs/field-manual.md` updated.
 - Visual preferences epic (#519): units, map style, map layers — Settings/prefs
   (`docs/visual-preferences.md`, children #520–#525).
 - TTP content sourcing epic (#513) under meta #510: Distro A pubs → doctrine packs
