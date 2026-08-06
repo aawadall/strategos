@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://strategos.local/schemas/features.v1.json",
+  "title": "Strategos map features v1",
+  "type": "object",
+  "required": ["schema", "name", "width", "height"],
+  "properties": {
+    "schema": { "const": "strategos.features.v1" },
+    "name": { "type": "string", "minLength": 1 },
+    "width": { "type": "integer", "minimum": 8 },
+    "height": { "type": "integer", "minimum": 8 },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "points"],
+        "properties": {
+          "kind": { "type": "string" },
+          "name": { "type": "string" },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["x", "y"],
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pois": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "x", "y"],
+        "properties": {
+          "kind": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "dataset": { "type": "string" },
+        "licence": { "type": "string" },
+        "url": { "type": "string" }
+      }
+    }
+  }
+}

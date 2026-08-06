@@ -100,28 +100,29 @@ Assets/Art/NatoSymbols/
   [#487](https://github.com/aawadall/strategos/issues/487) /
   [`docs/value-roadmap-52w.md`](value-roadmap-52w.md) (after FoW, before guns).
 
-**Processing pipeline (target — not shipped yet):**
-1. Download SRTM tiles for target region from EarthExplorer or [OpenTopography](https://opentopography.org)
-2. Convert and crop with **GDAL** (`gdal_translate`, `gdalwarp`) into the scenario
-   UTM bbox / `MetresPerCell` grid
-3. Resample into `MapData.Elevation` and feed `MapGenerator` via the **authoredRelief**
-   hook (do not replace the procedural pipeline; training maps stay generated)
+**Processing pipeline:** see [`map-import-tools.md`](map-import-tools.md) and
+`tools/maps/` (hunt → GDAL convert → validate → Unity authoredRelief).
+
+1. `hunt-bbox.ps1` — bbox → download checklist under `Research/maps/raw/<id>/`
+2. `convert-dem.ps1` — GeoTIFF/HGT → `elevation.v1.json` (UTM patch, cell grid)
+3. Unity (W19 / #489) loads JSON via **authoredRelief** into `MapData.Elevation`
 4. Keep `MapCoordinates` / `GeoOrigin` so MGRS labels match the sheet
 
 **Useful pre-built tools:**
+- **GDAL** (required by convert scripts) — OSGeo4W / conda / chocolatey
 - **Terrain.party** ([terrain.party](https://terrain.party)) — download heightmaps by bbox
+- **QGIS** — inspect tiles before convert
 - **WorldCreator** — commercial terrain tool with SRTM import
 
-Stage fixtures under `Research/maps/` with provenance; promote into scenario JSON only
-after `ShippedMapProbe` passes.
+Stage fixtures under `Research/maps/fixtures/` with provenance; promote into scenario
+JSON only after `ShippedMapProbe` passes. Raw tiles stay gitignored in `raw/`.
 
 ### Road & Settlement Overlay — OpenStreetMap
 
 - **Source:** [openstreetmap.org](https://openstreetmap.org) / [download.geofabrik.de](https://download.geofabrik.de)
 - **License:** Open Database License (ODbL) — attribution required in-game
 - **Data includes:** roads, railways, rivers, towns, airfields, bridges, borders
-- **Format:** OSM XML or PBF → convert to GeoJSON with [osmtogeojson](https://github.com/tyrasd/osmtogeojson) or **osm2json**
-- **Unity integration:** parse GeoJSON → stamp `MapData` lines / POIs (W21 / #491)
+- **Unity integration:** `convert-osm.ps1` → `features.v1.json` → stamp `MapData` lines / POIs (W21 / #491)
 - **Cadence:** weekly release **W21** under [#487](https://github.com/aawadall/strategos/issues/487)
 
 **Attribution requirement (ODbL):**

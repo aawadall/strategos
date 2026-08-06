@@ -20,6 +20,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- External map import tools (#493): hunt / convert / validate scripts under `tools/maps/`,
+  intermediate JSON schemas, `docs/map-import-tools.md`, synthetic `demo-ramp` fixture.
 - Real-world map sourcing epic (#487): SRTM + OSM on the weekly cadence (#488–#491).
 - 52-week value-add roadmap (#483): weekly player-visible value from 2026-08-10 through
   2027-08-02 aligned to `$15`–`$30` ladder — `docs/value-roadmap-52w.md`.
