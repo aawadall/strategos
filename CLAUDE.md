@@ -176,6 +176,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/simulation-invariants.md](docs/simulation-invariants.md) | Touching `Core/Commands`, `Reports`, `Combat`, `Reactions`, `Direction`, `Objectives`, `Movement`, `Messaging` |
 | [docs/symbol-invariants.md](docs/symbol-invariants.md) | Touching `Core/NatoSymbols` — SIDC layout, echelon marks, frame rules |
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
+| [docs/visual-preferences.md](docs/visual-preferences.md) | Unit / map style / layer prefs (#519) |
 | [docs/map-import-tools.md](docs/map-import-tools.md) | Hunting / converting / importing real DEM+OSM (#493) |
 | [docs/ui-invariants.md](docs/ui-invariants.md) | Touching `Assets/Scripts/UI` or `Demo` — view shell, layout, glyph coverage |
 | [docs/audio.md](docs/audio.md) | Touching `Core/Audio` or soundtrack beds — mixer stub, Resources clips, volume prefs |

@@ -22,6 +22,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- Visual preferences epic (#519): units, map style, map layers — Settings/prefs
+  (`docs/visual-preferences.md`, children #520–#525).
 - TTP content sourcing epic (#513) under meta #510: Distro A pubs → doctrine packs
   (#514–#517); W11 tracker points at #516.
 - TTP / doctrine epic of epics (#510): binder, field manual, AAR, medals, `$15` drill
