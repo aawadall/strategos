@@ -28,10 +28,13 @@ commits, and how the backlog is filed.
    time on this project (a batch build silently shipping the previous revision, enum
    renames breaking saved content, indexing `Scenario.Units` by position). Knowing these
    up front is much cheaper than rediscovering them.
-5. **Pick something small first.** `docs/known-gaps.md` and the open issue list are both
-   real, current backlog — not toy issues held back for newcomers. A small one is still
-   the fastest way to exercise the build → verify → PR loop once before attempting
-   anything larger.
+5. **Pick something small first.** Prefer issues labelled
+   [**good first issue**](https://github.com/aawadall/strategos/labels/good%20first%20issue)
+   (docs, storefront copy, small site/media). After one PR, look at
+   [**help wanted**](https://github.com/aawadall/strategos/labels/help%20wanted)
+   (Unity loaders, splash, screenshots, audio tooling). Comment on the issue to claim it.
+   `docs/known-gaps.md` and other `size:5m` tickets are also real backlog — not toys —
+   but the labelled lists are the curated door for newcomers.
 
 ---
 
