@@ -21,6 +21,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   (then guns/ground compressed into W22–W26) — `docs/value-roadmap-52w.md`,
   `docs/assets.md`.
 
+### Changed
+- Visual preferences (#519): include chrome **theme** Light / Dark / CRT (#528–#530);
+  dark UI epic #132 folded under #519 section D.
+
 ### Added
 - Visual preferences epic (#519): units, map style, map layers — Settings/prefs
   (`docs/visual-preferences.md`, children #520–#525).
