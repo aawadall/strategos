@@ -173,7 +173,6 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/ci-unity-licence.md](docs/ci-unity-licence.md) | Hosted CI Unity secrets checklist (#216) |
 | [docs/itch-publish.md](docs/itch-publish.md) | itch.io project + butler / app / browser push (#221) |
 | [docs/field-manual.md](docs/field-manual.md) | Glossary JSON shape + pack status (#124 / #205) |
-| [docs/ttp-epics.md](docs/ttp-epics.md) | TTP / doctrine meta-epic (#510) — binder, school, AAR, medals, authoring |
 | [docs/simulation-invariants.md](docs/simulation-invariants.md) | Touching `Core/Commands`, `Reports`, `Combat`, `Reactions`, `Direction`, `Objectives`, `Movement`, `Messaging` |
 | [docs/symbol-invariants.md](docs/symbol-invariants.md) | Touching `Core/NatoSymbols` — SIDC layout, echelon marks, frame rules |
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
