@@ -99,10 +99,14 @@ Closing #221 when this page + `itch-push.ps1` ship is the **ops handoff** (same 
 Storefront polish on [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos) —
 distinct from butler push (#221) and from Steam assets (#293).
 
-- [ ] Cover image + 3–5 gameplay screenshots (map, symbols, combat, menu).
-- [ ] Short + long page copy: how-to, alpha limits, links to Pages / GitHub Release.
-- [ ] Tags / genre / Windows platform; PWYW **$2** default still visible.
-- [ ] First itch **devlog** (or status post) for the current alpha.
+**In-repo pack (ready to paste/upload):** [itch-page-copy.md](itch-page-copy.md) +
+`Research/store/itch/`.
+
+- [x] Cover image + 3 gameplay screenshots staged under `Research/store/itch/` (menu, PLAY, EXPLORE).
+- [x] Short + long page copy drafted in `docs/itch-page-copy.md` (how-to, alpha limits, Pages / GitHub links).
+- [x] Tags / genre / Windows / PWYW **$2** listed in `itch-page-copy.md` (confirm on Edit game).
+- [x] First itch **devlog** draft in `itch-page-copy.md` (publish on itch to finish).
+- [ ] **Operator:** paste copy, upload images, publish devlog on the live page → close #480.
 - [ ] Optional: motion capture if Pages GIF (#210) is ready to reuse.
 
 ---

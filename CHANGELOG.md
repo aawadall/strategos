@@ -20,6 +20,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- itch marketing pack (#480): paste-ready page copy + staged cover/screenshots —
+  `docs/itch-page-copy.md`, `Research/store/itch/`.
 - itch discoverability checklist (#496): trailer, theme, quality guidelines, indexing,
   community/social posts (#497–#504) — `docs/itch-publish.md`.
 - External map import tools (#493): hunt / convert / validate scripts under `tools/maps/`,
