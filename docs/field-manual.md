@@ -12,7 +12,7 @@ Parent meta: [ttp-epics.md](ttp-epics.md) / [#510](https://github.com/aawadall/s
 | #205 glossary JSON + one pack | `GlossaryPack` / `GlossaryTerm` + `Resources/FieldManual/alpha-glossary.json` |
 | #206 in-app read-only browser | Pause → **FIELD MANUAL** → `FieldManualBrowserPanel` (list + detail) |
 | #207 cross-link one drill | **done** — DRILLS binder + pause quick-ref show glossary for `T1`; manual lists `DrillRefs` |
-| #208 Pages stub | open |
+| #208 Pages stub | **done** — `site/field-manual.html` mirrors the alpha pack; nav on all Pages |
 | #209 phases pointer | open (partial: this page + phases §10 already mention #124) |
 
 ## In-app browser (#206)
@@ -22,6 +22,12 @@ From PLAY, Esc (pause) → **FIELD MANUAL**. Nested overlay loads
 manual before pause. Not the DRILLS binder and not `AlphaHelpOverlay`.
 
 Probe: **Strategos → Probe Glossary** also Build/Open/Close the browser panel.
+
+## GitHub Pages stub (#208)
+
+Static mirror at [field-manual.html](https://aawadall.github.io/strategos/field-manual.html)
+(`site/field-manual.html`). Same six alpha terms and T1 cites as the JSON pack; linked from
+the site nav. Keep the HTML in sync when the pack grows (no build step — copy by hand).
 
 ## Drill cross-links (#207)
 

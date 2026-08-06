@@ -13,7 +13,7 @@ under price-ladder meta [#471](https://github.com/aawadall/strategos/issues/471)
 | Binder (read + execute) | [#61](https://github.com/aawadall/strategos/issues/61) · [#97](https://github.com/aawadall/strategos/issues/97) | **done** |
 | Campaign arc (drills in climb) | [#78](https://github.com/aawadall/strategos/issues/78) | **done** |
 | **Source TTP content (Distro A)** | [#513](https://github.com/aawadall/strategos/issues/513) | **open** (#514–#517) |
-| Field manual / glossary | [#124](https://github.com/aawadall/strategos/issues/124) | **open** (#205–#207 done; #208–#209 open) |
+| Field manual / glossary | [#124](https://github.com/aawadall/strategos/issues/124) | **open** (#205–#208 done; #209 open) |
 | Teach in PLAY (AAR / commentary) | [#421](https://github.com/aawadall/strategos/issues/421) | **open** |
 | Bar medals | [#467](https://github.com/aawadall/strategos/issues/467) | **open** (design in [bar-medals.md](bar-medals.md)) |
 | **$15 Drill school** | [#475](https://github.com/aawadall/strategos/issues/475) | **open — next chargeable** |

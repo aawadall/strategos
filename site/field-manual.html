@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field manual — Strategos</title>
+<meta name="description" content="Alpha glossary for Strategos: MoveTo, Engage, Hold, Abort, ORBAT, and TTP — the same pack as the in-game field manual.">
+<link rel="canonical" href="https://aawadall.github.io/strategos/field-manual.html">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aawadall.github.io/strategos/field-manual.html">
+<meta property="og:title" content="Field manual — Strategos">
+<meta property="og:description" content="Alpha glossary: command vocabulary mirrored from the in-game field manual pack.">
+<meta property="og:image" content="https://aawadall.github.io/strategos/images/explore-symbol-library.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Field manual — Strategos">
+<meta name="twitter:description" content="Alpha glossary: command vocabulary mirrored from the in-game field manual pack.">
+<meta name="twitter:image" content="https://aawadall.github.io/strategos/images/explore-symbol-library.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div>
+      <h1>STRATEGOS</h1>
+      <p class="tagline">A tactical command simulation built on topographic maps, NATO APP-6D
+        symbology, and multi-echelon command — from a fireteam to a theatre command.</p>
+    </div>
+    <nav>
+      <a class="page" href="index.html">What's built</a>
+      <a class="page" href="roadmap.html">Roadmap</a>
+      <a class="page" href="concepts.html">Concepts</a>
+      <a class="page" href="field-manual.html" aria-current="page">Field manual</a>
+      <a class="page" href="https://github.com/aawadall/strategos">Source</a>
+      <a class="cta" href="https://aawadall.itch.io/strategos">Play on itch.io</a>
+    </nav>
+  </div>
+</header>
+
+<div class="status-strip">
+  <div class="wrap">
+    <strong>Alpha Glossary</strong> — same pack as in-game pause → FIELD MANUAL
+    (<code>Resources/FieldManual/alpha-glossary.json</code>).
+    Web stub for
+    <a href="https://github.com/aawadall/strategos/issues/208">#208</a>
+    / epic
+    <a href="https://github.com/aawadall/strategos/issues/124">#124</a>.
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <section id="about">
+      <h2>What this is</h2>
+      <p class="lede">
+        Short command vocabulary for PLAY — not the DRILLS binder, not context help on one
+        control, and not a full doctrine wiki yet. In the Windows alpha: Esc →
+        <strong>FIELD MANUAL</strong>. Terms that cite drills (for example <strong>T1</strong>)
+        cross-link with the DRILLS tab.
+      </p>
+      <p>
+        Source of truth:
+        <a href="https://github.com/aawadall/strategos/blob/master/Assets/Resources/FieldManual/alpha-glossary.json">alpha-glossary.json</a>
+        · design note:
+        <a href="https://github.com/aawadall/strategos/blob/master/docs/field-manual.md">docs/field-manual.md</a>.
+      </p>
+    </section>
+
+    <section id="glossary">
+      <h2>Terms</h2>
+
+      <article class="glossary-term" id="move-to">
+        <h3>MoveTo</h3>
+        <p>
+          Order a unit to march to a map cell. Paths use terrain-cost A*. Arm MOVE (M) or
+          right-click empty ground. Hold Shift to append behind the live plan instead of
+          replacing it.
+        </p>
+        <p class="term-meta">Related drills: <strong>T1</strong></p>
+      </article>
+
+      <article class="glossary-term" id="engage">
+        <h3>Engage</h3>
+        <p>
+          Direct-fire order against a hostile contact. Arm ENGAGE (E) or right-click a red
+          contact. Range and line of sight still matter; this is not artillery.
+        </p>
+      </article>
+
+      <article class="glossary-term" id="hold-dig-in">
+        <h3>Hold / Dig in</h3>
+        <p>
+          Stay put and prepare. Dig-in takes about two minutes; once prepared, the unit takes
+          half the incoming fire. DIG IN on the palette bridges to the same Hold/Defend path
+          when the unit can dig in.
+        </p>
+      </article>
+
+      <article class="glossary-term" id="abort-plan">
+        <h3>Abort plan</h3>
+        <p>
+          Clear the selected unit's queued orders. Issued as a logged Abort command so replay
+          can reconstruct the cut. Distinct from Hold — Abort means stop and do nothing.
+        </p>
+      </article>
+
+      <article class="glossary-term" id="orbat">
+        <h3>ORBAT</h3>
+        <p>
+          Order of battle: the side's unit tree. Formations own subordinates; an order to a
+          formation decomposes one echelon per step. Select from the map or the ORBAT list.
+        </p>
+      </article>
+
+      <article class="glossary-term" id="ttp">
+        <h3>TTP / drill</h3>
+        <p>
+          Tactics, techniques, and procedures — coded drills in the DRILLS binder. Readiness
+          gates which drills you may issue. Glossary terms may cite drill codes such as T1.
+        </p>
+        <p class="term-meta">Related drills: <strong>T1</strong></p>
+      </article>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Strategos —
+      <a href="https://github.com/aawadall/strategos">source</a>
+      ·
+      <a href="https://aawadall.itch.io/strategos">itch.io</a>
+      · mirrored from the alpha glossary pack (#208).
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

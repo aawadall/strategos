@@ -401,7 +401,8 @@ rank insignia ships; audio issues filed (#40–#46).
   still open
 - [ ] Site motion capture / GIF for the landing page (#120 remainder)
 - [x] In-game / web field-manual reference (#124) — glossary pack (#205) + pause browser
-  (#206) + drill cross-link (#207); see [field-manual.md](field-manual.md); Pages #208 still open
+  (#206) + drill cross-link (#207) + Pages stub (#208); see [field-manual.md](field-manual.md);
+  phases pointer #209 still open
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289) —
