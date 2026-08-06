@@ -34,7 +34,7 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 **Goal:** Render realistic topographic terrain with interactable overlay.
 **Status:** Largely built via procedural generation (not SRTM ingestion).
 
-- [ ] Heightmap ingestion pipeline (SRTM/GeoTIFF → Unity Terrain) *(superseded for now by procedural `MapGenerator`)*
+- [ ] Heightmap ingestion pipeline (SRTM/GeoTIFF → `MapData.Elevation` via authoredRelief) — cadence **W18–W20** [#487](https://github.com/aawadall/strategos/issues/487); OSM overlay **W21** (#491). Procedural `MapGenerator` remains the default for training maps.
 - [x] Procedural contour-line overlay generation from heightmap data
 - [x] Terrain classification layer (open ground, forest, urban, mountain, water, swamp, desert)
 - [x] Map rendering modes: schematic, topographic, hybrid, terrain, US/NATO topo (#169 / #188–#192); satellite still open

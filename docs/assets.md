@@ -96,20 +96,24 @@ Assets/Art/NatoSymbols/
 - **License:** Public Domain (US Government work)
 - **Format:** GeoTIFF or HGT
 - **Coverage:** Global land surface
+- **Cadence:** weekly releases **W18–W20** under epic
+  [#487](https://github.com/aawadall/strategos/issues/487) /
+  [`docs/value-roadmap-52w.md`](value-roadmap-52w.md) (after FoW, before guns).
 
-**Processing pipeline:**
+**Processing pipeline (target — not shipped yet):**
 1. Download SRTM tiles for target region from EarthExplorer or [OpenTopography](https://opentopography.org)
-2. Convert and crop with **GDAL** (`gdal_translate`, `gdalwarp`):
-   ```
-   gdalwarp -t_srs EPSG:4326 -r bilinear input.hgt output.tif
-   gdal_translate -of PNG -scale output.tif heightmap.png
-   ```
-3. Import 16-bit greyscale PNG into Unity as a Raw Heightmap
-4. Apply to `UnityEngine.TerrainData.SetHeightsFromTexture`
+2. Convert and crop with **GDAL** (`gdal_translate`, `gdalwarp`) into the scenario
+   UTM bbox / `MetresPerCell` grid
+3. Resample into `MapData.Elevation` and feed `MapGenerator` via the **authoredRelief**
+   hook (do not replace the procedural pipeline; training maps stay generated)
+4. Keep `MapCoordinates` / `GeoOrigin` so MGRS labels match the sheet
 
 **Useful pre-built tools:**
-- **Terrain.party** ([terrain.party](https://terrain.party)) — download Unity-ready heightmaps by drawing a bounding box on a web map (free, no account required)
+- **Terrain.party** ([terrain.party](https://terrain.party)) — download heightmaps by bbox
 - **WorldCreator** — commercial terrain tool with SRTM import
+
+Stage fixtures under `Research/maps/` with provenance; promote into scenario JSON only
+after `ShippedMapProbe` passes.
 
 ### Road & Settlement Overlay — OpenStreetMap
 
@@ -117,10 +121,12 @@ Assets/Art/NatoSymbols/
 - **License:** Open Database License (ODbL) — attribution required in-game
 - **Data includes:** roads, railways, rivers, towns, airfields, bridges, borders
 - **Format:** OSM XML or PBF → convert to GeoJSON with [osmtogeojson](https://github.com/tyrasd/osmtogeojson) or **osm2json**
-- **Unity integration:** parse GeoJSON at runtime and draw road/river overlays on the terrain
+- **Unity integration:** parse GeoJSON → stamp `MapData` lines / POIs (W21 / #491)
+- **Cadence:** weekly release **W21** under [#487](https://github.com/aawadall/strategos/issues/487)
 
 **Attribution requirement (ODbL):**
-Add "© OpenStreetMap contributors" to the in-game map credits screen and docs.
+Add the verbatim credit from [ATTRIBUTIONS.md](../ATTRIBUTIONS.md) to the in-game map
+credits screen and docs.
 
 ### Procedural Map Generator
 
