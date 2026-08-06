@@ -22,6 +22,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- TTP / doctrine epic of epics (#510): binder, field manual, AAR, medals, `$15` drill
+  school, authoring — `docs/ttp-epics.md`.
 - Field manual ↔ drill cross-link (#207): DRILLS binder and pause quick-ref show glossary
   terms for cited codes (T1); field-manual detail lists `DrillRefs`; `GlossaryIO.TermsForDrill`.
 - itch marketing pack (#480): paste-ready page copy + staged cover/screenshots —

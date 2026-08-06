@@ -3,6 +3,8 @@
 In-game and web reference for command vocabulary and doctrine terms — distinct from
 PLAY context help (#308+) and the main-menu alpha HELP overlay.
 
+Parent meta: [ttp-epics.md](ttp-epics.md) / [#510](https://github.com/aawadall/strategos/issues/510).
+
 ## Shipped so far
 
 | Issue | Status |

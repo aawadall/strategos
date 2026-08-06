@@ -27,6 +27,7 @@ order type. C2 *foundations* already ship under $0–$10.
 
 ## Related design notes
 
+- [ttp-epics.md](ttp-epics.md) (#510) — meta for binder / glossary / AAR / medals / authoring
 - [tiered-releases.md](tiered-releases.md) (#465) — Pass SKUs → gate on #477
 - [bar-medals.md](bar-medals.md) (#467) — medals → gate on #475
 - Scenario server (#464) → gate on #478
