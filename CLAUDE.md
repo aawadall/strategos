@@ -173,6 +173,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/ci-unity-licence.md](docs/ci-unity-licence.md) | Hosted CI Unity secrets checklist (#216) |
 | [docs/itch-publish.md](docs/itch-publish.md) | itch.io project + butler / app / browser push (#221) |
 | [docs/field-manual.md](docs/field-manual.md) | Glossary JSON shape + pack status (#124 / #205) |
+| [docs/ttp-epics.md](docs/ttp-epics.md) | TTP / doctrine meta-epic (#510) — binder, school, AAR, medals, authoring |
 | [docs/simulation-invariants.md](docs/simulation-invariants.md) | Touching `Core/Commands`, `Reports`, `Combat`, `Reactions`, `Direction`, `Objectives`, `Movement`, `Messaging` |
 | [docs/symbol-invariants.md](docs/symbol-invariants.md) | Touching `Core/NatoSymbols` — SIDC layout, echelon marks, frame rules |
 | [docs/map-invariants.md](docs/map-invariants.md) | Touching `Core/Maps` — the 2D sheet and the 3D drape |
@@ -189,6 +190,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/tiered-releases.md](docs/tiered-releases.md) | Free / Base / Scenario Pass unlock design (#465) |
 | [docs/bar-medals.md](docs/bar-medals.md) | Post-battle ribbon bars — categories + procedural renderer (#467) |
 | [docs/price-ladder.md](docs/price-ladder.md) | $0–$30 milestone epics (#471–#478) |
+| [docs/ttp-epics.md](docs/ttp-epics.md) | TTP / doctrine epic-of-epics (#510) |
 | [docs/value-roadmap-52w.md](docs/value-roadmap-52w.md) | 52-week value-add cadence (#483) |
 | [docs/campaign-invariants.md](docs/campaign-invariants.md) | Touching `Core/Campaigns` — the chain shape, carry-over, authored-not-generated |
 | [docs/climb-campaign.md](docs/climb-campaign.md) | Multi-echelon climb campaign (#403) — seat ladder and scenario Id rules |
