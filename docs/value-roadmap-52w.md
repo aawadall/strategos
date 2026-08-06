@@ -79,7 +79,7 @@ heightfields, then guns / ground compressed into W22–W26.
 | 15 | 2026-11-16 | Detection gated by LOS | ALPHA LIMITS rewrite — fog now real | #476 |
 | 16 | 2026-11-23 | PLAY fog presentation | Context help: what grey/unknown means | #476 |
 | 17 | 2026-11-30 | HELP / known-gaps fog honesty | README Alpha limits bullet update | #476 |
-| 18 | 2026-12-07 | SRTM ingest design + Research tile | `docs/assets.md` ingest note + glossary DEM/SRTM | #488 / #487 |
+| 18 | 2026-12-07 | External map tools + SRTM hunt/convert scaffold | `docs/map-import-tools.md` + glossary DEM/SRTM | #488 / #493 / #487 |
 | 19 | 2026-12-14 | GeoTIFF → `MapData.Elevation` (authoredRelief) | HELP / ALPHA LIMITS: real vs procedural maps | #489 / #487 |
 | 20 | 2026-12-21 | One historical fight on SRTM height | Scenario JSON note + ATTRIBUTIONS SRTM row | #490 / #487 |
 | 21 | 2026-12-28 | OSM roads/settlements + ODbL credit | In-game credits string + glossary OpenStreetMap | #491 / #487 |

@@ -91,3 +91,8 @@ Research/*
 !Research/historical/**
 !Research/audio/
 !Research/audio/**
+!Research/maps/
+!Research/maps/**
+# Raw DEM/OSM downloads stay local (see docs/map-import-tools.md).
+Research/maps/raw/
+Research/maps/raw/**
