@@ -59,7 +59,7 @@ Release checklist each week:
 | 08 | 2026-09-28 | Thin AAR critique | Post-battle HELP blurb + 1 AAR metric glossary entry | #421 |
 | 09 | 2026-10-05 | Outcome HistoricalNotes on replay | Outcome note text on LRT or Belleau JSON | #462 / #298 |
 | 10 | 2026-10-12 | +1 historical menu fight | Scenario JSON + Briefing HistoricalNote + ATTRIBUTIONS row | #475 |
-| 11 | 2026-10-19 | +1 historical fight + ATP doctrine expand | 1–2 new `Ttp` rows in doctrine pack + binder visible | #475 |
+| 11 | 2026-10-19 | +1 historical fight + ATP doctrine expand | 1–2 new `Ttp` rows in doctrine pack + binder visible | #516 / #513 / #475 |
 | 12 | 2026-10-26 | Close **$15** — harden | ALPHA LIMITS / HELP refresh listing Drill school features | #475 |
 | 13 | 2026-11-02 | FoW design spike + LOS probe | Glossary “line of sight” + known-gaps “coming” note (player-facing) | #476 prep |
 
