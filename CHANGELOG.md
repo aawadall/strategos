@@ -20,6 +20,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- itch discoverability checklist (#496): trailer, theme, quality guidelines, indexing,
+  community/social posts (#497–#504) — `docs/itch-publish.md`.
 - External map import tools (#493): hunt / convert / validate scripts under `tools/maps/`,
   intermediate JSON schemas, `docs/map-import-tools.md`, synthetic `demo-ramp` fixture.
 - Real-world map sourcing epic (#487): SRTM + OSM on the weekly cadence (#488–#491).

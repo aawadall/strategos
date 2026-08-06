@@ -107,10 +107,36 @@ distinct from butler push (#221) and from Steam assets (#293).
 
 ---
 
+## Discoverability checklist (#496)
+
+itch.io post-publish onboarding — stand out, get indexed, share. Parent epic
+[#496](https://github.com/aawadall/strategos/issues/496). Complements #480 (assets/copy);
+does not replace Steam trailer work (#327).
+
+### Make the page stand out
+
+- [ ] Trailer or gameplay video in the theme editor — [#497](https://github.com/aawadall/strategos/issues/497)
+- [ ] Customize theme (colors, fonts, images) — [#498](https://github.com/aawadall/strategos/issues/498)
+- [ ] Review [quality guidelines](https://itch.io/docs/creators/quality-guidelines); close page gaps — [#499](https://github.com/aawadall/strategos/issues/499)
+
+### Get noticed / indexed
+
+- [ ] Review [getting indexed](https://itch.io/docs/creators/getting-indexed); complete metadata — [#500](https://github.com/aawadall/strategos/issues/500)
+
+### Community & social
+
+- [ ] Post in the itch [community](https://itch.io/community) — [#501](https://github.com/aawadall/strategos/issues/501)
+- [ ] Twitter/X with image or GIF; may mention [@itchio](https://twitter.com/itchio) — [#502](https://github.com/aawadall/strategos/issues/502)
+- [ ] Reddit [r/itchio](https://www.reddit.com/r/itchio/) — [#503](https://github.com/aawadall/strategos/issues/503)
+- [ ] Facebook tagged [@itchiogames](https://www.facebook.com/itchiogames) — [#504](https://github.com/aawadall/strategos/issues/504)
+
+---
+
 ## Cross-links
 
 - Release zip / version stamp: [build-and-verify.md](build-and-verify.md), #217–#219
 - Pages CTA: #211 / #437 (done)
 - WebGL verify: #220
 - itch marketing: #480
+- itch discoverability: #496
 - Release epic: #83
