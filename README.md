@@ -100,8 +100,10 @@ See [docs/build-and-verify.md](docs/build-and-verify.md) for capture, probes, an
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and open a PR against `master`. Small known-gap
-fixes and size:5m issues are the best first contributions.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and open a PR against `master`.
+
+- Newcomers: [good first issue](https://github.com/aawadall/strategos/labels/good%20first%20issue)
+- Next step: [help wanted](https://github.com/aawadall/strategos/labels/help%20wanted)
 
 ---
 

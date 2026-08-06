@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Changed
+- Contributor entry: README + CONTRIBUTING point at curated
+  `good first issue` / `help wanted` labels on GitHub.
 - Trackers refreshed 2026-08-06: #480 / #207 closed; epic #124 children 205–207 checked;
   `docs/value-roadmap-52w.md` W01/W03 status notes.
 - 52-week roadmap (#483): every weekly release requires an **addon** (help, glossary,
