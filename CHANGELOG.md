@@ -15,8 +15,12 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ### Changed
 - 52-week roadmap (#483): every weekly release requires an **addon** (help, glossary,
   doctrine, scenario note, or storefront artifact) — see `docs/value-roadmap-52w.md`.
+- Q2 weekly plan (#487): after FoW, **W18–W21** ship SRTM/OSM accurate-map sourcing
+  (then guns/ground compressed into W22–W26) — `docs/value-roadmap-52w.md`,
+  `docs/assets.md`.
 
 ### Added
+- Real-world map sourcing epic (#487): SRTM + OSM on the weekly cadence (#488–#491).
 - 52-week value-add roadmap (#483): weekly player-visible value from 2026-08-10 through
   2027-08-02 aligned to `$15`–`$30` ladder — `docs/value-roadmap-52w.md`.
 - itch marketing checklist (#480): cover / screenshots / copy / tags / first devlog —

@@ -69,23 +69,27 @@ Release checklist each week:
 
 ## Q2 — $20 Honest fight (W14–W26)
 
+FoW first (W14–W17), then **real-world map sourcing** (W18–W21, epic
+[#487](https://github.com/aawadall/strategos/issues/487)) so LOS runs on true
+heightfields, then guns / ground compressed into W22–W26.
+
 | W | Week of | Value added | Addon | Tracker |
 |---|---|---|---|---|
 | 14 | 2026-11-09 | Terrain LOS raycast (probe) | Glossary: LOS; known-gaps engineering pointer | #476 |
 | 15 | 2026-11-16 | Detection gated by LOS | ALPHA LIMITS rewrite — fog now real | #476 |
 | 16 | 2026-11-23 | PLAY fog presentation | Context help: what grey/unknown means | #476 |
 | 17 | 2026-11-30 | HELP / known-gaps fog honesty | README Alpha limits bullet update | #476 |
-| 18 | 2026-12-07 | Indirect fire model | Glossary: ToT / battery; HELP artillery note | #476 |
-| 19 | 2026-12-14 | Artillery uses indirect | CombatProbe matrix in CHANGELOG numbers | #476 |
-| 20 | 2026-12-21 | Facing + no pass-through | Glossary: facing; ALPHA LIMITS drop “pass through” | #476 |
-| 21 | 2026-12-28 | ZoC v1 | Glossary: zone of control; ContextHelp if new verb | #476 |
-| 22 | 2027-01-04 | Formation column / line | Doctrine step or drill figure using formation | #476 |
-| 23 | 2027-01-11 | Formation wedge / drill bind | 1 drill pack update referencing formation | #476 |
-| 24 | 2027-01-18 | Supply classes bite | Glossary: supply class; unit card help line | #476 |
-| 25 | 2027-01-25 | Reconstitution between ops | Campaign HELP / field-manual reconstitution | #476 |
-| 26 | 2027-02-01 | Close **$20** | Full ALPHA LIMITS pass reflecting honest fight | #476 |
+| 18 | 2026-12-07 | SRTM ingest design + Research tile | `docs/assets.md` ingest note + glossary DEM/SRTM | #488 / #487 |
+| 19 | 2026-12-14 | GeoTIFF → `MapData.Elevation` (authoredRelief) | HELP / ALPHA LIMITS: real vs procedural maps | #489 / #487 |
+| 20 | 2026-12-21 | One historical fight on SRTM height | Scenario JSON note + ATTRIBUTIONS SRTM row | #490 / #487 |
+| 21 | 2026-12-28 | OSM roads/settlements + ODbL credit | In-game credits string + glossary OpenStreetMap | #491 / #487 |
+| 22 | 2027-01-04 | Indirect fire model | Glossary: ToT / battery; HELP artillery note | #476 |
+| 23 | 2027-01-11 | Artillery uses indirect + facing / no pass-through | CombatProbe numbers; glossary facing; drop pass-through limit | #476 |
+| 24 | 2027-01-18 | ZoC v1 + formation column / line | Glossary ZoC; doctrine step using formation | #476 |
+| 25 | 2027-01-25 | Formation wedge + supply classes bite | Drill pack bind; glossary supply class | #476 |
+| 26 | 2027-02-01 | Reconstitution + close **$20** | Campaign HELP reconstitution; full ALPHA LIMITS pass | #476 |
 
-**Q2 exit:** $20 clear; help/glossary track every sim depth ship.
+**Q2 exit:** $20 clear; one playable SRTM-backed historical sheet; help/glossary track every ship.
 
 ---
 
