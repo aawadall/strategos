@@ -22,6 +22,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   `docs/assets.md`.
 
 ### Added
+- TTP content sourcing epic (#513) under meta #510: Distro A pubs → doctrine packs
+  (#514–#517); W11 tracker points at #516.
 - TTP / doctrine epic of epics (#510): binder, field manual, AAR, medals, `$15` drill
   school, authoring — `docs/ttp-epics.md`.
 - Field manual ↔ drill cross-link (#207): DRILLS binder and pause quick-ref show glossary
