@@ -9,7 +9,7 @@ PLAY context help (#308+) and the main-menu alpha HELP overlay.
 |---|---|
 | #205 glossary JSON + one pack | `GlossaryPack` / `GlossaryTerm` + `Resources/FieldManual/alpha-glossary.json` |
 | #206 in-app read-only browser | Pause → **FIELD MANUAL** → `FieldManualBrowserPanel` (list + detail) |
-| #207 cross-link one drill | open (terms already carry optional `DrillRefs`) |
+| #207 cross-link one drill | **DRILLS** binder + pause quick-ref show glossary terms for `T1`; manual detail lists `DrillRefs` |
 | #208 Pages stub | open |
 | #209 phases pointer | this page + phases §10 |
 
@@ -20,6 +20,15 @@ From PLAY, Esc (pause) → **FIELD MANUAL**. Nested overlay loads
 manual before pause. Not the DRILLS binder and not `AlphaHelpOverlay`.
 
 Probe: **Strategos → Probe Glossary** also Build/Open/Close the browser panel.
+
+## Drill cross-links (#207)
+
+`GlossaryTerm.DrillRefs` cites doctrine codes (alpha pack: **T1** on MoveTo and TTP).
+
+- **Binder → term:** `TtpView` and pause **DRILLS** quick-ref append a Field Manual line
+  for the selected / listed drill via `GlossaryIO.TermsForDrill`.
+- **Term → drills:** field-manual detail appends `Related drills: T1` and points at the
+  DRILLS tab. `OpenOnDrill(code)` selects the first citing term (probe uses T1).
 
 ## JSON shape (#205)
 

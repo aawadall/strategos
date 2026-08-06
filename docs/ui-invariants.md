@@ -79,7 +79,8 @@ destroying the session (Resume / Continue can re-enter).
 **In-session drills** from pause are a *quick-reference lookup* (interpretation a of #371),
 not optional quests. Full binder remains the DRILLS tab; issuing drills stays on PLAY's rail.
 **FIELD MANUAL** on the same pause card opens `FieldManualBrowserPanel` (#206) over the
-alpha glossary — read-only list → detail; drill cross-links are #207.
+alpha glossary — read-only list → detail; related `DrillRefs` and binder ↔ glossary
+links are #207.
 **HISTORICAL NOTE** opens `HistoricalNotePanel` (#462) when the scenario carries
 `HistoricalNotes` (LRT / Belleau / Remagen).
 **ALPHA LIMITS** (#469) opens the same `AlphaHelpOverlay` as menu HELP (how-to + known
