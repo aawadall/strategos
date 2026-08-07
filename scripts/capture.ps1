@@ -37,7 +37,8 @@ param (
     [int]$Width = 1600,
     [int]$Height = 900,
     [int]$WaitSeconds = 12,
-    [string]$View
+    [string]$View,
+    [switch]$DemoPostBattle
 )
 
 $ErrorActionPreference = "Stop"
@@ -84,6 +85,7 @@ $unityArgs = @(
     "-popupwindow"
 )
 if ($View) { $unityArgs += @("-view", $View) }
+if ($DemoPostBattle) { $unityArgs += "-demo-postbattle" }
 
 $proc = Start-Process -FilePath $Exe -ArgumentList $unityArgs -PassThru
 

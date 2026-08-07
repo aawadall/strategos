@@ -410,6 +410,20 @@ namespace Strategos.UI
             }
         }
 
+        /// <summary>
+        /// Capture helper: open a canned post-battle panel on PLAY (#467 Pages still).
+        /// </summary>
+        public static bool DemoPostBattleRequested
+        {
+            get
+            {
+                foreach (var a in Environment.GetCommandLineArgs())
+                    if (string.Equals(a, "-demo-postbattle", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                return false;
+            }
+        }
+
         private static void MaskDrapeLayerFromSceneCameras()
         {
             foreach (var cam in Camera.allCameras)

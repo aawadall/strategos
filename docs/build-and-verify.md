@@ -46,7 +46,9 @@ instead.
 
 `-View <key>` selects a view without driving the UI: `explore`, `symbols`, `map`,
 `scenario`, `ttp`, `builder`. Add `-view3d` (passed straight to the player) to open the
-scenario preview in 3D. `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
+scenario preview in 3D. Add `-DemoPostBattle` (player arg `-demo-postbattle`) with
+`-View play` to open the canned AFTER ACTION / Merit ribbon panel for Pages captures.
+`AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
 which is the cheap check that the shell came up at all.
 
 **A batch build can silently ship the previous revision.** `BuildPlayer` will package

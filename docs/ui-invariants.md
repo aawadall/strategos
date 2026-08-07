@@ -88,7 +88,9 @@ limits) so players mid-fight can read the honesty bar without exiting to the men
 
 **Post-battle (#467).** When victory decides, `PostBattlePanel` opens over PLAY with
 outcome stats and Merit ribbons (`enemy-neutralized`, `objective-secured`). Not the live
-HUD; Esc / CONTINUE dismisses.
+HUD; Esc / CONTINUE dismisses. For Pages / verify captures, `-demo-postbattle` (via
+`capture.ps1 -DemoPostBattle` with `-View play`) opens a canned review without deciding
+the sim.
 
 - **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
   them multiplies exposure to the silent-layout-truncation failure mode and pays every
