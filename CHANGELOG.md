@@ -13,6 +13,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Changed
+- Backlog refresh 2026-08-07: field manual epic #124 closed (#205–#209); phases §10 +
+  Tutorial bullets, `docs/field-manual.md`, `docs/ttp-epics.md`, ROADMAP, W03 tracker.
 - Contributor entry: README + CONTRIBUTING point at curated
   `good first issue` / `help wanted` labels on GitHub.
 - Trackers refreshed 2026-08-06: #480 / #207 closed; epic #124 children 205–207 checked;
@@ -28,6 +30,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   dark UI epic #132 folded under #519 section D.
 
 ### Added
+- Field manual phases pointer (#209): closes epic #124 with #205–#208; Tutorial wiki
+  bullet marked done and pointed at TTP expand (#510 / #475).
 - Field manual Pages stub (#208): `site/field-manual.html` mirrors the alpha glossary
   pack; Field manual nav link on all Pages; `docs/field-manual.md` updated.
 - Visual preferences epic (#519): units, map style, map layers — Settings/prefs

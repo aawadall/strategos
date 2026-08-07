@@ -62,7 +62,8 @@ are done. First historical Scenario JSON (Little Round Top, #333) is done. Local
   `Research/audio/`, with production tasks filed against them: #395–#397 (voice), #398–#399
   (soundtrack); automation tooling #400 (ElevenLabs script) and #401 (OGG conversion, per
   `docs/assets.md`'s existing music/SFX pipeline — voice format still undecided)
-- **Docs / reference** — #124 (field manual), #125 (rank insignia decoration variants)
+- **Docs / reference** — #124 **closed** (field manual #205–#209); still open: #125
+  (rank insignia decoration variants)
 - **UI / accessibility** — #132 (dark theme, alongside colour-blind palettes)
 - **UI revamp** — #371 **closed** (#375–#379 via #374; Help/Server stubs → #124 / #288;
   Options → #306 settings shell + #307 preference store; rest of #289 still open)

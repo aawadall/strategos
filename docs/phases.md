@@ -401,15 +401,16 @@ rank insignia ships; audio issues filed (#40–#46).
   still open
 - [ ] Site motion capture / GIF for the landing page (#120 remainder)
 - [x] In-game / web field-manual reference (#124) — glossary pack (#205) + pause browser
-  (#206) + drill cross-link (#207) + Pages stub (#208); see [field-manual.md](field-manual.md);
-  phases pointer #209 still open
+  (#206) + drill cross-link (#207) + Pages stub (#208) + phases pointer (#209); see
+  [field-manual.md](field-manual.md)
 
 ### Tutorial & Onboarding
 - [ ] Interactive tutorial campaign: start at squad, walk through all systems (#289) —
   distinct from the shipped multi-echelon **climb campaign** (#403 / [climb-campaign.md](climb-campaign.md)).
   Squad scenario skeleton (#309); first select→MoveTo beat (#310); more beats open
 - [ ] Context-sensitive in-game help overlay (#289) — MOVE help shipped (#308); more controls open
-- [ ] Doctrinal reference wiki (in-game and web) (#124)
+- [x] Doctrinal reference (field manual / glossary) (#124) — shipped; expand terms/drills
+  under TTP meta [#510](https://github.com/aawadall/strategos/issues/510) / `$15` [#475](https://github.com/aawadall/strategos/issues/475)
 
 ### Performance & Stability
 - [ ] Unit stress tests: 10,000 simultaneous units at theater scale
