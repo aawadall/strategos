@@ -15,7 +15,7 @@ under price-ladder meta [#471](https://github.com/aawadall/strategos/issues/471)
 | **Source TTP content (Distro A)** | [#513](https://github.com/aawadall/strategos/issues/513) | **open** (#514–#517) |
 | Field manual / glossary | [#124](https://github.com/aawadall/strategos/issues/124) | **done** (#205–#209) |
 | Teach in PLAY (AAR / commentary) | [#421](https://github.com/aawadall/strategos/issues/421) | **open** |
-| Bar medals | [#467](https://github.com/aawadall/strategos/issues/467) | **open** (design in [bar-medals.md](bar-medals.md)) |
+| Bar medals | [#467](https://github.com/aawadall/strategos/issues/467) | **partial** — post-battle panel + Merit kills/objective; career rack open |
 | **$15 Drill school** | [#475](https://github.com/aawadall/strategos/issues/475) | **open — next chargeable** |
 | Echelon-gated authoring | [#65](https://github.com/aawadall/strategos/issues/65) | **open** (#228–#231) |
 

@@ -18,8 +18,20 @@ are [#462](https://github.com/aawadall/strategos/issues/462) / `HistoricalNotes`
 
 Award when a scenario or campaign operation **ends with a decisive outcome**
 (win / loss / draw as the victory evaluator already reports). Do **not** award
-mid-fight for individual kills. Replays and spectator watches may earn **Mode**
+mid-fight for individual kills — tally at decision. Replays and spectator watches may earn **Mode**
 medals only when the player explicitly finishes the session — not on every tick.
+
+### Merit thin slice (shipped)
+
+At decision, `PostBattleReviewer` builds stats and grants:
+
+| Id | Rule |
+|---|---|
+| `enemy-neutralized` | One medal per hostile in `CasualtyLog` (shown as one bar with numeral / ×N) |
+| `objective-secured` | Player **won** and currently holds ≥1 objective |
+
+UI: `PostBattlePanel` after `PlayView.ShowOutcome` — stats + earned ribbons. Esc closes.
+Catalogue: `Resources/Medals/alpha-medals.json`. Probe: **Strategos → Probe Bar Medals**.
 
 ### Broad categories
 
@@ -31,7 +43,7 @@ strip **group by category** (stable order below). Do not invent finer trees in v
 | **Training** | Onboarding / drills | `tut-squad-complete` |
 | **Campaign** | Authored chain ops | `climb-complete`, `valley-op-win`, `highland-op-win` |
 | **Historical** | First-party historical fights | `lrt-complete`, `belleau-complete`, `remagen-complete` |
-| **Merit** | How you fought (outcome qualifiers) | `no-friendly-losses`, `hold-under-fire` |
+| **Merit** | How you fought (outcome qualifiers) | `enemy-neutralized` (numeral = kills), `objective-secured`, `no-friendly-losses` |
 | **Mode** | How you played | `hotseat-win`, `spectator-finished` |
 
 **Binding order on screen:** Training → Campaign → Historical → Merit → Mode.
@@ -119,10 +131,11 @@ must work with `LocalAnonymousIdentity` and no App ID.
 ## Out of scope (v1)
 
 - Full-size hanging medals / dress kits
-- Per-kill or score-streak spam
+- Mid-fight kill popups (awards still land only at decision — see Merit below)
 - Paid cosmetic ribbons (#465 Pass does not sell medals)
 - Live Steam sync, leaderboards, or sharing screenshots as a feature
 - Community-category awards
+- Career / menu rack (child still open)
 
 ---
 

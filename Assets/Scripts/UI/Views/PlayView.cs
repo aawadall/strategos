@@ -37,6 +37,7 @@ using Strategos.Identity;
 using Strategos.Audio;
 using Strategos.Scenarios;
 using Strategos.Units;
+using Strategos.Medals;
 
 using Theme = Strategos.UI.UiTheme;
 using static Strategos.UI.UiFactory;
@@ -190,6 +191,7 @@ namespace Strategos.UI.Views
         private PauseOverlay _pause;
         private ContextHelpOverlay _contextHelp;
         private TutorialFirstBeat _tutorialBeat;
+        private PostBattlePanel _postBattle;
         private bool _runningBeforePause = true;
 
         // ─── IAppView ─────────────────────────────────────────────────────────
@@ -248,13 +250,19 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Esc layering (#371 / #129 / #308 / #206 / #462 / #469): historical note →
-        /// alpha limits → field manual → drills → context help → pause resume →
-        /// armed verb clear → open pause.
+        /// Esc layering (#371 / #129 / #308 / #206 / #462 / #469 / #467): post-battle →
+        /// historical note → alpha limits → field manual → drills → context help →
+        /// pause resume → armed verb clear → open pause.
         /// </summary>
         private bool HandlePauseKeys()
         {
             if (!Input.GetKeyDown(KeyCode.Escape)) return false;
+
+            if (_postBattle != null && _postBattle.IsOpen)
+            {
+                _postBattle.Close();
+                return true;
+            }
 
             if (_pause != null && _pause.HistoryOpen)
             {
@@ -363,6 +371,9 @@ namespace Strategos.UI.Views
 
             _tutorialBeat = host.gameObject.AddComponent<TutorialFirstBeat>();
             _tutorialBeat.Build(host);
+
+            _postBattle = host.gameObject.AddComponent<PostBattlePanel>();
+            _postBattle.Build(host);
         }
 
         private void BuildStage(Transform root)
@@ -1090,6 +1101,7 @@ namespace Strategos.UI.Views
             }
 
             _outcomeShown = false;
+            _postBattle?.Close();
             if (_clockLabel != null) _clockLabel.color = Theme.InkMuted;
             _feed.Clear();
             _sim.Reports.Subscribe("ui-feed", 100, OnReport);
@@ -2061,6 +2073,13 @@ namespace Strategos.UI.Views
 
             RefreshCampaignChrome();
             Debug.Log($"[PlayView] scenario decided: {outcome}");
+
+            // #467: post-battle stats + Merit medals (neutralized / objective).
+            if (_postBattle != null)
+            {
+                var review = PostBattleReviewer.Build(_sim);
+                _postBattle.Open(review);
+            }
         }
 
         // ─── Situation feed ───────────────────────────────────────────────────

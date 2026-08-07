@@ -30,6 +30,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   dark UI epic #132 folded under #519 section D.
 
 ### Added
+- Post-battle screen (#467 thin slice): `PostBattlePanel` shows outcome stats and Merit
+  ribbons — one `enemy-neutralized` per hostile casualty (×N bar) and `objective-secured`
+  when the player wins holding an objective; `BarMedalBaker` + `Resources/Medals/alpha-medals.json`;
+  probe **Strategos → Probe Bar Medals**.
 - Field manual phases pointer (#209): closes epic #124 with #205–#208; Tutorial wiki
   bullet marked done and pointed at TTP expand (#510 / #475).
 - Field manual Pages stub (#208): `site/field-manual.html` mirrors the alpha glossary
