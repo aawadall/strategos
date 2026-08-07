@@ -210,6 +210,8 @@ namespace Strategos.UI.Views
         {
             _card?.UpdateCrop();
             LayOutMarkers();
+            if (AppShell.DemoPostBattleRequested)
+                OpenDemoPostBattle();
         }
 
         public void OnHidden()
@@ -217,7 +219,48 @@ namespace Strategos.UI.Views
             _tutorialBeat?.Reset();
             _contextHelp?.Close();
             _pause?.Close();
+            _postBattle?.Close();
             HideDropdownsIn(transform);
+        }
+
+        /// <summary>
+        /// Canned AFTER ACTION + Merit ribbons for <c>-demo-postbattle</c> captures.
+        /// Does not touch the live sim — Pages / verify only.
+        /// </summary>
+        private void OpenDemoPostBattle()
+        {
+            if (_postBattle == null) return;
+            var fake = new PostBattleReview
+            {
+                Stats = new PostBattleStats
+                {
+                    ScenarioName = "Meeting Engagement",
+                    OutcomeLine = "BLUFOR WINS — Objective Anvil held",
+                    PlayerWon = true,
+                    Tick = 1840,
+                    EnemyNeutralized = 3,
+                    FriendlyLost = 1,
+                    ObjectivesHeld = 1,
+                    ObjectiveCount = 1,
+                    FriendlyRemaining = 0.72f,
+                    EnemyRemaining = 0.18f,
+                },
+            };
+            fake.Awards.Add(new BarMedalAward
+            {
+                MedalId = BarMedalIO.EnemyNeutralizedId,
+                Count = 3,
+                Tick = 1840,
+                ScenarioName = "Meeting Engagement",
+            });
+            fake.Awards.Add(new BarMedalAward
+            {
+                MedalId = BarMedalIO.ObjectiveSecuredId,
+                Count = 1,
+                Tick = 1840,
+                ScenarioName = "Meeting Engagement",
+            });
+            _postBattle.Open(fake);
         }
 
         private void OnDestroy() => _card?.Dispose();
