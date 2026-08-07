@@ -57,11 +57,11 @@ size). `PlayerPreferences` carries `Fullscreen`, `WindowWidth`, `WindowHeight` (
 store round-trip plus Settings/F11 sharing `ApplyWindowed` / `ApplyFullscreen` /
 `ToggleFullscreen` / `ApplyDisplayPreferences`.
 
-**Esc precedence in PLAY (#371 / #129 / #308 / #206 / #462 / #469):** historical-note panel
-closes first; then alpha-limits (`AlphaHelpOverlay` nested under pause); then field-manual
-browser; then drills quick-ref; then context help; then the pause overlay resumes; then an
-armed palette verb clears (`CommandPalette.ClearShortcut`); else Esc opens pause and stops
-the clock. Space remains the clock toggle and must not open pause.
+**Esc precedence in PLAY (#371 / #129 / #308 / #206 / #462 / #469 / #467):** post-battle
+panel closes first; then historical-note; then alpha-limits (`AlphaHelpOverlay` nested under
+pause); then field-manual browser; then drills quick-ref; then context help; then the pause
+overlay resumes; then an armed palette verb clears (`CommandPalette.ClearShortcut`); else Esc
+opens pause and stops the clock. Space remains the clock toggle and must not open pause.
 
 **Context help (#308 / #442 / #445 / #447).** PLAY rail **HELP** opens `ContextHelpOverlay`
 for the armed verb. **MOVE**, **ENGAGE**, **WAYPOINTS**, and **DIG IN** have authored copy;
@@ -85,6 +85,10 @@ links are #207.
 `HistoricalNotes` (LRT / Belleau / Remagen).
 **ALPHA LIMITS** (#469) opens the same `AlphaHelpOverlay` as menu HELP (how-to + known
 limits) so players mid-fight can read the honesty bar without exiting to the menu.
+
+**Post-battle (#467).** When victory decides, `PostBattlePanel` opens over PLAY with
+outcome stats and Merit ribbons (`enemy-neutralized`, `objective-secured`). Not the live
+HUD; Esc / CONTINUE dismisses.
 
 - **Views are built lazily and hidden, never destroyed.** Lazily, because building all of
   them multiplies exposure to the silent-layout-truncation failure mode and pays every

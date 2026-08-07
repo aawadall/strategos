@@ -386,7 +386,9 @@ rank insignia ships; audio issues filed (#40–#46).
 - [x] Outside menu + in-game pause + drills quick-ref (#371) — Help/Server stubs → #124 / #288;
   Options opens settings shell (#306)
 - [x] Shoulder-board command-rank insignia in the shell (#38)
-- [ ] Post-battle bar medals: categories + procedural ribbon renderer (#467 — design in `docs/bar-medals.md`)
+- [x] Post-battle bar medals: categories + procedural ribbon renderer (#467 — design in
+  `docs/bar-medals.md`; thin slice: post-battle panel + `enemy-neutralized` /
+  `objective-secured`; career rack still open)
 - [x] GitHub Pages status site with OG/Twitter meta and header CTA (#120 partial)
 - [ ] Full UI skin — finished military map aesthetic
 - [ ] Colour-blind accessible symbol and map palettes
