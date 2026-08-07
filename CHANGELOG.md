@@ -12,6 +12,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+## [0.3.0-alpha.2] - 2026-08-07
+
 ### Changed
 - Backlog refresh 2026-08-07: field manual epic #124 closed (#205–#209); phases §10 +
   Tutorial bullets, `docs/field-manual.md`, `docs/ttp-epics.md`, ROADMAP, W03 tracker.
