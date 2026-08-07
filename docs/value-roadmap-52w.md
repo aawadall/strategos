@@ -51,7 +51,7 @@ Release checklist each week:
 |---|---|---|---|---|
 | 01 | 2026-08-10 | itch storefront marketing live | itch cover + short page copy + 1 screenshot | **#480 done** (in-repo); #496 discoverability open |
 | 02 | 2026-08-17 | Procedural splash boot frame | HELP / splash one-liner in ui-invariants + ALPHA LIMITS “new boot art” note | #482 |
-| 03 | 2026-08-24 | Field manual ↔ drill cross-link | 1 glossary term with `DrillRefs` | **#207 done** / #124 |
+| 03 | 2026-08-24 | Field manual ↔ drill cross-link | 1 glossary term with `DrillRefs` | **#207 done** · epic #124 **closed** (#205–#209) |
 | 04 | 2026-08-31 | Drill range design + scenario skeleton | `docs/` design note **or** `Resources/Scenarios` stub JSON + menu hidden flag | #475 |
 | 05 | 2026-09-07 | Train-on-drills playable (T1 / React) | Context help for **DRILL** verb (or drill-range HELP card) | #475 |
 | 06 | 2026-09-14 | Bar medal catalogue + ribbon renderer | 1 medal def JSON + contact-sheet bake | #467 |

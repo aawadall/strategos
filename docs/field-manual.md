@@ -13,7 +13,7 @@ Parent meta: [ttp-epics.md](ttp-epics.md) / [#510](https://github.com/aawadall/s
 | #206 in-app read-only browser | Pause → **FIELD MANUAL** → `FieldManualBrowserPanel` (list + detail) |
 | #207 cross-link one drill | **done** — DRILLS binder + pause quick-ref show glossary for `T1`; manual lists `DrillRefs` |
 | #208 Pages stub | **done** — `site/field-manual.html` mirrors the alpha pack; nav on all Pages |
-| #209 phases pointer | open (partial: this page + phases §10 already mention #124) |
+| #209 phases pointer | **done** — phases §10 UI + Tutorial bullets; this page; epic #124 closed |
 
 ## In-app browser (#206)
 
@@ -22,6 +22,11 @@ From PLAY, Esc (pause) → **FIELD MANUAL**. Nested overlay loads
 manual before pause. Not the DRILLS binder and not `AlphaHelpOverlay`.
 
 Probe: **Strategos → Probe Glossary** also Build/Open/Close the browser panel.
+
+## Phases pointer (#209)
+
+`docs/phases.md` §10 lists the field manual under UI/UX and Tutorial as **done**, with
+expand work pointed at TTP meta #510 / `$15` #475 rather than reopening #124.
 
 ## GitHub Pages stub (#208)
 
