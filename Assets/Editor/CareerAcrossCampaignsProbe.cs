@@ -30,6 +30,7 @@ namespace Strategos.Editor
 
             bad += CheckRoundTrip(log);
             bad += CheckStamp(log);
+            bad += CheckHistory(log);
             bad += CheckTwoCampaignSmoke(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
@@ -89,6 +90,49 @@ namespace Strategos.Editor
             }
 
             log.AppendLine("  stamp: OK — TF 1-7 IN / 3 BDE");
+            return 0;
+        }
+
+        /// <summary>#519: RecordCampaignCompletion appends at the rank/formation held then,
+        /// and the list round-trips through CareerProfileIO.</summary>
+        private static int CheckHistory(StringBuilder log)
+        {
+            var profile = CareerProfile.Default();
+            profile.CareerRankId = "battalion";
+            profile.FormationDesignation = "TF 1-7 IN";
+            profile.RecordCampaignCompletion("Valley Campaign", OperationOutcome.Won);
+
+            profile.CareerRankId = "regiment";
+            profile.FormationDesignation = "3 BDE";
+            profile.RecordCampaignCompletion("Highland Campaign", OperationOutcome.Lost);
+
+            if (profile.History.Count != 2)
+            {
+                log.AppendLine($"  history: FAILED — want 2 records got {profile.History.Count}");
+                return 1;
+            }
+
+            if (profile.History[0].ChainName != "Valley Campaign" ||
+                profile.History[0].Outcome != OperationOutcome.Won ||
+                profile.History[0].CareerRankId != "battalion" ||
+                profile.History[0].FormationDesignation != "TF 1-7 IN")
+            {
+                log.AppendLine("  history: FAILED — first record does not match rank/formation held at the time");
+                return 1;
+            }
+
+            var again = CareerProfileIO.FromJson(CareerProfileIO.ToJson(profile));
+            if (again == null || again.History.Count != 2 ||
+                again.History[1].ChainName != "Highland Campaign" ||
+                again.History[1].Outcome != OperationOutcome.Lost ||
+                again.History[1].CareerRankId != "regiment" ||
+                again.History[1].FormationDesignation != "3 BDE")
+            {
+                log.AppendLine("  history: FAILED — round-trip lost or corrupted a record");
+                return 1;
+            }
+
+            log.AppendLine("  history: OK — 2 records, append-at-the-time rank/formation, round-trip");
             return 0;
         }
 

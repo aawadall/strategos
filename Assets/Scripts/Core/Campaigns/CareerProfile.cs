@@ -6,6 +6,7 @@
 // *second* campaign — rank (#76) plus the formation higher still addresses (#214).
 
 using System;
+using System.Collections.Generic;
 using Strategos.Commands;
 using Strategos.NatoSymbols;
 using Strategos.Scenarios;
@@ -13,6 +14,21 @@ using Strategos.Units;
 
 namespace Strategos.Campaigns
 {
+    /// <summary>
+    /// One finished campaign chain, recorded at the rank and formation the player held
+    /// when it ended — a career page reads this list to show where a player has been,
+    /// distinct from <see cref="CampaignChainEntry.Outcome"/> which lives only for the
+    /// duration of one loaded <see cref="CampaignChain"/>.
+    /// </summary>
+    [Serializable]
+    public sealed class CareerCampaignRecord
+    {
+        public string ChainName = string.Empty;
+        public OperationOutcome Outcome = OperationOutcome.Unplayed;
+        public string CareerRankId = string.Empty;
+        public string FormationDesignation = string.Empty;
+    }
+
     /// <summary>Persistent career seat across campaign boundaries.</summary>
     [Serializable]
     public sealed class CareerProfile
@@ -32,7 +48,30 @@ namespace Strategos.Campaigns
         /// </summary>
         public string HigherFormation = string.Empty;
 
+        /// <summary>
+        /// Finished campaign chains, oldest first. Appended by
+        /// <see cref="RecordCampaignCompletion"/> when a chain's last operation is decided —
+        /// never mutated afterward, so it is a true log, not projected state.
+        /// </summary>
+        public List<CareerCampaignRecord> History = new();
+
         public static CareerProfile Default() => new();
+
+        /// <summary>
+        /// Appends one finished-chain record at the career's current rank and formation.
+        /// Call once, when a chain's last operation is decided — see
+        /// <c>PlayView.ShowOutcome</c>.
+        /// </summary>
+        public void RecordCampaignCompletion(string chainName, OperationOutcome outcome)
+        {
+            History.Add(new CareerCampaignRecord
+            {
+                ChainName = chainName ?? string.Empty,
+                Outcome = outcome,
+                CareerRankId = CareerRankId,
+                FormationDesignation = FormationDesignation,
+            });
+        }
 
         /// <summary>
         /// Copies formation labels from the player's seat unit on

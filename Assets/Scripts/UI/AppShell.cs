@@ -424,6 +424,20 @@ namespace Strategos.UI
             }
         }
 
+        /// <summary>
+        /// Capture helper: open pause on a canned career profile (#519 Pages still).
+        /// </summary>
+        public static bool DemoCareerRequested
+        {
+            get
+            {
+                foreach (var a in Environment.GetCommandLineArgs())
+                    if (string.Equals(a, "-demo-career", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                return false;
+            }
+        }
+
         private static void MaskDrapeLayerFromSceneCameras()
         {
             foreach (var cam in Camera.allCameras)
