@@ -12,6 +12,15 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Added
+- Visual prefs (#519 / #520): `PlayerPreferences` persists `MapRenderMode` and the seven
+  `Draw*` layer toggles, defaulting to `MapRenderOptions.Default`. Nothing reads them yet —
+  Settings UI is #521.
+- Career page (#519 / #109): PLAY pause **CAREER** panel shows current rank, formation,
+  and higher formation, plus `CareerProfile.History` — one row per finished campaign
+  chain, recorded at the rank held when it ended. `-demo-career` opens it on a canned
+  profile for captures.
+
 ## [0.3.0-alpha.2] - 2026-08-07
 
 ### Changed

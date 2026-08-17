@@ -212,6 +212,8 @@ namespace Strategos.UI.Views
             LayOutMarkers();
             if (AppShell.DemoPostBattleRequested)
                 OpenDemoPostBattle();
+            if (AppShell.DemoCareerRequested)
+                OpenDemoCareer();
         }
 
         public void OnHidden()
@@ -263,6 +265,26 @@ namespace Strategos.UI.Views
             _postBattle.Open(fake);
         }
 
+        /// <summary>
+        /// Canned career profile + pause open on CAREER for <c>-demo-career</c> captures.
+        /// Does not touch the live session's real career — Pages / verify only.
+        /// </summary>
+        private void OpenDemoCareer()
+        {
+            if (_pause == null) return;
+            var fake = new CareerProfile
+            {
+                CareerRankId = "regiment",
+                FormationDesignation = "3 BDE",
+                HigherFormation = "1 DIV",
+            };
+            fake.RecordCampaignCompletion("Valley Campaign", OperationOutcome.Won);
+            fake.RecordCampaignCompletion("Highland Campaign", OperationOutcome.Won);
+            _pause.BindCareer(fake);
+            _pause.Open();
+            _pause.OpenCareer();
+        }
+
         private void OnDestroy() => _card?.Dispose();
 
         private void Update()
@@ -293,8 +315,8 @@ namespace Strategos.UI.Views
         }
 
         /// <summary>
-        /// Esc layering (#371 / #129 / #308 / #206 / #462 / #469 / #467): post-battle →
-        /// historical note → alpha limits → field manual → drills → context help →
+        /// Esc layering (#371 / #129 / #308 / #206 / #462 / #469 / #467 / #519): post-battle →
+        /// historical note → career → alpha limits → field manual → drills → context help →
         /// pause resume → armed verb clear → open pause.
         /// </summary>
         private bool HandlePauseKeys()
@@ -310,6 +332,12 @@ namespace Strategos.UI.Views
             if (_pause != null && _pause.HistoryOpen)
             {
                 _pause.CloseHistoryOnly();
+                return true;
+            }
+
+            if (_pause != null && _pause.CareerOpen)
+            {
+                _pause.CloseCareerOnly();
                 return true;
             }
 
@@ -1112,6 +1140,7 @@ namespace Strategos.UI.Views
             _scenario = sim.Scenario;
             _map = sim.Map;
             _pause?.BindScenario(_scenario);
+            _pause?.BindCareer(_session?.Career);
 
             _headerLabel.text = HeaderForCurrent();
 
@@ -2091,6 +2120,15 @@ namespace Strategos.UI.Views
                                      _scenario != null &&
                                      _scenario.PlayerSide.IsValid &&
                                      outcome.Winner == _scenario.PlayerSide;
+
+                    // Career page (#519): one history row per finished chain, at the rank
+                    // and formation just stamped above.
+                    var chainOutcome = outcome.IsDraw ? OperationOutcome.Drew
+                        : playerWon ? OperationOutcome.Won
+                        : OperationOutcome.Lost;
+                    _session.Career.RecordCampaignCompletion(
+                        _session.ActiveChain?.Name, chainOutcome);
+
                     if (playerWon)
                     {
                         string rank = _session.CareerRankId;

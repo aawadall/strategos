@@ -257,6 +257,16 @@ shipped `highland-campaign` opens at `PlayerEchelon = Regiment` with a directive
 `From` is still `3 BDE` — the same higher HQ that addressed the valley seat. Probe:
 `Strategos > Probe Career Across Campaigns`.
 
+**History (#519).** `CareerProfile.History` is a `List<CareerCampaignRecord>` — one row
+per finished chain, appended by `RecordCampaignCompletion` at the *rank and formation held
+during that chain*, not the rank after any end-of-chain promotion (`PlayView.ShowOutcome`
+records before applying the promotion). It is an append-only log: nothing edits a past
+record when the career is promoted later. Reuses `CampaignChain`'s own `OperationOutcome`
+(Won / Lost / Drew) rather than a second outcome enum. Viewed read-only from a **CAREER**
+panel on the PLAY pause overlay (`Assets/Scripts/UI/CareerPanel.cs`, same nested-panel
+shape as `HistoricalNotePanel`); `-demo-career` (see build-and-verify.md) opens it on a
+canned profile for captures.
+
 ## Multi-echelon climb campaign (#403)
 
 Seat escalation inside **one** chain (Squad → Company → Battalion). Spec:

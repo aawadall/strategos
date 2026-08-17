@@ -48,6 +48,8 @@ instead.
 `scenario`, `ttp`, `builder`. Add `-view3d` (passed straight to the player) to open the
 scenario preview in 3D. Add `-DemoPostBattle` (player arg `-demo-postbattle`) with
 `-View play` to open the canned AFTER ACTION / Merit ribbon panel for Pages captures.
+Add `-DemoCareer` (player arg `-demo-career`) with `-View play` to open pause on a
+canned CAREER panel — rank, formation, and two finished-chain history rows (#519).
 `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
 which is the cheap check that the shell came up at all.
 
@@ -175,7 +177,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.MapPaletteProbe.Run` | NatoTopo in dropdown; colours distinct from Topographic; draw differs |
 | `Strategos.Editor.RankGateProbe.Run` | Rank authority table; under-rank refuse; BN allow; promote |
 | `Strategos.Editor.CommandScopeProbe.Run` | PlayerEchelon derive/validate; Company seat refuses BN Issue; rank prefers authored |
-| `Strategos.Editor.CareerAcrossCampaignsProbe.Run` | CareerProfile stamp/round-trip; highland Regiment≠valley; directive From continues |
+| `Strategos.Editor.CareerAcrossCampaignsProbe.Run` | CareerProfile stamp/round-trip; History append-at-the-time + round-trip; highland Regiment≠valley; directive From continues |
 | `Strategos.Editor.GameModesProbe.Run` | ModeKind; spectator both directors decide; hotseat side flip |
 | `Strategos.Editor.AiDifficultyProbe.Run` | Easy/Hard ladder; personality packs; Hard issues more orders than Easy |
 | `Strategos.Editor.DrillProbe.Run` | Drills become orders, bind directionally, reach a formation's troops |
@@ -187,7 +189,7 @@ The simulation has no picture to read, so it has probes instead. All four run un
 | `Strategos.Editor.PreferenceStoreProbe.Run` | `JsonPreferenceStore` ConfirmOrders + display fields write/read; legacy JSON defaults |
 | `Strategos.Editor.DisplayModeProbe.Run` | AppShell display-mode API (remembered windowed size; ToggleFullscreen callable) |
 | `Strategos.Editor.DisplayPrefsProbe.Run` | Display prefs round-trip + Settings/F11 share AppShell Apply* (#392) |
-| `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView / Splash / PauseOverlay; VersionLabel (#218); fit-height Footer EXIT |
+| `Strategos.Editor.UiShellProbe.Run` | MainMenuView / SettingsView / Splash / PauseOverlay (nested ALPHA LIMITS + CAREER); VersionLabel (#218); fit-height Footer EXIT |
 | `Strategos.Editor.SteamProbe.Run` | `SteamClientHost` Init no-ops without Steamworks; Overlay / Achievement / Cloud stubs guarded (#305) |
 | `Strategos.Editor.CampaignChainProbe.Run` | `CampaignChain` round trip: every field, including the outcome enum and carried-over ORBAT state — #75 chunk 1, data shape only |
 | `Strategos.Editor.CampaignCarryOverProbe.Run` | `CampaignCarryOver.CarryOver` — wreck exclusion (red-then-green), exact readiness-recovery arithmetic unclamped and at the clamp, outcome mapping for Won/Lost/Drew, both undecided-simulation caller-error paths — #75 chunk 2, carry-over logic only |

@@ -255,6 +255,34 @@ namespace Strategos.Editor
                         else log.AppendLine("  PauseOverlay ALPHA LIMITS nested ok");
                     }
                 }
+                // #519: nested CAREER panel — Bind before Open so it has something to show.
+                var careerUnderPause = hostGo.GetComponentInChildren<CareerPanel>(true);
+                if (careerUnderPause == null)
+                {
+                    log.AppendLine("  FAIL PauseOverlay missing CareerPanel child");
+                    bad++;
+                }
+                else
+                {
+                    pause.BindCareer(Strategos.Campaigns.CareerProfile.Default());
+                    careerUnderPause.Open();
+                    if (!pause.CareerOpen)
+                    {
+                        log.AppendLine("  FAIL PauseOverlay.CareerOpen after Open");
+                        bad++;
+                    }
+                    else
+                    {
+                        pause.CloseCareerOnly();
+                        if (pause.CareerOpen)
+                        {
+                            log.AppendLine("  FAIL CloseCareerOnly left panel open");
+                            bad++;
+                        }
+                        else log.AppendLine("  PauseOverlay CAREER nested ok");
+                    }
+                }
+
                 pause.Close();
                 if (pause.IsOpen) { log.AppendLine("  FAIL PauseOverlay.Close"); bad++; }
                 log.AppendLine("  PauseOverlay Build/Open/Close ok");

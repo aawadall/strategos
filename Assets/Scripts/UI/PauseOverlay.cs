@@ -1,11 +1,12 @@
 // PauseOverlay.cs
-// #371 / #206 / #462 / #469: pause — Save / Load / Drills / Field manual / Historical note /
-// Alpha limits / Resume / Exit.
+// #371 / #206 / #462 / #469 / #519: pause — Save / Load / Drills / Field manual /
+// Historical note / Career / Alpha limits / Resume / Exit.
 
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Strategos.Campaigns;
 using Strategos.Scenarios;
 
 using Theme = Strategos.UI.UiTheme;
@@ -19,6 +20,7 @@ namespace Strategos.UI
         private DrillQuickRefPanel _drills;
         private FieldManualBrowserPanel _manual;
         private HistoricalNotePanel _history;
+        private CareerPanel _career;
         private AlphaHelpOverlay _alphaHelp;
         private Button _historyButton;
         private Action _onResume;
@@ -30,6 +32,7 @@ namespace Strategos.UI
         public bool DrillsOpen => _drills != null && _drills.IsOpen;
         public bool ManualOpen => _manual != null && _manual.IsOpen;
         public bool HistoryOpen => _history != null && _history.IsOpen;
+        public bool CareerOpen => _career != null && _career.IsOpen;
         public bool AlphaHelpOpen => _alphaHelp != null && _alphaHelp.IsOpen;
 
         public void Build(RectTransform host, Action onResume, Action onSave, Action onLoad,
@@ -80,6 +83,7 @@ namespace Strategos.UI
             AddButton(card, "DRILLS  (quick ref)", OpenDrills);
             AddButton(card, "FIELD MANUAL", OpenManual);
             _historyButton = AddButton(card, "HISTORICAL NOTE", OpenHistory);
+            AddButton(card, "CAREER", OpenCareer);
             AddButton(card, "ALPHA LIMITS", OpenAlphaHelp);
             AddButton(card, "EXIT TO MENU", () => _onExitMenu?.Invoke());
 
@@ -89,6 +93,8 @@ namespace Strategos.UI
             _manual.Build(root);
             _history = root.gameObject.AddComponent<HistoricalNotePanel>();
             _history.Build(root);
+            _career = root.gameObject.AddComponent<CareerPanel>();
+            _career.Build(root);
             _alphaHelp = root.gameObject.AddComponent<AlphaHelpOverlay>();
             _alphaHelp.Build(root);
 
@@ -103,12 +109,15 @@ namespace Strategos.UI
                 _historyButton.interactable = _history != null && _history.HasNotes;
         }
 
+        public void BindCareer(CareerProfile career) => _career?.Bind(career);
+
         public void Open()
         {
             if (_panel == null) return;
             _drills?.Close();
             _manual?.Close();
             _history?.Close();
+            _career?.Close();
             _alphaHelp?.Close();
             if (_historyButton != null)
                 _historyButton.interactable = _history != null && _history.HasNotes;
@@ -121,6 +130,7 @@ namespace Strategos.UI
             _drills?.Close();
             _manual?.Close();
             _history?.Close();
+            _career?.Close();
             _alphaHelp?.Close();
             if (_panel != null) _panel.SetActive(false);
         }
@@ -128,12 +138,14 @@ namespace Strategos.UI
         public void CloseDrillsOnly() => _drills?.Close();
         public void CloseManualOnly() => _manual?.Close();
         public void CloseHistoryOnly() => _history?.Close();
+        public void CloseCareerOnly() => _career?.Close();
         public void CloseAlphaHelpOnly() => _alphaHelp?.Close();
 
         private void OpenDrills()
         {
             _manual?.Close();
             _history?.Close();
+            _career?.Close();
             _alphaHelp?.Close();
             _drills?.Open();
         }
@@ -142,6 +154,7 @@ namespace Strategos.UI
         {
             _drills?.Close();
             _history?.Close();
+            _career?.Close();
             _alphaHelp?.Close();
             _manual?.Open();
         }
@@ -150,8 +163,19 @@ namespace Strategos.UI
         {
             _drills?.Close();
             _manual?.Close();
+            _career?.Close();
             _alphaHelp?.Close();
             _history?.Open();
+        }
+
+        /// <summary>Public for the pause CAREER button and <c>-demo-career</c> captures (#519).</summary>
+        public void OpenCareer()
+        {
+            _drills?.Close();
+            _manual?.Close();
+            _history?.Close();
+            _alphaHelp?.Close();
+            _career?.Open();
         }
 
         private void OpenAlphaHelp()
@@ -159,6 +183,7 @@ namespace Strategos.UI
             _drills?.Close();
             _manual?.Close();
             _history?.Close();
+            _career?.Close();
             _alphaHelp?.Open();
         }
     }
