@@ -46,6 +46,24 @@ fight, and climb echelons in a playable Windows alpha — pay-what-you-want ($2 
 
 ---
 
+## Downloads — external source entry
+
+Uploads → **provide a download URL instead** (external file), so source sits in the
+Downloads list next to the Windows zip rather than only as a prose link in the long
+description above. Not scriptable via `butler` — page/Uploads edits are itch dashboard
+only.
+
+| Field | Value |
+|---|---|
+| URL | `https://github.com/aawadall/strategos.git` |
+| Label | `Source (GitHub, git clone)` |
+
+A `.git` URL isn't a direct download — clicking it triggers a clone/browser redirect,
+not a file fetch. That's fine for the audience it's aimed at (players who'd rather
+build from source than run the zip).
+
+---
+
 ## Classification / tags
 
 | Field | Value |
@@ -96,6 +114,7 @@ Attach `02-play-meeting-engagement.png` (or a GIF when #210 lands).
 
 1. Edit game → paste short + long copy from this file.
 2. Upload cover + screenshots from `Research/store/itch/`.
-3. Confirm tags / Windows / PWYW $2.
-4. Publish the first devlog (draft above).
-5. Tick the Marketing checklist in [itch-publish.md](itch-publish.md) and close #480.
+3. Add the external source entry (Downloads — external source entry, above).
+4. Confirm tags / Windows / PWYW $2.
+5. Publish the first devlog (draft above).
+6. Tick the Marketing checklist in [itch-publish.md](itch-publish.md) and close #480.
