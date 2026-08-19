@@ -39,7 +39,8 @@ param (
     [int]$WaitSeconds = 12,
     [string]$View,
     [switch]$DemoPostBattle,
-    [switch]$DemoCareer
+    [switch]$DemoCareer,
+    [switch]$FreezeSplash
 )
 
 $ErrorActionPreference = "Stop"
@@ -88,6 +89,7 @@ $unityArgs = @(
 if ($View) { $unityArgs += @("-view", $View) }
 if ($DemoPostBattle) { $unityArgs += "-demo-postbattle" }
 if ($DemoCareer) { $unityArgs += "-demo-career" }
+if ($FreezeSplash) { $unityArgs += "-freeze-splash" }
 
 $proc = Start-Process -FilePath $Exe -ArgumentList $unityArgs -PassThru
 

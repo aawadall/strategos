@@ -20,6 +20,10 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
   and higher formation, plus `CareerProfile.History` — one row per finished campaign
   chain, recorded at the rank held when it ended. `-demo-career` opens it on a canned
   profile for captures.
+- Splash boot art (#482): `SplashView`'s backdrop is now a procedural terrain sheet
+  (`SplashBaker`, `MapGenerator`/`MapRasterizer`, deterministic seed) full-bleed behind
+  the paper brand card, instead of flat colour. `-freeze-splash` holds the frame for
+  captures.
 
 ## [0.3.0-alpha.2] - 2026-08-07
 
