@@ -1,7 +1,7 @@
 # itch.io publish (#221 / #83)
 
 Desktop Windows channel already exists as a GitHub Release
-([v0.3.0-alpha.2](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.2)).
+([v0.3.0-alpha.3](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.3)).
 Pages download CTA is live on [aawadall.github.io/strategos](https://aawadall.github.io/strategos/).
 **Live itch page:** [aawadall.itch.io/strategos](https://aawadall.itch.io/strategos)
 (`user/game` = `aawadall/strategos`).
@@ -45,7 +45,7 @@ App GUI: [pushing builds in the itch app](https://itch.io/updates/pushing-builds
 
 Prefer the **Release asset**, not a random local `Artifacts` folder:
 
-- Zip: `Strategos-0.3.0-alpha.2-windows.zip` from the GitHub Release, **or**
+- Zip: `Strategos-0.3.0-alpha.3-windows.zip` from the GitHub Release, **or**
 - Unzipped folder that contains `Strategos.exe` (butler can push a directory).
 
 Channel name convention: `windows` (stable alpha) or `windows-alpha` for the first push.
@@ -69,7 +69,7 @@ Open the app (logged in) → **Upload** / Builds → pick project + channel → 
 butler login
 
 # from repo root — zip path or unzipped Windows build dir
-.\scripts\itch-push.ps1 -Source path\to\Strategos-0.3.0-alpha.2-windows.zip
+.\scripts\itch-push.ps1 -Source path\to\Strategos-0.3.0-alpha.3-windows.zip
 # or
 $env:STRATEGOS_ITCH_TARGET = 'aawadall/strategos'
 .\scripts\itch-push.ps1 -Source .\Artifacts\Windows -Channel windows-alpha

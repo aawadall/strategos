@@ -38,7 +38,7 @@ fight, and climb echelons in a playable Windows alpha — pay-what-you-want ($2 
   Status site:
   <a href="https://aawadall.github.io/strategos/">aawadall.github.io/strategos</a>
   · Free zip mirror:
-  <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.2">GitHub Release v0.3.0-alpha.2</a>
+  <a href="https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.3">GitHub Release v0.3.0-alpha.3</a>
   · Source:
   <a href="https://github.com/aawadall/strategos">github.com/aawadall/strategos</a>
 </p>
@@ -76,7 +76,7 @@ From `Research/store/itch/` (mirrors Pages captures):
 
 ## First devlog draft (paste into itch Devlog)
 
-**Title:** Strategos v0.3.0-alpha.2 — playable Windows alpha on itch
+**Title:** Strategos v0.3.0-alpha.3 — playable Windows alpha on itch
 
 **Body:**
 
@@ -86,7 +86,7 @@ This is a pre-production sandbox. Fog of war is thin, artillery is still direct 
 
 Play: https://aawadall.itch.io/strategos  
 Status: https://aawadall.github.io/strategos/  
-Zip mirror: https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.2
+Zip mirror: https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.3
 
 Attach `02-play-meeting-engagement.png` (or a GIF when #210 lands).
 
