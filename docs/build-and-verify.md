@@ -10,7 +10,7 @@ How to build, run and prove a change in Strategos.
 
 ```powershell
 .\scripts\build.ps1 -Target Windows64      # Windows64 | Linux64 | macOS | WebGL | All
-.\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.2   # stamp bundleVersion (#217)
+.\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.3   # stamp bundleVersion (#217)
 .\scripts\capture.ps1 -View scenario       # launch player on one view, screenshot, close
 ```
 

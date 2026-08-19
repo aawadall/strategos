@@ -12,6 +12,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+## [0.3.0-alpha.3] - 2026-08-19
+
 ### Added
 - Visual prefs (#519 / #520): `PlayerPreferences` persists `MapRenderMode` and the seven
   `Draw*` layer toggles, defaulting to `MapRenderOptions.Default`. Nothing reads them yet —
