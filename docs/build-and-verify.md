@@ -50,6 +50,9 @@ scenario preview in 3D. Add `-DemoPostBattle` (player arg `-demo-postbattle`) wi
 `-View play` to open the canned AFTER ACTION / Merit ribbon panel for Pages captures.
 Add `-DemoCareer` (player arg `-demo-career`) with `-View play` to open pause on a
 canned CAREER panel — rank, formation, and two finished-chain history rows (#519).
+Add `-FreezeSplash` (player arg `-freeze-splash`) with `-View splash` to hold the boot
+frame indefinitely instead of racing its ~2.25s auto-advance, for photographing the
+procedural backdrop (#482).
 `AppShell` logs `[AppShell] n view(s), showing 'key'` on start,
 which is the cheap check that the shell came up at all.
 

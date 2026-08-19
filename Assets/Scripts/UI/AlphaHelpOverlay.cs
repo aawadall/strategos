@@ -32,6 +32,8 @@ namespace Strategos.UI
             "• No zone of control, facing, or unit collision — units pass through.\n" +
             "• Destroyed units stay on the map as wrecks (not commandable).\n" +
             "• Head-on equal firefights can stall under suppression — flank or dig in.\n" +
+            "• Splash boot art is a procedural terrain sample (same pipeline as " +
+            "EXPLORE/SCENARIO) — not a specific map, not hand-authored.\n" +
             "\n" +
             "Full list: docs/known-gaps.md · Pause → FIELD MANUAL for glossary terms.";
 

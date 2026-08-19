@@ -1,7 +1,8 @@
 // SplashView.cs
-// #430 / #426: branded boot frame before MainMenuView — paper + STRATEGOS, click or
-// timeout to continue. Skippable; AppShell skips splash when -view is set or in
-// batchmode so probes stay deterministic.
+// #430 / #426: branded boot frame before MainMenuView — a procedural terrain backdrop
+// (#482, SplashBaker) behind the paper + STRATEGOS card, click or timeout to continue.
+// Skippable; AppShell skips splash when -view is set or in batchmode so probes stay
+// deterministic.
 
 using TMPro;
 using UnityEngine;
@@ -26,6 +27,7 @@ namespace Strategos.UI.Views
         public float HoldSeconds { get; set; } = DefaultHoldSeconds;
 
         private Texture2D _paperTex;
+        private Texture2D _bgTex;
         private float _shownAt = -1f;
         private bool _dismissed;
 
@@ -36,6 +38,17 @@ namespace Strategos.UI.Views
             var bg = root.gameObject.AddComponent<Image>();
             bg.color = Theme.StageBg;
             bg.raycastTarget = true;
+
+            // Procedural terrain sheet, full-bleed behind the paper card (#482) — the
+            // first frame reads as the product, not a blank card. Same stable seed
+            // every boot; PaperTexture.SeedFor keeps that contract in one place.
+            _bgTex = SplashBaker.CreateBackground(PaperTexture.SeedFor("splash-terrain"));
+            var backdrop = CreateRect("Backdrop", root);
+            Stretch(backdrop);
+            var backdropImage = backdrop.gameObject.AddComponent<RawImage>();
+            backdropImage.texture = _bgTex;
+            backdropImage.color = Color.white;
+            backdropImage.raycastTarget = false;
 
             _paperTex = PaperTexture.Create(960, 1080, PaperTexture.SeedFor("splash"),
                 PaperOptions.Clean);
@@ -125,6 +138,11 @@ namespace Strategos.UI.Views
             {
                 Destroy(_paperTex);
                 _paperTex = null;
+            }
+            if (_bgTex != null)
+            {
+                Destroy(_bgTex);
+                _bgTex = null;
             }
         }
     }

@@ -82,7 +82,11 @@ namespace Strategos.UI
 
             _views.Add<SplashView>(v =>
             {
-                ((SplashView)v).Shell = this;
+                var s = (SplashView)v;
+                s.Shell = this;
+                // Capture helper: hold indefinitely so the boot frame can be
+                // photographed instead of racing capture.ps1's screenshot timer.
+                if (FreezeSplashRequested) s.HoldSeconds = float.PositiveInfinity;
             }, showTab: false);
             _views.Add<MainMenuView>(v =>
             {
@@ -433,6 +437,21 @@ namespace Strategos.UI
             {
                 foreach (var a in Environment.GetCommandLineArgs())
                     if (string.Equals(a, "-demo-career", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Capture helper: hold the splash boot frame indefinitely instead of
+        /// auto-advancing, so it can be screenshotted (#482 Pages still).
+        /// </summary>
+        public static bool FreezeSplashRequested
+        {
+            get
+            {
+                foreach (var a in Environment.GetCommandLineArgs())
+                    if (string.Equals(a, "-freeze-splash", StringComparison.OrdinalIgnoreCase))
                         return true;
                 return false;
             }

@@ -34,9 +34,17 @@ stall). The same overlay opens from pause **ALPHA LIMITS** (#469). Distinct from
 `GameBuild` stamps `PlayerSettings.bundleVersion` from `-bundleVersion` /
 `STRATEGOS_VERSION` (#217); `build.ps1 -Version` passes it through.
 
-**Splash (#430).** Normal boots open `SplashView` (`-view splash`) — paper brand hold,
-click / any key / ~2.25s → menu. Skipped when `-view` is set or under batchmode /
+**Splash (#430 / #482).** Normal boots open `SplashView` (`-view splash`) — paper brand
+hold, click / any key / ~2.25s → menu. Skipped when `-view` is set or under batchmode /
 `-nographics` (`AppShell.ShouldShowSplash`) so probes and captures stay deterministic.
+The backdrop behind the paper card is a procedural terrain sheet (`SplashBaker`, same
+`MapGenerator`/`MapRasterizer` pipeline EXPLORE and SCENARIO use — no erosion, no
+culture, `MapRenderOptions.TerrainOnly`), baked full-bleed from a stable seed
+(`PaperTexture.SeedFor("splash-terrain")`) so the boot frame is the same sheet every
+launch. It sits *behind* the opaque paper card, never under the brand text, so it needs
+no contrast guard of its own — see `PaperTexture`'s header for why that guard exists
+where text sits directly on generated art. `-freeze-splash` (`capture.ps1 -FreezeSplash`)
+holds the frame indefinitely instead of auto-advancing, for photographing it.
 
 **Settings shell (#306 / #307 / #389 / #390 / #391).** `SettingsView` (`-view settings`) is a
 no-tab screen opened from menu Options / Audio. GRAPHICS has **FULLSCREEN** (shared with F11 via
