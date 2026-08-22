@@ -12,6 +12,12 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Added
+- Drill range design + T1 skeleton (#475 W04): `docs/drill-range.md` design note and
+  `ScenarioSamples.DrillRangeT1()` / `Resources/Scenarios/drill-range-t1.json` — a fixed
+  practice-ground fixture for drill T1 (Fire and Movement), the one drill the field manual
+  already cross-links (#207). Not yet wired into the main menu; W05 makes it playable.
+
 ## [0.3.0-alpha.3] - 2026-08-19
 
 ### Added

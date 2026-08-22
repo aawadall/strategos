@@ -59,6 +59,11 @@ namespace Strategos.Editor
             ScenarioIO.SaveToFile(ScenarioSamples.Tutorial(), tutPath);
             Debug.Log($"[ScenarioProbe] wrote {tutPath}");
 
+            // #475 W04: T1 drill range skeleton — see docs/drill-range.md.
+            var rangePath = Path.Combine(ResourceDir, ScenarioSamples.DrillRangeT1Name + ".json");
+            ScenarioIO.SaveToFile(ScenarioSamples.DrillRangeT1(), rangePath);
+            Debug.Log($"[ScenarioProbe] wrote {rangePath}");
+
             // #405 / #403: climb campaign seat ladder (Squad → Company → Battalion).
             WriteClimb(ScenarioSamples.ClimbSquadName, ScenarioSamples.ClimbSquad());
             WriteClimb(ScenarioSamples.ClimbCompanyName, ScenarioSamples.ClimbCompany());
@@ -286,6 +291,10 @@ namespace Strategos.Editor
             // #309: squad tutorial skeleton.
             bad += CheckNamedShippedFixture(ScenarioSamples.TutorialName,
                 ScenarioSamples.Tutorial(), log);
+
+            // #475 W04: T1 drill range skeleton.
+            bad += CheckNamedShippedFixture(ScenarioSamples.DrillRangeT1Name,
+                ScenarioSamples.DrillRangeT1(), log);
 
             // #405: climb campaign seat ladder.
             bad += CheckNamedShippedFixture(ScenarioSamples.ClimbSquadName,
