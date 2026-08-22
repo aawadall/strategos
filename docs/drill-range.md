@@ -1,4 +1,4 @@
-# Drill range (#475 W04)
+# Drill range (#475 W04/W05)
 
 Design note for the first "practice range" scenario — a fixed, repeatable tactical problem
 built around one field drill, so the DRILLS binder becomes something the player *uses*
@@ -7,19 +7,22 @@ instead of only reads.
 Parent: [ttp-epics.md](ttp-epics.md) / [#510](https://github.com/aawadall/strategos/issues/510)
 · rung epic [#475](https://github.com/aawadall/strategos/issues/475) ("Train-on-drills:
 practice range / guided TTP scenarios") · cadence:
-[value-roadmap-52w.md](value-roadmap-52w.md) W04.
+[value-roadmap-52w.md](value-roadmap-52w.md) W04/W05 (both shipped ahead of schedule in the
+same sitting).
 
-## What ships this week (design + skeleton, not yet playable)
+## What ships (W04 design + skeleton, W05 playable)
 
 - This note.
 - `ScenarioSamples.DrillRangeT1()` / `Resources/Scenarios/drill-range-t1.json` — a real,
   `ScenarioProbe`-checked scenario fixture, built and validated the same way every other
   sample is.
-- **Not** wired into `MainMenuView` — no menu button yet. That is deliberate: a range only
-  earns a place on the menu once it teaches something the raw scenario cannot (W05, see
-  below), and an unfinished feature with a menu entry is a worse first impression than one
-  that does not exist yet. It stays reachable from `ScenarioIO.Load("drill-range-t1")` for
-  probes and manual testing.
+- Main menu **DRILL RANGE: T1** button (`MainMenuView`, next to SKIRMISH ONLY), wired to
+  `Shell.LoadScenarioFromMenu(ScenarioSamples.DrillRangeT1Name)` — the same path every other
+  menu scenario uses.
+- A HOW TO PLAY step in `AlphaHelpOverlay` naming the range and drill T1 by code — the
+  "drill-range HELP card" addon; verified with `UiShellProbe` (menu still fits at 720px,
+  preferred height 655) rather than a screenshot, since this session's automation cannot
+  hold OS foreground for `capture.ps1` to shoot the live menu.
 
 ## Why T1 first
 
@@ -58,17 +61,15 @@ the same approach, the same OPFOR posture, and the same result are there every t
 is what "practice" requires and a procedurally seeded meeting engagement does not promise
 on its own (two different seeds can hand the same drill very different terrain).
 
-## What "playable" (W05) still needs
+## What is still not built
 
-None of this is graded yet. Ordering `T1` and ordering a bare `MoveTo` both currently just
-run the sim — there is no feedback that names the difference. W05's gap, concretely:
+Reachable and playable, but **not graded**. Ordering `T1` and ordering a bare `MoveTo` both
+currently just run the sim — there is no feedback that names the difference:
 
-- A context help card (`ContextHelp` / `AlphaHelpOverlay`, matching the project's other
-  addon pattern) that appears on this scenario and names the drill by code.
 - Some signal, even a thin one, that the player used the drill rather than a raw order —
   `CommandLog` already carries `CommandKind`, so this is a read over existing data (same
-  shape as the AAR critique epic, #421), not new instrumentation.
-- Only then does a menu entry (or a dedicated "RANGE" section) make sense.
+  shape as the AAR critique epic, #421), not new instrumentation. Natural next step once
+  #421 lands a place to show it.
 
 ## Open questions (not blocking this week)
 

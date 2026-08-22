@@ -41,8 +41,9 @@ ATP 3-21.8) into `Resources/Doctrine/` with Research digests and
 - Pause **DRILLS** quick-ref
 - Field manual (#124 done): pause browser, Pages stub, **T1 ↔ glossary** (#207) — see
   [field-manual.md](field-manual.md)
-- Drill range design + T1 skeleton (#475 W04) — `drill-range-t1` fixture, not yet menu-wired
-  or graded — see [drill-range.md](drill-range.md)
+- Drill range playable (#475 W04/W05) — main menu **DRILL RANGE: T1**, HOW TO PLAY step;
+  `drill-range-t1` fixture is real but ungraded — no signal yet that the player used T1
+  rather than a bare MOVE — see [drill-range.md](drill-range.md)
 
 ## Cadence
 
