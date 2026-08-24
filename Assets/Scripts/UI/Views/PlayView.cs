@@ -280,6 +280,13 @@ namespace Strategos.UI.Views
             };
             fake.RecordCampaignCompletion("Valley Campaign", OperationOutcome.Won);
             fake.RecordCampaignCompletion("Highland Campaign", OperationOutcome.Won);
+            fake.GrantMedals(new[]
+            {
+                new BarMedalAward { MedalId = BarMedalIO.EnemyNeutralizedId, Count = 9,
+                    ScenarioName = "Highland Campaign" },
+                new BarMedalAward { MedalId = BarMedalIO.ObjectiveSecuredId, Count = 2,
+                    ScenarioName = "Highland Campaign" },
+            });
             _pause.BindCareer(fake);
             _pause.Open();
             _pause.OpenCareer();
@@ -2159,6 +2166,8 @@ namespace Strategos.UI.Views
             if (_postBattle != null)
             {
                 var review = PostBattleReviewer.Build(_sim);
+                // #467 W07: fold this decision's awards onto the career rack.
+                _session?.Career.GrantMedals(review.Awards);
                 _postBattle.Open(review);
             }
         }

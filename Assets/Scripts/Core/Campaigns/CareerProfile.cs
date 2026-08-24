@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using Strategos.Commands;
+using Strategos.Medals;
 using Strategos.NatoSymbols;
 using Strategos.Scenarios;
 using Strategos.Units;
@@ -27,6 +28,19 @@ namespace Strategos.Campaigns
         public OperationOutcome Outcome = OperationOutcome.Unplayed;
         public string CareerRankId = string.Empty;
         public string FormationDesignation = string.Empty;
+    }
+
+    /// <summary>
+    /// One bar medal on the career rack (#467 W07) — the rack shows this, not the
+    /// per-fight <see cref="BarMedalAward"/>, so a numeral Merit medal reads as a career
+    /// total rather than resetting every time <see cref="PostBattleReviewer"/> runs.
+    /// </summary>
+    [Serializable]
+    public sealed class CareerEarnedMedal
+    {
+        public string MedalId = string.Empty;
+        public int Count = 1;
+        public string FirstScenarioName = string.Empty;
     }
 
     /// <summary>Persistent career seat across campaign boundaries.</summary>
@@ -55,7 +69,53 @@ namespace Strategos.Campaigns
         /// </summary>
         public List<CareerCampaignRecord> History = new();
 
+        /// <summary>
+        /// Bar medals earned across every fight this career has finished, one entry per
+        /// <see cref="BarMedalDef.Id"/> — see <see cref="GrantMedals"/>.
+        /// </summary>
+        public List<CareerEarnedMedal> EarnedMedals = new();
+
         public static CareerProfile Default() => new();
+
+        /// <summary>
+        /// Folds one decision's awards into the career rack (#467 W07). Idempotent per
+        /// <see cref="BarMedalAward.MedalId"/>: an Id already on the rack does not add a
+        /// second entry, its <see cref="CareerEarnedMedal.Count"/> accumulates instead.
+        /// Call once per decision — see <c>PlayView.ShowOutcome</c>.
+        /// </summary>
+        public void GrantMedals(IEnumerable<BarMedalAward> awards)
+        {
+            if (awards == null) return;
+            foreach (var award in awards)
+            {
+                if (award == null || string.IsNullOrEmpty(award.MedalId)) continue;
+                int count = award.Count > 1 ? award.Count : 1;
+
+                CareerEarnedMedal existing = null;
+                for (int i = 0; i < EarnedMedals.Count; i++)
+                {
+                    if (EarnedMedals[i].MedalId == award.MedalId)
+                    {
+                        existing = EarnedMedals[i];
+                        break;
+                    }
+                }
+
+                if (existing != null)
+                {
+                    existing.Count += count;
+                }
+                else
+                {
+                    EarnedMedals.Add(new CareerEarnedMedal
+                    {
+                        MedalId = award.MedalId,
+                        Count = count,
+                        FirstScenarioName = award.ScenarioName ?? string.Empty,
+                    });
+                }
+            }
+        }
 
         /// <summary>
         /// Appends one finished-chain record at the career's current rank and formation.

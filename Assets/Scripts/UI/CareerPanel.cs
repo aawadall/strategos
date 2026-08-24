@@ -2,11 +2,14 @@
 // #519: read-only career summary — current rank/formation plus finished-chain history
 // (pause nested, same layering as HistoricalNotePanel).
 
+using System;
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Strategos.Campaigns;
+using Strategos.Medals;
 using Strategos.Units;
 
 using Theme = Strategos.UI.UiTheme;
@@ -17,7 +20,11 @@ namespace Strategos.UI
     public sealed class CareerPanel : MonoBehaviour
     {
         private GameObject _root;
+        private RectTransform _content;
         private TMP_Text _body;
+        private LayoutElement _bodyLayout;
+        private Transform _medalsHost;
+        private BarMedalCatalog _catalog;
         private CareerProfile _career;
 
         public bool IsOpen => _root != null && _root.activeSelf;
@@ -33,7 +40,7 @@ namespace Strategos.UI
             var card = CreateRect("Card", root);
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(560, 420);
+            card.sizeDelta = new Vector2(560, 480);
             card.gameObject.AddComponent<Image>().color = Theme.MapPaper;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -58,7 +65,7 @@ namespace Strategos.UI
 
             var scrollHost = CreateRect("Scroll", card);
             scrollHost.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
-            scrollHost.gameObject.AddComponent<LayoutElement>().preferredHeight = 280;
+            scrollHost.gameObject.AddComponent<LayoutElement>().preferredHeight = 340;
             var scroll = scrollHost.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical = true;
@@ -81,17 +88,37 @@ namespace Strategos.UI
             content.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
                 ContentSizeFitter.FitMode.PreferredSize;
             scroll.content = content;
+            _content = content;
 
             _body = CreateTmp("Body", content, "", 13, FontStyles.Normal);
             _body.color = Theme.Ink;
             _body.alignment = TextAlignmentOptions.TopLeft;
             _body.enableWordWrapping = true;
-            _body.gameObject.AddComponent<LayoutElement>().preferredHeight = 400;
+            // Height tracks the actual history length (set in Refresh) — a fixed height
+            // here left a gap before the medals section for every career shorter than the
+            // max, pushing it below the fold.
+            _bodyLayout = _body.gameObject.AddComponent<LayoutElement>();
+
+            var medalsLabel = CreateTmp("MedalsLabel", content, "MEDALS", 12, FontStyles.Bold);
+            medalsLabel.color = Theme.Accent;
+            medalsLabel.characterSpacing = 4f;
+            medalsLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+
+            var medalsHost = CreateRect("Medals", content);
+            var medalsV = medalsHost.gameObject.AddComponent<VerticalLayoutGroup>();
+            medalsV.spacing = 6;
+            medalsV.childControlWidth = true;
+            medalsV.childControlHeight = true;
+            medalsV.childForceExpandWidth = true;
+            medalsHost.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+            _medalsHost = medalsHost;
 
             AddButton(card, "CLOSE", Close);
 
             _root = root.gameObject;
             _root.SetActive(false);
+            _catalog = BarMedalIO.Load();
         }
 
         public void Bind(CareerProfile career) => _career = career;
@@ -152,6 +179,93 @@ namespace Strategos.UI
             }
 
             _body.text = sb.ToString();
+            if (_bodyLayout != null)
+            {
+                int lines = _body.text.Split('\n').Length;
+                _bodyLayout.preferredHeight = Mathf.Max(60, lines * 17f);
+            }
+
+            RefreshMedals();
+
+            if (_content != null) LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
+        }
+
+        /// <summary>Career rack (#467 W07): earned bars grouped Training → Campaign →
+        /// Historical → Merit → Mode, read-only.</summary>
+        private void RefreshMedals()
+        {
+            if (_medalsHost == null) return;
+            for (int i = _medalsHost.childCount - 1; i >= 0; i--)
+                UnityEngine.Object.Destroy(_medalsHost.GetChild(i).gameObject);
+
+            _catalog ??= BarMedalIO.Load();
+            var earned = _career?.EarnedMedals;
+            if (earned == null || earned.Count == 0)
+            {
+                var none = CreateTmp("NoneMedals", _medalsHost, "(none earned yet)", 12,
+                    FontStyles.Italic);
+                none.color = Theme.InkMuted;
+                none.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+                return;
+            }
+
+            foreach (BarMedalCategory category in Enum.GetValues(typeof(BarMedalCategory)))
+            {
+                var inCategory = new List<CareerEarnedMedal>();
+                for (int i = 0; i < earned.Count; i++)
+                {
+                    var def = BarMedalIO.Find(_catalog, earned[i].MedalId);
+                    if (def != null && def.Category == category) inCategory.Add(earned[i]);
+                }
+                if (inCategory.Count == 0) continue;
+
+                var row = CreateRect($"Row_{category}", _medalsHost);
+                row.gameObject.AddComponent<LayoutElement>().preferredHeight = 84;
+                var rowH = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+                rowH.spacing = 8;
+                rowH.childAlignment = TextAnchor.MiddleLeft;
+                rowH.childControlWidth = false;
+                rowH.childControlHeight = false;
+
+                var catLabel = CreateTmp($"Cat_{category}", row,
+                    category.ToString().ToUpperInvariant(), 10, FontStyles.Bold);
+                catLabel.color = Theme.InkMuted;
+                catLabel.gameObject.AddComponent<LayoutElement>().preferredWidth = 66;
+
+                for (int i = 0; i < inCategory.Count; i++)
+                    AddMedalChip(row, inCategory[i]);
+            }
+        }
+
+        private void AddMedalChip(Transform parent, CareerEarnedMedal earned)
+        {
+            var def = BarMedalIO.Find(_catalog, earned.MedalId);
+            if (def == null) return;
+
+            var chip = CreateRect($"Medal_{earned.MedalId}", parent);
+            chip.gameObject.AddComponent<LayoutElement>().preferredWidth = 110;
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = 76;
+
+            var col = chip.gameObject.AddComponent<VerticalLayoutGroup>();
+            col.spacing = 4;
+            col.childAlignment = TextAnchor.UpperCenter;
+            col.childControlWidth = true;
+            col.childControlHeight = false;
+            col.childForceExpandWidth = true;
+
+            var icon = CreateRect("Icon", chip);
+            icon.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
+            var img = icon.gameObject.AddComponent<Image>();
+            img.sprite = BarMedalBaker.For(def, earned.Count);
+            img.preserveAspect = true;
+            img.color = Color.white;
+
+            string label = earned.Count > 1 ? $"{def.Title} ×{earned.Count}" : def.Title;
+            var cap = CreateTmp("Cap", chip, label, 10, FontStyles.Normal);
+            cap.color = Theme.InkMuted;
+            cap.alignment = TextAlignmentOptions.Center;
+            cap.enableWordWrapping = true;
+            cap.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
         }
     }
 }
