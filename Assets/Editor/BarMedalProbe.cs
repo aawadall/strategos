@@ -3,12 +3,14 @@
 
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Strategos.Medals;
 using Strategos.UI;
 using Strategos.Commands;
+using Strategos.Direction;
 using Strategos.Scenarios;
 using Strategos.Units;
 
@@ -76,16 +78,69 @@ namespace Strategos.Editor
                 var review = PostBattleReviewer.Build(sim, catalog);
                 log.AppendLine(
                     $"  Fresh sim: neutralized={review.Stats.EnemyNeutralized} " +
-                    $"awards={review.Awards.Count}");
+                    $"awards={review.Awards.Count} critiques={review.Critiques.Count}");
                 if (review.Stats.EnemyNeutralized != 0)
                 {
                     log.AppendLine("  FAIL fresh sim should have 0 enemy casualties");
+                    bad++;
+                }
+                if (review.Critiques.Count == 0 ||
+                    !review.Critiques[0].StartsWith("DOCTRINE"))
+                {
+                    log.AppendLine("  FAIL #421 critique missing/mis-ordered doctrine line");
+                    bad++;
+                }
+                if (review.Critiques.Count != 1)
+                {
+                    log.AppendLine(
+                        $"  FAIL fresh sim is undecided — expected only the doctrine line, " +
+                        $"got {review.Critiques.Count}");
                     bad++;
                 }
             }
             else
             {
                 log.AppendLine("  WARN ScenarioSamples.Skirmish() null — skip sim grant check");
+            }
+
+            // #421: a decided fight gets exchange + objective lines too, not just doctrine.
+            {
+                var decidedScenario = ScenarioSamples.Skirmish();
+                decidedScenario.Map.EnableErosion = false;
+                foreach (var u in decidedScenario.Units) u.Roe = RulesOfEngagement.FireAtWill;
+                var decidedMap = decidedScenario.GenerateMap();
+                var decidedSim = new Simulation(decidedScenario, decidedMap);
+                decidedSim.AddExecutor(new MoveToExecutor());
+                decidedSim.AddExecutor(new EngageExecutor());
+                decidedSim.EnableReactions();
+
+                var sides = new List<SideId>();
+                foreach (var s in decidedScenario.Sides) sides.Add(s.Id);
+                decidedSim.EnableDirector(sides);
+
+                int limit = decidedScenario.TimeLimitTicks > 0
+                    ? decidedScenario.TimeLimitTicks + 60 : 4000;
+                while (decidedSim.Tick < limit && !decidedSim.IsOver) decidedSim.Step();
+
+                if (!decidedSim.IsOver)
+                {
+                    log.AppendLine($"  FAIL decided-fight setup never reached a decision after {decidedSim.Tick} ticks");
+                    bad++;
+                }
+                else
+                {
+                    var decidedReview = PostBattleReviewer.Build(decidedSim, catalog);
+                    bool hasObjectiveLine = decidedReview.Critiques.Exists(c => c.StartsWith("OBJECTIVE"));
+                    log.AppendLine(
+                        $"  Decided sim (T+{decidedSim.Tick}, draw={decidedReview.Stats.IsDraw}): " +
+                        $"critiques={decidedReview.Critiques.Count} " +
+                        $"[{string.Join(" | ", decidedReview.Critiques)}]");
+                    if (!decidedReview.Stats.IsDraw && !hasObjectiveLine)
+                    {
+                        log.AppendLine("  FAIL decided non-draw sim should carry an OBJECTIVE critique line");
+                        bad++;
+                    }
+                }
             }
 
             // Panel Build/Open/Close

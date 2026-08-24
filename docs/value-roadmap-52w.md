@@ -56,7 +56,7 @@ Release checklist each week:
 | 05 | 2026-09-07 | Train-on-drills playable (T1 / React) | **shipped early** — HOW TO PLAY step + main-menu **DRILL RANGE: T1** button | #475 |
 | 06 | 2026-09-14 | Bar medal catalogue + ribbon renderer | 1 medal def JSON + contact-sheet bake | **#467 done** |
 | 07 | 2026-09-21 | Post-battle medal strip + career rack | Glossary: “service ribbon” / medal rack term | **#467 done** |
-| 08 | 2026-09-28 | Thin AAR critique | Post-battle HELP blurb + 1 AAR metric glossary entry | #421 |
+| 08 | 2026-09-28 | Thin AAR critique | Post-battle HELP blurb + 1 AAR metric glossary entry | **#421 done** |
 | 09 | 2026-10-05 | Outcome HistoricalNotes on replay | Outcome note text on LRT or Belleau JSON | #462 / #298 |
 | 10 | 2026-10-12 | +1 historical menu fight | Scenario JSON + Briefing HistoricalNote + ATTRIBUTIONS row | #475 |
 | 11 | 2026-10-19 | +1 historical fight + ATP doctrine expand | 1–2 new `Ttp` rows in doctrine pack + binder visible | #516 / #513 / #475 |

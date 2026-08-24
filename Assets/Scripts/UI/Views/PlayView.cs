@@ -262,6 +262,9 @@ namespace Strategos.UI.Views
                 Tick = 1840,
                 ScenarioName = "Meeting Engagement",
             });
+            fake.Critiques.Add("DOCTRINE — ordered a named drill rather than a bare move.");
+            fake.Critiques.Add("EXCHANGE — no friendly losses this fight.");
+            fake.Critiques.Add("OBJECTIVE — held at decision.");
             _postBattle.Open(fake);
         }
 

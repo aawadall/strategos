@@ -37,6 +37,12 @@
       "Title": "TTP / drill",
       "Body": "Tactics, techniques, and procedures — coded drills in the DRILLS binder. Readiness gates which drills you may issue. Glossary terms may cite drill codes such as T1.",
       "DrillRefs": [ "T1" ]
+    },
+    {
+      "Id": "aar",
+      "Title": "AAR (After-Action Review)",
+      "Body": "The AAR section of the post-battle card. Three short lines read from the fight just fought: whether a named drill was ordered, how the casualty exchange landed, and whether the objective was held — commentary, not a score.",
+      "DrillRefs": []
     }
   ]
 }

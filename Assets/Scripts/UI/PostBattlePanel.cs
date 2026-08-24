@@ -17,6 +17,7 @@ namespace Strategos.UI
         private GameObject _root;
         private TMP_Text _title;
         private TMP_Text _stats;
+        private TMP_Text _critique;
         private Transform _medalRow;
         private BarMedalCatalog _catalog;
 
@@ -34,7 +35,7 @@ namespace Strategos.UI
             var card = CreateRect("Card", root);
             card.anchorMin = new Vector2(0.5f, 0.5f);
             card.anchorMax = new Vector2(0.5f, 0.5f);
-            card.sizeDelta = new Vector2(520, 420);
+            card.sizeDelta = new Vector2(520, 500);
             card.gameObject.AddComponent<Image>().color = Theme.MapPaper;
 
             var v = card.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -55,6 +56,17 @@ namespace Strategos.UI
             _stats.alignment = TextAlignmentOptions.TopLeft;
             _stats.enableWordWrapping = true;
             _stats.gameObject.AddComponent<LayoutElement>().preferredHeight = 160;
+
+            var critiqueLabel = CreateTmp("CritiqueLabel", card, "AAR", 12, FontStyles.Bold);
+            critiqueLabel.color = Theme.Accent;
+            critiqueLabel.characterSpacing = 4f;
+            critiqueLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+
+            _critique = CreateTmp("Critique", card, "", 12, FontStyles.Normal);
+            _critique.color = Theme.Ink;
+            _critique.alignment = TextAlignmentOptions.TopLeft;
+            _critique.enableWordWrapping = true;
+            _critique.gameObject.AddComponent<LayoutElement>().preferredHeight = 64;
 
             var medalsLabel = CreateTmp("MedalsLabel", card, "MEDALS EARNED", 12, FontStyles.Bold);
             medalsLabel.color = Theme.Accent;
@@ -100,6 +112,13 @@ namespace Strategos.UI
             sb.AppendLine(
                 $"STRENGTH LEFT  friendly {s.FriendlyRemaining:P0} · enemy {s.EnemyRemaining:P0}");
             _stats.text = sb.ToString();
+
+            if (_critique != null)
+            {
+                _critique.text = review.Critiques == null || review.Critiques.Count == 0
+                    ? string.Empty
+                    : string.Join("\n", review.Critiques);
+            }
 
             ClearMedals();
             if (review.Awards != null)

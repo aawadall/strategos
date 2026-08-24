@@ -63,13 +63,12 @@ on its own (two different seeds can hand the same drill very different terrain).
 
 ## What is still not built
 
-Reachable and playable, but **not graded**. Ordering `T1` and ordering a bare `MoveTo` both
-currently just run the sim — there is no feedback that names the difference:
-
-- Some signal, even a thin one, that the player used the drill rather than a raw order —
-  `CommandLog` already carries `CommandKind`, so this is a read over existing data (same
-  shape as the AAR critique epic, #421), not new instrumentation. Natural next step once
-  #421 lands a place to show it.
+Reachable and playable, but **not precisely graded**. #421's post-battle AAR now has a
+line reading `CommandLog` for *any* `CommandKind.Drill` use ("ordered a named drill
+rather than a bare move") — the place to show a signal now exists — but it does not
+distinguish `T1` from another drill code, so ordering `T1` and ordering some other drill
+read the same. Naming the drill code (or flagging a bare `MoveTo` across T1's specific
+approach) is the next cut, once there is a second range to tell apart from the first.
 
 ## Open questions (not blocking this week)
 
