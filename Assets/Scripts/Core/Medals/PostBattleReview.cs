@@ -30,6 +30,12 @@ namespace Strategos.Medals
     {
         public PostBattleStats Stats = new();
         public List<BarMedalAward> Awards = new();
+
+        /// <summary>
+        /// Thin AAR critique (#421): one line per teaching angle, read from data already on
+        /// hand rather than new instrumentation. Never empty — always names doctrine use.
+        /// </summary>
+        public List<string> Critiques = new();
     }
 
     public static class PostBattleReviewer
@@ -121,7 +127,41 @@ namespace Strategos.Medals
                 });
             }
 
+            BuildCritiques(review, sim, stats, outcome.Decided);
+
             return review;
+        }
+
+        /// <summary>
+        /// One line per teaching angle — doctrine use, casualty exchange, objective outcome —
+        /// each read from data <see cref="Build"/> already produced or the sim's own
+        /// <see cref="CommandLog"/>. #421 thin slice: commentary, not scoring. The objective
+        /// and exchange lines only speak once <paramref name="decided"/> — an undecided sim
+        /// has not actually been lost or won yet, so there is nothing to critique there.
+        /// </summary>
+        private static void BuildCritiques(
+            PostBattleReview review, Simulation sim, PostBattleStats stats, bool decided)
+        {
+            bool usedDrill = false;
+            for (int i = 0; i < sim.Log.Count; i++)
+            {
+                if (sim.Log[i].Kind == CommandKind.Drill) { usedDrill = true; break; }
+            }
+            review.Critiques.Add(usedDrill
+                ? "DOCTRINE — ordered a named drill rather than a bare move."
+                : "DOCTRINE — no named drill ordered; see the DRILLS binder for T1 (Fire and Movement).");
+
+            if (!decided) return;
+
+            if (stats.EnemyNeutralized > 0 && stats.FriendlyLost == 0)
+                review.Critiques.Add("EXCHANGE — no friendly losses this fight.");
+            else if (stats.EnemyNeutralized > 0 && stats.FriendlyLost >= stats.EnemyNeutralized)
+                review.Critiques.Add("EXCHANGE — losses matched or exceeded enemy casualties, a costly trade.");
+
+            if (stats.PlayerWon && stats.ObjectivesHeld > 0)
+                review.Critiques.Add("OBJECTIVE — held at decision.");
+            else if (!stats.PlayerWon && !stats.IsDraw)
+                review.Critiques.Add("OBJECTIVE — not secured.");
         }
     }
 }

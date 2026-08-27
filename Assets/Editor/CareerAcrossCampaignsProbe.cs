@@ -12,6 +12,7 @@ using UnityEditor;
 using UnityEngine;
 using Strategos.Campaigns;
 using Strategos.Commands;
+using Strategos.Medals;
 using Strategos.NatoSymbols;
 using Strategos.Scenarios;
 using Strategos.Units;
@@ -31,6 +32,7 @@ namespace Strategos.Editor
             bad += CheckRoundTrip(log);
             bad += CheckStamp(log);
             bad += CheckHistory(log);
+            bad += CheckMedals(log);
             bad += CheckTwoCampaignSmoke(log);
 
             log.AppendLine(bad == 0 ? "PROBE PASSED" : $"PROBE FAILED with {bad} problem(s)");
@@ -133,6 +135,54 @@ namespace Strategos.Editor
             }
 
             log.AppendLine("  history: OK — 2 records, append-at-the-time rank/formation, round-trip");
+            return 0;
+        }
+
+        /// <summary>#467 W07: GrantMedals is idempotent per Id — a second fight's award
+        /// accumulates Count rather than duplicating the rack entry — and the rack
+        /// round-trips through CareerProfileIO.</summary>
+        private static int CheckMedals(StringBuilder log)
+        {
+            var profile = CareerProfile.Default();
+            profile.GrantMedals(new[]
+            {
+                new BarMedalAward { MedalId = BarMedalIO.EnemyNeutralizedId, Count = 3,
+                    ScenarioName = "Fight A" },
+                new BarMedalAward { MedalId = BarMedalIO.ObjectiveSecuredId, Count = 1,
+                    ScenarioName = "Fight A" },
+            });
+            profile.GrantMedals(new[]
+            {
+                new BarMedalAward { MedalId = BarMedalIO.EnemyNeutralizedId, Count = 2,
+                    ScenarioName = "Fight B" },
+            });
+
+            if (profile.EarnedMedals.Count != 2)
+            {
+                log.AppendLine(
+                    $"  medals: FAILED — want 2 rack entries got {profile.EarnedMedals.Count}");
+                return 1;
+            }
+
+            var neutralized = profile.EarnedMedals.Find(
+                m => m.MedalId == BarMedalIO.EnemyNeutralizedId);
+            if (neutralized == null || neutralized.Count != 5)
+            {
+                log.AppendLine(
+                    $"  medals: FAILED — enemy-neutralized count {neutralized?.Count.ToString() ?? "(missing)"}, want 5 (idempotent accumulate across two fights)");
+                return 1;
+            }
+
+            var again = CareerProfileIO.FromJson(CareerProfileIO.ToJson(profile));
+            if (again == null || again.EarnedMedals.Count != 2 ||
+                again.EarnedMedals.Find(m => m.MedalId == BarMedalIO.EnemyNeutralizedId)?.Count != 5)
+            {
+                log.AppendLine("  medals: FAILED — round-trip lost or corrupted the rack");
+                return 1;
+            }
+
+            log.AppendLine(
+                "  medals: OK — 2 rack entries, enemy-neutralized accumulated to 5, round-trip");
             return 0;
         }
 

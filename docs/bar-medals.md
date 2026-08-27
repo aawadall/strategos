@@ -33,6 +33,19 @@ At decision, `PostBattleReviewer` builds stats and grants:
 UI: `PostBattlePanel` after `PlayView.ShowOutcome` — stats + earned ribbons. Esc closes.
 Catalogue: `Resources/Medals/alpha-medals.json`. Probe: **Strategos → Probe Bar Medals**.
 
+### Career rack (shipped, W07)
+
+`PlayView.ShowOutcome` folds each decision's `PostBattleReview.Awards` onto
+`CareerProfile.GrantMedals` — idempotent per `Id`: a medal already on the rack
+accumulates `Count` instead of duplicating, so `enemy-neutralized` reads as a running
+career total rather than resetting every fight. The **CAREER** panel (pause overlay,
+#519) renders the rack grouped by category (binding order below), read-only. Probe:
+**Strategos → Probe Career Across Campaigns**.
+
+`CareerProfile` is in-memory per app session, same as `History` — it does not yet
+survive an app restart (#355/#66 wiring is still open); the rack persists across
+campaigns and skirmishes within one run the same way rank and formation already do.
+
 ### Broad categories
 
 Every medal belongs to exactly one `BarMedalCategory`. The rack and post-battle
@@ -135,7 +148,6 @@ must work with `LocalAnonymousIdentity` and no App ID.
 - Paid cosmetic ribbons (#465 Pass does not sell medals)
 - Live Steam sync, leaderboards, or sharing screenshots as a feature
 - Community-category awards
-- Career / menu rack (child still open)
 
 ---
 
@@ -146,9 +158,9 @@ About five minutes each:
 1. Docs cross-links (this page + phases / CLAUDE) — design PR.
 2. `BarMedalCategory` + def/award POCOs + JSON catalogue stub (3–5 medals).
 3. `BarMedalRenderer` bake + cache; contact sheet or probe pixels.
-4. Grant hook from victory / campaign advance (idempotent).
-5. Post-battle strip UI for newly earned bars.
-6. Menu/career rack grouped by category.
+4. Grant hook from victory / campaign advance (idempotent) — shipped, `CareerProfile.GrantMedals`.
+5. Post-battle strip UI for newly earned bars — shipped, `PostBattlePanel`.
+6. Menu/career rack grouped by category — shipped, **CAREER** panel.
 7. Optional: SteamAchievementId field reserved; stub no-ops without App ID.
 
 ---

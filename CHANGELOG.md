@@ -13,6 +13,17 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 ## [Unreleased]
 
 ### Added
+- Thin AAR critique (#421 W08): `PostBattleReviewer` now reads a decided sim's own
+  `CommandLog` and stats into three commentary lines — doctrine (was a named drill
+  ordered, vs a bare move), exchange (friendly losses vs enemy neutralized), objective
+  (held or not) — shown under a new **AAR** section on `PostBattlePanel`. Commentary, not
+  a score. Glossary term `aar`. Probe: **Strategos → Probe Bar Medals**.
+- Career medal rack (#467 W07): `CareerProfile.GrantMedals` folds each decision's Merit
+  awards onto a persistent, idempotent-per-Id `EarnedMedals` list (numeral medals
+  accumulate a career total instead of resetting per fight); `PlayView.ShowOutcome` grants
+  on decision, and the PLAY pause **CAREER** panel renders the rack grouped Training →
+  Campaign → Historical → Merit → Mode, read-only. Probe: **Strategos → Probe Career
+  Across Campaigns**.
 - Drill range design + playable T1 skeleton (#475 W04/W05): `docs/drill-range.md` design
   note and `ScenarioSamples.DrillRangeT1()` / `Resources/Scenarios/drill-range-t1.json` — a
   fixed practice-ground fixture for drill T1 (Fire and Movement), the one drill the field

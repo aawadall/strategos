@@ -217,8 +217,9 @@ ships in the repository as of **2026-08-03** — not the original aspiration lis
 - [x] Research pack notes at varied echelon scales into `Research/historical/` (#332 / #335–#340)
 - [x] Convert researched engagements to Scenario JSON via ScenarioSamples + Write Samples (#333 / #341–#346; starter: Little Round Top; #460 Belleau; #461 Remagen)
 - [x] Data format allows community-built historical packs (`ScenarioIO` / #341 smoke)
-- [x] Optional `HistoricalNotes` on Scenario + pause surface (#462 / #421 thin slice)
-- [ ] Full AAR analytics critique (#421 remainder)
+- [x] Optional `HistoricalNotes` on Scenario + pause surface (#462 / briefing-side #421 thin slice)
+- [x] Post-battle AAR critique — doctrine/exchange/objective commentary lines (#421 W08 thin slice)
+- [ ] Full AAR analytics critique — deeper metrics beyond the three thin-slice lines (#421 remainder)
 - [ ] Historical AI behaviour seeding (see Phase 8)
 - [x] Procedural scenario generation — OOB / objectives / victory from parameters (#334 / #347–#352); feature placement via #51
 
