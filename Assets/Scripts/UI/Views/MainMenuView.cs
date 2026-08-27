@@ -108,6 +108,8 @@ namespace Strategos.UI.Views
                 () => Shell?.StartClimbFromMenu());
             MenuButton(camp.left, "SKIRMISH ONLY",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.SkirmishName));
+            MenuButton(camp.left, "DRILL RANGE: T1",
+                () => Shell?.LoadScenarioFromMenu(ScenarioSamples.DrillRangeT1Name));
             MenuButton(camp.right, "PUSH NORTH",
                 () => Shell?.LoadScenarioFromMenu(ScenarioSamples.PushNorthName));
             MenuButton(camp.right, "SQUAD TUTORIAL",

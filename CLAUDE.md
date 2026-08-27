@@ -197,6 +197,7 @@ forwarding to it. Add new primitives to the rectangular overload.
 | [docs/game-modes.md](docs/game-modes.md) | Touching PLAY mode-select, spectator, hotseat, replay (#287) |
 | [docs/ai-difficulty.md](docs/ai-difficulty.md) | Touching `SideDirector` difficulty / personality (#291) |
 | [docs/scenario-generation.md](docs/scenario-generation.md) | Touching `ScenarioGenerator` / procedural scenarios (#334) |
+| [docs/drill-range.md](docs/drill-range.md) | Touching a practice-range scenario / Train-on-drills content (#475 W04) |
 | [docs/historical-research.md](docs/historical-research.md) | Gathering Phase 6.2 notes under `Research/historical/` (#332); before #333 conversion |
 | [docs/known-gaps.md](docs/known-gaps.md) | Chasing anything that looks like a bug — it may already be recorded |
 

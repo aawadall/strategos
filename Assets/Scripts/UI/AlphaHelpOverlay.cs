@@ -25,6 +25,9 @@ namespace Strategos.UI
             "or right-click a contact to fire.\n" +
             "5. Space pauses / resumes the clock. Esc opens pause " +
             "(Save / Load / return to menu).\n" +
+            "6. DRILL RANGE: T1 (menu) is practice ground for one field drill — select your " +
+            "squad, open the DRILLS binder, and order drill T1 (Fire and Movement) instead " +
+            "of a bare MOVE against the dug-in OPFOR position.\n" +
             "\n" +
             "ALPHA LIMITS (not bugs)\n" +
             "• Little fog of war on small maps — detection ranges are long.\n" +

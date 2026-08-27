@@ -544,6 +544,99 @@ namespace Strategos.Scenarios
             return s;
         }
 
+        /// <summary>Name of the T1 drill range under Resources/Scenarios (#475 W04).</summary>
+        public const string DrillRangeT1Name = "drill-range-t1";
+
+        /// <summary>Display name authored on <see cref="DrillRangeT1"/>.</summary>
+        public const string DrillRangeT1DisplayName = "Drill Range — T1 Fire and Movement";
+
+        /// <summary>
+        /// #475 W04: a fixed, repeatable practice ground for one field drill rather than a
+        /// generated skirmish — see docs/drill-range.md. Shares <see cref="Tutorial"/>'s
+        /// squad-echelon, small-flat-map shape (fast, unattended-safe) but the OPFOR squad is
+        /// dug into the only covered approach so crossing it without alternating fire and
+        /// movement costs suppression the way it would anywhere else in the sim. T1 is the
+        /// one drill the field manual already cross-links (#207) — see field-manual.md.
+        /// Not wired into the main menu yet; reachable via <c>ScenarioIO.Load(DrillRangeT1Name)</c>
+        /// until W05 makes it playable.
+        /// </summary>
+        public static Scenario DrillRangeT1()
+        {
+            var blue = new Side(new SideId(1), "BLUFOR", Affiliation.Friend)
+            {
+                RankLadder = RankLadderDefaults.UsArmy,
+            };
+            var red = new Side(new SideId(2), "OPFOR", Affiliation.Hostile)
+            {
+                RankLadder = RankLadderDefaults.Soviet,
+            };
+
+            var s = new Scenario
+            {
+                Name = DrillRangeT1DisplayName,
+                Description =
+                    "Practice ground, not a fight to win by attrition. OPFOR holds the only " +
+                    "covered approach to the objective and will not move. Order your squad " +
+                    "into drill T1 (Fire and Movement) from the DRILLS binder instead of a " +
+                    "bare MOVE — crossing open ground without alternating fire and movement " +
+                    "costs suppression the same way it would in any other engagement.",
+                Map = new MapGenerationSettings
+                {
+                    Name = "Drill Range",
+                    Seed = 20260831,
+                    Width = 64,
+                    Height = 64,
+                    MetresPerCell = 25f,
+                    Profile = ReliefProfile.Plains,
+                    EnableErosion = false,
+                    EnableCulture = false,
+                },
+                PlayerEchelon = Echelon.Squad,
+            };
+
+            s.Sides.Add(blue);
+            s.Sides.Add(red);
+            s.PlayerSide = blue.Id;
+
+            Add(s, blue.Id, 1, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(16f, 32f), "1 SQD / A", "A PLT",
+                UnitCatalogue.InfantryFoot);
+
+            Add(s, red.Id, 2, LandEntityCode.Infantry, IconDecorator.VarStandard,
+                Echelon.Squad, new Vector2(48f, 32f), "OPFOR SQD", "OPFOR",
+                UnitCatalogue.InfantryFoot, training: 70f);
+
+            // Authored exactly on OPFOR's position, deliberately not a PlaceNearKind ref: a
+            // range needs the same ground every time, not the nearest POI the generator
+            // happens to place near this hint (which on some seeds is nowhere near either
+            // squad — see docs/drill-range.md).
+            s.Objectives.Add(new Objective
+            {
+                Id = 1,
+                Name = "RANGE OBJECTIVE",
+                Cell = new Vector2(48f, 32f),
+                RadiusCells = 6f,
+                InitialOwner = red.Id,
+            });
+
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.HoldObjectives, Side = blue.Id, Priority = 10,
+                ObjectiveIds = new[] { 1 }, HoldTicks = 300,
+                Description = "BLUFOR took and held the range objective.",
+            });
+            s.Victory.Add(new VictoryCondition
+            {
+                Kind = VictoryKind.DestroyEnemy, Side = blue.Id, Priority = 5,
+                StrengthThresholdPercent = 40f,
+                Description = "OPFOR rendered combat ineffective.",
+            });
+
+            s.TimeLimitTicks = 1800;
+
+            return s;
+        }
+
         /// <summary>Resources name for climb op 1 — squad seat (#405 / #403).</summary>
         public const string ClimbSquadName = "climb-squad";
 
