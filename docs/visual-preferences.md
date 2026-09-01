@@ -32,14 +32,14 @@ stay independent unless a later child explicitly ties CRT phosphor to the sheet.
 
 - Light `UiTheme` paper palette
 - `MapRenderMode` dropdowns — **session-only** today
-- `MapRenderOptions.Draw*` layer flags — not yet prefs
+- `MapRenderOptions.Draw*` layer flags — not yet wired to a view (prefs now hold them, #520)
 - PLAY `afterPixels` overlays — always on when present
 
 ## Children
 
 | # | Task |
 |---|---|
-| #520 | Prefs: map mode + layers |
+| #520 | Prefs: map mode + layers — **done**. `PlayerPreferences.MapRenderMode` + `Draw*` bools, defaults matching `MapRenderOptions.Default`, `FormatVersion` bumped to 2. Nothing reads them yet — that's #522. |
 | #521 | Settings VISUAL (map) |
 | #522 | Views honor map prefs |
 | #523 | Unit scale + wrecks |

@@ -2,6 +2,10 @@
 // #307: player-facing options bag (settings screen). Distinct from save records (#355)
 // and from the embedded player-store choice (#66) — this is a thin prefs document only.
 // #388: Fullscreen + windowed WxH for graphics (Settings UI in #389/#390; apply on boot #391).
+// #520: map render mode + layer toggles, mirroring MapRenderOptions.Default so a fresh
+// install renders exactly what session-only options already did.
+
+using Strategos.Maps;
 
 namespace Strategos.Preferences
 {
@@ -9,7 +13,7 @@ namespace Strategos.Preferences
     public sealed class PlayerPreferences
     {
         /// <summary>Format of this prefs document — bump when fields rename or semantics change.</summary>
-        public int FormatVersion = 1;
+        public int FormatVersion = 2;
 
         /// <summary>
         /// GAMEPLAY stub (#307): when true, destructive palette actions should ask first.
@@ -41,5 +45,32 @@ namespace Strategos.Preferences
 
         /// <summary>One-shot SFX gain 0–1.</summary>
         public float SfxVolume = 1f;
+
+        /// <summary>
+        /// VISUAL (#520): map presentation style. Session-only until now — Settings wiring
+        /// is #521, views honouring the persisted value are #522.
+        /// </summary>
+        public MapRenderMode MapRenderMode = MapRenderMode.Topographic;
+
+        /// <summary>Relief shading layer. Defaults match <see cref="MapRenderOptions.Default"/>.</summary>
+        public bool DrawHillshade = true;
+
+        /// <summary>Elevation contour lines.</summary>
+        public bool DrawContours = true;
+
+        /// <summary>Filled area features — woods, built-up, water.</summary>
+        public bool DrawAreas = true;
+
+        /// <summary>Linear features — drainage, rail, roads.</summary>
+        public bool DrawLines = true;
+
+        /// <summary>Settlement and spot-height point marks.</summary>
+        public bool DrawPois = true;
+
+        /// <summary>Text labels for point marks and contours.</summary>
+        public bool DrawLabels = true;
+
+        /// <summary>Coordinate reference grid overprint.</summary>
+        public bool DrawGrid = true;
     }
 }
