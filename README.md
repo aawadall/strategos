@@ -10,13 +10,13 @@ itch is **pay-what-you-want** with a **$2** suggested default
 remains a free download.
 
 [![Strategos on itch.io](https://img.shields.io/badge/itch.io-PWYW_%242_default-fa5c5c?logo=itchdotio&logoColor=white)](https://aawadall.itch.io/strategos)
-[![GitHub Release](https://img.shields.io/badge/GitHub-v0.3.0--alpha.2_zip-2c5a38)](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.3)
+[![GitHub Release](https://img.shields.io/badge/GitHub-v0.3.0--alpha.2_zip-2c5a38)](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.4)
 
 > GitHub README cannot host the itch iframe widget — use the badges above, or the embed on
 > [aawadall.github.io/strategos](https://aawadall.github.io/strategos/).
 
 - **Play:** [itch.io (PWYW · $2 default)](https://aawadall.itch.io/strategos) ·
-  [v0.3.0-alpha.3 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.3)
+  [v0.3.0-alpha.4 Windows zip](https://github.com/aawadall/strategos/releases/tag/v0.3.0-alpha.4)
 - **Site:** [aawadall.github.io/strategos](https://aawadall.github.io/strategos/)
 - **Status:** [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
 
@@ -91,7 +91,7 @@ XXXXXX   Theater / Combatant Cmd  (multiple Army Groups)
 git clone https://github.com/aawadall/strategos.git
 cd strategos
 # Open the project root in Unity Hub, or:
-#   .\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.3
+#   .\scripts\build.ps1 -Target Windows64 -Version 0.3.0-alpha.4
 ```
 
 See [docs/build-and-verify.md](docs/build-and-verify.md) for capture, probes, and contact sheets.

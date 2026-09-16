@@ -12,6 +12,8 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+## [0.3.0-alpha.4] - 2026-08-29
+
 ### Added
 - Thin AAR critique (#421 W08): `PostBattleReviewer` now reads a decided sim's own
   `CommandLog` and stats into three commentary lines — doctrine (was a named drill
