@@ -406,6 +406,10 @@
     {
       "When": "Briefing",
       "Text": "Historically the 20th Maine held the extreme left of Vincent's brigade. Late in the fight, low on ammunition, Chamberlain ordered a bayonet charge down the slope rather than withdraw. This scenario's mechanics already model Depleted and Withdraw vs Attack — watch what you choose when the line thins. Source: Research/historical/little-round-top-20th-maine.md (CMH PD)."
+    },
+    {
+      "When": "Outcome",
+      "Text": "Historically the 20th Maine held: the Confederate assault broke against the charge and Little Round Top stayed in Union hands, anchoring the Army of the Potomac's left for the rest of 2 July. The historical margin was minutes and rounds, not a strength advantage — worth weighing against however this fight actually resolved. Source: Research/historical/little-round-top-20th-maine.md (CMH PD)."
     }
   ]
 }

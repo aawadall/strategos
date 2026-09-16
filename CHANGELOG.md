@@ -12,6 +12,12 @@ Open work is GitHub issues; deferred defects live in [docs/known-gaps.md](docs/k
 
 ## [Unreleased]
 
+### Added
+- Outcome `HistoricalNotes` on Little Round Top and Belleau Wood (#462 W09): a second,
+  `Outcome`-kind note on each scenario contrasting the historical result against however
+  the fight actually resolved; `HistoricalNotePanel` already labelled and rendered the
+  kind, only the content was missing. Probe: **Strategos → Probe Scenario**.
+
 ## [0.3.0-alpha.4] - 2026-08-29
 
 ### Added
