@@ -1,6 +1,7 @@
 // PreferenceStoreProbe.cs
 // #307: JsonPreferenceStore write/read round-trip for ConfirmOrders.
 // #388: same path for Fullscreen + windowed WxH.
+// #520: same path for map render mode + layer toggles.
 // #311: tutorial scenario Validates (skeleton already shipped).
 // Batch: -executeMethod Strategos.Editor.PreferenceStoreProbe.Run
 
@@ -9,6 +10,7 @@ using System.IO;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using Strategos.Maps;
 using Strategos.Persistence.Files;
 using Strategos.Preferences;
 using Strategos.Scenarios;
@@ -52,6 +54,15 @@ namespace Strategos.Editor
                 }
                 else log.AppendLine("  default WindowWidth/Height 1600x900 ok");
 
+                if (fresh.MapRenderMode != MapRenderMode.Topographic || !fresh.DrawHillshade ||
+                    !fresh.DrawContours || !fresh.DrawAreas || !fresh.DrawLines ||
+                    !fresh.DrawPois || !fresh.DrawLabels || !fresh.DrawGrid)
+                {
+                    log.AppendLine("  FAIL default map prefs should match MapRenderOptions.Default (all layers on, Topographic)");
+                    bad++;
+                }
+                else log.AppendLine("  default map render mode + layers match MapRenderOptions.Default ok");
+
                 fresh.ConfirmOrders = true;
                 store.Save(fresh);
 
@@ -67,6 +78,14 @@ namespace Strategos.Editor
                 again.Fullscreen = true;
                 again.WindowWidth = 1280;
                 again.WindowHeight = 720;
+                again.MapRenderMode = MapRenderMode.NatoTopo;
+                again.DrawHillshade = false;
+                again.DrawContours = false;
+                again.DrawAreas = false;
+                again.DrawLines = false;
+                again.DrawPois = false;
+                again.DrawLabels = false;
+                again.DrawGrid = false;
                 store.Save(again);
 
                 var display = store.Load();
@@ -86,7 +105,16 @@ namespace Strategos.Editor
                 }
                 else log.AppendLine("  round-trip Fullscreen + 1280x720 ok");
 
-                // Old ConfirmOrders-only JSON must pick up display defaults (field initializers).
+                if (display.MapRenderMode != MapRenderMode.NatoTopo || display.DrawHillshade ||
+                    display.DrawContours || display.DrawAreas || display.DrawLines ||
+                    display.DrawPois || display.DrawLabels || display.DrawGrid)
+                {
+                    log.AppendLine("  FAIL round-trip map prefs want NatoTopo, all layers off");
+                    bad++;
+                }
+                else log.AppendLine("  round-trip map render mode + layers off ok");
+
+                // Old ConfirmOrders-only JSON must pick up display + map defaults (field initializers).
                 File.WriteAllText(path, "{\n  \"FormatVersion\": 1,\n  \"ConfirmOrders\": true\n}\n");
                 var legacy = store.Load();
                 if (!legacy.ConfirmOrders || legacy.Fullscreen ||
@@ -98,6 +126,15 @@ namespace Strategos.Editor
                     bad++;
                 }
                 else log.AppendLine("  legacy JSON fills display defaults ok");
+
+                if (legacy.MapRenderMode != MapRenderMode.Topographic || !legacy.DrawHillshade ||
+                    !legacy.DrawContours || !legacy.DrawAreas || !legacy.DrawLines ||
+                    !legacy.DrawPois || !legacy.DrawLabels || !legacy.DrawGrid)
+                {
+                    log.AppendLine("  FAIL legacy JSON should fill map prefs defaults (Topographic, all layers on)");
+                    bad++;
+                }
+                else log.AppendLine("  legacy JSON fills map prefs defaults ok");
 
                 if (!File.Exists(path))
                 {
