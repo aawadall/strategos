@@ -407,6 +407,10 @@
     {
       "When": "Briefing",
       "Text": "Belleau Wood was cleared over roughly three weeks; this fight is one attack day at battalion scale. Approaches cross open ground into timber and machine-gun fire from the wood edge. Source: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD)."
+    },
+    {
+      "When": "Outcome",
+      "Text": "Historically the wood was not cleared in a day: it took roughly three weeks of costly, sector-by-sector fighting before the German garrison withdrew. This scenario compresses that to one attack day, so a win here says the opening assault succeeded where, historically, it only began the fight. Source: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD)."
     }
   ]
 }

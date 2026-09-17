@@ -1001,6 +1001,16 @@ namespace Strategos.Scenarios
                     "Depleted and Withdraw vs Attack — watch what you choose when the line thins. " +
                     "Source: Research/historical/little-round-top-20th-maine.md (CMH PD).",
             });
+            s.HistoricalNotes.Add(new HistoricalNote
+            {
+                When = HistoricalNoteWhen.Outcome,
+                Text =
+                    "Historically the 20th Maine held: the Confederate assault broke against the " +
+                    "charge and Little Round Top stayed in Union hands, anchoring the Army of the " +
+                    "Potomac's left for the rest of 2 July. The historical margin was minutes and " +
+                    "rounds, not a strength advantage — worth weighing against however this fight " +
+                    "actually resolved. Source: Research/historical/little-round-top-20th-maine.md (CMH PD).",
+            });
 
             return s;
         }
@@ -1142,6 +1152,16 @@ namespace Strategos.Scenarios
                     "Belleau Wood was cleared over roughly three weeks; this fight is one " +
                     "attack day at battalion scale. Approaches cross open ground into timber " +
                     "and machine-gun fire from the wood edge. " +
+                    "Source: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD).",
+            });
+            s.HistoricalNotes.Add(new HistoricalNote
+            {
+                When = HistoricalNoteWhen.Outcome,
+                Text =
+                    "Historically the wood was not cleared in a day: it took roughly three weeks " +
+                    "of costly, sector-by-sector fighting before the German garrison withdrew. This " +
+                    "scenario compresses that to one attack day, so a win here says the opening " +
+                    "assault succeeded where, historically, it only began the fight. " +
                     "Source: Research/historical/belleau-wood-1st-marine-brigade.md (CMH PD).",
             });
 
